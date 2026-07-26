@@ -1,5 +1,6 @@
 import { useState } from "react";
 import * as L from "lucide-react";
+import WeatherStrip from "./WeatherStrip.jsx";
 
 // Təhlükəsiz ikon: adla tapır, tapılmasa nöqtə göstərir — heç vaxt çökmür.
 const Ic = ({ n, size = 16, color = "currentColor", strokeWidth = 2 }) => {
@@ -189,30 +190,7 @@ const HomeScreen = ({ go, wallet, recs, openLoan }) => (
       </p>
     </div>
 
-    <SectionTitle action="7 gün">Sahədə hava</SectionTitle>
-    <Card style={{ padding: "12px" }}>
-      <div className="flex justify-between">
-        {[
-          { d: "C.ax", i: "Sun", t: "31°" },
-          { d: "Cümə", i: "CloudRain", t: "24°", wet: true },
-          { d: "Şən", i: "CloudRain", t: "23°", wet: true },
-          { d: "Baz", i: "Sun", t: "28°" },
-          { d: "B.e", i: "Wind", t: "27°" },
-        ].map((w) => (
-          <div key={w.d} className="flex flex-col items-center gap-1">
-            <span className="text-xs font-semibold" style={{ color: C.muted }}>{w.d}</span>
-            <Ic n={w.i} size={18} color={w.wet ? C.blue : C.goldDeep} />
-            <span className="text-xs font-bold" style={{ color: C.ink }}>{w.t}</span>
-          </div>
-        ))}
-      </div>
-      <div
-        className="mt-3 rounded-lg px-3 py-2 text-xs font-medium flex items-center gap-2"
-        style={{ backgroundColor: "#EAF1FD", color: "#2C5BC7" }}
-      >
-        <Ic n="Droplets" size={14} color="#2C5BC7" /> Cümə–şənbə 34 mm yağış gözlənilir. Məsləhətçi planınızı yenilədi.
-      </div>
-    </Card>
+    <WeatherStrip lat={40.3705} lon={47.1265} />
 
     <SectionTitle action="Məsləhətçini aç" onAction={() => go("advisor")}>Bugünkü addımlar</SectionTitle>
     {recs.filter((r) => !r.done).slice(0, 2).map((r) => (
