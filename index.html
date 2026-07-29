@@ -6,12 +6,26 @@
     <meta name="theme-color" content="#14351F" />
     <meta name="description" content="AgriFin — fermerlər üçün ağıllı maliyyə tətbiqi (prototip)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="AgriFin" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    />
+
     <title>AgriFin</title>
   </head>
-  <body style="margin:0">
+  <body>
     <div id="root"></div>
+    <noscript>AgriFin-i işlətmək üçün brauzerinizdə JavaScript-i aktiv edin.</noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

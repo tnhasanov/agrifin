@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/* Dizayn tokenləri — JS tərəfdəki qarşılığı: src/theme/tokens.js */
+@theme {
+  --color-pine: #14351f;
+  --color-pine-deep: #0e2818;
+  --color-field: #2e7d4f;
+  --color-field-soft: #e9f5ee;
+  --color-gold: #e9b54a;
+  --color-gold-deep: #c9932b;
+  --color-gold-soft: #fbf1da;
+  --color-blue: #3e7bfa;
+  --color-blue-soft: #eaf1fd;
+  --color-mist: #eff2ec;
+  --color-card: #ffffff;
+  --color-ink: #1a211c;
+  --color-muted: #6b7568;
+  --color-line: #e3e8e0;
+  --color-danger: #c24a3f;
+
+  --font-display: "Sora", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-body);
+    background-color: #dfe5db;
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Toxunma ilə idarə olunan tətbiqdə mətn seçimi təsadüfən işə düşür */
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Telefon çərçivəsi: masaüstündə maket kimi, mobildə tam ekran */
+.az-outer {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.az-frame {
+  max-width: 402px;
+  height: min(860px, 94vh);
+  border-radius: 36px;
+  box-shadow: 0 24px 60px rgb(16 32 22 / 0.35);
+}
+
+@media (max-width: 640px) {
+  .az-outer {
+    padding: 0 !important;
+  }
+
+  .az-frame {
+    max-width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* iPhone-un aşağı göstərici zolağı naviqasiya düymələrini örtməsin */
+.az-safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

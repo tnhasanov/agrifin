@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="AgriFin">
+  <rect width="64" height="64" rx="14" fill="#14351F" />
+  <path d="M32 13 C 19.5 23.5, 19.5 40.5, 32 51 C 44.5 40.5, 44.5 23.5, 32 13 Z" fill="#E9B54A" />
+  <path d="M32 15 L 32 49" stroke="#14351F" stroke-width="2.6" stroke-linecap="round" />
+</svg>
