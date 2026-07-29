@@ -4,12 +4,17 @@ import userEvent from "@testing-library/user-event";
 import App from "../../App.jsx";
 import { renderApp, seedLocation, WEATHER_FIXTURE } from "../../test/render.jsx";
 
-function stubApi({ cavab = "Bu, sarı pas ola bilər.", aqronomTeklif = false, fail = false } = {}) {
+function stubApi({
+  cavab = "Bu, sarı pas ola bilər.",
+  aqronomTeklif = false,
+  fail = false,
+  status = 502,
+} = {}) {
   vi.stubGlobal(
     "fetch",
     vi.fn((url) => {
       if (String(url).includes("/api/agronom")) {
-        if (fail) return Promise.resolve({ ok: false, status: 502, json: () => Promise.resolve({}) });
+        if (fail) return Promise.resolve({ ok: false, status, json: () => Promise.resolve({}) });
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ cavab, aqronomTeklif }) });
       }
       // hava sorğusu
@@ -99,6 +104,21 @@ describe("Aqronom çatı", () => {
         screen.getByText("Cavab alınmadı. Bir az sonra yenidən yoxlayın."),
       ).toBeInTheDocument(),
     );
+  });
+
+  // Quraşdırma zamanı səbəbi tapmaq üçün status kodu ayrı-ayrı mesajlara düşür
+  it.each([
+    [404, "Köməkçi bu versiyada hələ qurulmayıb."],
+    [500, "Köməkçi hələ tam qurulmayıb. Bir az sonra yenidən yoxlayın."],
+    [429, "Çox sual göndərildi. Bir neçə dəqiqə gözləyin."],
+  ])("HTTP %i üçün uyğun mesaj göstərir", async (status, expected) => {
+    stubApi({ fail: true, status });
+    const user = userEvent.setup();
+    renderApp(<App />);
+    await openChat(user);
+
+    await user.click(screen.getByRole("button", { name: "Suvarmanı nə vaxt etməliyəm?" }));
+    await waitFor(() => expect(screen.getByText(expected)).toBeInTheDocument());
   });
 
   it("xəta mesajları növbəti sorğunun tarixçəsinə düşmür", async () => {

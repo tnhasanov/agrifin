@@ -14,12 +14,15 @@ export const LANGUAGES = [
   { code: "ru", label: "RU", name: "Русский" },
 ];
 
+/**
+ * Məhsul Azərbaycan üçündür, ona görə standart dil həmişə azərbaycancadır.
+ * Brauzerin dilinə görə seçim etmirik: fermerin telefonu ingiliscə qurulmuş
+ * ola bilər, bu onun ingilis interfeysi istədiyi demək deyil. Dili başlıqdaki
+ * düymə ilə dəyişmək olar və seçim saxlanılır.
+ */
 function detectLang() {
   const saved = storage.read("lang");
-  if (saved && DICTS[saved]) return saved;
-  const nav = typeof navigator === "undefined" ? "" : navigator.language || "";
-  const short = String(nav).slice(0, 2).toLowerCase();
-  return DICTS[short] ? short : DEFAULT_LANG;
+  return saved && DICTS[saved] ? saved : DEFAULT_LANG;
 }
 
 /** "{count} kredit" + {count: 9} -> "9 kredit" */

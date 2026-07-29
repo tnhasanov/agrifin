@@ -9,6 +9,32 @@ import { DEFAULT_LOCATION } from "../../services/location.js";
 
 const SAMPLE_KEYS = ["chat.sample.1", "chat.sample.2", "chat.sample.3", "chat.sample.4"];
 
+/**
+ * Xətanın səbəbini istifadəçiyə anlaşılan dildə çatdırır. Status kodu
+ * brauzer konsoluna yazılır — quraşdırma zamanı səbəbi tapmaq üçün lazımdır,
+ * amma fermerin ekranında HTTP kodu görünməməlidir.
+ */
+function errorKeyFor(error) {
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    return "chat.errorNetwork";
+  }
+  if (error?.status) {
+    console.warn(`[agronom] /api/agronom → HTTP ${error.status}`);
+  }
+  switch (error?.status) {
+    case 404:
+      // Funksiya yayımda yoxdur — api/agronom.js kök qovluqda olmalıdır
+      return "chat.errorNotDeployed";
+    case 429:
+      return "chat.errorBusy";
+    case 500:
+      // Server açarı görmür — mühit dəyişəni bu build-ə tətbiq olunmayıb
+      return "chat.errorConfig";
+    default:
+      return "chat.errorServer";
+  }
+}
+
 export function AgronomChat({ onClose }) {
   const { t, lang } = useI18n();
   const { state, actions } = useStore();
@@ -65,7 +91,7 @@ export function AgronomChat({ onClose }) {
       actions.chatAssistant(result.answer, result.referral);
     } catch (error) {
       if (error?.name !== "AbortError") {
-        actions.chatError(navigator.onLine === false ? "chat.errorNetwork" : "chat.errorServer");
+        actions.chatError(errorKeyFor(error));
       }
     } finally {
       setBusy(false);

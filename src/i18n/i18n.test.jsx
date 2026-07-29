@@ -1,8 +1,19 @@
 import { describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/react";
 import az from "./az.js";
 import en from "./en.js";
 import ru from "./ru.js";
-import { interpolate } from "./index.jsx";
+import { I18nProvider, interpolate, useI18n } from "./index.jsx";
+
+function Probe() {
+  const { lang, t } = useI18n();
+  return (
+    <div>
+      <span data-testid="lang">{lang}</span>
+      <span data-testid="nav">{t("nav.home")}</span>
+    </div>
+  );
+}
 
 const DICTS = { en, ru };
 const azKeys = Object.keys(az).sort();
@@ -35,6 +46,42 @@ describe("tərcümə lüğətləri", () => {
       Object.values(DICTS).some((dict) => placeholders(dict[key] ?? "") !== placeholders(az[key])),
     );
     expect(mismatched).toEqual([]);
+  });
+});
+
+describe("standart dil", () => {
+  it("brauzer ingiliscə olsa da azərbaycanca açılır", () => {
+    // jsdom-un navigator.language dəyəri "en-US"-dur. Məhsul Azərbaycan
+    // üçündür: telefonun dili interfeys seçimi sayılmır.
+    const { unmount } = render(
+      <I18nProvider>
+        <Probe />
+      </I18nProvider>,
+    );
+    expect(screen.getByTestId("lang")).toHaveTextContent("az");
+    expect(screen.getByTestId("nav")).toHaveTextContent("Əsas");
+    unmount();
+  });
+
+  it("saxlanmış seçimə hörmət edir", () => {
+    window.localStorage.setItem("agrifin:lang", JSON.stringify("ru"));
+    render(
+      <I18nProvider>
+        <Probe />
+      </I18nProvider>,
+    );
+    expect(screen.getByTestId("lang")).toHaveTextContent("ru");
+    expect(screen.getByTestId("nav")).toHaveTextContent("Главная");
+  });
+
+  it("naməlum saxlanmış dili rədd edir", () => {
+    window.localStorage.setItem("agrifin:lang", JSON.stringify("de"));
+    render(
+      <I18nProvider>
+        <Probe />
+      </I18nProvider>,
+    );
+    expect(screen.getByTestId("lang")).toHaveTextContent("az");
   });
 });
 

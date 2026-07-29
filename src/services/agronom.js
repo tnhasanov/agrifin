@@ -36,8 +36,11 @@ export async function askAgronomist({ messages, bitkiKey, location, lang, signal
     }),
   });
 
+  // Status kodu saxlanılır ki, istifadəçiyə səbəbə uyğun mesaj göstərilsin
   if (!response.ok) {
-    throw new Error(`agronom ${response.status}`);
+    const error = new Error(`agronom ${response.status}`);
+    error.status = response.status;
+    throw error;
   }
 
   const data = await response.json();

@@ -112,6 +112,9 @@ export default {
   "chat.referral": "Aqronoma göndər",
   "chat.errorNetwork": "İnternet bağlantısı yoxdur. Yenidən cəhd edin.",
   "chat.errorServer": "Cavab alınmadı. Bir az sonra yenidən yoxlayın.",
+  "chat.errorNotDeployed": "Köməkçi bu versiyada hələ qurulmayıb.",
+  "chat.errorConfig": "Köməkçi hələ tam qurulmayıb. Bir az sonra yenidən yoxlayın.",
+  "chat.errorBusy": "Çox sual göndərildi. Bir neçə dəqiqə gözləyin.",
   "chat.disclaimer": "Məlumat məqsədlidir. Preparat və doza üçün dileri və AQTA reyestrini yoxlayın.",
 
   "kbcrop.bugda": "Payızlıq buğda",

@@ -112,6 +112,9 @@ export default {
   "chat.referral": "Send to an agronomist",
   "chat.errorNetwork": "No internet connection. Try again.",
   "chat.errorServer": "No answer received. Try again in a moment.",
+  "chat.errorNotDeployed": "The assistant is not set up in this version yet.",
+  "chat.errorConfig": "The assistant is not fully set up yet. Try again in a moment.",
+  "chat.errorBusy": "Too many questions sent. Wait a few minutes.",
   "chat.disclaimer":
     "For information only. For products and doses, check with your dealer and the AQTA register.",
 
