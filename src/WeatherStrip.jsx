@@ -88,15 +88,21 @@ function tovsiye(g, s) {
   };
 }
 
-const Baslik = ({ children, action }) => (
+const Baslik = ({ children, yerAd, onYerSec }) => (
   <div className="flex items-center justify-between mt-5 mb-2 px-1">
     <h3 className="text-sm font-bold tracking-wide" style={{ color: C.ink, fontFamily: font.display }}>
       {children}
     </h3>
-    {action && (
-      <span className="text-xs font-semibold" style={{ color: C.field }}>
-        {action}
-      </span>
+    {onYerSec && (
+      <button
+        onClick={onYerSec}
+        className="flex items-center gap-1 text-xs font-semibold"
+        style={{ color: C.field }}
+      >
+        <Ic n="MapPin" size={12} color={C.field} />
+        {yerAd || "Yeri seçin"}
+        <Ic n="ChevronDown" size={12} color={C.field} />
+      </button>
     )}
   </div>
 );
@@ -110,7 +116,7 @@ const Qutu = ({ children }) => (
   </div>
 );
 
-export default function WeatherStrip({ lat = 40.3705, lon = 47.1265, gunSayi = 5 }) {
+export default function WeatherStrip({ lat = 40.3705, lon = 47.1265, gunSayi = 5, yerAd, onYerSec }) {
   const [hava, setHava] = useState(null);
   const [xeta, setXeta] = useState(false);
 
@@ -135,7 +141,7 @@ export default function WeatherStrip({ lat = 40.3705, lon = 47.1265, gunSayi = 5
   if (xeta) {
     return (
       <>
-        <Baslik>Sahədə hava</Baslik>
+        <Baslik yerAd={yerAd} onYerSec={onYerSec}>Sahədə hava</Baslik>
         <Qutu>
           <p className="text-xs" style={{ color: C.muted }}>
             Hava məlumatı hazırda əlçatan deyil.
@@ -148,7 +154,7 @@ export default function WeatherStrip({ lat = 40.3705, lon = 47.1265, gunSayi = 5
   if (!hava) {
     return (
       <>
-        <Baslik>Sahədə hava</Baslik>
+        <Baslik yerAd={yerAd} onYerSec={onYerSec}>Sahədə hava</Baslik>
         <Qutu>
           <div className="flex justify-between">
             {Array.from({ length: gunSayi }).map((_, i) => (
@@ -170,7 +176,7 @@ export default function WeatherStrip({ lat = 40.3705, lon = 47.1265, gunSayi = 5
 
   return (
     <>
-      <Baslik action="7 gün">Sahədə hava</Baslik>
+      <Baslik yerAd={yerAd} onYerSec={onYerSec}>Sahədə hava</Baslik>
       <Qutu>
         <div className="flex justify-between">
           {g.time.slice(0, gunSayi).map((iso, i) => {

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import * as L from "lucide-react";
 import WeatherStrip from "./WeatherStrip.jsx";
+import LocationSheet from "./LocationSheet.jsx";
+import { yerOxu, yerYaz, DEFAULT_YER } from "./location.js";
 
 // Təhlükəsiz ikon: adla tapır, tapılmasa nöqtə göstərir — heç vaxt çökmür.
 const Ic = ({ n, size = 16, color = "currentColor", strokeWidth = 2 }) => {
@@ -139,7 +141,7 @@ const FarmScoreGauge = ({ score, ndvi }) => {
 };
 
 // ---------- Ekranlar ----------
-const HomeScreen = ({ go, wallet, recs, openLoan }) => (
+const HomeScreen = ({ go, wallet, recs, openLoan, yer, onYerSec }) => (
   <div className="px-4 pb-4">
     <div
       className="rounded-3xl pt-4 pb-3 px-4 mt-3"
@@ -190,7 +192,12 @@ const HomeScreen = ({ go, wallet, recs, openLoan }) => (
       </p>
     </div>
 
-    <WeatherStrip lat={40.3705} lon={47.1265} />
+    <WeatherStrip
+      lat={yer.lat}
+      lon={yer.lon}
+      yerAd={yer.ad}
+      onYerSec={onYerSec}
+    />
 
     <SectionTitle action="Məsləhətçini aç" onAction={() => go("advisor")}>Bugünkü addımlar</SectionTitle>
     {recs.filter((r) => !r.done).slice(0, 2).map((r) => (
@@ -645,6 +652,8 @@ export default function AgriFinApp() {
   const [loanOpen, setLoanOpen] = useState(false);
   const [loan] = useState({ active: true, amount: 8000, repay: 8380 });
   const [toast, setToast] = useState(null);
+  const [yer, setYer] = useState(() => yerOxu() || DEFAULT_YER);
+  const [yerAcik, setYerAcik] = useState(() => yerOxu() === null);
   const [txns, setTxns] = useState([
     { name: "Şirvan Taxıl MMC", meta: "Buğda satışı · eskrou açıldı", amt: 3150 },
     { name: "AqroTəchizat", meta: "Gübrə · kart ••4127", amt: -530 },
@@ -698,6 +707,12 @@ export default function AgriFinApp() {
     },
   ]);
 
+  const yerSec = (y) => {
+    setYer(y);
+    yerYaz(y);
+    showToast(`${y.ad} üçün hava proqnozu yükləndi`);
+  };
+
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2600);
@@ -743,6 +758,13 @@ export default function AgriFinApp() {
         className="az-frame relative w-full flex flex-col overflow-hidden"
         style={{ backgroundColor: C.mist }}
       >
+        <LocationSheet
+          open={yerAcik}
+          current={yer}
+          onSelect={yerSec}
+          onClose={() => setYerAcik(false)}
+        />
+
         <div className="flex items-center justify-between px-5 pt-5 pb-2">
           <div className="flex items-center gap-2">
             <div className="rounded-xl p-1.5" style={{ backgroundColor: C.pine }}>
@@ -766,7 +788,14 @@ export default function AgriFinApp() {
 
         <div className="flex-1 overflow-y-auto">
           {tab === "home" && (
-            <HomeScreen go={setTab} wallet={wallet} recs={recs} openLoan={() => setLoanOpen(true)} />
+            <HomeScreen
+              go={setTab}
+              wallet={wallet}
+              recs={recs}
+              openLoan={() => setLoanOpen(true)}
+              yer={yer}
+              onYerSec={() => setYerAcik(true)}
+            />
           )}
           {tab === "advisor" && <AdvisorScreen recs={recs} completeRec={completeRec} />}
           {tab === "money" && (
