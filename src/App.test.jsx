@@ -2,12 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App.jsx";
-import { renderApp, WEATHER_FIXTURE } from "./test/render.jsx";
+import { renderApp, seedLocation, WEATHER_FIXTURE } from "./test/render.jsx";
 
 beforeEach(() => {
   window.history.pushState({}, "", "/");
   // jsdom-un dili "en-US"-dur; ekran mətnlərini yoxlamaq üçün azərbaycancanı seçirik
   window.localStorage.setItem("agrifin:lang", JSON.stringify("az"));
+  seedLocation();
   vi.stubGlobal(
     "fetch",
     vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve(WEATHER_FIXTURE) })),

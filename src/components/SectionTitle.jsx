@@ -8,7 +8,12 @@ export function SectionTitle({ children, action, onAction }) {
       </h2>
       {action &&
         (onAction ? (
-          <button type="button" onClick={onAction} className="text-xs font-semibold" style={{ color: C.field }}>
+          <button
+            type="button"
+            onClick={onAction}
+            className="flex items-center gap-1 text-xs font-semibold"
+            style={{ color: C.field }}
+          >
             {action}
           </button>
         ) : (

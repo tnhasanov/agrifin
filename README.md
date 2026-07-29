@@ -36,7 +36,7 @@ src/
   App.jsx             qabıq: başlıq, naviqasiya, aktiv ekran
   routes.js           yolların vahid siyahısı
   screens/            beş ekran — yalnız göstərmə məntiqi
-  features/           kredit paneli, hava zolağı
+  features/           kredit paneli, yer seçimi, hava zolağı
   components/         Icon, Card, Chip, Sparkline, FarmScoreGauge, ...
   state/store.jsx     reducer + localStorage-da saxlanma
   services/           məlumat mənbələri (hava realdır, qalanı nümunə)
@@ -100,6 +100,11 @@ uyğunluğunu yoxlayır.
 - **Hava xidməti** keşlənir (30 dəqiqə), sorğu alınmasa köhnə proqnozu "oflayn"
   nişanı ilə göstərir. Tövsiyə məntiqi (`buildAdvisory`) ayrı, təmiz funksiyadır və
   test olunur.
+- **Yer seçimi** (47 rayon + GPS) `features/location/` və `services/location.js`-ə
+  köçürüldü: seçim store-da saxlanılır, mətnlər üç dildədir, rayon siyahısı isə
+  azərbaycan əlifba sırasına düzəldildi (əvvəl `Qəbələ` `Qusar`-dan sonra gəlirdi,
+  çünki sıralama Unicode kod nöqtəsinə görə idi). Köhnə `agrifin.yer` açarı bir dəfə
+  oxunur ki, mövcud istifadəçidən yer yenidən soruşulmasın.
 - **Əlçatanlıq:** klik olunan kartlar həqiqi `<button>`-dur, ikon düymələrində
   `aria-label`, kredit paneli `role="dialog"` + Escape ilə bağlanır, naviqasiyada
   `aria-current`.

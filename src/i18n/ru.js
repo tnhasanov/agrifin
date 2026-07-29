@@ -49,6 +49,20 @@ export default {
   "weather.day.5": "Пт",
   "weather.day.6": "Сб",
 
+  "location.title": "Расположение вашего поля",
+  "location.subtitle": "Прогноз погоды и советы по поливу рассчитываются по нему.",
+  "location.gpsCta": "Определить расположение поля",
+  "location.gpsBusy": "Определяем расположение…",
+  "location.gpsUnsupported": "Это устройство не поддерживает определение места.",
+  "location.gpsDenied": "Доступ запрещён. Выберите район ниже.",
+  "location.gpsNoSignal": "Сигнал не найден. Выберите район ниже.",
+  "location.gpsName": "{district} (GPS)",
+  "location.searchPlaceholder": "Поиск района",
+  "location.notFound": "Район не найден.",
+  "location.later": "Выберу позже",
+  "location.pick": "Выберите место",
+  "location.close": "Закрыть выбор места",
+
   "advisor.title": "Рекомендации",
   "advisor.subtitle":
     "Отсортированы по влиянию на урожай и доход. Источник указан на каждой карточке.",
@@ -172,6 +186,7 @@ export default {
 
   "toast.recAdded": "Добавлено в план хозяйства",
   "toast.creditsSold": "{amount} добавлено в ваш кошелёк",
+  "toast.locationSelected": "Прогноз погоды загружен для {name}",
 
   "date.aug15.short": "15 авг",
   "date.aug15.long": "15 августа",

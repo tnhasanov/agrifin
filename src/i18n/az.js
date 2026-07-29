@@ -49,6 +49,20 @@ export default {
   "weather.day.5": "Cümə",
   "weather.day.6": "Şən",
 
+  "location.title": "Sahənizin yeri",
+  "location.subtitle": "Hava proqnozu və suvarma tövsiyələri buna görə hesablanır.",
+  "location.gpsCta": "Sahəmin yerini təyin et",
+  "location.gpsBusy": "Yer təyin edilir…",
+  "location.gpsUnsupported": "Bu cihaz yer təyinini dəstəkləmir.",
+  "location.gpsDenied": "İcazə verilmədi. Rayonu aşağıdan seçə bilərsiniz.",
+  "location.gpsNoSignal": "Siqnal tapılmadı. Rayonu aşağıdan seçin.",
+  "location.gpsName": "{district} (GPS)",
+  "location.searchPlaceholder": "Rayon axtarın",
+  "location.notFound": "Rayon tapılmadı.",
+  "location.later": "Sonra seçəcəyəm",
+  "location.pick": "Yeri seçin",
+  "location.close": "Yer seçimini bağla",
+
   "advisor.title": "Tövsiyələr",
   "advisor.subtitle":
     "Məhsuldarlığa və gəlirinizə təsirinə görə sıralanıb. Mənbə hər kartda göstərilir.",
@@ -171,6 +185,7 @@ export default {
 
   "toast.recAdded": "Təsərrüfat planınıza əlavə olundu",
   "toast.creditsSold": "{amount} pulqabınıza əlavə olundu",
+  "toast.locationSelected": "{name} üçün hava proqnozu yükləndi",
 
   "date.aug15.short": "15 avq",
   "date.aug15.long": "15 avqustda",

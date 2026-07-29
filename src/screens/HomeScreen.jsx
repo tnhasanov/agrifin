@@ -12,6 +12,7 @@ import { formatNumber } from "../lib/format.js";
 import { pathFor } from "../routes.js";
 import { withCompletion } from "../services/advisor.js";
 import { FARM } from "../services/farm.js";
+import { DEFAULT_LOCATION } from "../services/location.js";
 
 function StatTile({ label, children }) {
   return (
@@ -24,10 +25,13 @@ function StatTile({ label, children }) {
   );
 }
 
-export function HomeScreen({ onOpenLoan }) {
+export function HomeScreen({ onOpenLoan, onPickLocation }) {
   const { t, money, lang } = useI18n();
   const { state } = useStore();
   const { navigate } = useRouter();
+
+  // Yer seçilməyibsə default rayonun proqnozu göstərilir
+  const location = state.location ?? DEFAULT_LOCATION;
 
   const pending = withCompletion(state.completedRecs)
     .filter((rec) => !rec.done)
@@ -88,10 +92,13 @@ export function HomeScreen({ onOpenLoan }) {
         </p>
       </div>
 
+      {/* key yeri dəyişdikdə komponenti sıfırdan qurur — yeni proqnoz yüklənir */}
       <WeatherStrip
-        key={`${FARM.location.lat},${FARM.location.lon}`}
-        lat={FARM.location.lat}
-        lon={FARM.location.lon}
+        key={`${location.lat},${location.lon}`}
+        lat={location.lat}
+        lon={location.lon}
+        locationName={location.name}
+        onPickLocation={onPickLocation}
       />
 
       <SectionTitle action={t("home.openAdvisor")} onAction={() => navigate(pathFor("advisor"))}>

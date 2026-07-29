@@ -1,7 +1,19 @@
 import { render } from "@testing-library/react";
 import { I18nProvider } from "../i18n/index.jsx";
-import { StoreProvider } from "../state/store.jsx";
+import { PERSIST_KEY, PERSIST_VERSION, StoreProvider } from "../state/store.jsx";
 import { RouterProvider } from "../lib/router.jsx";
+import { DEFAULT_LOCATION } from "../services/location.js";
+
+/**
+ * Yer seçilmiş kimi göstərir. Bunu etməsək yer seçimi paneli ilk açılışda
+ * qalxır və digər testlərdə ekranı örtür.
+ */
+export function seedLocation(location = DEFAULT_LOCATION) {
+  window.localStorage.setItem(
+    `agrifin:${PERSIST_KEY}`,
+    JSON.stringify({ version: PERSIST_VERSION, state: { location } }),
+  );
+}
 
 /** Tətbiqin bütün provayderləri ilə render edir */
 export function renderApp(ui) {

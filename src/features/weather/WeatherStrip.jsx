@@ -40,7 +40,7 @@ function Skeleton({ days }) {
  * Koordinatlar dəyişəndə komponent `key` ilə yenidən qurulur (bax: HomeScreen) —
  * effektin içində vəziyyəti "loading"-ə qaytarmağa ehtiyac qalmır.
  */
-export function WeatherStrip({ lat, lon, days = 5 }) {
+export function WeatherStrip({ lat, lon, days = 5, locationName, onPickLocation }) {
   const { t } = useI18n();
   const [result, setResult] = useState({ status: "loading", data: null, stale: false });
   const { status, data: forecast, stale } = result;
@@ -61,10 +61,30 @@ export function WeatherStrip({ lat, lon, days = 5 }) {
     return () => controller.abort();
   }, [lat, lon]);
 
+  // Başlığın sağ tərəfi yer seçicisidir; seçici verilmirsə sadəcə müddəti yazır
+  const header = (
+    <SectionTitle
+      action={
+        onPickLocation ? (
+          <>
+            <Icon name="MapPin" size={12} color={C.field} />
+            {locationName || t("location.pick")}
+            <Icon name="ChevronDown" size={12} color={C.field} />
+          </>
+        ) : (
+          t("common.days7")
+        )
+      }
+      onAction={onPickLocation}
+    >
+      {t("weather.title")}
+    </SectionTitle>
+  );
+
   if (status === "error") {
     return (
       <>
-        <SectionTitle>{t("weather.title")}</SectionTitle>
+        {header}
         <Box>
           <p className="text-xs" style={{ color: C.muted }}>
             {t("weather.unavailable")}
@@ -77,7 +97,7 @@ export function WeatherStrip({ lat, lon, days = 5 }) {
   if (status === "loading" || !forecast) {
     return (
       <>
-        <SectionTitle>{t("weather.title")}</SectionTitle>
+        {header}
         <Box>
           <Skeleton days={days} />
         </Box>
@@ -91,12 +111,13 @@ export function WeatherStrip({ lat, lon, days = 5 }) {
 
   return (
     <>
-      <SectionTitle action={t("common.days7")}>{t("weather.title")}</SectionTitle>
+      {header}
       <Box>
         <div className="flex justify-between">
           {daily.time.slice(0, days).map((iso, index) => {
             const { name, wet } = iconForCode(daily.weather_code[index]);
-            const label = index === 0 ? t("common.today") : t(`weather.day.${new Date(iso).getDay()}`);
+            const label =
+              index === 0 ? t("common.today") : t(`weather.day.${new Date(iso).getDay()}`);
             return (
               <div key={iso} className="flex flex-col items-center gap-1">
                 <span className="text-xs font-semibold" style={{ color: C.muted }}>

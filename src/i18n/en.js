@@ -49,6 +49,20 @@ export default {
   "weather.day.5": "Fri",
   "weather.day.6": "Sat",
 
+  "location.title": "Your field's location",
+  "location.subtitle": "The forecast and irrigation advice are calculated from this.",
+  "location.gpsCta": "Detect my field's location",
+  "location.gpsBusy": "Detecting location…",
+  "location.gpsUnsupported": "This device does not support location detection.",
+  "location.gpsDenied": "Permission denied. You can pick a district below.",
+  "location.gpsNoSignal": "No signal found. Pick a district below.",
+  "location.gpsName": "{district} (GPS)",
+  "location.searchPlaceholder": "Search for a district",
+  "location.notFound": "No district found.",
+  "location.later": "I'll choose later",
+  "location.pick": "Pick a location",
+  "location.close": "Close location picker",
+
   "advisor.title": "Recommendations",
   "advisor.subtitle":
     "Ranked by impact on your yield and income. The source is shown on every card.",
@@ -171,6 +185,7 @@ export default {
 
   "toast.recAdded": "Added to your farm plan",
   "toast.creditsSold": "{amount} added to your wallet",
+  "toast.locationSelected": "Forecast loaded for {name}",
 
   "date.aug15.short": "15 Aug",
   "date.aug15.long": "15 August",

@@ -3,12 +3,14 @@ import { AppHeader } from "./components/AppHeader.jsx";
 import { BottomNav } from "./components/BottomNav.jsx";
 import { Toast } from "./components/Toast.jsx";
 import { LoanSheet } from "./features/loan/LoanSheet.jsx";
+import { LocationSheet } from "./features/location/LocationSheet.jsx";
 import { HomeScreen } from "./screens/HomeScreen.jsx";
 import { AdvisorScreen } from "./screens/AdvisorScreen.jsx";
 import { MoneyScreen } from "./screens/MoneyScreen.jsx";
 import { MarketScreen } from "./screens/MarketScreen.jsx";
 import { CarbonScreen } from "./screens/CarbonScreen.jsx";
 import { useRouter } from "./lib/router.jsx";
+import { useStore } from "./state/store.jsx";
 import { routeForPath } from "./routes.js";
 import { C, font } from "./theme/tokens.js";
 
@@ -22,7 +24,10 @@ const SCREENS = {
 
 export default function App() {
   const { path } = useRouter();
+  const { state, actions } = useStore();
   const [loanOpen, setLoanOpen] = useState(false);
+  // Yer heç vaxt seçilməyibsə panel ilk açılışda özü qalxır
+  const [locationOpen, setLocationOpen] = useState(() => state.location === null);
   const scrollRef = useRef(null);
 
   const route = routeForPath(path);
@@ -45,13 +50,24 @@ export default function App() {
         <AppHeader />
 
         <main ref={scrollRef} className="flex-1 overflow-y-auto">
-          <Screen onOpenLoan={() => setLoanOpen(true)} />
+          <Screen
+            onOpenLoan={() => setLoanOpen(true)}
+            onPickLocation={() => setLocationOpen(true)}
+          />
         </main>
 
         <Toast />
         <BottomNav />
 
         {loanOpen && <LoanSheet onClose={() => setLoanOpen(false)} />}
+
+        {locationOpen && (
+          <LocationSheet
+            current={state.location}
+            onSelect={actions.setLocation}
+            onClose={() => setLocationOpen(false)}
+          />
+        )}
       </div>
     </div>
   );

@@ -10,10 +10,11 @@ import {
 import * as storage from "../lib/storage.js";
 import { FARM, LOAN_TERMS, computeRepayment } from "../services/farm.js";
 import { CARBON, carbonPayout } from "../services/carbon.js";
+import { isValidLocation, readLegacyLocation } from "../services/location.js";
 
-const PERSIST_KEY = "state";
+export const PERSIST_KEY = "state";
 // Saxlanan formanı dəyişəndə bu rəqəmi artırın — köhnə məlumat səssizcə atılır.
-const PERSIST_VERSION = 2;
+export const PERSIST_VERSION = 2;
 
 const INITIAL_TXNS = [
   { id: "t1", nameKey: "txn.grainSale.name", metaKey: "txn.grainSale.meta", amount: 3150 },
@@ -36,6 +37,8 @@ const INITIAL_TXNS = [
 
 export const initialState = {
   wallet: 7280,
+  // null olduqda ilk açılışda yer seçimi paneli göstərilir
+  location: null,
   creditsSold: false,
   completedRecs: [],
   txns: INITIAL_TXNS,
@@ -92,6 +95,11 @@ export function reducer(state, action) {
       };
     }
 
+    case "location/set": {
+      if (!isValidLocation(action.location)) return state;
+      return { ...state, location: action.location };
+    }
+
     case "toast/show":
       return { ...state, toast: { key: action.key, vars: action.vars ?? null } };
 
@@ -108,9 +116,19 @@ export function reducer(state, action) {
 
 function loadPersisted() {
   const saved = storage.read(PERSIST_KEY);
-  if (!saved || saved.version !== PERSIST_VERSION) return initialState;
   // Toast efemer UI-dır — yenidən yüklənəndə göstərilməməlidir.
-  return { ...initialState, ...saved.state, toast: null };
+  const base =
+    !saved || saved.version !== PERSIST_VERSION
+      ? initialState
+      : { ...initialState, ...saved.state, toast: null };
+
+  // Köhnə prototipdə yer ayrı açarda saxlanılırdı — yenidən soruşmuruq
+  if (!isValidLocation(base.location)) {
+    const legacy = readLegacyLocation();
+    if (legacy) return { ...base, location: legacy };
+  }
+
+  return base;
 }
 
 const StoreContext = createContext(null);
@@ -145,6 +163,10 @@ export function StoreProvider({ children }) {
         showToast("toast.creditsSold", { amount: { money: carbonPayout() } });
       },
       takeLoan: (amount) => dispatch({ type: "loan/take", amount }),
+      setLocation: (location) => {
+        dispatch({ type: "location/set", location });
+        showToast("toast.locationSelected", { name: location.name });
+      },
       resetDemo: () => dispatch({ type: "demo/reset" }),
     }),
     [showToast],
