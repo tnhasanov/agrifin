@@ -80,6 +80,18 @@ export function buildAdvisory(daily, hourly) {
   };
 }
 
+/** Aqronom çatına ötürülən qısa hava xülasəsi (7 gün) */
+export function summarizeForecast(daily) {
+  if (!daily?.temperature_2m_max?.length) return null;
+  const rain = sumFirst(daily.precipitation_sum, 7);
+  const et = sumFirst(daily.et0_fao_evapotranspiration, 7);
+  return {
+    maxTemp: Math.round(Math.max(...daily.temperature_2m_max.slice(0, 7))),
+    yagis: Math.round(rain),
+    balans: Math.round(et - rain),
+  };
+}
+
 /**
  * @returns {Promise<{data: object, stale: boolean}>} stale=true olduqda
  *          məlumat keşdəndir və istifadəçiyə bunu bildirmək lazımdır.

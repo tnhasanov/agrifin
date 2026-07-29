@@ -4,7 +4,7 @@ Fermerlər üçün ağıllı maliyyə tətbiqi: peyk əsaslı tövsiyələr, mə
 kart və pulqabı, bazar qiymətləri və karbon gəliri.
 
 > **Demo prototipdir.** Maliyyə rəqəmləri, alıcılar və karbon kreditləri nümunədir.
-> Yalnız hava proqnozu realdır (Open-Meteo).
+> Real olanlar: hava proqnozu (Open-Meteo) və aqronom köməkçisi (Claude API).
 
 ---
 
@@ -20,7 +20,7 @@ npm run dev        # http://localhost:5173
 | `npm run dev`    | Dev server (HMR ilə)                                 |
 | `npm run build`  | `dist/` qovluğuna istehsal build-i                   |
 | `npm run preview`| Build-i lokal yoxlamaq                               |
-| `npm test`       | Vitest — 52 test                                     |
+| `npm test`       | Vitest — 121 test                                    |
 | `npm run lint`   | ESLint                                               |
 | `npm run icons`  | PWA ikonlarını yenidən yaradır (asılılıq tələb etmir)|
 
@@ -31,15 +31,18 @@ Node 22 tələb olunur (`.nvmrc`).
 ## Quruluş
 
 ```
+api/
+  agronom.js          serverless funksiya — Claude API açarı yalnız burada
 src/
   main.jsx            provayderlər + servis işçisi
   App.jsx             qabıq: başlıq, naviqasiya, aktiv ekran
   routes.js           yolların vahid siyahısı
   screens/            beş ekran — yalnız göstərmə məntiqi
-  features/           kredit paneli, yer seçimi, hava zolağı
+  features/           kredit paneli, yer seçimi, hava zolağı, aqronom çatı
   components/         Icon, Card, Chip, Sparkline, FarmScoreGauge, ...
   state/store.jsx     reducer + localStorage-da saxlanma
-  services/           məlumat mənbələri (hava realdır, qalanı nümunə)
+  services/           məlumat mənbələri (hava və aqronom realdır, qalanı nümunə)
+  services/knowledge.js  aqronomik bilik bazası — aqronom yoxlanışı gözləyir
   i18n/               az (əsas), en, ru + açar yoxlayan test
   lib/                format, storage, router, pwa
   theme/tokens.js     rənglər və şriftlər (CSS qarşılığı: index.css @theme)
@@ -113,22 +116,68 @@ uyğunluğunu yoxlayır.
 
 ---
 
+## Aqronom köməkçisi
+
+Fermer əlamətləri təsvir edir, cavab isə onun rayonunun iqlim zonası, cari
+fenoloji mərhələ, 7 günlük hava xülasəsi və NDVI göstəricisi nəzərə alınaraq
+qurulur. Model: Claude (`claude-sonnet-5`) — qısa aqronomik cavablar üçün
+sürət/qiymət balansı uyğundur.
+
+**Qurulma (bir dəfə)**
+
+1. [console.anthropic.com](https://console.anthropic.com) → API Keys → açar yarat,
+   balans əlavə et. **Həmin gün xərc limiti qoy** — səbəbi aşağıda.
+2. Vercel → Project → Settings → Environment Variables → `ANTHROPIC_API_KEY`,
+   hər üç mühit üçün → Save.
+3. **Yenidən deploy et.** Mühit dəyişənləri mövcud build-ə tətbiq olunmur;
+   bu addım atlanarsa nasaz açarla eyni görünən xəta alınır.
+
+**Bilməli olduğun iki şey**
+
+- **`npm run dev` çatı işlətmir.** `/api/*` marşrutları yalnız Vercel-də (və ya
+  `vercel dev`-də) mövcuddur. Lokal Vite serverində çat sorğusu 404 qaytarır —
+  bu qüsur deyil, gözlənilən davranışdır.
+- **Endpoint publikdir və pul xərcləyir.** Funksiyada instans-daxili sürət həddi
+  var (5 dəqiqədə 20 sorğu / IP), lakin serverless instanslar arasında
+  paylaşılmadığı üçün tam qorunma deyil. Linki geniş yaymadan əvvəl Anthropic
+  konsolunda xərc limiti və düzgün sürət həddi (KV/Redis) lazımdır.
+
+**Təhlükəsizlik qaydası — preparat və doza verilmir.** Azərbaycanda yalnız
+dövlət qeydiyyatına alınmış preparatların istifadəsi qanunidir və reyestr
+AQTA-dadır (afsa.gov.az). Model reyestri görmür, ona görə preparat adı, doza
+və norma verməsi qadağandır: sistem promptu bunu qadağan edir, serverdə regex
+yoxlaması sızmış dozanı kəsir, bilik bazasının özündə isə doza yazılışı olmadığı
+test ilə yoxlanılır. Cavab problemi adlandırır, müdaxilə SİNFİNİ izah edir və
+dilerə/aqronoma yönləndirir.
+
+**Bilik bazası hələ yoxlanmayıb.** `services/knowledge.js` — 10 bitki üzrə
+fenoloji mərhələlər və xəstəlik əlamətləri. Hər bitkidə `yoxlanildi: false`
+bayrağı var və test bunu yoxlayır. İstifadəyə verilməzdən əvvəl bir dəfə
+peşəkar aqronom baxışından keçirilməlidir.
+
+---
+
 ## 3-cü mərhələ — növbəti addımlar
 
 Prioritet sırası ilə:
 
-1. **Backend və autentifikasiya.** Hazırda bütün vəziyyət brauzerdədir.
+1. **Çat endpoint-inin qorunması.** `/api/agronom` publikdir və hər çağırış pul
+   xərcləyir. Cari sürət həddi instans-daxilidir; Vercel KV və ya Redis ilə
+   paylaşılan hədd, sonra isə hesaba bağlı kvota lazımdır.
+2. **Bilik bazasının aqronom yoxlanışı.** 10 bitki üzrə mərhələ və əlamət
+   məlumatı yoxlanmalı, `yoxlanildi` bayraqları qaldırılmalıdır.
+3. **Backend və autentifikasiya.** Hazırda bütün vəziyyət brauzerdədir.
    Real məhsul üçün: hesab, SMS/ASAN ilə giriş, server tərəfdə saxlanma.
    `services/` qovluğu bu keçid üçün hazırdır — ekranlara toxunmaq lazım deyil.
-2. **Real peyk məlumatı.** NDVI və sahə sərhədləri indi sabit rəqəmdir.
+4. **Real peyk məlumatı.** NDVI və sahə sərhədləri indi sabit rəqəmdir.
    Sentinel-2 (Copernicus) ilə əvəz olunmalı; FarmScore həmin seriyadan hesablanmalı.
-3. **KYC və maliyyə tənzimləməsi.** Kredit və kart məhsulu bank lisenziyası və ya
+5. **KYC və maliyyə tənzimləməsi.** Kredit və kart məhsulu bank lisenziyası və ya
    partnyor bank tələb edir. Bu, texniki deyil, hüquqi işdir və ən uzun sürəndir.
-4. **Şriftləri öz üzərimizdə saxlamaq.** Sora/Inter indi Google-dan gəlir —
+6. **Şriftləri öz üzərimizdə saxlamaq.** Sora/Inter indi Google-dan gəlir —
    oflayn rejimdə brend şrifti itir və üçüncü tərəfə sorğu gedir.
-5. **Bazar qiymətləri** üçün real mənbə (dövlət statistikası və ya birja).
-6. **Karbon MRV.** Kredit satışı real registr (Verra/Gold Standard) tələb edir.
-7. **Telemetriya və xəta izləmə** — hansı tövsiyələrin tamamlandığını ölçmək
+7. **Bazar qiymətləri** üçün real mənbə (dövlət statistikası və ya birja).
+8. **Karbon MRV.** Kredit satışı real registr (Verra/Gold Standard) tələb edir.
+9. **Telemetriya və xəta izləmə** — hansı tövsiyələrin tamamlandığını ölçmək
    məhsulun dəyərini sübut etmək üçün lazımdır.
 
 ---

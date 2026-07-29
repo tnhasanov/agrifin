@@ -5,3 +5,8 @@ import { beforeEach } from "vitest";
 beforeEach(() => {
   window.localStorage.clear();
 });
+
+// jsdom bu metodu vermir; çat avtomatik sürüşdürmə üçün istifadə edir
+if (typeof window !== "undefined" && !window.HTMLElement.prototype.scrollIntoView) {
+  window.HTMLElement.prototype.scrollIntoView = () => {};
+}

@@ -37,7 +37,7 @@ export default [
     languageOptions: { globals: { ...globals.node, ...globals.vitest } },
   },
   {
-    files: ["scripts/**"],
+    files: ["scripts/**", "api/**"],
     languageOptions: { globals: globals.node },
   },
 ];

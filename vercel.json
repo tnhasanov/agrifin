@@ -1,6 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [{ "source": "/((?!icons|manifest.webmanifest|sw.js|assets).*)", "destination": "/index.html" }],
+  "rewrites": [{ "source": "/((?!api|icons|manifest.webmanifest|sw.js|assets).*)", "destination": "/index.html" }],
+  "functions": {
+    "api/agronom.js": { "maxDuration": 30 }
+  },
   "headers": [
     {
       "source": "/assets/(.*)",

@@ -7,13 +7,35 @@ import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
 import { withCompletion } from "../services/advisor.js";
 
-export function AdvisorScreen() {
+export function AdvisorScreen({ onOpenChat }) {
   const { t } = useI18n();
   const { state, actions } = useStore();
   const recs = withCompletion(state.completedRecs);
 
   return (
     <div className="px-4 pb-4">
+      <SectionTitle>{t("chat.title")}</SectionTitle>
+      <Card
+        onClick={onOpenChat}
+        ariaLabel={t("chat.open")}
+        style={{ background: `linear-gradient(150deg, ${C.pine} 0%, #1B4A2B 100%)`, border: "none" }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="rounded-xl p-2.5" style={{ backgroundColor: "rgba(233,181,74,0.18)" }}>
+            <Icon name="Sprout" size={18} color={C.gold} />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-white" style={{ fontFamily: font.display }}>
+              {t("chat.open")}
+            </p>
+            <p className="mt-0.5 text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>
+              {t("chat.openDesc")}
+            </p>
+          </div>
+          <Icon name="ChevronRight" size={18} color="rgba(255,255,255,0.5)" />
+        </div>
+      </Card>
+
       <SectionTitle>{t("advisor.title")}</SectionTitle>
       <p className="-mt-1 mb-3 px-1 text-xs" style={{ color: C.muted }}>
         {t("advisor.subtitle")}

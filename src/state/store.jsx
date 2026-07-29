@@ -35,10 +35,15 @@ const INITIAL_TXNS = [
   { id: "t4", nameKey: "txn.insurance.name", metaKey: "txn.insurance.meta", amount: -70 },
 ];
 
+// Yaddaşda saxlanan çat tarixçəsinin yuxarı həddi
+const CHAT_LIMIT = 40;
+
 export const initialState = {
   wallet: 7280,
   // null olduqda ilk açılışda yer seçimi paneli göstərilir
   location: null,
+  // Aqronom çatı: mesajlar {role, content} və ya {role, errorKey}
+  chat: { messages: [], crop: null, referral: false },
   creditsSold: false,
   completedRecs: [],
   txns: INITIAL_TXNS,
@@ -94,6 +99,52 @@ export function reducer(state, action) {
         ],
       };
     }
+
+    case "chat/user": {
+      const content = String(action.content ?? "").trim();
+      if (!content) return state;
+      return {
+        ...state,
+        chat: {
+          ...state.chat,
+          referral: false,
+          messages: [...state.chat.messages, { role: "user", content }].slice(-CHAT_LIMIT),
+        },
+      };
+    }
+
+    case "chat/assistant":
+      return {
+        ...state,
+        chat: {
+          ...state.chat,
+          referral: Boolean(action.referral),
+          messages: [
+            ...state.chat.messages,
+            { role: "assistant", content: String(action.content ?? "") },
+          ].slice(-CHAT_LIMIT),
+        },
+      };
+
+    // Xəta mesajı açar kimi saxlanılır ki, dil dəyişəndə düzgün göstərilsin.
+    // Bu mesajlar API-yə tarixçə kimi göndərilmir (bax: AgronomChat).
+    case "chat/error":
+      return {
+        ...state,
+        chat: {
+          ...state.chat,
+          messages: [
+            ...state.chat.messages,
+            { role: "assistant", errorKey: action.errorKey },
+          ].slice(-CHAT_LIMIT),
+        },
+      };
+
+    case "chat/crop":
+      return { ...state, chat: { ...state.chat, crop: action.crop } };
+
+    case "chat/clear":
+      return { ...state, chat: { ...initialState.chat, crop: state.chat.crop } };
 
     case "location/set": {
       if (!isValidLocation(action.location)) return state;
@@ -167,6 +218,12 @@ export function StoreProvider({ children }) {
         dispatch({ type: "location/set", location });
         showToast("toast.locationSelected", { name: location.name });
       },
+      chatUser: (content) => dispatch({ type: "chat/user", content }),
+      chatAssistant: (content, referral) =>
+        dispatch({ type: "chat/assistant", content, referral }),
+      chatError: (errorKey) => dispatch({ type: "chat/error", errorKey }),
+      chatSetCrop: (crop) => dispatch({ type: "chat/crop", crop }),
+      chatClear: () => dispatch({ type: "chat/clear" }),
       resetDemo: () => dispatch({ type: "demo/reset" }),
     }),
     [showToast],
