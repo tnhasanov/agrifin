@@ -182,6 +182,15 @@ export default async function handler(req, res) {
       messages: temiz,
     });
 
+    // Vercel → Deployments → Functions → Logs. `mesaj.model` sorğuya real
+    // cavab verən modeldir — bizim sabitimizin əks-səsi deyil. Token sayları
+    // hər sualın nəyə başa gəldiyini göstərir.
+    console.log(
+      `[agronom] model=${mesaj.model} giris=${mesaj.usage?.input_tokens ?? "?"} ` +
+        `cixis=${mesaj.usage?.output_tokens ?? "?"} ` +
+        `kesden=${mesaj.usage?.cache_read_input_tokens ?? 0}`,
+    );
+
     const cavab = mesaj.content
       .filter((blok) => blok.type === "text")
       .map((blok) => blok.text)

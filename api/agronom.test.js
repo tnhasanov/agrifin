@@ -46,6 +46,8 @@ const makeReq = (body, method = "POST") => ({
 const textResponse = (text) => ({
   content: [{ type: "text", text }],
   stop_reason: "end_turn",
+  model: "claude-sonnet-5",
+  usage: { input_tokens: 1200, output_tokens: 180, cache_read_input_tokens: 900 },
 });
 
 beforeEach(() => {
@@ -183,6 +185,16 @@ describe("api/agronom", () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.aqronomTeklif).toBe(true);
     expect(res.body.cavab).toBeTruthy();
+  });
+
+  it("modeli və token sayını loga yazır", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    mockCreate.mockResolvedValue(textResponse("Cavab"));
+    await handler(makeReq({ messages: [{ role: "user", content: "sual" }] }), makeRes());
+
+    expect(log).toHaveBeenCalledWith(expect.stringContaining("model=claude-sonnet-5"));
+    expect(log).toHaveBeenCalledWith(expect.stringContaining("cixis=180"));
+    log.mockRestore();
   });
 
   it("Anthropic xətasında 502 qaytarır", async () => {
