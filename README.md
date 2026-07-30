@@ -33,6 +33,8 @@ Node 22 tələb olunur (`.nvmrc`).
 ```
 api/
   agronom.js          serverless funksiya — Claude API açarı yalnız burada
+  knowledge.js        aqronomik bilik bazası — aqronom yoxlanışı gözləyir
+  dozaQoruyucu.js     axında doza sızmasını tutan bufer
 src/
   main.jsx            provayderlər + servis işçisi
   App.jsx             qabıq: başlıq, naviqasiya, aktiv ekran
@@ -42,7 +44,6 @@ src/
   components/         Icon, Card, Chip, Sparkline, FarmScoreGauge, ...
   state/store.jsx     reducer + localStorage-da saxlanma
   services/           məlumat mənbələri (hava və aqronom realdır, qalanı nümunə)
-  services/knowledge.js  aqronomik bilik bazası — aqronom yoxlanışı gözləyir
   i18n/               az (əsas), en, ru + açar yoxlayan test
   lib/                format, storage, router, pwa
   theme/tokens.js     rənglər və şriftlər (CSS qarşılığı: index.css @theme)
@@ -132,6 +133,14 @@ sürət/qiymət balansı uyğundur.
 3. **Yenidən deploy et.** Mühit dəyişənləri mövcud build-ə tətbiq olunmur;
    bu addım atlanarsa nasaz açarla eyni görünən xəta alınır.
 
+**Cavab axınla gəlir.** Funksiya NDJSON qaytarır (`{t:"delta"|"replace"|"done"|
+"error"}`), çat isə mətni gəldikcə göstərir — fermer 5–8 saniyə boş ekrana
+baxmır. Doza qoruyucusu buna uyğunlaşdırılıb: mətnin son 48 simvolu heç vaxt
+dərhal göndərilmir, çünki orada yarımçıq doza forması ola bilər. Tam uyğunluq
+yaranan kimi axın dayandırılır və `replace` hadisəsi ekrandakı hər şeyi
+təhlükəsiz mətnlə əvəz edir. Başlıqlar da gec yazılır: ilk parça hazır olana
+qədər funksiya hələ həqiqi 500/502 qaytara bilir.
+
 **Bilməli olduğun iki şey**
 
 - **`npm run dev` çatı işlətmir.** `/api/*` marşrutları yalnız Vercel-də (və ya
@@ -145,12 +154,13 @@ sürət/qiymət balansı uyğundur.
 **Təhlükəsizlik qaydası — preparat və doza verilmir.** Azərbaycanda yalnız
 dövlət qeydiyyatına alınmış preparatların istifadəsi qanunidir və reyestr
 AQTA-dadır (afsa.gov.az). Model reyestri görmür, ona görə preparat adı, doza
-və norma verməsi qadağandır: sistem promptu bunu qadağan edir, serverdə regex
-yoxlaması sızmış dozanı kəsir, bilik bazasının özündə isə doza yazılışı olmadığı
-test ilə yoxlanılır. Cavab problemi adlandırır, müdaxilə SİNFİNİ izah edir və
+və norma verməsi qadağandır: sistem promptu bunu qadağan edir, serverdə
+gecikdirmə buferli yoxlama sızmış dozanı axın ekrana çatmamış kəsir (parçaların
+hansı sərhədlə gəlməsindən asılı olmayaraq — test bütün parça ölçülərini
+yoxlayır), bilik bazasının özündə isə doza yazılışı olmadığı test ilə yoxlanılır. Cavab problemi adlandırır, müdaxilə SİNFİNİ izah edir və
 dilerə/aqronoma yönləndirir.
 
-**Bilik bazası hələ yoxlanmayıb.** `services/knowledge.js` — 10 bitki üzrə
+**Bilik bazası hələ yoxlanmayıb.** `api/knowledge.js` — 10 bitki üzrə
 fenoloji mərhələlər və xəstəlik əlamətləri. Hər bitkidə `yoxlanildi: false`
 bayrağı var və test bunu yoxlayır. İstifadəyə verilməzdən əvvəl bir dəfə
 peşəkar aqronom baxışından keçirilməlidir.

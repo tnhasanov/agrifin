@@ -43,12 +43,15 @@ export function AgronomChat({ onClose }) {
 
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  // Axın gedərkən yığılan mətn. Tamamlananda store-a bir dəfə yazılır —
+  // hər parçada store-u yeniləsək, bütün tətbiq hər hərfdə render olunardı.
+  const [axanMetn, setAxanMetn] = useState("");
   const bottomRef = useRef(null);
   const abortRef = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, busy]);
+  }, [messages, busy, axanMetn]);
 
   // Sorğu YALNIZ komponent sökülərkən dayandırılır. Bunu Escape effekti ilə
   // birləşdirmək olmaz: onClose hər render-də yeni funksiyadır, ona görə o
@@ -76,6 +79,7 @@ export function AgronomChat({ onClose }) {
     actions.chatUser(question);
     setInput("");
     setBusy(true);
+    setAxanMetn("");
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -87,7 +91,13 @@ export function AgronomChat({ onClose }) {
         location,
         lang,
         signal: controller.signal,
+        // Serverin "replace" hadisəsi mətni tam əvəz edə bilər (doza qoruyucusu),
+        // ona görə parçanı əlavə etmirik — hər dəfə tam mətni alırıq.
+        onDelta: (tamMetn) => {
+          if (abortRef.current === controller) setAxanMetn(tamMetn);
+        },
       });
+      // Eyni render-də: axan mətn silinir, tam cavab tarixçəyə düşür — sıçrayış olmur
       actions.chatAssistant(result.answer, result.referral);
     } catch (error) {
       if (error?.name !== "AbortError") {
@@ -95,6 +105,7 @@ export function AgronomChat({ onClose }) {
       }
     } finally {
       setBusy(false);
+      setAxanMetn("");
     }
   };
 
@@ -215,17 +226,37 @@ export function AgronomChat({ onClose }) {
           );
         })}
 
+        {/* Axın gələnə qədər gözləmə göstəricisi, sonra mətnin özü */}
         {busy && (
           <div className="mb-3 flex justify-start">
-            <div
-              className="flex items-center gap-2 rounded-2xl px-3 py-2"
-              style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}
-            >
-              <Icon name="LoaderCircle" size={13} color={C.muted} />
-              <span className="text-xs" style={{ color: C.muted }}>
-                {t("chat.thinking")}
-              </span>
-            </div>
+            {axanMetn ? (
+              <div
+                aria-live="polite"
+                className="rounded-2xl px-3 py-2 text-xs leading-relaxed"
+                style={{
+                  maxWidth: "85%",
+                  whiteSpace: "pre-wrap",
+                  backgroundColor: C.card,
+                  color: C.ink,
+                  border: `1px solid ${C.line}`,
+                }}
+              >
+                {axanMetn}
+                <span className="ml-0.5 animate-pulse" style={{ color: C.muted }}>
+                  ▍
+                </span>
+              </div>
+            ) : (
+              <div
+                className="flex items-center gap-2 rounded-2xl px-3 py-2"
+                style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}
+              >
+                <Icon name="LoaderCircle" size={13} color={C.muted} />
+                <span className="text-xs" style={{ color: C.muted }}>
+                  {t("chat.thinking")}
+                </span>
+              </div>
+            )}
           </div>
         )}
 

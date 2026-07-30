@@ -4,9 +4,34 @@ import userEvent from "@testing-library/user-event";
 import App from "../../App.jsx";
 import { renderApp, seedLocation, WEATHER_FIXTURE } from "../../test/render.jsx";
 
+/** Server NDJSON axını göndərir — hər parça ayrı oxunuşda gəlir */
+function ndjsonResponse(parcalar) {
+  const encoder = new TextEncoder();
+  let i = 0;
+  return {
+    ok: true,
+    status: 200,
+    body: {
+      getReader: () => ({
+        read: async () =>
+          i < parcalar.length
+            ? { done: false, value: encoder.encode(parcalar[i++]) }
+            : { done: true, value: undefined },
+      }),
+    },
+  };
+}
+
+const setirler = (...hadiseler) => hadiseler.map((h) => `${JSON.stringify(h)}\n`);
+
+/**
+ * `parcalar` verilməyibsə cavab bir hadisədə gəlir. Verilibsə hər sətir ayrı
+ * oxunuşdur — mətnin tədricən görünməsini yoxlamaq üçün.
+ */
 function stubApi({
   cavab = "Bu, sarı pas ola bilər.",
   aqronomTeklif = false,
+  parcalar = null,
   fail = false,
   status = 502,
 } = {}) {
@@ -14,8 +39,11 @@ function stubApi({
     "fetch",
     vi.fn((url) => {
       if (String(url).includes("/api/agronom")) {
-        if (fail) return Promise.resolve({ ok: false, status, json: () => Promise.resolve({}) });
-        return Promise.resolve({ ok: true, json: () => Promise.resolve({ cavab, aqronomTeklif }) });
+        if (fail) return Promise.resolve({ ok: false, status });
+        const hadiseler = (parcalar ?? [cavab]).map((v) => ({ t: "delta", v }));
+        return Promise.resolve(
+          ndjsonResponse(setirler(...hadiseler, { t: "done", aqronomTeklif })),
+        );
       }
       // hava sorğusu
       return Promise.resolve({ ok: true, json: () => Promise.resolve(WEATHER_FIXTURE) });
@@ -73,6 +101,89 @@ describe("Aqronom çatı", () => {
       role: "user",
       content: "Suvarmanı nə vaxt etməliyəm?",
     });
+  });
+
+  // Axının bütün mənası budur: fermer cavabın tamamlanmasını gözləmir
+  it("cavab tamamlanmadan mətni parça-parça göstərir", async () => {
+    let davamEt;
+    const gozle = new Promise((resolve) => {
+      davamEt = resolve;
+    });
+    const encoder = new TextEncoder();
+    const parcalar = setirler(
+      { t: "delta", v: "Bu, sarı pas " },
+      { t: "delta", v: "ola bilər." },
+      { t: "done", aqronomTeklif: false },
+    );
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url) => {
+        if (!String(url).includes("/api/agronom")) {
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(WEATHER_FIXTURE) });
+        }
+        let i = 0;
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          body: {
+            getReader: () => ({
+              // İkinci parçadan əvvəl dayanır — birinci artıq ekranda olmalıdır
+              read: async () => {
+                if (i === 1) await gozle;
+                return i < parcalar.length
+                  ? { done: false, value: encoder.encode(parcalar[i++]) }
+                  : { done: true, value: undefined };
+              },
+            }),
+          },
+        });
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp(<App />);
+    await openChat(user);
+    await user.click(screen.getByRole("button", { name: "Suvarmanı nə vaxt etməliyəm?" }));
+
+    // Axın hələ davam edir, amma ilk parça göründü
+    await waitFor(() => expect(screen.getByText(/Bu, sarı pas/)).toBeInTheDocument());
+    expect(screen.queryByText("ola bilər.")).not.toBeInTheDocument();
+
+    davamEt();
+    await waitFor(() =>
+      expect(screen.getByText("Bu, sarı pas ola bilər.")).toBeInTheDocument(),
+    );
+    // Yarımçıq qabarcıq tam cavabla əvəz olunub, iki dənə qalmayıb
+    expect(screen.getAllByText(/sarı pas/)).toHaveLength(1);
+  });
+
+  it("ilk parça gələnə qədər gözləmə göstəricisi görünür", async () => {
+    let davamEt;
+    const gozle = new Promise((resolve) => {
+      davamEt = resolve;
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url) => {
+        if (!String(url).includes("/api/agronom")) {
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(WEATHER_FIXTURE) });
+        }
+        return gozle.then(() =>
+          ndjsonResponse(setirler({ t: "delta", v: "Cavab" }, { t: "done" })),
+        );
+      }),
+    );
+
+    const user = userEvent.setup();
+    renderApp(<App />);
+    await openChat(user);
+    await user.click(screen.getByRole("button", { name: "Suvarmanı nə vaxt etməliyəm?" }));
+
+    await waitFor(() => expect(screen.getByText("Baxıram…")).toBeInTheDocument());
+    davamEt();
+    await waitFor(() => expect(screen.getByText("Cavab")).toBeInTheDocument());
+    expect(screen.queryByText("Baxıram…")).not.toBeInTheDocument();
   });
 
   it("bitki seçimi sorğuya düşür", async () => {
@@ -198,7 +309,9 @@ describe("Aqronom çatı", () => {
                 reject(error);
                 return;
               }
-              resolve({ ok: true, json: () => Promise.resolve({ cavab: "Gecikmiş cavab" }) });
+              resolve(
+                ndjsonResponse(setirler({ t: "delta", v: "Gecikmiş cavab" }, { t: "done" })),
+              );
             }, 40);
           });
         }
