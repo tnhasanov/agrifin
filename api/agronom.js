@@ -5,7 +5,7 @@
 // Qeyd: `npm run dev` bu marşrutu vermir — /api/* yalnız Vercel-də (və ya
 // `vercel dev`-də) işləyir. Lokal Vite serverində çat 404 qaytaracaq.
 import Anthropic from "@anthropic-ai/sdk";
-import { BITKILER, kontekstQur } from "../src/services/knowledge.js";
+import { BITKILER, kontekstQur } from "./knowledge.js";
 
 // Sonnet: qısa aqronomik cavablar üçün sürət/qiymət balansı Opus-dan uyğundur.
 const MODEL = "claude-sonnet-5";
@@ -101,9 +101,23 @@ const eded = (value, min, max) =>
     ? value
     : null;
 
+/**
+ * Quraşdırma yoxlaması: brauzerin ünvan sətrindən GET açanda açarın
+ * qurulub-qurulmadığını göstərir. Yalnız bul dəyər və say — açarın özü,
+ * dəyişənlərin adları və heç bir hissəsi qaytarılmır.
+ */
+function diaqnostika() {
+  return {
+    acarQurulub: Boolean(process.env.ANTHROPIC_API_KEY),
+    anthropicDeyisenSayi: Object.keys(process.env).filter((name) =>
+      /anthropic|claude/i.test(name),
+    ).length,
+  };
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Yalnız POST" });
+    return res.status(405).json({ error: "Yalnız POST", ...diaqnostika() });
   }
   if (!process.env.ANTHROPIC_API_KEY) {
     return res.status(500).json({ error: "Server konfiqurasiyası tamamlanmayıb." });

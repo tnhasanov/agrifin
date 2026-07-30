@@ -5,8 +5,9 @@ import {
   IQLIM_ZONALARI,
   kontekstQur,
   zonaTap,
-} from "./knowledge.js";
+} from "../../api/knowledge.js";
 import { DISTRICTS } from "./location.js";
+import { CROP_KEYS } from "./crops.js";
 
 describe("bilik bazası — struktur", () => {
   const crops = Object.entries(BITKILER);
@@ -52,6 +53,11 @@ describe("bilik bazası — struktur", () => {
     expect(BITKI_SECIMI.map((item) => item.key).sort()).toEqual(
       Object.keys(BITKILER).sort(),
     );
+  });
+
+  it("müştəridəki CROP_KEYS bilik bazası ilə eyni sıradadır", () => {
+    // Bilik bazası serverdə, çiplər müştəridədir — ikisi ayrılmamalıdır
+    expect(CROP_KEYS).toEqual(Object.keys(BITKILER));
   });
 
   it("hər bitki hələ aqronom yoxlanışı gözləyir (bayraq aşağı düşəndə bu test yenilənməlidir)", () => {

@@ -4,7 +4,7 @@ import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { useStore } from "../../state/store.jsx";
 import { askAgronomist } from "../../services/agronom.js";
-import { BITKI_SECIMI } from "../../services/knowledge.js";
+import { CROP_KEYS } from "../../services/crops.js";
 import { DEFAULT_LOCATION } from "../../services/location.js";
 
 const SAMPLE_KEYS = ["chat.sample.1", "chat.sample.2", "chat.sample.3", "chat.sample.4"];
@@ -146,13 +146,13 @@ export function AgronomChat({ onClose }) {
         className="flex gap-2 overflow-x-auto px-3 py-2"
         style={{ backgroundColor: C.card, borderBottom: `1px solid ${C.line}` }}
       >
-        {BITKI_SECIMI.map((item) => {
-          const selected = crop === item.key;
+        {CROP_KEYS.map((key) => {
+          const selected = crop === key;
           return (
             <button
-              key={item.key}
+              key={key}
               type="button"
-              onClick={() => actions.chatSetCrop(item.key)}
+              onClick={() => actions.chatSetCrop(key)}
               aria-pressed={selected}
               className="rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap"
               style={{
@@ -160,7 +160,7 @@ export function AgronomChat({ onClose }) {
                 color: selected ? "#fff" : C.muted,
               }}
             >
-              {t(`kbcrop.${item.key}`)}
+              {t(`kbcrop.${key}`)}
             </button>
           );
         })}

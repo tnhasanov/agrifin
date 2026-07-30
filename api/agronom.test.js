@@ -64,6 +64,25 @@ describe("api/agronom", () => {
     expect(res.statusCode).toBe(405);
   });
 
+  it("GET quraşdırma vəziyyətini göstərir, açarı sızdırmadan", async () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "sk-super-secret-value");
+    const res = makeRes();
+    await handler(makeReq({}, "GET"), res);
+
+    expect(res.body.acarQurulub).toBe(true);
+    expect(res.body.anthropicDeyisenSayi).toBeGreaterThan(0);
+    // Açarın heç bir hissəsi cavabda olmamalıdır
+    expect(JSON.stringify(res.body)).not.toContain("sk-super-secret-value");
+    expect(JSON.stringify(res.body)).not.toContain("secret");
+  });
+
+  it("açar yoxdursa GET bunu açıq göstərir", async () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "");
+    const res = makeRes();
+    await handler(makeReq({}, "GET"), res);
+    expect(res.body.acarQurulub).toBe(false);
+  });
+
   it("açar yoxdursa 500 qaytarır", async () => {
     vi.stubEnv("ANTHROPIC_API_KEY", "");
     const res = makeRes();
