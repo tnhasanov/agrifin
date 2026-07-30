@@ -40,12 +40,12 @@ src/
   App.jsx             qabıq: başlıq, naviqasiya, aktiv ekran
   routes.js           yolların vahid siyahısı
   screens/            beş ekran — yalnız göstərmə məntiqi
-  features/           kredit paneli, yer seçimi, hava zolağı, aqronom çatı
+  features/           ilk açılış, kredit paneli, yer seçimi, hava, aqronom çatı
   components/         Icon, Card, Chip, Sparkline, FarmScoreGauge, ...
   state/store.jsx     reducer + localStorage-da saxlanma
   services/           məlumat mənbələri (hava və aqronom realdır, qalanı nümunə)
   i18n/               az (əsas), en, ru + açar yoxlayan test
-  lib/                format, storage, router, pwa
+  lib/                format, storage, router, pwa, analitika
   theme/tokens.js     rənglər və şriftlər (CSS qarşılığı: index.css @theme)
 ```
 
@@ -117,6 +117,32 @@ uyğunluğunu yoxlayır.
 
 ---
 
+## İlk açılış (Tier 0)
+
+İki addım, iki toxunuş: rayon və bitki. Nə hesab, nə telefon nömrəsi, nə
+şəxsiyyət — heç biri soruşulmur, hər addım da keçilə bilir.
+
+Səbəb ölçülərdir, zövq deyil. Fintex qeydiyyatında orta imtina 63%-dir,
+3 dəqiqədən uzun axını isə istifadəçilərin 70%-i yarımçıq atır. Aqronom
+çatı və hava proqnozu şəxsiyyət bilmədən tam işləyir, ona görə onları
+kimlik yoxlamasının arxasına qoymağın mənası yoxdur: fermer dəyəri əvvəl
+görməlidir. Brauzerdə ölçülən müddət: **0.4 saniyə**.
+
+Sonrakı pillələr (hazırda YOXDUR, plan üçün bax: 3-cü mərhələ):
+
+| Pillə | Nə verir | Nə açır |
+|---|---|---|
+| 0 — anonim | rayon + bitki | çat, hava — **qurulub** |
+| 1 — SİMA İmza | təsdiqlənmiş şəxsiyyət | cihazlar arasında saxlanma |
+| 2 — EKTİS | qeydiyyatdan keçmiş sahələr | həqiqi sahə, həqiqi NDVI |
+| 3 — tam KYC | bank tərəfdaşı | kredit müraciəti |
+
+`lib/analytics.js` hər addımı qeyd edir. Heç yerə göndərilmir — hadisələr
+yaddaşdadır. Qıfı ölçmədən düzəltmək mümkün deyil, sonradan əlavə etmək isə
+hər ekrana toxunmaq deməkdir.
+
+---
+
 ## Aqronom köməkçisi
 
 Fermer əlamətləri təsvir edir, cavab isə onun rayonunun iqlim zonası, cari
@@ -176,12 +202,20 @@ Prioritet sırası ilə:
    paylaşılan hədd, sonra isə hesaba bağlı kvota lazımdır.
 2. **Bilik bazasının aqronom yoxlanışı.** 10 bitki üzrə mərhələ və əlamət
    məlumatı yoxlanmalı, `yoxlanildi` bayraqları qaldırılmalıdır.
-3. **Backend və autentifikasiya.** Hazırda bütün vəziyyət brauzerdədir.
-   Real məhsul üçün: hesab, SMS/ASAN ilə giriş, server tərəfdə saxlanma.
+3. **Tier 1 — SİMA İmza ilə giriş.** SİMA pulsuzdur, qeydiyyat tətbiqin
+   içində ~1 dəqiqədir və altı bank onu artıq inteqrasiya edib. Sənəd şəkli
+   istənilmir — bu vacibdir, çünki sənədi yenidən yükləməyə məcbur olan
+   istifadəçi 3 dəfə çox imtina edir. AzInTelecom ilə müqavilə tələb olunur.
+4. **Tier 2 — EKTİS inteqrasiyası.** Kənd Təsərrüfatı Nazirliyinin sistemində
+   435 mindən çox fermer və 364 min hektar bəyan edilmiş əkin var. Açıq API
+   yoxdur — kurum səviyyəsində razılaşma lazımdır. Əsas sual: EKTİS sahənin
+   HƏNDƏSƏSİNİ (sərhəd konturunu) saxlayır, yoxsa yalnız hektarı? Cavab
+   peyk yol xəritəsinin ölçüsünü müəyyən edir.
+5. **Backend və saxlanma.** Hazırda bütün vəziyyət brauzerdədir.
    `services/` qovluğu bu keçid üçün hazırdır — ekranlara toxunmaq lazım deyil.
-4. **Real peyk məlumatı.** NDVI və sahə sərhədləri indi sabit rəqəmdir.
+6. **Real peyk məlumatı.** NDVI və sahə sərhədləri indi sabit rəqəmdir.
    Sentinel-2 (Copernicus) ilə əvəz olunmalı; FarmScore həmin seriyadan hesablanmalı.
-5. **KYC və maliyyə tənzimləməsi.** Kredit və kart məhsulu bank lisenziyası və ya
+7. **KYC və maliyyə tənzimləməsi.** Kredit və kart məhsulu bank lisenziyası və ya
    partnyor bank tələb edir. Bu, texniki deyil, hüquqi işdir və ən uzun sürəndir.
 6. **Şriftləri öz üzərimizdə saxlamaq.** Sora/Inter indi Google-dan gəlir —
    oflayn rejimdə brend şrifti itir və üçüncü tərəfə sorğu gedir.

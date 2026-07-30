@@ -224,4 +224,13 @@ export default {
 
   "date.aug15.short": "15 Aug",
   "date.aug15.long": "15 August",
+
+  "onb.title": "Getting started",
+  "onb.step": "Step {current} of {total}",
+  "onb.back": "Back",
+  "onb.location.title": "Where is your field?",
+  "onb.location.subtitle": "Weather and irrigation advice are calculated from this.",
+  "onb.crop.title": "What are you growing?",
+  "onb.crop.subtitle": "We will tailor advice for {district} to it.",
+  "onb.crop.skip": "I have not decided yet",
 };

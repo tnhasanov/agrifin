@@ -5,13 +5,25 @@ import { RouterProvider } from "../lib/router.jsx";
 import { DEFAULT_LOCATION } from "../services/location.js";
 
 /**
- * Yer seçilmiş kimi göstərir. Bunu etməsək yer seçimi paneli ilk açılışda
- * qalxır və digər testlərdə ekranı örtür.
+ * İlk açılış keçilmiş kimi göstərir. Bunu etməsək qeydiyyat axını qalxır
+ * və digər testlərdə ekranı örtür.
  */
 export function seedLocation(location = DEFAULT_LOCATION) {
+  seedState({ location, onboarded: true });
+}
+
+/**
+ * İlk açılış keçilib, amma rayon seçilməyib. Yer seçimi panelinin
+ * "hələ seçilməyib" davranışını yoxlamaq üçün.
+ */
+export function seedOnboarded() {
+  seedState({ location: null, onboarded: true });
+}
+
+export function seedState(state) {
   window.localStorage.setItem(
     `agrifin:${PERSIST_KEY}`,
-    JSON.stringify({ version: PERSIST_VERSION, state: { location } }),
+    JSON.stringify({ version: PERSIST_VERSION, state }),
   );
 }
 

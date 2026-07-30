@@ -4,6 +4,7 @@ import { BottomNav } from "./components/BottomNav.jsx";
 import { Toast } from "./components/Toast.jsx";
 import { LoanSheet } from "./features/loan/LoanSheet.jsx";
 import { LocationSheet } from "./features/location/LocationSheet.jsx";
+import { Onboarding } from "./features/onboarding/Onboarding.jsx";
 import { AgronomChat } from "./features/agronom/AgronomChat.jsx";
 import { HomeScreen } from "./screens/HomeScreen.jsx";
 import { AdvisorScreen } from "./screens/AdvisorScreen.jsx";
@@ -28,8 +29,9 @@ export default function App() {
   const { state, actions } = useStore();
   const [loanOpen, setLoanOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
-  // Yer heç vaxt seçilməyibsə panel ilk açılışda özü qalxır
-  const [locationOpen, setLocationOpen] = useState(() => state.location === null);
+  // Yer seçimi paneli sonradan rayonu dəyişmək üçündür; ilk açılışda
+  // qeydiyyat axını bu işi görür
+  const [locationOpen, setLocationOpen] = useState(false);
   const scrollRef = useRef(null);
 
   const route = routeForPath(path);
@@ -55,29 +57,38 @@ export default function App() {
         className="az-frame relative flex w-full flex-col overflow-hidden"
         style={{ backgroundColor: C.mist }}
       >
-        <AppHeader />
+        {/* İlk açılışda tətbiq ALTDA render olunmur: rayon seçilməmiş hava
+            sorğusu göndərmək mənasızdır və ekran oxuyucu iki dəfə eyni
+            düymələri görür. */}
+        {!state.onboarded ? (
+          <Onboarding />
+        ) : (
+          <>
+            <AppHeader />
 
-        <main ref={scrollRef} className="flex-1 overflow-y-auto">
-          <Screen
-            onOpenLoan={() => setLoanOpen(true)}
-            onPickLocation={() => setLocationOpen(true)}
-            onOpenChat={() => setChatOpen(true)}
-          />
-        </main>
+            <main ref={scrollRef} className="flex-1 overflow-y-auto">
+              <Screen
+                onOpenLoan={() => setLoanOpen(true)}
+                onPickLocation={() => setLocationOpen(true)}
+                onOpenChat={() => setChatOpen(true)}
+              />
+            </main>
 
-        <Toast />
-        <BottomNav />
+            <Toast />
+            <BottomNav />
 
-        {loanOpen && <LoanSheet onClose={closeLoan} />}
+            {loanOpen && <LoanSheet onClose={closeLoan} />}
 
-        {chatOpen && <AgronomChat onClose={closeChat} />}
+            {chatOpen && <AgronomChat onClose={closeChat} />}
 
-        {locationOpen && (
-          <LocationSheet
-            current={state.location}
-            onSelect={actions.setLocation}
-            onClose={closeLocation}
-          />
+            {locationOpen && (
+              <LocationSheet
+                current={state.location}
+                onSelect={actions.setLocation}
+                onClose={closeLocation}
+              />
+            )}
+          </>
         )}
       </div>
     </div>

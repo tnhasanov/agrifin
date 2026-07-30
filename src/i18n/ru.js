@@ -225,4 +225,13 @@ export default {
 
   "date.aug15.short": "15 авг",
   "date.aug15.long": "15 августа",
+
+  "onb.title": "Начало работы",
+  "onb.step": "Шаг {current} из {total}",
+  "onb.back": "Назад",
+  "onb.location.title": "Где находится ваше поле?",
+  "onb.location.subtitle": "По нему рассчитываются прогноз погоды и советы по поливу.",
+  "onb.crop.title": "Что вы выращиваете?",
+  "onb.crop.subtitle": "Мы подстроим советы для {district} под эту культуру.",
+  "onb.crop.skip": "Ещё не решил",
 };

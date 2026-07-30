@@ -223,4 +223,13 @@ export default {
 
   "date.aug15.short": "15 avq",
   "date.aug15.long": "15 avqustda",
+
+  "onb.title": "Başlanğıc",
+  "onb.step": "Addım {current} / {total}",
+  "onb.back": "Geri",
+  "onb.location.title": "Sahəniz haradadır?",
+  "onb.location.subtitle": "Hava proqnozu və suvarma tövsiyələri buna görə hesablanır.",
+  "onb.crop.title": "Nə əkirsiniz?",
+  "onb.crop.subtitle": "{district} üçün tövsiyələri buna uyğunlaşdıracağıq.",
+  "onb.crop.skip": "Hələ qərar verməmişəm",
 };
