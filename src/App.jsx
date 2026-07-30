@@ -1,10 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { AppHeader } from "./components/AppHeader.jsx";
 import { BottomNav } from "./components/BottomNav.jsx";
 import { Toast } from "./components/Toast.jsx";
 import { LoanSheet } from "./features/loan/LoanSheet.jsx";
 import { LocationSheet } from "./features/location/LocationSheet.jsx";
 import { Onboarding } from "./features/onboarding/Onboarding.jsx";
+
+// Xəritə (Leaflet) yalnız sahə çəkiləndə yüklənir — əsas paketə düşmür
+const FieldDraw = lazy(() =>
+  import("./features/field/FieldDraw.jsx").then((m) => ({ default: m.FieldDraw })),
+);
 import { AgronomChat } from "./features/agronom/AgronomChat.jsx";
 import { HomeScreen } from "./screens/HomeScreen.jsx";
 import { AdvisorScreen } from "./screens/AdvisorScreen.jsx";
@@ -29,6 +34,7 @@ export default function App() {
   const { state, actions } = useStore();
   const [loanOpen, setLoanOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [fieldOpen, setFieldOpen] = useState(false);
   // Yer seçimi paneli sonradan rayonu dəyişmək üçündür; ilk açılışda
   // qeydiyyat axını bu işi görür
   const [locationOpen, setLocationOpen] = useState(false);
@@ -40,6 +46,7 @@ export default function App() {
   // Sabit identifikator: alt komponentlərdəki effektlər hər render-də
   // yenidən qurulmasın
   const closeChat = useCallback(() => setChatOpen(false), []);
+  const closeField = useCallback(() => setFieldOpen(false), []);
   const closeLoan = useCallback(() => setLoanOpen(false), []);
   const closeLocation = useCallback(() => setLocationOpen(false), []);
 
@@ -71,6 +78,7 @@ export default function App() {
                 onOpenLoan={() => setLoanOpen(true)}
                 onPickLocation={() => setLocationOpen(true)}
                 onOpenChat={() => setChatOpen(true)}
+                onDrawField={() => setFieldOpen(true)}
               />
             </main>
 
@@ -80,6 +88,21 @@ export default function App() {
             {loanOpen && <LoanSheet onClose={closeLoan} />}
 
             {chatOpen && <AgronomChat onClose={closeChat} />}
+
+            {fieldOpen && (
+              <Suspense fallback={null}>
+                <FieldDraw
+                  location={state.location}
+                  existing={state.sahe}
+                  onSave={(sahe, xeberdarlıqAcari) => {
+                    actions.setSahe(sahe);
+                    if (xeberdarlıqAcari) actions.showToast(xeberdarlıqAcari);
+                    setFieldOpen(false);
+                  }}
+                  onClose={closeField}
+                />
+              </Suspense>
+            )}
 
             {locationOpen && (
               <LocationSheet

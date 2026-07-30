@@ -11,11 +11,12 @@ import * as storage from "../lib/storage.js";
 import { FARM, LOAN_TERMS, computeRepayment } from "../services/farm.js";
 import { CARBON, carbonPayout } from "../services/carbon.js";
 import { isValidLocation, readLegacyLocation } from "../services/location.js";
+import { duzgunSahe } from "../services/geo.js";
 
 export const PERSIST_KEY = "state";
 // Saxlanan formanı dəyişəndə bu rəqəmi artırın və MIQRASIYALAR-a keçid yazın.
 // Keçid yoxdursa köhnə məlumat səssizcə atılır.
-export const PERSIST_VERSION = 3;
+export const PERSIST_VERSION = 4;
 
 /**
  * Köhnə versiyadan yeniyə keçid. Fermerdən onsuz da bildiyimiz şeyi
@@ -25,6 +26,8 @@ const MIQRASIYALAR = {
   // 2 → 3: ilk açılış axını əlavə olundu. Rayonu artıq seçmiş fermer
   // qeydiyyatı keçmiş sayılır — ona ilk açılış ekranı göstərilmir.
   2: (state) => ({ ...state, onboarded: isValidLocation(state.location) }),
+  // 3 → 4: fermerin öz çəkdiyi sahə konturu əlavə olundu
+  3: (state) => ({ ...state, sahe: null }),
 };
 
 function miqrasiyaEt(saved) {
@@ -65,6 +68,8 @@ export const initialState = {
   // false olduqda ilk açılışda qeydiyyat axını göstərilir
   onboarded: false,
   location: null,
+  // Fermerin peyk şəklində çəkdiyi sahə: {noqteler: [[lat,lon],...], hektar}
+  sahe: null,
   // Aqronom çatı: mesajlar {role, content} və ya {role, errorKey}
   chat: { messages: [], crop: null, referral: false },
   creditsSold: false,
@@ -177,6 +182,13 @@ export function reducer(state, action) {
     case "onboarding/finish":
       return { ...state, onboarded: true };
 
+    case "sahe/set":
+      if (!duzgunSahe(action.sahe)) return state;
+      return { ...state, sahe: action.sahe };
+
+    case "sahe/clear":
+      return { ...state, sahe: null };
+
     case "toast/show":
       return { ...state, toast: { key: action.key, vars: action.vars ?? null } };
 
@@ -203,6 +215,9 @@ function loadPersisted() {
 
   // Toast efemer UI-dır — yenidən yüklənəndə göstərilməməlidir.
   const base = saxlanan ? { ...initialState, ...saxlanan, toast: null } : initialState;
+
+  // Zədələnmiş sahə konturunu (əl ilə pozulmuş localStorage) yükləmirik
+  if (base.sahe && !duzgunSahe(base.sahe)) base.sahe = null;
 
   // Köhnə prototipdə yer ayrı açarda saxlanılırdı — yenidən soruşmuruq
   if (!isValidLocation(base.location)) {
@@ -256,6 +271,11 @@ export function StoreProvider({ children }) {
       chatSetCrop: (crop) => dispatch({ type: "chat/crop", crop }),
       chatClear: () => dispatch({ type: "chat/clear" }),
       finishOnboarding: () => dispatch({ type: "onboarding/finish" }),
+      setSahe: (sahe) => {
+        dispatch({ type: "sahe/set", sahe });
+        showToast("toast.fieldSaved", { hektar: { number: sahe.hektar } });
+      },
+      clearSahe: () => dispatch({ type: "sahe/clear" }),
       resetDemo: () => dispatch({ type: "demo/reset" }),
     }),
     [showToast],

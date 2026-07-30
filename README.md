@@ -40,7 +40,7 @@ src/
   App.jsx             qabıq: başlıq, naviqasiya, aktiv ekran
   routes.js           yolların vahid siyahısı
   screens/            beş ekran — yalnız göstərmə məntiqi
-  features/           ilk açılış, kredit paneli, yer seçimi, hava, aqronom çatı
+  features/           ilk açılış, sahə çəkmə, kredit paneli, yer, hava, çat
   components/         Icon, Card, Chip, Sparkline, FarmScoreGauge, ...
   state/store.jsx     reducer + localStorage-da saxlanma
   services/           məlumat mənbələri (hava və aqronom realdır, qalanı nümunə)
@@ -143,6 +143,30 @@ hər ekrana toxunmaq deməkdir.
 
 ---
 
+## Sahə çəkmə
+
+Fermer peyk şəklində sahəsinin künclərinə toxunub konturu çəkir; sahə hektarla
+canlı hesablanır və saxlananda əsas ekrandaki nümunə rəqəmi (6.5 ha) əvəz edir.
+Bu, FarmScore-un peyk yolunun birinci addımıdır: NDVI yalnız konturu bilinən
+sahə üçün hesablana bilər.
+
+Üç texniki qərar:
+
+- **Peyk təsviri, küçə xəritəsi yox** (Esri World Imagery). Kənddə küçə
+  xəritəsi boş bej düzbucaqlıdır — fermer sahəsini yalnız peyk şəklində tanıyır.
+- **Sahə sferik düsturla hesablanır** (`services/geo.js`). Dərəcələri düz
+  müstəvi saymaq 40°N-də sahəni ~30% şişirdir; kredit limiti hektara bağlı
+  olacağı üçün bu, qrafik xətası deyil, maliyyə xətasıdır. Test planar düsturun
+  verəcəyi səhv cavabı açıq şəkildə istisna edir.
+- **Leaflet yalnız bu ekranda yüklənir** (~43 kB gzip ayrıca parça) — sahə
+  çəkməyən fermer xəritə kitabxanasının yükünü heç vaxt almır.
+
+Yoxlamalar: minimum 3 künc, öz-özünü kəsən kontur rədd edilir (papyon
+formasının sahəsi mənasızdır), 0.05 ha-dan kiçik və 1000 ha-dan böyük kontur
+rədd edilir, seçilmiş rayondan 150 km-dən uzaq sahəyə xəbərdarlıq verilir.
+
+---
+
 ## Aqronom köməkçisi
 
 Fermer əlamətləri təsvir edir, cavab isə onun rayonunun iqlim zonası, cari
@@ -213,8 +237,9 @@ Prioritet sırası ilə:
    peyk yol xəritəsinin ölçüsünü müəyyən edir.
 5. **Backend və saxlanma.** Hazırda bütün vəziyyət brauzerdədir.
    `services/` qovluğu bu keçid üçün hazırdır — ekranlara toxunmaq lazım deyil.
-6. **Real peyk məlumatı.** NDVI və sahə sərhədləri indi sabit rəqəmdir.
-   Sentinel-2 (Copernicus) ilə əvəz olunmalı; FarmScore həmin seriyadan hesablanmalı.
+6. **Real peyk məlumatı.** Sahə konturu artıq fermerin özündən gəlir; NDVI
+   hələ sabit rəqəmdir. Növbəti addım: konturu Sentinel-2-yə (Copernicus)
+   göndərib NDVI seriyası almaq; FarmScore həmin seriyadan hesablanmalı.
 7. **KYC və maliyyə tənzimləməsi.** Kredit və kart məhsulu bank lisenziyası və ya
    partnyor bank tələb edir. Bu, texniki deyil, hüquqi işdir və ən uzun sürəndir.
 6. **Şriftləri öz üzərimizdə saxlamaq.** Sora/Inter indi Google-dan gəlir —
