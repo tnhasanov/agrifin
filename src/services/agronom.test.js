@@ -39,6 +39,69 @@ beforeEach(() => {
   vi.unstubAllGlobals();
 });
 
+// Bərdə rayon mərkəzindən ~15 km şimalda çəkilmiş sahə
+const SAHE = {
+  hektar: 6.5,
+  noqteler: [
+    [40.5, 47.2],
+    [40.5023, 47.2],
+    [40.5023, 47.2029],
+    [40.5, 47.2029],
+  ],
+};
+
+describe("askAgronomist — sahəyə uyğunluq", () => {
+  const uğurluCavab = () =>
+    ndjsonResponse(setirler({ t: "delta", v: "Cavab" }, { t: "done" }));
+
+  it("sahə çəkilibsə havanı SAHƏNİN koordinatı üçün alır", async () => {
+    const { fetchForecast } = await import("./weather.js");
+    fetchForecast.mockClear();
+    vi.stubGlobal("fetch", vi.fn(async () => uğurluCavab()));
+
+    await askAgronomist({ ...SORGU, sahe: SAHE });
+
+    const cagiris = fetchForecast.mock.calls[0][0];
+    // Rayon mərkəzi deyil (40.37, 47.13), sahənin mərkəzi
+    expect(cagiris.lat).toBeCloseTo(40.5012, 3);
+    expect(cagiris.lon).toBeCloseTo(47.2015, 3);
+  });
+
+  it("sahə yoxdursa rayon mərkəzini işlədir", async () => {
+    const { fetchForecast } = await import("./weather.js");
+    fetchForecast.mockClear();
+    vi.stubGlobal("fetch", vi.fn(async () => uğurluCavab()));
+
+    await askAgronomist(SORGU);
+
+    const cagiris = fetchForecast.mock.calls[0][0];
+    expect(cagiris.lat).toBe(SORGU.location.lat);
+    expect(cagiris.lon).toBe(SORGU.location.lon);
+  });
+
+  it("sahənin ölçüsünü və hava dəqiqliyini serverə göndərir", async () => {
+    const fetchMock = vi.fn(async () => uğurluCavab());
+    vi.stubGlobal("fetch", fetchMock);
+
+    await askAgronomist({ ...SORGU, sahe: SAHE });
+
+    const yuk = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(yuk.sahe).toEqual({ hektar: 6.5 });
+    expect(yuk.havaDeqiq).toBe(true);
+  });
+
+  it("sahə yoxdursa ölçü göndərilmir və dəqiqlik iddia edilmir", async () => {
+    const fetchMock = vi.fn(async () => uğurluCavab());
+    vi.stubGlobal("fetch", fetchMock);
+
+    await askAgronomist(SORGU);
+
+    const yuk = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(yuk.sahe).toBeUndefined();
+    expect(yuk.havaDeqiq).toBe(false);
+  });
+});
+
 describe("askAgronomist", () => {
   it("deltaları toplayır və onDelta-ya toplanmış mətni verir", async () => {
     vi.stubGlobal(

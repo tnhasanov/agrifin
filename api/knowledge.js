@@ -317,7 +317,7 @@ ağ qanadlı = whitefly | sünə = sunn pest
 // Bota veriləcək konteksti yığır — yalnız lazım olan bitki bloku
 // --------------------------------------------------------------------------
 
-export function kontekstQur({ bitkiKey, rayon, ay, hava, ndvi }) {
+export function kontekstQur({ bitkiKey, rayon, ay, hava, ndvi, sahe, havaDeqiq }) {
   const zona = zonaTap(rayon);
   const b = BITKILER[bitkiKey];
 
@@ -325,9 +325,17 @@ export function kontekstQur({ bitkiKey, rayon, ay, hava, ndvi }) {
   mətn += `Rayon: ${rayon || "bilinmir"} | İqlim zonası: ${zona.ad} — ${zona.qeyd}\n`;
   mətn += `Cari ay: ${ay}\n`;
 
+  // Ölçü tövsiyənin praktikliyini dəyişir: 0.5 ha-da bir baxış kifayətdir,
+  // 12 ha-da fermerə neçə yerdən yoxlamalı olduğunu demək lazımdır.
+  if (sahe?.hektar) mətn += `Sahənin ölçüsü: ${sahe.hektar} ha\n`;
+
   if (hava) {
     mətn += `Hava (7 gün): maks ${hava.maxTemp}°C, cəmi yağış ${hava.yagis} mm, `;
     mətn += `su balansı (ET0 − yağış) ${hava.balans} mm\n`;
+    // Model uydurma dəqiqlik iddia etməməlidir — mənbəni bilməlidir
+    mətn += havaDeqiq
+      ? `(hava proqnozu fermerin öz sahəsinin koordinatı üçündür)\n`
+      : `(hava proqnozu rayon mərkəzi üçündür — sahə bir neçə km uzaq ola bilər)\n`;
   }
   if (ndvi != null) mətn += `Sahənin cari NDVI: ${ndvi}\n`;
 

@@ -1,5 +1,6 @@
 import { fetchForecast, summarizeForecast } from "./weather.js";
 import { FARM } from "./farm.js";
+import { havaNoqtesi } from "./saheYeri.js";
 
 /**
  * Server NDJSON axını göndərir: hər sətir bir hadisə.
@@ -44,12 +45,23 @@ function hadiseleriIsle(setir, vəziyyət, onDelta) {
  * Hava xülasəsi keşdən götürülür; alınmasa sual havasız gedir.
  * Qeyd: /api/agronom yalnız Vercel-də mövcuddur, `npm run dev`-də deyil.
  */
-export async function askAgronomist({ messages, bitkiKey, location, lang, signal, onDelta }) {
+export async function askAgronomist({
+  messages,
+  bitkiKey,
+  location,
+  sahe,
+  lang,
+  signal,
+  onDelta,
+}) {
+  // Sahə çəkilibsə hava ONUN koordinatı üçün alınır, rayon mərkəzi üçün yox
+  const noqte = havaNoqtesi({ location, sahe });
+
   let hava = null;
   try {
     const { data } = await fetchForecast({
-      lat: location.lat,
-      lon: location.lon,
+      lat: noqte.lat,
+      lon: noqte.lon,
       days: 7,
       signal,
     });
@@ -68,6 +80,10 @@ export async function askAgronomist({ messages, bitkiKey, location, lang, signal
       rayon: location.name,
       ay: new Date().getMonth() + 1,
       hava,
+      // Modelə sahənin ölçüsü lazımdır: 0.5 ha ilə 12 ha üçün "sahəni yoxlayın"
+      // tövsiyəsinin praktiki mənası tamam fərqlidir
+      sahe: sahe?.hektar ? { hektar: sahe.hektar } : undefined,
+      havaDeqiq: noqte.deqiq,
       ndvi: FARM.ndvi,
       dil: lang,
     }),

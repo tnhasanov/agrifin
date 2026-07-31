@@ -3,7 +3,7 @@ import { Icon } from "../../components/Icon.jsx";
 import { SectionTitle } from "../../components/SectionTitle.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
-import { buildAdvisory, fetchForecast, iconForCode } from "../../services/weather.js";
+import { buildAdvisory, fetchForecast, iconForCode, proqnozIsleyir } from "../../services/weather.js";
 
 const TONE = {
   wet: { bg: C.blueSoft, fg: "#2C5BC7", icon: "Droplets" },
@@ -50,6 +50,12 @@ export function WeatherStrip({ lat, lon, days = 5, locationName, onPickLocation 
 
     fetchForecast({ lat, lon, days: 7, signal: controller.signal })
       .then((response) => {
+        // 200 gəlməsi məzmunun düzgün olması demək deyil — boş və ya naqis
+        // cavabda "əlçatan deyil" göstəririk, çöküb tətbiqi aparmaqdansa
+        if (!proqnozIsleyir(response.data)) {
+          setResult({ status: "error", data: null, stale: false });
+          return;
+        }
         setResult({ status: "ready", data: response.data, stale: response.stale });
       })
       .catch((error) => {
