@@ -73,6 +73,108 @@
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
+/* ---- AI kartı ---------------------------------------------------------
+   Aqronom çatının giriş kartı. Məqsəd: süni intellekt hissi vermək, amma
+   etibarı pozmamaq — eyni palitra, sakit hərəkət. Üç qat:
+   1) fırlanan qızıl-yaşıl haşiyə (conic-gradient)
+   2) kartın üstündən hərdən keçən parıltı zolağı
+   3) işıqlanan nöqtə (canlı olduğunu bildirir)
+   prefers-reduced-motion aşağıdaki qlobal qayda ilə söndürülür. */
+
+@property --ai-bucaq {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.ai-halqa {
+  position: relative;
+  border-radius: 1.1rem;
+  padding: 1.5px;
+  /* @property dəstəklənməyəndə haşiyə sadəcə fırlanmır — qırılmır */
+  background: conic-gradient(
+    from var(--ai-bucaq, 0deg),
+    rgba(233, 181, 74, 0.95),
+    rgba(46, 125, 79, 0.55) 30%,
+    rgba(233, 181, 74, 0.1) 55%,
+    rgba(46, 125, 79, 0.55) 75%,
+    rgba(233, 181, 74, 0.95)
+  );
+  animation: ai-donen 7s linear infinite;
+}
+
+@keyframes ai-donen {
+  to {
+    --ai-bucaq: 360deg;
+  }
+}
+
+.ai-kart {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  /* Künc işığı: kartın sağ yuxarısında zəif qızıl şəfəq */
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(233, 181, 74, 0.22) 0%, transparent 45%),
+    linear-gradient(150deg, #14351f 0%, #123020 55%, #1b4a2b 100%);
+}
+
+/* Süpürən parıltı: 6 saniyədə bir kartın üstündən keçir */
+.ai-kart::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 42%,
+    rgba(255, 255, 255, 0.09) 50%,
+    transparent 58%
+  );
+  transform: translateX(-100%);
+  animation: ai-supur 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ai-supur {
+  0% {
+    transform: translateX(-100%);
+  }
+  35%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* İkonun arxasındaki nəfəs alan işıq halqası */
+.ai-ikon {
+  animation: ai-nefes 3s ease-in-out infinite;
+}
+
+@keyframes ai-nefes {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(233, 181, 74, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 9px rgba(233, 181, 74, 0);
+  }
+}
+
+/* "Canlı" nöqtəsi */
+.ai-nokta {
+  animation: ai-vur 2s ease-in-out infinite;
+}
+
+@keyframes ai-vur {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

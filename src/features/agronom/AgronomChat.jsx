@@ -149,7 +149,7 @@ export function AgronomChat({ onClose }) {
             <Icon name="Trash2" size={15} color="rgba(255,255,255,0.8)" />
           </button>
         )}
-        <Icon name="Sprout" size={20} color={C.gold} />
+        <Icon name="Sparkles" size={20} color={C.gold} />
       </div>
 
       {/* Bitki seçimi */}
