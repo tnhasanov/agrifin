@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildAdvisory, forecastUrl, iconForCode, summarizeForecast } from "./weather.js";
+import {
+  buildAdvisory,
+  forecastUrl,
+  iconForCode,
+  proqnozIsleyir,
+  summarizeForecast,
+} from "./weather.js";
 
 describe("iconForCode", () => {
   it("WMO kodlarını ikonlara uyğunlaşdırır", () => {
@@ -90,5 +96,32 @@ describe("summarizeForecast", () => {
   it("məlumat olmayanda null qaytarır", () => {
     expect(summarizeForecast(undefined)).toBeNull();
     expect(summarizeForecast({})).toBeNull();
+  });
+});
+
+// Reqressiya: API 200 qaytarıb boş məzmun verəndə strip render zamanı
+// undefined massivə toxunurdu və bütün tətbiq ağ ekrana düşürdü.
+describe("proqnozIsleyir", () => {
+  const tam = {
+    daily: {
+      time: ["2026-07-29", "2026-07-30"],
+      weather_code: [0, 1],
+      temperature_2m_max: [34, 33],
+    },
+  };
+
+  it("tam proqnozu qəbul edir", () => {
+    expect(proqnozIsleyir(tam)).toBe(true);
+  });
+
+  it("boş və ya naqis cavabı rədd edir", () => {
+    expect(proqnozIsleyir(undefined)).toBe(false);
+    expect(proqnozIsleyir(null)).toBe(false);
+    expect(proqnozIsleyir({})).toBe(false);
+    expect(proqnozIsleyir({ daily: {} })).toBe(false);
+    expect(proqnozIsleyir({ daily: { time: [] } })).toBe(false);
+    // Günlər var, amma ikon və temperatur massivləri yoxdur
+    expect(proqnozIsleyir({ daily: { time: ["2026-07-29"] } })).toBe(false);
+    expect(proqnozIsleyir({ daily: { ...tam.daily, temperature_2m_max: undefined } })).toBe(false);
   });
 });

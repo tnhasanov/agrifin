@@ -222,6 +222,49 @@ describe("api/agronom", () => {
     expect(res.gorunenMetn).toBe("Sətir bir\nsətir iki");
   });
 
+  it("sahənin ölçüsünü kontekstə salır", async () => {
+    mockStream.mockReturnValue(fakeStream(["Cavab"]));
+    await handler(
+      makeReq({
+        messages: [{ role: "user", content: "sual" }],
+        sahe: { hektar: 6.5 },
+        havaDeqiq: true,
+        hava: { maxTemp: 34, yagis: 18, balans: 12 },
+      }),
+      makeRes(),
+    );
+    const kontekst = mockStream.mock.calls[0][0].system[1].text;
+    expect(kontekst).toContain("Sahənin ölçüsü: 6.5 ha");
+    // Model uydurma dəqiqlik iddia etməsin deyə mənbə açıq yazılır
+    expect(kontekst).toContain("fermerin öz sahəsinin koordinatı");
+  });
+
+  it("sahə çəkilməyibsə havanın rayon mərkəzi üçün olduğunu bildirir", async () => {
+    mockStream.mockReturnValue(fakeStream(["Cavab"]));
+    await handler(
+      makeReq({
+        messages: [{ role: "user", content: "sual" }],
+        hava: { maxTemp: 34, yagis: 18, balans: 12 },
+      }),
+      makeRes(),
+    );
+    const kontekst = mockStream.mock.calls[0][0].system[1].text;
+    expect(kontekst).toContain("rayon mərkəzi üçündür");
+    expect(kontekst).not.toContain("Sahənin ölçüsü");
+  });
+
+  it("ağlabatan olmayan sahə ölçüsünü süzür", async () => {
+    mockStream.mockReturnValue(fakeStream(["Cavab"]));
+    await handler(
+      makeReq({
+        messages: [{ role: "user", content: "sual" }],
+        sahe: { hektar: 999999 },
+      }),
+      makeRes(),
+    );
+    expect(mockStream.mock.calls[0][0].system[1].text).not.toContain("999999");
+  });
+
   it("başda qalan assistant mesajlarını atır (API ilk user tələb edir)", async () => {
     mockStream.mockReturnValue(fakeStream(["Cavab"]));
     const res = makeRes();

@@ -13,6 +13,7 @@ import { pathFor } from "../routes.js";
 import { withCompletion } from "../services/advisor.js";
 import { FARM } from "../services/farm.js";
 import { DEFAULT_LOCATION } from "../services/location.js";
+import { havaNoqtesi } from "../services/saheYeri.js";
 
 function StatTile({ label, children }) {
   return (
@@ -34,6 +35,8 @@ export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
   const location = state.location ?? DEFAULT_LOCATION;
   // Fermer öz sahəsini çəkibsə həqiqi hektar göstərilir, yoxsa nümunə
   const hectares = state.sahe?.hektar ?? FARM.hectares;
+  // Proqnoz sahənin öz koordinatı üçün alınır — çatla eyni nöqtə olsun deyə
+  const noqte = havaNoqtesi({ location, sahe: state.sahe });
 
   const pending = withCompletion(state.completedRecs)
     .filter((rec) => !rec.done)
@@ -112,9 +115,9 @@ export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
 
       {/* key yeri dəyişdikdə komponenti sıfırdan qurur — yeni proqnoz yüklənir */}
       <WeatherStrip
-        key={`${location.lat},${location.lon}`}
-        lat={location.lat}
-        lon={location.lon}
+        key={`${noqte.lat},${noqte.lon}`}
+        lat={noqte.lat}
+        lon={noqte.lon}
         locationName={location.name}
         onPickLocation={onPickLocation}
       />

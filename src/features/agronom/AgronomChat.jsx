@@ -40,6 +40,7 @@ export function AgronomChat({ onClose }) {
   const { state, actions } = useStore();
   const location = state.location ?? DEFAULT_LOCATION;
   const { messages, crop, referral } = state.chat;
+  const sahe = state.sahe;
 
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -89,6 +90,7 @@ export function AgronomChat({ onClose }) {
         messages: history,
         bitkiKey: crop,
         location,
+        sahe,
         lang,
         signal: controller.signal,
         // Serverin "replace" hadisəsi mətni tam əvəz edə bilər (doza qoruyucusu),

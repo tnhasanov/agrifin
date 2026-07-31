@@ -130,7 +130,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { messages = [], bitkiKey, rayon, ay, hava, ndvi, dil } = req.body || {};
+    const { messages = [], bitkiKey, rayon, ay, hava, sahe, havaDeqiq, ndvi, dil } =
+      req.body || {};
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: "Sual yoxdur." });
@@ -162,6 +163,12 @@ export default async function handler(req, res) {
             }
           : undefined,
       ndvi: eded(ndvi, 0, 1) ?? undefined,
+      // Sahə ölçüsü müştəridən gəlir — həddləri geo.js-dəki ilə eynidir
+      sahe:
+        sahe && typeof sahe === "object" && eded(sahe.hektar, 0.05, 1000) != null
+          ? { hektar: sahe.hektar }
+          : undefined,
+      havaDeqiq: havaDeqiq === true,
     });
 
     const cavabDili = CAVAB_DILLERI[dil] ?? CAVAB_DILLERI.az;

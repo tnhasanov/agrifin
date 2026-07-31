@@ -81,6 +81,24 @@ export function buildAdvisory(daily, hourly) {
 }
 
 /** Aqronom çatına ötürülən qısa hava xülasəsi (7 gün) */
+/**
+ * Proqnozun ekranda göstərilə biləcək formada olub-olmadığı.
+ *
+ * Niyə lazımdır: API 200 qaytarsa da məzmun boş və ya naqis ola bilər —
+ * proxy, keş, ya da xidmətin öz nasazlığı. Yoxlamasaq render `undefined`
+ * massivə toxunur, çöküş baş verir və (xəta sərhədi olmadığı üçün) BÜTÜN
+ * tətbiq ağ ekrana düşür. Fermer üçün bu, tətbiqin tamamilə itməsi deməkdir.
+ */
+export function proqnozIsleyir(data) {
+  const d = data?.daily;
+  return (
+    Array.isArray(d?.time) &&
+    d.time.length > 0 &&
+    Array.isArray(d?.weather_code) &&
+    Array.isArray(d?.temperature_2m_max)
+  );
+}
+
 export function summarizeForecast(daily) {
   if (!daily?.temperature_2m_max?.length) return null;
   const rain = sumFirst(daily.precipitation_sum, 7);
