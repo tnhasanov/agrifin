@@ -16,7 +16,7 @@ export function AdvisorScreen({ onOpenChat }) {
     <div className="px-4 pb-4">
       <SectionTitle>{t("chat.title")}</SectionTitle>
       {/* AI girişi: fırlanan haşiyə + parıltı (bax: index.css "AI kartı") */}
-      <div className="ai-halqa">
+      <div className="ai-halqa giris">
         <button
           type="button"
           onClick={onOpenChat}
@@ -69,10 +69,14 @@ export function AdvisorScreen({ onOpenChat }) {
         {t("advisor.subtitle")}
       </p>
 
-      {recs.map((rec) => {
+      {recs.map((rec, index) => {
         const palette = TONES[rec.tone];
         return (
-          <Card key={rec.id} style={{ marginBottom: 10, opacity: rec.done ? 0.55 : 1 }}>
+          <Card
+            key={rec.id}
+            className="giris"
+            style={{ "--i": index + 1, marginBottom: 10, opacity: rec.done ? 0.55 : 1 }}
+          >
             <div className="flex items-start gap-3">
               <div className="mt-0.5 rounded-xl p-2" style={{ backgroundColor: palette.bg }}>
                 <Icon name={rec.icon} size={16} color={palette.color} />

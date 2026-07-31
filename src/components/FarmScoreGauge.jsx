@@ -1,5 +1,6 @@
 import { C, font } from "../theme/tokens.js";
 import { scoreFraction } from "../services/farm.js";
+import { useCountUp } from "../lib/useCountUp.js";
 
 const RADIUS = 84;
 const CX = 110;
@@ -16,7 +17,11 @@ function arcPath(from, to, radius = RADIUS) {
 
 /** Tətbiqin imza elementi: qızıl qövs FarmScore, kəsikli yaşıl qövs NDVI. */
 export function FarmScoreGauge({ score, ndvi, label }) {
-  const fraction = scoreFraction(score);
+  // Qövs və rəqəm birlikdə 0-dan hədəfə "hesablanır" — bal statik yazı
+  // deyil, ölçülmüş dəyər təəssüratı verir. aria-label isə yekun baldır:
+  // ekran oxuyucusu sayma prosesini eşitməməlidir.
+  const gorunen = useCountUp(score);
+  const fraction = scoreFraction(gorunen);
   const start = Math.PI;
 
   return (
@@ -50,7 +55,7 @@ export function FarmScoreGauge({ score, ndvi, label }) {
         fontSize="34"
         fontWeight="800"
       >
-        {score}
+        {gorunen}
       </text>
       <text
         x={CX}

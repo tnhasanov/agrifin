@@ -74,12 +74,15 @@ export default function App() {
             <AppHeader />
 
             <main ref={scrollRef} className="flex-1 overflow-y-auto">
-              <Screen
+              {/* key ekran dəyişəndə remount edir — giriş animasiyası hər dəfə oynayır */}
+              <div key={route.id} className="ekran-giris">
+                <Screen
                 onOpenLoan={() => setLoanOpen(true)}
                 onPickLocation={() => setLocationOpen(true)}
                 onOpenChat={() => setChatOpen(true)}
                 onDrawField={() => setFieldOpen(true)}
-              />
+                />
+              </div>
             </main>
 
             <Toast />

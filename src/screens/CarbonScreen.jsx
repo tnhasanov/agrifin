@@ -7,11 +7,14 @@ import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
 import { formatNumber } from "../lib/format.js";
 import { CARBON, PRACTICES, carbonPayout } from "../services/carbon.js";
+import { useCountUp } from "../lib/useCountUp.js";
 
 export function CarbonScreen() {
   const { t, money, lang } = useI18n();
   const { state, actions } = useStore();
   const payout = carbonPayout();
+  // Tutulan karbon 0-dan saydırılır — ölçülmüş dəyər təəssüratı üçün
+  const tonlar = useCountUp(CARBON.capturedTonnes, { onluq: 1 });
 
   return (
     <div className="px-4 pb-4">
@@ -34,7 +37,7 @@ export function CarbonScreen() {
           />
         </div>
         <p className="mt-3 text-3xl font-extrabold text-white" style={{ fontFamily: font.display }}>
-          {formatNumber(CARBON.capturedTonnes, lang, { minimumFractionDigits: 1 })}{" "}
+          {formatNumber(tonlar, lang, { minimumFractionDigits: 1 })}{" "}
           <span className="text-base font-bold" style={{ color: "rgba(255,255,255,0.8)" }}>
             {t("carbon.captured")}
           </span>
@@ -89,8 +92,9 @@ export function CarbonScreen() {
         {PRACTICES.map((practice, index) => (
           <div
             key={practice.id}
-            className="flex items-center gap-3 py-3"
+            className="giris flex items-center gap-3 py-3"
             style={{
+              "--i": index,
               borderBottom: index < PRACTICES.length - 1 ? `1px solid ${C.line}` : "none",
             }}
           >
