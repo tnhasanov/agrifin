@@ -2,14 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "../../components/Icon.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
-import { nearestDistrict, searchDistricts } from "../../services/location.js";
-
-const GPS_TIMEOUT_MS = 10000;
+import { searchDistricts } from "../../services/location.js";
+import { useGps } from "./useGps.js";
 
 export function LocationSheet({ current, onSelect, onClose }) {
   const { t } = useI18n();
   const [query, setQuery] = useState("");
-  const [gps, setGps] = useState({ status: "idle", errorKey: null });
   const sheetRef = useRef(null);
 
   useEffect(() => {
@@ -21,39 +19,15 @@ export function LocationSheet({ current, onSelect, onClose }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
-  const requestGps = () => {
-    if (!navigator.geolocation) {
-      setGps({ status: "error", errorKey: "location.gpsUnsupported" });
-      return;
-    }
-
-    setGps({ status: "busy", errorKey: null });
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = Number(position.coords.latitude.toFixed(4));
-        const lon = Number(position.coords.longitude.toFixed(4));
-        const district = nearestDistrict(lat, lon);
-        onSelect({
-          name: t("location.gpsName", { district: district.name }),
-          lat,
-          lon,
-          gps: true,
-        });
-        onClose();
-      },
-      (error) => {
-        setGps({
-          status: "error",
-          // code 1 = PERMISSION_DENIED
-          errorKey: error.code === 1 ? "location.gpsDenied" : "location.gpsNoSignal",
-        });
-      },
-      { timeout: GPS_TIMEOUT_MS, enableHighAccuracy: true },
-    );
-  };
+  const { gps, requestGps, busy } = useGps({
+    adYarat: (district) => t("location.gpsName", { district }),
+    onSelect: (location) => {
+      onSelect(location);
+      onClose();
+    },
+  });
 
   const districts = searchDistricts(query);
-  const busy = gps.status === "busy";
 
   return (
     <div

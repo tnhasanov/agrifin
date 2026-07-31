@@ -86,7 +86,7 @@ export function MoneyScreen({ onOpenLoan }) {
           </p>
           <div className="mt-3 h-2 rounded-full" style={{ backgroundColor: C.mist }}>
             <div
-              className="h-2 rounded-full"
+              className="bar-dolur h-2 rounded-full"
               style={{ width: `${loan.seasonProgress}%`, backgroundColor: C.field }}
             />
           </div>
@@ -137,8 +137,11 @@ export function MoneyScreen({ onOpenLoan }) {
           return (
             <div
               key={txn.id}
-              className="flex items-center gap-3 py-3"
-              style={{ borderBottom: index < txns.length - 1 ? `1px solid ${C.line}` : "none" }}
+              className="giris flex items-center gap-3 py-3"
+              style={{
+                "--i": index,
+                borderBottom: index < txns.length - 1 ? `1px solid ${C.line}` : "none",
+              }}
             >
               <div
                 className="rounded-full p-2"

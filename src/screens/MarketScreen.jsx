@@ -19,8 +19,9 @@ export function MarketScreen() {
           return (
             <div
               key={crop.id}
-              className="flex items-center gap-3 py-3"
+              className="giris flex items-center gap-3 py-3"
               style={{
+                "--i": index,
                 borderBottom: index < CROP_PRICES.length - 1 ? `1px solid ${C.line}` : "none",
               }}
             >
@@ -68,8 +69,8 @@ export function MarketScreen() {
       </Card>
 
       <SectionTitle>{t("market.buyers")}</SectionTitle>
-      {BUYER_OFFERS.map((offer) => (
-        <Card key={offer.id} style={{ marginBottom: 8 }}>
+      {BUYER_OFFERS.map((offer, index) => (
+        <Card key={offer.id} className="giris" style={{ "--i": index, marginBottom: 8 }}>
           <div className="flex items-center gap-3">
             <div className="rounded-xl p-2" style={{ backgroundColor: C.mist }}>
               <Icon name="MapPin" size={16} color={C.pine} />

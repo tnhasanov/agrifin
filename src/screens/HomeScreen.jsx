@@ -25,13 +25,15 @@ function StatTile({ label, children }) {
   );
 }
 
-export function HomeScreen({ onOpenLoan, onPickLocation }) {
+export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
   const { t, money, lang } = useI18n();
   const { state } = useStore();
   const { navigate } = useRouter();
 
   // Yer seçilməyibsə default rayonun proqnozu göstərilir
   const location = state.location ?? DEFAULT_LOCATION;
+  // Fermer öz sahəsini çəkibsə həqiqi hektar göstərilir, yoxsa nümunə
+  const hectares = state.sahe?.hektar ?? FARM.hectares;
 
   const pending = withCompletion(state.completedRecs)
     .filter((rec) => !rec.done)
@@ -53,7 +55,7 @@ export function HomeScreen({ onOpenLoan, onPickLocation }) {
             <p className="text-sm font-bold text-white" style={{ fontFamily: font.display }}>
               {t("home.farmLine", {
                 farm: { key: FARM.farmNameKey },
-                ha: { number: FARM.hectares },
+                ha: { number: hectares },
               })}
             </p>
           </div>
@@ -64,6 +66,22 @@ export function HomeScreen({ onOpenLoan, onPickLocation }) {
             bg="rgba(96,190,134,0.18)"
           />
         </div>
+
+        {/* Sahə çəkilməyibsə açıq dəvət; çəkilibsə redaktə keçidi */}
+        <button
+          type="button"
+          onClick={onDrawField}
+          className="mt-2 flex w-full items-center justify-between rounded-xl px-3 py-2"
+          style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+        >
+          <span className="flex items-center gap-2 text-xs font-semibold text-white">
+            <Icon name="MapPin" size={13} color={C.gold} />
+            {state.sahe
+              ? t("home.fieldDrawn", { hektar: { number: state.sahe.hektar } })
+              : t("home.fieldCta")}
+          </span>
+          <Icon name="ChevronRight" size={14} color="rgba(255,255,255,0.6)" />
+        </button>
 
         <div className="-mb-1 flex justify-center">
           <FarmScoreGauge score={FARM.farmScore} ndvi={FARM.ndvi} label={t("home.farmscore")} />

@@ -15,36 +15,68 @@ export function AdvisorScreen({ onOpenChat }) {
   return (
     <div className="px-4 pb-4">
       <SectionTitle>{t("chat.title")}</SectionTitle>
-      <Card
-        onClick={onOpenChat}
-        ariaLabel={t("chat.open")}
-        style={{ background: `linear-gradient(150deg, ${C.pine} 0%, #1B4A2B 100%)`, border: "none" }}
-      >
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl p-2.5" style={{ backgroundColor: "rgba(233,181,74,0.18)" }}>
-            <Icon name="Sprout" size={18} color={C.gold} />
+      {/* AI girişi: fırlanan haşiyə + parıltı (bax: index.css "AI kartı") */}
+      <div className="ai-halqa giris">
+        <button
+          type="button"
+          onClick={onOpenChat}
+          aria-label={t("chat.open")}
+          className="ai-kart w-full p-4 text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="ai-ikon rounded-full p-2.5"
+              style={{
+                backgroundColor: "rgba(233,181,74,0.16)",
+                border: "1px solid rgba(233,181,74,0.4)",
+              }}
+            >
+              <Icon name="Sparkles" size={18} color={C.gold} />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-bold text-white" style={{ fontFamily: font.display }}>
+                  {t("chat.open")}
+                </p>
+                <span
+                  className="flex items-center gap-1 rounded-full px-1.5 py-0.5 font-bold"
+                  style={{
+                    fontSize: 9,
+                    letterSpacing: "0.06em",
+                    color: C.gold,
+                    border: "1px solid rgba(233,181,74,0.45)",
+                    backgroundColor: "rgba(233,181,74,0.1)",
+                  }}
+                >
+                  <span
+                    className="ai-nokta inline-block h-1.5 w-1.5 rounded-full"
+                    style={{ backgroundColor: C.gold }}
+                  />
+                  AI
+                </span>
+              </div>
+              <p className="mt-0.5 text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>
+                {t("chat.openDesc")}
+              </p>
+            </div>
+            <Icon name="ChevronRight" size={18} color="rgba(255,255,255,0.5)" />
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-bold text-white" style={{ fontFamily: font.display }}>
-              {t("chat.open")}
-            </p>
-            <p className="mt-0.5 text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>
-              {t("chat.openDesc")}
-            </p>
-          </div>
-          <Icon name="ChevronRight" size={18} color="rgba(255,255,255,0.5)" />
-        </div>
-      </Card>
+        </button>
+      </div>
 
       <SectionTitle>{t("advisor.title")}</SectionTitle>
       <p className="-mt-1 mb-3 px-1 text-xs" style={{ color: C.muted }}>
         {t("advisor.subtitle")}
       </p>
 
-      {recs.map((rec) => {
+      {recs.map((rec, index) => {
         const palette = TONES[rec.tone];
         return (
-          <Card key={rec.id} style={{ marginBottom: 10, opacity: rec.done ? 0.55 : 1 }}>
+          <Card
+            key={rec.id}
+            className="giris"
+            style={{ "--i": index + 1, marginBottom: 10, opacity: rec.done ? 0.55 : 1 }}
+          >
             <div className="flex items-start gap-3">
               <div className="mt-0.5 rounded-xl p-2" style={{ backgroundColor: palette.bg }}>
                 <Icon name={rec.icon} size={16} color={palette.color} />

@@ -6,6 +6,7 @@
 // `vercel dev`-də) işləyir. Lokal Vite serverində çat 404 qaytaracaq.
 import Anthropic from "@anthropic-ai/sdk";
 import { BITKILER, kontekstQur } from "./knowledge.js";
+import { dozaQoruyucusuYarat } from "./dozaQoruyucu.js";
 
 // Sonnet: qısa aqronomik cavablar üçün sürət/qiymət balansı Opus-dan uyğundur.
 const MODEL = "claude-sonnet-5";
@@ -64,9 +65,6 @@ const CAVAB_DILLERI = {
   en: "İngilis dili (English)",
   ru: "Rus dili (русский)",
 };
-
-// Serverdə son yoxlama: doza/norma sızarsa, cavabı kəs.
-const DOZA_REGEX = /\b\d+([.,]\d+)?\s?(ml|l|litr|q|qr|qram|kq|gr|g)\s?\/\s?(ha|hektar|litr|l|sot)\b/i;
 
 const DOZA_CAVABI =
   "Bu sual konkret preparat və doza tələb edir. Onu təhlükəsiz şəkildə " +
@@ -168,11 +166,31 @@ export default async function handler(req, res) {
 
     const cavabDili = CAVAB_DILLERI[dil] ?? CAVAB_DILLERI.az;
 
+    // Başlıqlar yalnız ilk mətn hazır olanda yazılır. Səbəb: başlıq gedəndən
+    // sonra status 200-dür və artıq dəyişdirilə bilməz — sorğu heç başlamasa,
+    // müştəri həqiqi 502/500 alsın deyə gözləyirik.
+    let axinBasladi = false;
+    const axinaYaz = (hadise) => {
+      if (!axinBasladi) {
+        axinBasladi = true;
+        res.writeHead(200, {
+          "Content-Type": "application/x-ndjson; charset=utf-8",
+          "Cache-Control": "no-store, no-transform",
+          // Aralıq proxy-lərin buferləməsini söndürür — yoxsa axının mənası qalmır
+          "X-Accel-Buffering": "no",
+        });
+      }
+      res.write(`${JSON.stringify(hadise)}\n`);
+    };
+
     const client = new Anthropic({ maxRetries: 1, timeout: 25_000 });
-    const mesaj = await client.messages.create({
+    const axin = client.messages.stream({
       model: MODEL,
       max_tokens: 700,
-      // Qısa cavablar üçün dərin düşünmə lazım deyil — gecikməni azaldır
+      // Sonnet 5-də düşünmə susmaya görə AÇIQdır və max_tokens büdcəsini
+      // cavabla bölüşür. Qısa aqronomik cavab üçün lazım deyil: söndürmək həm
+      // gecikməni azaldır, həm də cavabın yarımçıq kəsilmə riskini aradan qaldırır.
+      thinking: { type: "disabled" },
       output_config: { effort: "low" },
       system: [
         // Sabit hissə keşlənir — hər mesajda yenidən emal olunmur
@@ -182,39 +200,77 @@ export default async function handler(req, res) {
       messages: temiz,
     });
 
-    // Vercel → Deployments → Functions → Logs. `mesaj.model` sorğuya real
-    // cavab verən modeldir — bizim sabitimizin əks-səsi deyil. Token sayları
-    // hər sualın nəyə başa gəldiyini göstərir.
-    console.log(
-      `[agronom] model=${mesaj.model} giris=${mesaj.usage?.input_tokens ?? "?"} ` +
-        `cixis=${mesaj.usage?.output_tokens ?? "?"} ` +
-        `kesden=${mesaj.usage?.cache_read_input_tokens ?? 0}`,
-    );
+    const qoruyucu = dozaQoruyucusuYarat();
+    let bloklandi = false;
 
-    const cavab = mesaj.content
-      .filter((blok) => blok.type === "text")
-      .map((blok) => blok.text)
-      .join("\n")
-      .trim();
-
-    if (mesaj.stop_reason === "refusal" || !cavab) {
-      return res.status(200).json({ cavab: DOZA_CAVABI, aqronomTeklif: true });
+    for await (const hadise of axin) {
+      if (hadise.type !== "content_block_delta" || hadise.delta?.type !== "text_delta") {
+        continue;
+      }
+      const netice = qoruyucu.elaveEt(hadise.delta.text);
+      if (netice.bloklandi) {
+        bloklandi = true;
+        axin.abort?.();
+        break;
+      }
+      if (netice.metn) axinaYaz({ t: "delta", v: netice.metn });
     }
 
-    if (DOZA_REGEX.test(cavab)) {
-      return res.status(200).json({ cavab: DOZA_CAVABI, aqronomTeklif: true });
+    if (!bloklandi) {
+      const son = qoruyucu.bosalt();
+      if (son.bloklandi) bloklandi = true;
+      else if (son.metn) axinaYaz({ t: "delta", v: son.metn });
+    }
+
+    // Doza aşkarlanıbsa: göstərilən hər şey ləğv olunur və təhlükəsiz mətn qalır
+    if (bloklandi) {
+      axinaYaz({ t: "replace", v: DOZA_CAVABI, aqronomTeklif: true });
+      return res.end();
+    }
+
+    const cavab = qoruyucu.tamMetn.trim();
+    let final = null;
+    try {
+      final = await axin.finalMessage();
+    } catch {
+      /* axın yarımçıq bitdi — aşağıdakı yoxlamalar cavabın özünə baxır */
+    }
+
+    if (final) {
+      // Vercel → Deployments → Functions → Logs. `final.model` sorğuya real
+      // cavab verən modeldir — bizim sabitimizin əks-səsi deyil.
+      console.log(
+        `[agronom] model=${final.model} giris=${final.usage?.input_tokens ?? "?"} ` +
+          `cixis=${final.usage?.output_tokens ?? "?"} ` +
+          `kesden=${final.usage?.cache_read_input_tokens ?? 0}`,
+      );
+    }
+
+    if (final?.stop_reason === "refusal" || !cavab) {
+      axinaYaz({ t: "replace", v: DOZA_CAVABI, aqronomTeklif: true });
+      return res.end();
     }
 
     const aqronomTeklif =
       /aqronom|sahədə baxış|dəqiq demək üçün|bakterial yanıq|karantin/i.test(cavab);
 
-    return res.status(200).json({ cavab, aqronomTeklif });
+    axinaYaz({ t: "done", aqronomTeklif });
+    return res.end();
   } catch (error) {
-    if (error instanceof Anthropic.APIError) {
+    const apiXetasi = error instanceof Anthropic.APIError;
+    if (apiXetasi) {
       console.error("Anthropic error:", error.status, String(error.message).slice(0, 400));
-      return res.status(502).json({ error: "Köməkçi hazırda cavab vermir." });
+    } else {
+      console.error(error);
     }
-    console.error(error);
-    return res.status(500).json({ error: "Gözlənilməz xəta." });
+
+    // Başlıq artıq gedibsə status dəyişmir — xətanı axının içində bildiririk
+    if (res.headersSent) {
+      res.write(`${JSON.stringify({ t: "error" })}\n`);
+      return res.end();
+    }
+    return res
+      .status(apiXetasi ? 502 : 500)
+      .json({ error: apiXetasi ? "Köməkçi hazırda cavab vermir." : "Gözlənilməz xəta." });
   }
 }

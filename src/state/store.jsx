@@ -11,10 +11,35 @@ import * as storage from "../lib/storage.js";
 import { FARM, LOAN_TERMS, computeRepayment } from "../services/farm.js";
 import { CARBON, carbonPayout } from "../services/carbon.js";
 import { isValidLocation, readLegacyLocation } from "../services/location.js";
+import { duzgunSahe } from "../services/geo.js";
 
 export const PERSIST_KEY = "state";
-// Saxlanan formanı dəyişəndə bu rəqəmi artırın — köhnə məlumat səssizcə atılır.
-export const PERSIST_VERSION = 2;
+// Saxlanan formanı dəyişəndə bu rəqəmi artırın və MIQRASIYALAR-a keçid yazın.
+// Keçid yoxdursa köhnə məlumat səssizcə atılır.
+export const PERSIST_VERSION = 4;
+
+/**
+ * Köhnə versiyadan yeniyə keçid. Fermerdən onsuz da bildiyimiz şeyi
+ * (rayonunu, söhbətini) yenidən soruşmaq pis təcrübədir.
+ */
+const MIQRASIYALAR = {
+  // 2 → 3: ilk açılış axını əlavə olundu. Rayonu artıq seçmiş fermer
+  // qeydiyyatı keçmiş sayılır — ona ilk açılış ekranı göstərilmir.
+  2: (state) => ({ ...state, onboarded: isValidLocation(state.location) }),
+  // 3 → 4: fermerin öz çəkdiyi sahə konturu əlavə olundu
+  3: (state) => ({ ...state, sahe: null }),
+};
+
+function miqrasiyaEt(saved) {
+  let { version, state } = saved;
+  while (version < PERSIST_VERSION) {
+    const keçid = MIQRASIYALAR[version];
+    if (!keçid) return null;
+    state = keçid(state);
+    version += 1;
+  }
+  return state;
+}
 
 const INITIAL_TXNS = [
   { id: "t1", nameKey: "txn.grainSale.name", metaKey: "txn.grainSale.meta", amount: 3150 },
@@ -40,8 +65,11 @@ const CHAT_LIMIT = 40;
 
 export const initialState = {
   wallet: 7280,
-  // null olduqda ilk açılışda yer seçimi paneli göstərilir
+  // false olduqda ilk açılışda qeydiyyat axını göstərilir
+  onboarded: false,
   location: null,
+  // Fermerin peyk şəklində çəkdiyi sahə: {noqteler: [[lat,lon],...], hektar}
+  sahe: null,
   // Aqronom çatı: mesajlar {role, content} və ya {role, errorKey}
   chat: { messages: [], crop: null, referral: false },
   creditsSold: false,
@@ -151,6 +179,16 @@ export function reducer(state, action) {
       return { ...state, location: action.location };
     }
 
+    case "onboarding/finish":
+      return { ...state, onboarded: true };
+
+    case "sahe/set":
+      if (!duzgunSahe(action.sahe)) return state;
+      return { ...state, sahe: action.sahe };
+
+    case "sahe/clear":
+      return { ...state, sahe: null };
+
     case "toast/show":
       return { ...state, toast: { key: action.key, vars: action.vars ?? null } };
 
@@ -167,11 +205,19 @@ export function reducer(state, action) {
 
 function loadPersisted() {
   const saved = storage.read(PERSIST_KEY);
+  // Köhnə versiya miqrasiya olunur; alınmasa sıfırdan başlanır.
+  const saxlanan =
+    saved && saved.state
+      ? saved.version === PERSIST_VERSION
+        ? saved.state
+        : miqrasiyaEt(saved)
+      : null;
+
   // Toast efemer UI-dır — yenidən yüklənəndə göstərilməməlidir.
-  const base =
-    !saved || saved.version !== PERSIST_VERSION
-      ? initialState
-      : { ...initialState, ...saved.state, toast: null };
+  const base = saxlanan ? { ...initialState, ...saxlanan, toast: null } : initialState;
+
+  // Zədələnmiş sahə konturunu (əl ilə pozulmuş localStorage) yükləmirik
+  if (base.sahe && !duzgunSahe(base.sahe)) base.sahe = null;
 
   // Köhnə prototipdə yer ayrı açarda saxlanılırdı — yenidən soruşmuruq
   if (!isValidLocation(base.location)) {
@@ -224,6 +270,12 @@ export function StoreProvider({ children }) {
       chatError: (errorKey) => dispatch({ type: "chat/error", errorKey }),
       chatSetCrop: (crop) => dispatch({ type: "chat/crop", crop }),
       chatClear: () => dispatch({ type: "chat/clear" }),
+      finishOnboarding: () => dispatch({ type: "onboarding/finish" }),
+      setSahe: (sahe) => {
+        dispatch({ type: "sahe/set", sahe });
+        showToast("toast.fieldSaved", { hektar: { number: sahe.hektar } });
+      },
+      clearSahe: () => dispatch({ type: "sahe/clear" }),
       resetDemo: () => dispatch({ type: "demo/reset" }),
     }),
     [showToast],

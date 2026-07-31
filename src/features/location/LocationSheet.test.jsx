@@ -2,12 +2,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../../App.jsx";
-import { renderApp, seedLocation, WEATHER_FIXTURE } from "../../test/render.jsx";
+import { renderApp, seedLocation, seedOnboarded, WEATHER_FIXTURE } from "../../test/render.jsx";
 
-// Bu faylda yer QƏSDƏN seed edilmir — panelin özünü yoxlayırıq.
+/**
+ * Paneli hava zolağındaki düymə ilə açır. İlk açılışda panel artıq özü
+ * qalxmır — bu işi qeydiyyat axını görür (bax: Onboarding.test.jsx).
+ */
+async function acPanel(user) {
+  await user.click(screen.getByRole("button", { name: /Bərdə|Yeri seçin/ }));
+  return screen.getByRole("dialog", { name: "Sahənizin yeri" });
+}
+
+// Qeydiyyat keçilib, amma rayon seçilməyib — panelin öz davranışı yoxlanılır.
 beforeEach(() => {
   window.history.pushState({}, "", "/");
   window.localStorage.setItem("agrifin:lang", JSON.stringify("az"));
+  seedOnboarded();
   vi.stubGlobal(
     "fetch",
     vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve(WEATHER_FIXTURE) })),
@@ -19,20 +29,21 @@ afterEach(() => {
 });
 
 describe("yer seçimi", () => {
-  it("yer seçilməyibsə ilk açılışda özü qalxır", () => {
-    renderApp(<App />);
-    expect(screen.getByRole("dialog", { name: "Sahənizin yeri" })).toBeInTheDocument();
-  });
-
-  it("yer saxlanılıbsa qalxmır", () => {
-    seedLocation();
+  it("ilk açılışda özü qalxmır — bu, qeydiyyat axınının işidir", () => {
     renderApp(<App />);
     expect(screen.queryByRole("dialog", { name: "Sahənizin yeri" })).not.toBeInTheDocument();
+  });
+
+  it("hava zolağındaki düymə ilə açılır", async () => {
+    const user = userEvent.setup();
+    renderApp(<App />);
+    expect(await acPanel(user)).toBeInTheDocument();
   });
 
   it("axtarış rayon siyahısını süzür", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
+    await acPanel(user);
 
     expect(screen.getByRole("button", { name: "Gəncə" })).toBeInTheDocument();
     await user.type(screen.getByRole("textbox", { name: "Rayon axtarın" }), "quba");
@@ -44,6 +55,7 @@ describe("yer seçimi", () => {
   it("tapılmayan ad üçün mesaj göstərir", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
+    await acPanel(user);
 
     await user.type(screen.getByRole("textbox", { name: "Rayon axtarın" }), "belərayonyoxdur");
     expect(screen.getByText("Rayon tapılmadı.")).toBeInTheDocument();
@@ -52,6 +64,7 @@ describe("yer seçimi", () => {
   it("rayon seçmək paneli bağlayır, bildiriş verir və başlığı yeniləyir", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
+    await acPanel(user);
 
     await user.click(screen.getByRole("button", { name: "Gəncə" }));
 
@@ -64,6 +77,7 @@ describe("yer seçimi", () => {
   it("seçilmiş rayon üçün yeni proqnoz sorğusu göndərir", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
+    await acPanel(user);
 
     await user.click(screen.getByRole("button", { name: "Quba" }));
 
@@ -78,6 +92,7 @@ describe("yer seçimi", () => {
   it("«Sonra seçəcəyəm» seçim etmədən bağlayır", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
+    await acPanel(user);
 
     await user.click(screen.getByRole("button", { name: "Sonra seçəcəyəm" }));
 
@@ -89,18 +104,18 @@ describe("yer seçimi", () => {
   it("Escape ilə bağlanır", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
+    await acPanel(user);
 
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog", { name: "Sahənizin yeri" })).not.toBeInTheDocument();
   });
 
-  it("hava başlığındaki düymə paneli yenidən açır", async () => {
+  it("rayon seçildikdən sonra düymə paneli yenidən açır", async () => {
     const user = userEvent.setup();
     seedLocation();
     renderApp(<App />);
 
-    await user.click(screen.getByRole("button", { name: /Bərdə/ }));
-    expect(screen.getByRole("dialog", { name: "Sahənizin yeri" })).toBeInTheDocument();
+    expect(await acPanel(user)).toBeInTheDocument();
   });
 
   it("köhnə prototipin saxladığı yeri qəbul edir və yenidən soruşmur", () => {
@@ -120,6 +135,7 @@ describe("yer seçimi — GPS", () => {
     const user = userEvent.setup();
     vi.stubGlobal("navigator", { ...window.navigator, geolocation: undefined });
     renderApp(<App />);
+    await acPanel(user);
 
     await user.click(screen.getByRole("button", { name: "Sahəmin yerini təyin et" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Bu cihaz yer təyinini dəstəkləmir.");
@@ -132,6 +148,7 @@ describe("yer seçimi — GPS", () => {
       geolocation: { getCurrentPosition: (_ok, fail) => fail({ code: 1 }) },
     });
     renderApp(<App />);
+    await acPanel(user);
 
     await user.click(screen.getByRole("button", { name: "Sahəmin yerini təyin et" }));
     expect(screen.getByRole("alert")).toHaveTextContent("İcazə verilmədi");
@@ -144,6 +161,7 @@ describe("yer seçimi — GPS", () => {
       geolocation: { getCurrentPosition: (_ok, fail) => fail({ code: 2 }) },
     });
     renderApp(<App />);
+    await acPanel(user);
 
     await user.click(screen.getByRole("button", { name: "Sahəmin yerini təyin et" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Siqnal tapılmadı");
@@ -159,6 +177,7 @@ describe("yer seçimi — GPS", () => {
       },
     });
     renderApp(<App />);
+    await acPanel(user);
 
     await user.click(screen.getByRole("button", { name: "Sahəmin yerini təyin et" }));
 
