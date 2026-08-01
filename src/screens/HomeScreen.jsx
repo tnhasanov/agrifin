@@ -14,6 +14,9 @@ import { withCompletion } from "../services/advisor.js";
 import { FARM } from "../services/farm.js";
 import { DEFAULT_LOCATION } from "../services/location.js";
 import { havaNoqtesi } from "../services/saheYeri.js";
+import { necheGunEvvel } from "../services/ndvi.js";
+import { useNdvi } from "../features/ndvi/useNdvi.js";
+import { Sparkline } from "../components/Sparkline.jsx";
 
 function StatTile({ label, children }) {
   return (
@@ -42,7 +45,15 @@ export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
     .filter((rec) => !rec.done)
     .slice(0, 2);
 
-  const ndvi = formatNumber(FARM.ndvi, lang, { minimumFractionDigits: 2 });
+  // Peyk ölçməsi sahədən asılıdır; sahə yoxdursa hook "yoxdur" qaytarır
+  const peyk = useNdvi(state.sahe);
+  const olculen = peyk.xulase;
+  const ndvi = formatNumber(olculen?.ndvi ?? FARM.ndvi, lang, {
+    minimumFractionDigits: 2,
+    // Üç onluq ölçmədə olmayan dəqiqlik iddia edir — NDVI iki onluqla oxunur
+    maximumFractionDigits: 2,
+  });
+  const gunEvvel = olculen ? necheGunEvvel(olculen.tarix) : null;
 
   return (
     <div className="px-4 pb-4">
@@ -92,13 +103,53 @@ export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
 
         <div className="mt-1 grid grid-cols-3 gap-2">
           <StatTile label={t("home.cropHealth")}>
-            NDVI {ndvi} <span style={{ color: "#7FD6A4" }}>▲</span>
+            NDVI {ndvi}{" "}
+            {olculen && olculen.istiqamet !== "sabit" && (
+              <span style={{ color: olculen.istiqamet === "artir" ? "#7FD6A4" : "#F0A0A0" }}>
+                {olculen.istiqamet === "artir" ? "▲" : "▼"}
+              </span>
+            )}
           </StatTile>
           <StatTile label={t("home.creditLimit")}>
             <span style={{ color: C.gold }}>{money(FARM.creditLimit)}</span>
           </StatTile>
           <StatTile label={t("home.wallet")}>{money(state.wallet)}</StatTile>
         </div>
+
+        {/* Peyk ölçməsinin vəziyyəti. Hər hal ayrı cümlə deyir: peyk məlumatı
+            havadan fərqli olaraq həmişə mövcud olmur və "yoxdur" ilə "xəta"
+            fermer üçün tamamilə fərqli mənalardır. */}
+        {state.sahe && peyk.hal !== "yoxdur" && (
+          <div
+            className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2"
+            style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+            aria-live="polite"
+          >
+            <Icon
+              name={peyk.hal === "yuklenir" ? "LoaderCircle" : "Satellite"}
+              size={13}
+              color={peyk.hal === "hazir" ? "#7FD6A4" : "rgba(255,255,255,0.6)"}
+            />
+            <span className="flex-1 text-xs" style={{ color: "rgba(255,255,255,0.72)" }}>
+              {peyk.hal === "yuklenir" && t("ndvi.loading")}
+              {peyk.hal === "hazir" &&
+                (peyk.kohne
+                  ? t("ndvi.cached", { gun: gunEvvel ?? 0 })
+                  : t("ndvi.measured", { gun: gunEvvel ?? 0, say: olculen.olcmeSayi }))}
+              {peyk.hal === "olcmeYox" && t("ndvi.noReading")}
+              {peyk.hal === "qurulmayib" && t("ndvi.notConfigured")}
+              {peyk.hal === "xeta" && t("ndvi.error")}
+            </span>
+            {peyk.hal === "hazir" && peyk.seriya.length > 1 && (
+              <Sparkline
+                points={peyk.seriya.map((n) => n.ndvi)}
+                up={olculen.istiqamet !== "azalir"}
+                width={56}
+                height={20}
+              />
+            )}
+          </div>
+        )}
 
         <button
           type="button"

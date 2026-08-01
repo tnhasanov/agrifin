@@ -18,7 +18,6 @@ export default {
   "nav.market": "Рынок",
   "nav.carbon": "Углерод",
 
-  "header.notifications": "Уведомления",
   "header.language": "Сменить язык",
 
   "home.greeting": "Доброе утро, {name}",
@@ -252,4 +251,12 @@ export default {
   "field.errorTooSmall": "Площадь слишком мала. Приблизьте и обведите заново.",
   "field.errorTooLarge": "Площадь слишком велика. Приблизьте и обведите только своё поле.",
   "field.warnFarFromDistrict": "Поле далеко от выбранного района. Проверьте район.",
+  "header.notificationsCount": "Уведомления — {count} ожидающих рекомендаций",
+  "header.notificationsEmpty": "Уведомления — нет ожидающих рекомендаций",
+  "ndvi.loading": "Загрузка спутникового измерения…",
+  "ndvi.measured": "Спутник · {gun} дн. назад · измерений: {say}",
+  "ndvi.cached": "Сохранённое измерение · {gun} дн. назад (нет сети)",
+  "ndvi.noReading": "За этот период нет чистого измерения — было облачно",
+  "ndvi.notConfigured": "Спутниковая интеграция ещё не настроена",
+  "ndvi.error": "Не удалось получить спутниковые данные",
 };

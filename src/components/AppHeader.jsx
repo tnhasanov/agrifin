@@ -1,10 +1,22 @@
 import { Icon } from "./Icon.jsx";
 import { C, font } from "../theme/tokens.js";
 import { LANGUAGES, useI18n } from "../i18n/index.jsx";
+import { useStore } from "../state/store.jsx";
+import { useRouter } from "../lib/router.jsx";
+import { pathFor } from "../routes.js";
+import { withCompletion } from "../services/advisor.js";
 
 export function AppHeader() {
   const { t, lang, cycleLang } = useI18n();
+  const { state } = useStore();
+  const { navigate } = useRouter();
   const current = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0];
+
+  // Nişan uydurma deyil: gözləyən tövsiyələrin həqiqi sayıdır. Fermer
+  // hamısını tamamlayanda nişan yox olur, zəng isə yenə məsləhət ekranına
+  // aparır. Əvvəl burada sabit qırmızı nöqtə vardı və düymə heç nə etmirdi —
+  // toxunub heç nə almamaq etibarı ən sürətli itirən şeydir.
+  const gozleyen = withCompletion(state.completedRecs).filter((rec) => !rec.done).length;
 
   return (
     <header className="flex items-center justify-between px-5 pt-5 pb-2">
@@ -31,15 +43,32 @@ export function AppHeader() {
 
         <button
           type="button"
-          aria-label={t("header.notifications")}
+          onClick={() => navigate(pathFor("advisor"))}
+          aria-label={
+            gozleyen > 0
+              ? t("header.notificationsCount", { count: gozleyen })
+              : t("header.notificationsEmpty")
+          }
           className="relative rounded-full p-2"
           style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}
         >
           <Icon name="Bell" size={15} color={C.ink} />
-          <span
-            className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full"
-            style={{ backgroundColor: C.danger }}
-          />
+          {gozleyen > 0 && (
+            <span
+              className="absolute -top-1 -right-1 flex items-center justify-center rounded-full font-bold"
+              style={{
+                minWidth: 16,
+                height: 16,
+                padding: "0 4px",
+                fontSize: 10,
+                backgroundColor: C.danger,
+                color: "#fff",
+                border: "2px solid #EFF2EC",
+              }}
+            >
+              {gozleyen}
+            </span>
+          )}
         </button>
       </div>
     </header>

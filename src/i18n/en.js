@@ -18,7 +18,6 @@ export default {
   "nav.market": "Market",
   "nav.carbon": "Carbon",
 
-  "header.notifications": "Notifications",
   "header.language": "Change language",
 
   "home.greeting": "Good morning, {name}",
@@ -251,4 +250,12 @@ export default {
   "field.errorTooSmall": "The area is too small. Zoom in and draw again.",
   "field.errorTooLarge": "The area is too large. Zoom in and draw only your own field.",
   "field.warnFarFromDistrict": "The field is far from your selected district. Check the district.",
+  "header.notificationsCount": "Notifications — {count} pending recommendations",
+  "header.notificationsEmpty": "Notifications — no pending recommendations",
+  "ndvi.loading": "Loading satellite reading…",
+  "ndvi.measured": "Satellite reading · {gun} days ago · {say} readings",
+  "ndvi.cached": "Saved reading · {gun} days ago (no network)",
+  "ndvi.noReading": "No clear reading this period — it was cloudy",
+  "ndvi.notConfigured": "Satellite integration is not set up yet",
+  "ndvi.error": "Could not get satellite data",
 };

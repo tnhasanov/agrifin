@@ -1,5 +1,4 @@
 import { fetchForecast, summarizeForecast } from "./weather.js";
-import { FARM } from "./farm.js";
 import { havaNoqtesi } from "./saheYeri.js";
 
 /**
@@ -50,6 +49,7 @@ export async function askAgronomist({
   bitkiKey,
   location,
   sahe,
+  ndvi,
   lang,
   signal,
   onDelta,
@@ -84,7 +84,11 @@ export async function askAgronomist({
       // tövsiyəsinin praktiki mənası tamam fərqlidir
       sahe: sahe?.hektar ? { hektar: sahe.hektar } : undefined,
       havaDeqiq: noqte.deqiq,
-      ndvi: FARM.ndvi,
+      // Yalnız HƏQİQİ peyk ölçməsi göndərilir. Nümunə rəqəm göndərsək model
+      // onu ölçülmüş fakt kimi təqdim edər — uydurma, özü də inamla deyilən.
+      ndvi: ndvi?.ndvi,
+      ndviTarix: ndvi?.tarix,
+      ndviFerq: ndvi?.ferq ?? undefined,
       dil: lang,
     }),
   });

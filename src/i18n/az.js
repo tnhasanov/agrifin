@@ -18,7 +18,6 @@ export default {
   "nav.market": "Bazar",
   "nav.carbon": "Karbon",
 
-  "header.notifications": "Bildirişlər",
   "header.language": "Dili dəyiş",
 
   "home.greeting": "Sabahınız xeyir, {name}",
@@ -250,4 +249,12 @@ export default {
   "field.errorTooSmall": "Sahə çox kiçikdir. Yaxınlaşdırıb yenidən çəkin.",
   "field.errorTooLarge": "Sahə çox böyükdür. Yaxınlaşdırıb yalnız öz sahənizi çəkin.",
   "field.warnFarFromDistrict": "Sahə seçdiyiniz rayondan uzaqdır. Rayonu yoxlayın.",
+  "header.notificationsCount": "Bildirişlər — {count} gözləyən tövsiyə",
+  "header.notificationsEmpty": "Bildirişlər — gözləyən tövsiyə yoxdur",
+  "ndvi.loading": "Peyk ölçməsi yüklənir…",
+  "ndvi.measured": "Peyk ölçməsi · {gun} gün əvvəl · {say} ölçmə",
+  "ndvi.cached": "Saxlanmış ölçmə · {gun} gün əvvəl (şəbəkə yoxdur)",
+  "ndvi.noReading": "Bu dövrdə təmiz ölçmə yoxdur — buludlu olub",
+  "ndvi.notConfigured": "Peyk inteqrasiyası hələ qurulmayıb",
+  "ndvi.error": "Peyk məlumatı alınmadı",
 };
