@@ -317,7 +317,7 @@ ağ qanadlı = whitefly | sünə = sunn pest
 // Bota veriləcək konteksti yığır — yalnız lazım olan bitki bloku
 // --------------------------------------------------------------------------
 
-export function kontekstQur({ bitkiKey, rayon, ay, hava, ndvi, sahe, havaDeqiq }) {
+export function kontekstQur({ bitkiKey, rayon, ay, hava, ndvi, ndviTarix, ndviFerq, sahe, havaDeqiq }) {
   const zona = zonaTap(rayon);
   const b = BITKILER[bitkiKey];
 
@@ -337,7 +337,18 @@ export function kontekstQur({ bitkiKey, rayon, ay, hava, ndvi, sahe, havaDeqiq }
       ? `(hava proqnozu fermerin öz sahəsinin koordinatı üçündür)\n`
       : `(hava proqnozu rayon mərkəzi üçündür — sahə bir neçə km uzaq ola bilər)\n`;
   }
-  if (ndvi != null) mətn += `Sahənin cari NDVI: ${ndvi}\n`;
+  // NDVI yalnız həqiqətən ölçülübsə gəlir. Yoxdursa modelə açıq deyilir ki,
+  // "sizin NDVI yaxşıdır" kimi uydurma cümlə qurmasın.
+  if (ndvi != null) {
+    mətn += `Peyklə ölçülmüş NDVI: ${ndvi}`;
+    if (ndviTarix) mətn += ` (ölçmə dövrü ${ndviTarix})`;
+    if (ndviFerq != null && Math.abs(ndviFerq) >= 0.02) {
+      mətn += `, son 2 həftədə ${ndviFerq > 0 ? "+" : ""}${ndviFerq}`;
+    }
+    mətn += `\n`;
+  } else {
+    mətn += `NDVI ölçüsü YOXDUR — bitki sağlamlığı barədə rəqəm uydurma.\n`;
+  }
 
   if (b) {
     mətn += `\nBİTKİ: ${b.ad}\n`;

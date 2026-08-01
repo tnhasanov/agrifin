@@ -33,6 +33,8 @@ Node 22 tələb olunur (`.nvmrc`).
 ```
 api/
   agronom.js          serverless funksiya — Claude API açarı yalnız burada
+  ndvi.js             Copernicus Sentinel-2 → sahənin NDVI seriyası
+  geoJson.js          kontur çevirmə (en/uzunluq sırası burada qorunur)
   knowledge.js        aqronomik bilik bazası — aqronom yoxlanışı gözləyir
   dozaQoruyucu.js     axında doza sızmasını tutan bufer
 src/
@@ -167,6 +169,42 @@ rədd edilir, seçilmiş rayondan 150 km-dən uzaq sahəyə xəbərdarlıq veril
 
 ---
 
+## Peyk ölçməsi (NDVI)
+
+Fermerin çəkdiyi kontur Copernicus-un Statistical API-sinə göndərilir və
+sahənin son 60 günlük NDVI seriyası qayıdır. Şəkil endirilmir — hesablama
+Copernicus tərəfdə olur, biz yalnız rəqəmləri alırıq.
+
+**Qurulma:** dataspace.copernicus.eu → qeydiyyat → Dashboard → User Settings →
+OAuth clients → Create. Alınan dəyərlər Vercel-ə `SENTINEL_CLIENT_ID` və
+`SENTINEL_CLIENT_SECRET` kimi əlavə olunur (Production + Preview; Vercel
+"Sensitive" dəyişəni Development-ə buraxmır və bu normaldır, çünki
+`npm run dev` onsuz da /api/* vermir). Sonra yenidən deploy.
+
+**Yoxlama:** brauzerin ünvan sətrindən `/api/ndvi` açın. `{acarQurulub,
+tokenAlindi}` qaytarır — açar dəyəri heç vaxt görünmür.
+
+Qərarlar:
+
+- **Bulud maskalanır.** SCL zolağı ilə bulud, kölgə və qar piksel-piksel
+  atılır. Bu olmadan buludlu gün "bitki ölüb" kimi görünür.
+- **5 günlük dövr, ən az buludlu görüntü.** Sentinel-2 hər 2–3 gündən bir
+  keçir, amma çox gün buludludur. Dövrlə fermer boşluqsuz əyri görür; dəqiq
+  çəkiliş tarixi dövrün içindədir və UI bundan artıq dəqiqlik iddia etmir.
+- **Açar heç bir formada geri qaytarılmır.** Diaqnostika yalnız status verir,
+  yuxarı axının xəta mətni əks olunmur — test bunu yoxlayır və bir dəfə
+  həqiqi sızma tutdu.
+- **Keş brauzerdədir**, 12 saat, açarı konturun özündən çıxarılır: fermer
+  sahəni dəyişəndə köhnə ölçmələr avtomatik etibarsız olur. Verilənlər
+  bazası lazım deyil.
+- **Ölçmə yoxdursa uydurulmur.** Nümunə NDVI artıq nə ekranda nə də çata
+  göndərilir; model kontekstdə açıq şəkildə "NDVI ölçüsü YOXDUR" görür.
+
+Vəziyyətlər fermerə ayrı-ayrı cümlələrlə deyilir: yüklənir · ölçüldü ·
+buludlu olub · inteqrasiya qurulmayıb · alınmadı.
+
+---
+
 ## Aqronom köməkçisi
 
 Fermer əlamətləri təsvir edir, cavab isə onun rayonunun iqlim zonası, cari
@@ -237,9 +275,11 @@ Prioritet sırası ilə:
    peyk yol xəritəsinin ölçüsünü müəyyən edir.
 5. **Backend və saxlanma.** Hazırda bütün vəziyyət brauzerdədir.
    `services/` qovluğu bu keçid üçün hazırdır — ekranlara toxunmaq lazım deyil.
-6. **Real peyk məlumatı.** Sahə konturu artıq fermerin özündən gəlir; NDVI
-   hələ sabit rəqəmdir. Növbəti addım: konturu Sentinel-2-yə (Copernicus)
-   göndərib NDVI seriyası almaq; FarmScore həmin seriyadan hesablanmalı.
+6. **FarmScore-un həqiqi hesablanması.** NDVI artıq peykdən gəlir, amma
+   FarmScore (782) və kredit limiti hələ sabit rəqəmdir. Növbəti addım:
+   balı NDVI seriyasından — trend, dəyişkənlik, rayon ortalaması ilə
+   müqayisə — hesablamaq. Bal maliyyə qərarına təsir edəcəyi üçün hesablama
+   izlənilə bilən (auditable) olmalıdır.
 7. **KYC və maliyyə tənzimləməsi.** Kredit və kart məhsulu bank lisenziyası və ya
    partnyor bank tələb edir. Bu, texniki deyil, hüquqi işdir və ən uzun sürəndir.
 6. **Şriftləri öz üzərimizdə saxlamaq.** Sora/Inter indi Google-dan gəlir —

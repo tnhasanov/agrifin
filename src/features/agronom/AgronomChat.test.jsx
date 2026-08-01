@@ -34,10 +34,14 @@ function stubApi({
   parcalar = null,
   fail = false,
   status = 502,
+  peykSeriyasi = [],
 } = {}) {
   vi.stubGlobal(
     "fetch",
     vi.fn((url) => {
+      if (String(url).includes("/api/ndvi")) {
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ seriya: peykSeriyasi }) });
+      }
       if (String(url).includes("/api/agronom")) {
         if (fail) return Promise.resolve({ ok: false, status });
         const hadiseler = (parcalar ?? [cavab]).map((v) => ({ t: "delta", v }));
@@ -95,7 +99,9 @@ describe("Aqronom çatı", () => {
     const payload = JSON.parse(call[1].body);
     expect(payload.rayon).toBe("Bərdə");
     expect(payload.dil).toBe("az");
-    expect(payload.ndvi).toBe(0.72);
+    // Sahə çəkilməyib, ölçmə yoxdur: NDVI GÖNDƏRİLMİR. Nümunə rəqəm
+    // göndərsək model onu ölçülmüş fakt kimi təqdim edərdi.
+    expect(payload.ndvi).toBeUndefined();
     expect(payload.hava).toMatchObject({ maxTemp: 34 });
     expect(payload.messages.at(-1)).toEqual({
       role: "user",
@@ -300,6 +306,9 @@ describe("Aqronom çatı", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn((url, options) => {
+        if (String(url).includes("/api/ndvi")) {
+          return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ seriya: [] }) });
+        }
         if (String(url).includes("/api/agronom")) {
           return new Promise((resolve, reject) => {
             setTimeout(() => {

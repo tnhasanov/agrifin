@@ -130,7 +130,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { messages = [], bitkiKey, rayon, ay, hava, sahe, havaDeqiq, ndvi, dil } =
+    const { messages = [], bitkiKey, rayon, ay, hava, sahe, havaDeqiq, ndvi, ndviTarix, ndviFerq, dil } =
       req.body || {};
 
     if (!Array.isArray(messages) || messages.length === 0) {
@@ -162,7 +162,9 @@ export default async function handler(req, res) {
               balans: eded(hava.balans, -1000, 1000) ?? "—",
             }
           : undefined,
-      ndvi: eded(ndvi, 0, 1) ?? undefined,
+      ndvi: eded(ndvi, -1, 1) ?? undefined,
+      ndviTarix: typeof ndviTarix === "string" ? ndviTarix.slice(0, 10) : undefined,
+      ndviFerq: eded(ndviFerq, -2, 2) ?? undefined,
       // Sahə ölçüsü müştəridən gəlir — həddləri geo.js-dəki ilə eynidir
       sahe:
         sahe && typeof sahe === "object" && eded(sahe.hektar, 0.05, 1000) != null

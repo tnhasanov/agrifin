@@ -1,0 +1,179 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import App from "../../App.jsx";
+import { renderApp, WEATHER_FIXTURE } from "../../test/render.jsx";
+
+const SAHE = {
+  hektar: 6.5,
+  noqteler: [
+    [40.4, 47.1],
+    [40.4023, 47.1],
+    [40.4023, 47.1029],
+    [40.4, 47.1029],
+  ],
+};
+
+/** Son 20 gündə azalan seriya — su stressi mənzərəsi */
+const bugun = new Date().toISOString().slice(0, 10);
+const SERIYA = [
+  { baslangic: "2026-07-02", son: "2026-07-07", ndvi: 0.78, ortulu: 0 },
+  { baslangic: "2026-07-07", son: "2026-07-12", ndvi: 0.76, ortulu: 0.1 },
+  { baslangic: "2026-07-12", son: "2026-07-17", ndvi: 0.71, ortulu: 0 },
+  { baslangic: "2026-07-17", son: bugun, ndvi: 0.68, ortulu: 0 },
+];
+
+function seedSahe(sahe = SAHE) {
+  window.localStorage.setItem(
+    "agrifin:state",
+    JSON.stringify({
+      version: 4,
+      state: {
+        location: { name: "Bərdə", lat: 40.3705, lon: 47.1265, gps: false },
+        onboarded: true,
+        sahe,
+        chat: { messages: [], crop: "bugda", referral: false },
+      },
+    }),
+  );
+}
+
+/** ndviCavab: {ok, status, seriya} */
+function stubApi({ ok: uygun = true, status = 200, seriya = SERIYA } = {}) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((url) => {
+      if (String(url).includes("/api/ndvi")) {
+        return Promise.resolve(
+          uygun
+            ? { ok: true, status: 200, json: () => Promise.resolve({ seriya }) }
+            : { ok: false, status },
+        );
+      }
+      if (String(url).includes("/api/agronom")) {
+        const encoder = new TextEncoder();
+        const setirler = ['{"t":"delta","v":"Cavab"}\n', '{"t":"done"}\n'];
+        let i = 0;
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          body: {
+            getReader: () => ({
+              read: async () =>
+                i < setirler.length
+                  ? { done: false, value: encoder.encode(setirler[i++]) }
+                  : { done: true, value: undefined },
+            }),
+          },
+        });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(WEATHER_FIXTURE) });
+    }),
+  );
+}
+
+beforeEach(() => {
+  window.history.pushState({}, "", "/");
+  window.localStorage.clear();
+  window.localStorage.setItem("agrifin:lang", JSON.stringify("az"));
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("peyk ölçməsi — əsas ekran", () => {
+  it("sahə çəkilibsə ölçülmüş NDVI-ni və azalma oxunu göstərir", async () => {
+    seedSahe();
+    stubApi();
+    renderApp(<App />);
+
+    // Nümunə 0,72 deyil, ölçülmüş 0,68
+    await waitFor(() => expect(screen.getByText(/NDVI 0,68/)).toBeInTheDocument());
+    expect(screen.getByText(/NDVI 0,68/).textContent).toContain("▼");
+    expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument();
+  });
+
+  it("konturu sorğuda serverə göndərir", async () => {
+    seedSahe();
+    stubApi();
+    renderApp(<App />);
+
+    await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());
+    const call = fetch.mock.calls.find(([url]) => String(url).includes("/api/ndvi"));
+    expect(JSON.parse(call[1].body).noqteler).toEqual(SAHE.noqteler);
+  });
+
+  it("sahə çəkilməyibsə peyk sorğusu göndərilmir", async () => {
+    window.localStorage.setItem(
+      "agrifin:state",
+      JSON.stringify({
+        version: 4,
+        state: {
+          location: { name: "Bərdə", lat: 40.3705, lon: 47.1265, gps: false },
+          onboarded: true,
+        },
+      }),
+    );
+    stubApi();
+    renderApp(<App />);
+
+    await waitFor(() => expect(screen.getByText(/NDVI/)).toBeInTheDocument());
+    expect(fetch.mock.calls.some(([url]) => String(url).includes("/api/ndvi"))).toBe(false);
+  });
+
+  // Buludlu dövr xəta deyil — fermerə səbəbi deyilməlidir
+  it("ölçmə tapılmayanda buludu izah edir", async () => {
+    seedSahe();
+    stubApi({ seriya: [] });
+    renderApp(<App />);
+
+    await waitFor(() =>
+      expect(screen.getByText(/təmiz ölçmə yoxdur/)).toBeInTheDocument(),
+    );
+  });
+
+  it("inteqrasiya qurulmayıbsa bunu ayrıca deyir", async () => {
+    seedSahe();
+    stubApi({ ok: false, status: 501 });
+    renderApp(<App />);
+
+    await waitFor(() =>
+      expect(screen.getByText(/hələ qurulmayıb/)).toBeInTheDocument(),
+    );
+  });
+
+  it("digər xətalarda ayrı mesaj göstərir və tətbiq işləməyə davam edir", async () => {
+    seedSahe();
+    stubApi({ ok: false, status: 502 });
+    renderApp(<App />);
+
+    await waitFor(() => expect(screen.getByText(/alınmadı/)).toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "Əsas" })).toBeInTheDocument();
+  });
+});
+
+describe("peyk ölçməsi — aqronom çatı", () => {
+  it("ölçülmüş NDVI və trend sorğuya düşür", async () => {
+    const user = userEvent.setup();
+    seedSahe();
+    stubApi();
+    renderApp(<App />);
+    await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());
+
+    await user.click(screen.getByRole("button", { name: "Məsləhət" }));
+    await user.click(screen.getByRole("button", { name: "Aqronoma sual verin" }));
+    await user.click(screen.getByRole("button", { name: "Suvarmanı nə vaxt etməliyəm?" }));
+
+    await waitFor(() =>
+      expect(fetch.mock.calls.some(([url]) => String(url).includes("/api/agronom"))).toBe(true),
+    );
+    const call = fetch.mock.calls.find(([url]) => String(url).includes("/api/agronom"));
+    const yuk = JSON.parse(call[1].body);
+
+    expect(yuk.ndvi).toBe(0.68);
+    expect(yuk.ndviTarix).toBe(bugun);
+    // 0.78 → 0.68 = azalma; model bunu şərh edə bilməlidir
+    expect(yuk.ndviFerq).toBeCloseTo(-0.1, 2);
+  });
+});
