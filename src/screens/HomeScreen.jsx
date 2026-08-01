@@ -48,7 +48,11 @@ export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
   // Peyk ölçməsi sahədən asılıdır; sahə yoxdursa hook "yoxdur" qaytarır
   const peyk = useNdvi(state.sahe);
   const olculen = peyk.xulase;
-  const ndvi = formatNumber(olculen?.ndvi ?? FARM.ndvi, lang, { minimumFractionDigits: 2 });
+  const ndvi = formatNumber(olculen?.ndvi ?? FARM.ndvi, lang, {
+    minimumFractionDigits: 2,
+    // Üç onluq ölçmədə olmayan dəqiqlik iddia edir — NDVI iki onluqla oxunur
+    maximumFractionDigits: 2,
+  });
   const gunEvvel = olculen ? necheGunEvvel(olculen.tarix) : null;
 
   return (
