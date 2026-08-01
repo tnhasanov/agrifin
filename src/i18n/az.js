@@ -18,7 +18,6 @@ export default {
   "nav.market": "Bazar",
   "nav.carbon": "Karbon",
 
-  "header.notifications": "Bildirişlər",
   "header.language": "Dili dəyiş",
 
   "home.greeting": "Sabahınız xeyir, {name}",
@@ -250,4 +249,6 @@ export default {
   "field.errorTooSmall": "Sahə çox kiçikdir. Yaxınlaşdırıb yenidən çəkin.",
   "field.errorTooLarge": "Sahə çox böyükdür. Yaxınlaşdırıb yalnız öz sahənizi çəkin.",
   "field.warnFarFromDistrict": "Sahə seçdiyiniz rayondan uzaqdır. Rayonu yoxlayın.",
+  "header.notificationsCount": "Bildirişlər — {count} gözləyən tövsiyə",
+  "header.notificationsEmpty": "Bildirişlər — gözləyən tövsiyə yoxdur",
 };

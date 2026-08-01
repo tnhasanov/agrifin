@@ -18,7 +18,6 @@ export default {
   "nav.market": "Рынок",
   "nav.carbon": "Углерод",
 
-  "header.notifications": "Уведомления",
   "header.language": "Сменить язык",
 
   "home.greeting": "Доброе утро, {name}",
@@ -252,4 +251,6 @@ export default {
   "field.errorTooSmall": "Площадь слишком мала. Приблизьте и обведите заново.",
   "field.errorTooLarge": "Площадь слишком велика. Приблизьте и обведите только своё поле.",
   "field.warnFarFromDistrict": "Поле далеко от выбранного района. Проверьте район.",
+  "header.notificationsCount": "Уведомления — {count} ожидающих рекомендаций",
+  "header.notificationsEmpty": "Уведомления — нет ожидающих рекомендаций",
 };
