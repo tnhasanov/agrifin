@@ -16,7 +16,7 @@ import { duzgunSahe } from "../services/geo.js";
 export const PERSIST_KEY = "state";
 // Saxlanan formanı dəyişəndə bu rəqəmi artırın və MIQRASIYALAR-a keçid yazın.
 // Keçid yoxdursa köhnə məlumat səssizcə atılır.
-export const PERSIST_VERSION = 5;
+export const PERSIST_VERSION = 6;
 
 /**
  * Köhnə versiyadan yeniyə keçid. Fermerdən onsuz da bildiyimiz şeyi
@@ -30,6 +30,13 @@ const MIQRASIYALAR = {
   3: (state) => ({ ...state, sahe: null }),
   // 4 → 5: sahə siqnalları əlavə olundu; bağlananların siyahısı boş başlayır
   4: (state) => ({ ...state, bagliSiqnallar: [] }),
+  // 5 → 6: nümunə tövsiyələr silindi (bax: services/siqnal.js) — onların
+  // "tamamlandı" vəziyyəti də lazım deyil
+  5: (state) => {
+    const yeni = { ...state };
+    delete yeni.completedRecs;
+    return yeni;
+  },
 };
 
 function miqrasiyaEt(saved) {
@@ -75,7 +82,6 @@ export const initialState = {
   // Aqronom çatı: mesajlar {role, content} və ya {role, errorKey}
   chat: { messages: [], crop: null, referral: false },
   creditsSold: false,
-  completedRecs: [],
   // Fermerin bağladığı sahə siqnallarının id-ləri. Id-də ölçmə/hadisə tarixi
   // var, ona görə növbəti şaxta və ya yeni ölçmə yenidən görünür.
   bagliSiqnallar: [],
@@ -87,11 +93,6 @@ export const initialState = {
 
 export function reducer(state, action) {
   switch (action.type) {
-    case "rec/complete": {
-      if (state.completedRecs.includes(action.id)) return state;
-      return { ...state, completedRecs: [...state.completedRecs, action.id] };
-    }
-
     case "siqnal/bagla": {
       if (!action.id || state.bagliSiqnallar.includes(action.id)) return state;
       // Siyahı sonsuz böyüməsin: id-lər tarixlidir, köhnələr bir daha
@@ -264,10 +265,6 @@ export function StoreProvider({ children }) {
     () => ({
       showToast,
       clearToast: () => dispatch({ type: "toast/clear" }),
-      completeRec: (id) => {
-        dispatch({ type: "rec/complete", id });
-        showToast("toast.recAdded");
-      },
       sellCredits: () => {
         dispatch({ type: "carbon/sell" });
         showToast("toast.creditsSold", { amount: { money: carbonPayout() } });

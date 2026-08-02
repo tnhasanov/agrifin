@@ -4,14 +4,14 @@ import { carbonPayout } from "../services/carbon.js";
 import { LOAN_TERMS, computeRepayment } from "../services/farm.js";
 
 describe("reducer", () => {
-  it("tövsiyəni tamamlanmış kimi qeyd edir", () => {
-    const next = reducer(initialState, { type: "rec/complete", id: "irrigate" });
-    expect(next.completedRecs).toEqual(["irrigate"]);
+  it("bağlanan siqnalı yadda saxlayır", () => {
+    const next = reducer(initialState, { type: "siqnal/bagla", id: "saxta:2026-08-04" });
+    expect(next.bagliSiqnallar).toEqual(["saxta:2026-08-04"]);
   });
 
-  it("eyni tövsiyəni iki dəfə əlavə etmir", () => {
-    const once = reducer(initialState, { type: "rec/complete", id: "irrigate" });
-    const twice = reducer(once, { type: "rec/complete", id: "irrigate" });
+  it("eyni siqnalı iki dəfə əlavə etmir", () => {
+    const once = reducer(initialState, { type: "siqnal/bagla", id: "saxta:2026-08-04" });
+    const twice = reducer(once, { type: "siqnal/bagla", id: "saxta:2026-08-04" });
     expect(twice).toBe(once);
   });
 

@@ -93,17 +93,6 @@ describe("AgriFin tətbiqi", () => {
     expect(screen.getByText("360 ₼ pulqabınıza əlavə olundu")).toBeInTheDocument();
   });
 
-  it("tövsiyəni tamamlayır və məsləhət ekranında qeyd edir", async () => {
-    const user = userEvent.setup();
-    window.history.pushState({}, "", "/advisor");
-    renderApp(<App />);
-
-    await user.click(screen.getByRole("button", { name: "Planlaşdır" }));
-
-    expect(screen.getByText("Hazırdır")).toBeInTheDocument();
-    expect(screen.getByText("Təsərrüfat planınıza əlavə olundu")).toBeInTheDocument();
-  });
-
   it("dil düyməsi interfeysi ingiliscəyə keçirir", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
@@ -111,7 +100,7 @@ describe("AgriFin tətbiqi", () => {
     await user.click(screen.getByRole("button", { name: /Dili dəyiş/ }));
 
     expect(screen.getByRole("button", { name: "Market" })).toBeInTheDocument();
-    expect(screen.getByText("Today's steps")).toBeInTheDocument();
+    expect(screen.getByText("Crop health")).toBeInTheDocument();
   });
 
   it("vəziyyəti localStorage-da saxlayır", async () => {

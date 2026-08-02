@@ -1,23 +1,18 @@
 import { Icon } from "./Icon.jsx";
 import { C, font } from "../theme/tokens.js";
 import { LANGUAGES, useI18n } from "../i18n/index.jsx";
-import { useStore } from "../state/store.jsx";
 import { useRouter } from "../lib/router.jsx";
 import { pathFor } from "../routes.js";
-import { withCompletion } from "../services/advisor.js";
 
 export function AppHeader({ siqnalSayi = 0 }) {
   const { t, lang, cycleLang } = useI18n();
-  const { state } = useStore();
   const { navigate } = useRouter();
   const current = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0];
 
-  // Nişan uydurma deyil: sahədən gələn açıq siqnallar + gözləyən tövsiyələr.
-  // Fermer hamısını bağlayanda nişan yox olur, zəng isə yenə məsləhət
-  // ekranına aparır. Əvvəl burada sabit qırmızı nöqtə vardı və düymə heç nə
-  // etmirdi — toxunub heç nə almamaq etibarı ən sürətli itirən şeydir.
-  const gozleyen =
-    siqnalSayi + withCompletion(state.completedRecs).filter((rec) => !rec.done).length;
+  // Nişan uydurma deyil: sahədən gələn açıq siqnalların sayıdır. Əvvəl bura
+  // nümunə tövsiyələr də sayılırdı — "5" görünürdü, amma yalnız 1-i ölçmədən
+  // çıxırdı. Qarışıq say nişanı mənasızlaşdırır.
+  const gozleyen = siqnalSayi;
 
   return (
     <header className="flex items-center justify-between px-5 pt-5 pb-2">

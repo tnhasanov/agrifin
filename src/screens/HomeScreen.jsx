@@ -1,16 +1,13 @@
-import { Card } from "../components/Card.jsx";
 import { Chip } from "../components/Chip.jsx";
 import { FarmScoreGauge } from "../components/FarmScoreGauge.jsx";
 import { Icon } from "../components/Icon.jsx";
-import { SectionTitle } from "../components/SectionTitle.jsx";
 import { WeatherStrip } from "../features/weather/WeatherStrip.jsx";
-import { C, font, tone as TONES } from "../theme/tokens.js";
+import { C, font } from "../theme/tokens.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
 import { useRouter } from "../lib/router.jsx";
 import { formatNumber } from "../lib/format.js";
 import { pathFor } from "../routes.js";
-import { withCompletion } from "../services/advisor.js";
 import { FARM } from "../services/farm.js";
 import { DEFAULT_LOCATION } from "../services/location.js";
 import { havaNoqtesi } from "../services/saheYeri.js";
@@ -50,10 +47,6 @@ export function HomeScreen({
   const hectares = state.sahe?.hektar ?? FARM.hectares;
   // Proqnoz sahənin öz koordinatı üçün alınır — çatla eyni nöqtə olsun deyə
   const noqte = havaNoqtesi({ location, sahe: state.sahe });
-
-  const pending = withCompletion(state.completedRecs)
-    .filter((rec) => !rec.done)
-    .slice(0, 2);
 
   // Peyk ölçməsi App-də qurulur (bax: App.jsx) — burada yalnız göstərilir
   const olculen = peyk.xulase;
@@ -133,8 +126,24 @@ export function HomeScreen({
         </button>
 
         <div className="-mb-1 flex justify-center">
-          <FarmScoreGauge score={FARM.farmScore} ndvi={FARM.ndvi} label={t("home.farmscore")} />
+          {/* Qövs ÖLÇÜLMÜŞ NDVI-dən çəkilir. Əvvəl nümunə 0.72 idi və yanındakı
+              xana həqiqi 0,33 göstərəndə qövs dolu görünürdü — eyni kartda iki
+              fərqli NDVI. Ölçmə yoxdursa qövs ümumiyyətlə çəkilmir. */}
+          <FarmScoreGauge
+            score={FARM.farmScore}
+            ndvi={olculen?.ndvi ?? 0}
+            label={t("home.farmscore")}
+          />
         </div>
+
+        {/* FarmScore və kredit limiti hələ hesablanmır. Fermer bunları peykdən
+            çıxarılmış təklif kimi oxuya bilər — açıq deyilməlidir. */}
+        <p
+          className="mt-1 text-center"
+          style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, lineHeight: 1.4 }}
+        >
+          {t("home.scoreNote")}
+        </p>
 
         <div className="mt-1 grid grid-cols-3 gap-2">
           <StatTile label={t("home.cropHealth")}>
@@ -241,50 +250,6 @@ export function HomeScreen({
         onPickLocation={onPickLocation}
         meslehetGoster={siqnallar.length === 0}
       />
-
-      <SectionTitle action={t("home.openAdvisor")} onAction={() => navigate(pathFor("advisor"))}>
-        {t("home.todaySteps")}
-      </SectionTitle>
-
-      {pending.length === 0 ? (
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl p-2" style={{ backgroundColor: C.fieldSoft }}>
-              <Icon name="Check" size={16} color={C.field} />
-            </div>
-            <p className="text-sm font-semibold" style={{ color: C.ink }}>
-              {t("home.allDone")}
-            </p>
-          </div>
-        </Card>
-      ) : (
-        pending.map((rec) => {
-          const palette = TONES[rec.tone];
-          return (
-            <Card
-              key={rec.id}
-              style={{ marginBottom: 8 }}
-              onClick={() => navigate(pathFor("advisor"))}
-              ariaLabel={t(rec.titleKey)}
-            >
-              <div className="flex items-start gap-3">
-                <div className="rounded-xl p-2" style={{ backgroundColor: palette.bg }}>
-                  <Icon name={rec.icon} size={16} color={palette.color} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold" style={{ color: C.ink }}>
-                    {t(rec.titleKey)}
-                  </p>
-                  <p className="mt-0.5 text-xs" style={{ color: C.muted }}>
-                    {t(rec.sourceKey)}
-                  </p>
-                </div>
-                <Icon name="ChevronRight" size={16} color={C.muted} />
-              </div>
-            </Card>
-          );
-        })
-      )}
     </div>
   );
 }

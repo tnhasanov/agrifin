@@ -27,11 +27,9 @@ export default {
   "home.cropHealth": "Crop health",
   "home.creditLimit": "Credit limit",
   "home.wallet": "Wallet",
+  "home.scoreNote": "FarmScore and the credit limit are illustrative — the real scoring model is still being built.",
   "home.loanCta": "Get a crop-cycle loan",
   "home.loanNote": "Your satellite-verified field is your credit history.",
-  "home.todaySteps": "Today's steps",
-  "home.openAdvisor": "Open advisor",
-  "home.allDone": "Every step for today is done. Nice work.",
 
   "weather.title": "Weather in the field",
   "weather.unavailable": "Weather data is not available right now.",
@@ -61,37 +59,6 @@ export default {
   "location.later": "I'll choose later",
   "location.pick": "Pick a location",
   "location.close": "Close location picker",
-
-  "advisor.title": "Recommendations",
-  "advisor.subtitle":
-    "Ranked by impact on your yield and income. The source is shown on every card.",
-
-  "rec.irrigate.title": "Irrigate zone 3, north field",
-  "rec.irrigate.cta": "Schedule",
-  "rec.irrigate.body":
-    "Satellite shows NDVI in zone 3 down 0.09 over 6 days — early water stress. Irrigating within 48 hours protects roughly 0.4 t/ha of yield.",
-  "rec.irrigate.source": "Satellite · Sentinel-2, yesterday",
-  "rec.irrigate.impact": "approx. +310 ₼",
-
-  "rec.fertilizer.title": "Push fertilising to Sunday",
-  "rec.fertilizer.cta": "Change plan",
-  "rec.fertilizer.body":
-    "34 mm of rain is coming Friday–Saturday. Applying nitrogen before rain means runoff — lost money and a hit to your carbon score. Sunday conditions are ideal.",
-  "rec.fertilizer.source": "Weather · local station + model",
-  "rec.fertilizer.impact": "210 ₼ saved",
-
-  "rec.sellWindow.title": "Selling window for wheat is opening",
-  "rec.sellWindow.cta": "View offers",
-  "rec.sellWindow.body":
-    "Prices rose 2.4% this week and the model expects +6–9% by the end of July. Consider a forward contract on part of the harvest to lock in the peak.",
-  "rec.sellWindow.source": "Market · price forecast",
-  "rec.sellWindow.impact": "+6–9%",
-
-  "rec.aphid.title": "Aphid risk is rising",
-  "rec.aphid.cta": "Log an inspection",
-  "rec.aphid.body":
-    "This week's humidity and temperature match aphid spread conditions in your region. Check the field edges; early intervention is far cheaper than a late one.",
-  "rec.aphid.source": "Agronomy · pest model",
 
   "chat.open": "Ask the agronomist",
   "chat.openDesc": "Your field's weather and satellite readings are taken into account",
@@ -217,7 +184,6 @@ export default {
   "loan.successLine": "{amount} is in your wallet",
   "loan.successNote": "Repay {repay} on {date}. We'll remind you when the grain sells.",
 
-  "toast.recAdded": "Added to your farm plan",
   "toast.creditsSold": "{amount} added to your wallet",
   "toast.locationSelected": "Forecast loaded for {name}",
 
@@ -282,6 +248,8 @@ export default {
   "siqnal.title": "Signals from your field",
   "siqnal.subtitle":
     "These alerts come from satellite measurements and a forecast taken for your own field's coordinates.",
+  "siqnal.bosBasliq": "Nothing on your field needs attention",
+  "siqnal.bosMetn": "The latest satellite reading and the forecast are both normal. A warning will appear here as soon as that changes.",
   "siqnal.bagla": "Dismiss signal",
   "siqnal.sekilCek": "Take a photo",
   "siqnal.qalan": "{count} more signals — see all",

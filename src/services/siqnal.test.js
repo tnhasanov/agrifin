@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { acigSiqnallar, siqnallariQur } from "./siqnal.js";
+import { ICONS } from "../components/icons.js";
 
 const GUNLER = [
   "2026-08-02",
@@ -217,5 +218,45 @@ describe("sıralama və filtr", () => {
   it("heç bir məlumat olmadan boş siyahı qaytarır", () => {
     expect(siqnallariQur()).toEqual([]);
     expect(siqnallariQur({ daily: {}, hourly: {}, xulase: null })).toEqual([]);
+  });
+});
+
+// Icon komponenti yalnız açıq siyahıdakı ikonları tanıyır (bax: icons.js) —
+// siyahıda olmayan ad ekranda SƏSSİZCƏ boşluq kimi görünür
+describe("siqnal ikonları", () => {
+  it("hər siqnal növünün ikonu Icon siyahısındadır", () => {
+    const senarilər = [
+      { ...hava({ temperature_2m_min: [17, -3, 18, 17, 16, 17, 17] }), indi: INDI },
+      { ...hava({ temperature_2m_max: [28, 41, 29, 28, 27, 28, 28] }), indi: INDI },
+      { ...hava({ precipitation_sum: [6, 8, 4, 0, 0, 0, 0] }), indi: INDI },
+      { ...hava(), xulase: peyk({ suSeviyyesi: "az", nemlik: -0.08 }), indi: INDI },
+      {
+        ...hava({ precipitation_sum: [0, 9, 3, 0, 0, 0, 0] }),
+        xulase: peyk({ suSeviyyesi: "az", nemlik: -0.08 }),
+        indi: INDI,
+      },
+      { ...hava(), xulase: peyk({ istiqamet: "azalir", ferq: -0.09 }), indi: INDI },
+      { ...hava(), xulase: peyk({ tarix: "2026-07-10" }), indi: INDI },
+      {
+        ...hava(),
+        xulase: peyk(),
+        muqayise: { pille: "alt", ferq: -17, medyan: 0.82, tarix: "2026-08-01" },
+        indi: INDI,
+      },
+    ];
+    const sakit = hava();
+    sakit.hourly.wind_speed_10m = Array.from({ length: 48 }, () => 6);
+    sakit.hourly.precipitation_probability = Array.from({ length: 48 }, () => 5);
+    senarilər.push({ ...sakit, indi: INDI });
+
+    const gorulen = new Set();
+    for (const arqument of senarilər) {
+      for (const siqnal of siqnallariQur(arqument)) {
+        gorulen.add(siqnal.nov);
+        expect(ICONS[siqnal.icon], `${siqnal.nov} → ${siqnal.icon}`).toBeTruthy();
+      }
+    }
+    // Senarilər bütün növləri əhatə etməlidir, yoxsa test heç nə qorumur
+    expect(gorulen.size).toBe(9);
   });
 });

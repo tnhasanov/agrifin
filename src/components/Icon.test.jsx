@@ -3,7 +3,6 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { hasIcon } from "./icons.js";
 import { ROUTES } from "../routes.js";
-import { RECOMMENDATIONS } from "../services/advisor.js";
 import { iconForCode } from "../services/weather.js";
 
 // Ikon adları sətir kimi ötürülür, ona görə çatışmayan ad kompilyasiya
@@ -42,10 +41,6 @@ describe("Icon siyahısı", () => {
 
   it("naviqasiya ikonlarını tanıyır", () => {
     expect(ROUTES.filter((route) => !hasIcon(route.icon))).toEqual([]);
-  });
-
-  it("tövsiyə ikonlarını tanıyır", () => {
-    expect(RECOMMENDATIONS.filter((rec) => !hasIcon(rec.icon))).toEqual([]);
   });
 
   it("bütün WMO hava kodları üçün ikon var", () => {

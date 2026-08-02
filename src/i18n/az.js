@@ -27,11 +27,9 @@ export default {
   "home.cropHealth": "Məhsul sağlamlığı",
   "home.creditLimit": "Kredit limiti",
   "home.wallet": "Pulqabı",
+  "home.scoreNote": "FarmScore və kredit limiti nümunə göstəricidir — real qiymətləndirmə modeli hazırlanır.",
   "home.loanCta": "Məhsul dövrü krediti al",
   "home.loanNote": "Peyklə təsdiqlənmiş əkininiz sizin kredit tarixçənizdir.",
-  "home.todaySteps": "Bugünkü addımlar",
-  "home.openAdvisor": "Məsləhətçini aç",
-  "home.allDone": "Bugünkü addımların hamısı tamamlandı. Yaxşı işdir.",
 
   "weather.title": "Sahədə hava",
   "weather.unavailable": "Hava məlumatı hazırda əlçatan deyil.",
@@ -61,37 +59,6 @@ export default {
   "location.later": "Sonra seçəcəyəm",
   "location.pick": "Yeri seçin",
   "location.close": "Yer seçimini bağla",
-
-  "advisor.title": "Tövsiyələr",
-  "advisor.subtitle":
-    "Məhsuldarlığa və gəlirinizə təsirinə görə sıralanıb. Mənbə hər kartda göstərilir.",
-
-  "rec.irrigate.title": "Şimal sahəsi, 3-cü zonanı suvarın",
-  "rec.irrigate.cta": "Planlaşdır",
-  "rec.irrigate.body":
-    "Peyk göstərir ki, 3-cü zonada NDVI 6 gündə 0.09 azalıb — erkən su stressi. 48 saat ərzində suvarma təxminən 0.4 t/ha məhsulu qoruyur.",
-  "rec.irrigate.source": "Peyk · Sentinel-2, dünən",
-  "rec.irrigate.impact": "təx. +310 ₼",
-
-  "rec.fertilizer.title": "Gübrələməni bazar gününə saxlayın",
-  "rec.fertilizer.cta": "Planı dəyiş",
-  "rec.fertilizer.body":
-    "Cümə–şənbə 34 mm yağış yağacaq. Yağışdan əvvəl azot vermək axıntı deməkdir — pul itkisi və karbon balınıza zərbə. Bazar günü şərait idealdır.",
-  "rec.fertilizer.source": "Hava · yerli stansiya + model",
-  "rec.fertilizer.impact": "210 ₼ qənaət",
-
-  "rec.sellWindow.title": "Buğda üçün satış pəncərəsi açılır",
-  "rec.sellWindow.cta": "Təkliflərə bax",
-  "rec.sellWindow.body":
-    "Qiymətlər bu həftə 2.4% artıb, model iyulun sonuna qədər +6–9% gözləyir. Zirvəni sabitləmək üçün məhsulun bir hissəsinə forvard müqaviləsi düşünün.",
-  "rec.sellWindow.source": "Bazar · qiymət proqnozu",
-  "rec.sellWindow.impact": "+6–9%",
-
-  "rec.aphid.title": "Mənənə riski artır",
-  "rec.aphid.cta": "Baxışı qeyd et",
-  "rec.aphid.body":
-    "Bu həftəki rütubət və temperatur bölgənizdə mənənə yayılması şəraitinə uyğundur. Bağın kənarlarını yoxlayın; erkən müdaxilə gecikmişdən qat-qat ucuzdur.",
-  "rec.aphid.source": "Aqronomiya · zərərverici modeli",
 
   "chat.open": "Aqronoma sual verin",
   "chat.openDesc": "Sahənizin havası və peyk göstəriciləri nəzərə alınır",
@@ -216,7 +183,6 @@ export default {
   "loan.successLine": "{amount} pulqabınızdadır",
   "loan.successNote": "{date} tarixində {repay} ödəyin. Taxıl satılanda sizə xatırladacağıq.",
 
-  "toast.recAdded": "Təsərrüfat planınıza əlavə olundu",
   "toast.creditsSold": "{amount} pulqabınıza əlavə olundu",
   "toast.locationSelected": "{name} üçün hava proqnozu yükləndi",
 
@@ -281,6 +247,8 @@ export default {
   "siqnal.title": "Sahənizdən siqnallar",
   "siqnal.subtitle":
     "Bu xəbərdarlıqlar sizin sahənizin koordinatı üçün alınmış peyk ölçməsi və hava proqnozundan çıxarılır.",
+  "siqnal.bosBasliq": "Sahənizdə diqqət tələb edən heç nə yoxdur",
+  "siqnal.bosMetn": "Son peyk ölçməsi və hava proqnozu normaldır. Vəziyyət dəyişən kimi burada xəbərdarlıq görünəcək.",
   "siqnal.bagla": "Siqnalı bağla",
   "siqnal.sekilCek": "Şəkil çək",
   "siqnal.qalan": "Daha {count} siqnal — hamısına bax",

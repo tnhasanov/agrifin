@@ -164,16 +164,16 @@ describe("sahə siqnalları — əsas ekran", () => {
 });
 
 describe("sahə siqnalları — bildiriş mərkəzi", () => {
-  it("zəngin nişanı siqnalları da sayır", async () => {
+  it("zəngin nişanı açıq siqnalların sayını göstərir", async () => {
     seed();
-    stubApi();
+    stubApi({ proqnoz: hava({ temperature_2m_min: [17, -3, 18, 17, 16, 17, 17] }) });
     renderApp(<App />);
 
-    // 4 nümunə tövsiyə + suvarma siqnalı
-    await waitFor(() => expect(zeng()).toHaveTextContent("5"));
+    // Şaxta + suvarma. Nümunə tövsiyələr sayılmır — hamısı ölçmədən çıxır.
+    await waitFor(() => expect(zeng()).toHaveTextContent("2"));
   });
 
-  it("məsləhət ekranında bütün siqnallar tövsiyələrdən əvvəl sıralanır", async () => {
+  it("məsləhət ekranı bütün siqnalları ciddiliyə görə sıralayır", async () => {
     const user = userEvent.setup();
     seed();
     stubApi({ proqnoz: hava({ temperature_2m_min: [17, -3, 18, 17, 16, 17, 17] }) });
@@ -193,12 +193,13 @@ describe("sahə siqnalları — bildiriş mərkəzi", () => {
     stubApi();
     renderApp(<App />);
     await waitFor(() => expect(screen.getByText("Suvarma vaxtıdır")).toBeInTheDocument());
-    expect(zeng()).toHaveTextContent("5");
+    expect(zeng()).toHaveTextContent("1");
 
     await user.click(screen.getByRole("button", { name: "Siqnalı bağla" }));
 
     expect(screen.queryByText("Suvarma vaxtıdır")).not.toBeInTheDocument();
-    expect(zeng()).toHaveTextContent("4");
+    // Tək siqnal idi — nişan tamamilə yox olur
+    expect(zeng()).toHaveTextContent("");
     // Səhifə yenilənəndə də qayıtmamalıdır
     expect(window.localStorage.getItem("agrifin:state")).toContain("suvar:");
   });

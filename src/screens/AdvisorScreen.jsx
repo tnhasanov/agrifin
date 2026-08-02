@@ -1,17 +1,13 @@
-import { Card } from "../components/Card.jsx";
-import { Chip } from "../components/Chip.jsx";
 import { Icon } from "../components/Icon.jsx";
 import { SectionTitle } from "../components/SectionTitle.jsx";
-import { C, font, tone as TONES } from "../theme/tokens.js";
+import { C, font } from "../theme/tokens.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
-import { withCompletion } from "../services/advisor.js";
 import { SiqnalKarti } from "../features/signals/SiqnalKarti.jsx";
 
 export function AdvisorScreen({ onOpenChat, siqnallar = [] }) {
   const { t } = useI18n();
-  const { state, actions } = useStore();
-  const recs = withCompletion(state.completedRecs);
+  const { actions } = useStore();
 
   return (
     <div className="px-4 pb-4">
@@ -65,85 +61,41 @@ export function AdvisorScreen({ onOpenChat, siqnallar = [] }) {
         </button>
       </div>
 
-      {/* Sahədən gələn siqnallar tövsiyələrdən ƏVVƏL gəlir: bunlar bu gün
-          ölçülmüş rəqəmlərdən çıxır, aşağıdakı siyahı isə nümunədir */}
-      {siqnallar.length > 0 && (
-        <>
-          <SectionTitle>{t("siqnal.title")}</SectionTitle>
-          <p className="-mt-1 mb-3 px-1 text-xs" style={{ color: C.muted }}>
-            {t("siqnal.subtitle")}
-          </p>
-          {siqnallar.map((siqnal, index) => (
-            <SiqnalKarti
-              key={siqnal.id}
-              siqnal={siqnal}
-              onBagla={actions.siqnaliBagla}
-              onHereket={onOpenChat}
-              style={{ marginBottom: 10, "--i": index + 1 }}
-            />
-          ))}
-        </>
-      )}
-
-      <SectionTitle>{t("advisor.title")}</SectionTitle>
+      {/* Bütün siyahı BU sahənin ölçmələrindən çıxır. Əvvəl burada nümunə
+          tövsiyələr də vardı — uydurma rəqəmlərlə, üstəlik həqiqi siqnallarla
+          eyni görkəmdə. Fermer hansının ölçülmüş olduğunu ayıra bilmirdi. */}
+      <SectionTitle>{t("siqnal.title")}</SectionTitle>
       <p className="-mt-1 mb-3 px-1 text-xs" style={{ color: C.muted }}>
-        {t("advisor.subtitle")}
+        {t("siqnal.subtitle")}
       </p>
 
-      {recs.map((rec, index) => {
-        const palette = TONES[rec.tone];
-        return (
-          <Card
-            key={rec.id}
-            className="giris"
-            style={{ "--i": index + 1, marginBottom: 10, opacity: rec.done ? 0.55 : 1 }}
-          >
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 rounded-xl p-2" style={{ backgroundColor: palette.bg }}>
-                <Icon name={rec.icon} size={16} color={palette.color} />
-              </div>
-              <div className="flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
-                    {t(rec.titleKey)}
-                  </h3>
-                  {rec.impactKey && (
-                    <Chip label={t(rec.impactKey)} color={C.goldDeep} bg={C.goldSoft} />
-                  )}
-                </div>
-                <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
-                  {t(rec.bodyKey)}
-                </p>
-                <div className="mt-3 flex items-center justify-between">
-                  <Chip
-                    icon={rec.icon}
-                    label={t(rec.sourceKey)}
-                    color={palette.color}
-                    bg={palette.bg}
-                  />
-                  {rec.done ? (
-                    <span
-                      className="flex items-center gap-1 text-xs font-bold"
-                      style={{ color: C.field }}
-                    >
-                      <Icon name="Check" size={14} color={C.field} /> {t("common.ready")}
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => actions.completeRec(rec.id)}
-                      className="rounded-lg px-3 py-1.5 text-xs font-bold"
-                      style={{ backgroundColor: C.pine, color: "#fff" }}
-                    >
-                      {t(rec.ctaKey)}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </Card>
-        );
-      })}
+      {siqnallar.length === 0 ? (
+        <div
+          className="giris rounded-2xl p-4 text-center"
+          style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}
+        >
+          {/* Icon svg-dir: text-center onu mərkəzləmir, flex lazımdır */}
+          <div className="flex justify-center">
+            <Icon name="Check" size={18} color={C.field} />
+          </div>
+          <p className="mt-1.5 text-sm font-semibold" style={{ color: C.ink }}>
+            {t("siqnal.bosBasliq")}
+          </p>
+          <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
+            {t("siqnal.bosMetn")}
+          </p>
+        </div>
+      ) : (
+        siqnallar.map((siqnal, index) => (
+          <SiqnalKarti
+            key={siqnal.id}
+            siqnal={siqnal}
+            onBagla={actions.siqnaliBagla}
+            onHereket={onOpenChat}
+            style={{ marginBottom: 10, "--i": index + 1 }}
+          />
+        ))
+      )}
     </div>
   );
 }
