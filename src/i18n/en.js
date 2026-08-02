@@ -308,20 +308,12 @@ export default {
   "tovsiye.title": "Work for this stage",
   "tovsiye.subtitle":
     "Derived from the crop calendar, your field size and the forecast. Unlike signals, these are not urgent — they are the season's plan.",
-  "tovsiye.kalibrleme":
-    "These recommendations rest on general norms and are not yet calibrated for Azerbaijani conditions. Stage dates are for the Aran lowland; water coefficients come from the FAO international table. Treat them as orientation, not a prescription — confirm with an agronomist.",
+  "tovsiye.kalibrleme": "These recommendations rest on general norms. Check with an agronomist before changing your irrigation schedule.",
 
   "tovsiye.menbe.teqvim": "Crop calendar · your climate zone",
   "tovsiye.menbe.hesablama": "Calculation · ET0 + satellite",
   "tovsiye.menbe.peyk": "Sentinel-2 satellite · your field",
   "tovsiye.menbe.sahe": "Your field's size",
-
-  "tovsiye.qeyd.teqvim":
-    "Stage months are for the Aran lowland. In the foothills and Sheki–Zagatala they start 1–3 weeks later. Not yet reviewed by an agronomist.",
-  "tovsiye.qeyd.su":
-    "Calculated with the FAO-56 standard coefficient. Soil type, irrigation method and variety shift it by ±20%. Do not overhaul your irrigation schedule on this figure alone.",
-  "tovsiye.qeyd.zona":
-    "The corners are geographic quadrants, not a soil map. The satellite cannot see why an area is weak — that needs a look on the ground.",
 
   "tovsiye.su.basliq": "Water needed this week",
   "tovsiye.su.metn":

@@ -69,7 +69,7 @@ describe("tövsiyə siyahısı", () => {
     // Mətn tərcümə açarı deyil — bilik bazasından olduğu kimi gəlir
     expect(ilk.basliq).toBe("Boruya çıxma");
     expect(ilk.metn).toContain("İkinci azot");
-    expect(ilk.qeydKey).toBe("tovsiye.qeyd.teqvim");
+    expect(ilk.menbeKey).toBe("tovsiye.menbe.teqvim");
   });
 
   it("suvarma miqdarını mm və m³ ilə verir", () => {
@@ -104,8 +104,9 @@ describe("tövsiyə siyahısı", () => {
     expect(tovsiyeleriQur()).toEqual([]);
   });
 
-  // Kalibrləmə qeydi olmayan kart fermerə rəqəmi olduğundan dəqiq göstərir
-  it("normativə əsaslanan hər kartda kalibrləmə qeydi var", () => {
+  // Metodologiya ekrandan çıxarıldı, mənbə isə qaldı: fermerə "FAO-56 əmsalı"
+  // lazım deyil, "bu rəqəm sizin sahənizdən gəlir" isə lazımdır
+  it("hər kartda mənbə var, metodologiya izahı yoxdur", () => {
     const siyahi = tovsiyeleriQur({
       teqvim: TEQVIM,
       daily: hava(5, 1),
@@ -113,9 +114,8 @@ describe("tövsiyə siyahısı", () => {
       zona: { zeif: { ad: "simalSerq", ferq: -18 }, tarix: "2026-08-01" },
     });
     for (const kart of siyahi) {
-      // Baxış planı sırf arifmetikadır — qeyd lazım deyil
-      if (kart.nov === "baxis") continue;
-      expect(kart.qeydKey, kart.nov).toBeTruthy();
+      expect(kart.menbeKey, kart.nov).toBeTruthy();
+      expect(kart.qeydKey, kart.nov).toBeUndefined();
     }
   });
 

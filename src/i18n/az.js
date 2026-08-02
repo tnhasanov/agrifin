@@ -307,20 +307,12 @@ export default {
   "tovsiye.title": "Bu mərhələnin işləri",
   "tovsiye.subtitle":
     "Bitkinin təqvimi, sahənizin ölçüsü və hava proqnozundan çıxarılır. Siqnallardan fərqli olaraq bunlar təcili deyil — mövsümün planıdır.",
-  "tovsiye.kalibrleme":
-    "Bu tövsiyələr ümumi normativlərə əsaslanır və hələ Azərbaycan şəraiti üçün kalibrlənməyib. Mərhələ tarixləri Aran zonası üçündür, su əmsalları FAO beynəlxalq cədvəlindəndir. Oriyentir kimi istifadə edin, resept kimi yox — aqronomla dəqiqləşdirin.",
+  "tovsiye.kalibrleme": "Tövsiyələr ümumi normativlərə əsaslanır. Suvarma normanızı dəyişməzdən əvvəl aqronomla dəqiqləşdirin.",
 
   "tovsiye.menbe.teqvim": "Bitki təqvimi · iqlim zonanız",
   "tovsiye.menbe.hesablama": "Hesablama · ET0 + peyk",
   "tovsiye.menbe.peyk": "Sentinel-2 peyki · sizin sahə",
   "tovsiye.menbe.sahe": "Sahənizin ölçüsü",
-
-  "tovsiye.qeyd.teqvim":
-    "Mərhələ ayları Aran zonası üçündür. Dağətəyi və Şəki–Zaqatalada 1–3 həftə gec başlayır. Aqronom yoxlamasından keçməyib.",
-  "tovsiye.qeyd.su":
-    "FAO-56 normativ əmsalı ilə hesablanıb. Torpaq növü, suvarma üsulu və sortdan asılı olaraq ±20% dəyişir. Suvarma normanızı buna görə tam dəyişməyin.",
-  "tovsiye.qeyd.zona":
-    "Künclər coğrafi kvadrantlardır, torpaq xəritəsi deyil. Zəiflik səbəbi peykdən görünmür — yerində baxmaq lazımdır.",
 
   "tovsiye.su.basliq": "Bu həftə su tələbatı",
   "tovsiye.su.metn":

@@ -8,8 +8,9 @@ import { useI18n } from "../../i18n/index.jsx";
  * Tövsiyə kartı. Siqnal kartından fərqi qəsdəndir: siqnal rəngli və təcili,
  * tövsiyə sakit və planlıdır — fermer ikisini bir baxışda ayırmalıdır.
  *
- * `qeydKey` olan kartlarda kalibrləmə xəbərdarlığı GÖSTƏRİLİR. Bunu gizlətmək
- * rəqəmi olduğundan dəqiq göstərmək deməkdir.
+ * Mənbə çipi qalır (dörd söz), metodologiya isə yox: "bu rəqəm SİZİN
+ * sahənizdən gəlir" etibar qazandırır, "FAO-56 əmsalı ±20% dəyişir" isə
+ * kartı sənədə çevirir.
  */
 export function TovsiyeKarti({ tovsiye, style }) {
   const { t } = useI18n();
@@ -36,16 +37,6 @@ export function TovsiyeKarti({ tovsiye, style }) {
           <div className="mt-2.5 flex flex-wrap items-center gap-2">
             <Chip icon={tovsiye.icon} label={t(tovsiye.menbeKey)} color={C.field} bg={C.fieldSoft} />
           </div>
-
-          {tovsiye.qeydKey && (
-            <p
-              className="mt-2 flex items-start gap-1.5 leading-relaxed"
-              style={{ color: C.muted, fontSize: 10 }}
-            >
-              <Icon name="Info" size={11} color={C.muted} />
-              <span>{t(tovsiye.qeydKey)}</span>
-            </p>
-          )}
         </div>
       </div>
     </Card>

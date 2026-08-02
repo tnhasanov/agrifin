@@ -6,10 +6,11 @@
  * o biri təqvimlə hərəkət edir.
  *
  * ═══ KALİBRLƏMƏ ═══════════════════════════════════════════════════════
- * Buradakı hesablamalar ümumi normativlərə əsaslanır və Azərbaycan
- * şəraitində ölçülməyib (bax: lib/teqvim.js). Hər kart öz qeydini daşıyır
- * ki, fermer rəqəmin dəqiqlik dərəcəsini bilsin — kalibrləmədən əvvəl
- * bunlar oriyentir sayılmalıdır, resept yox.
+ * Hesablamalar ümumi normativlərə əsaslanır və Azərbaycan şəraitində
+ * ölçülməyib. Metodun təfərrüatı lib/teqvim.js-in başındadır — EKRANDA
+ * DEYİL: hər kartın altında abzas boyu izahat olanda fermer heç birini
+ * oxumur və həqiqətən vacib olan (suvarma miqdarı) görünməz qalır.
+ * Ekranda bölmənin sonunda bir sətir var, mənbə isə hər kartda çipdədir.
  * ══════════════════════════════════════════════════════════════════════
  */
 
@@ -80,7 +81,6 @@ export function tovsiyeleriQur({ teqvim, daily, hektar, zona } = {}) {
       basliq: merhele.ad,
       metn: merhele.isler,
       menbeKey: "tovsiye.menbe.teqvim",
-      qeydKey: "tovsiye.qeyd.teqvim",
     });
   }
 
@@ -100,7 +100,6 @@ export function tovsiyeleriQur({ teqvim, daily, hektar, zona } = {}) {
         yagis: kesir.yagis,
       },
       menbeKey: "tovsiye.menbe.hesablama",
-      qeydKey: "tovsiye.qeyd.su",
     });
   }
 
@@ -117,7 +116,6 @@ export function tovsiyeleriQur({ teqvim, daily, hektar, zona } = {}) {
         faiz: Math.abs(zona.zeif.ferq),
       },
       menbeKey: "tovsiye.menbe.peyk",
-      qeydKey: "tovsiye.qeyd.zona",
     });
   }
 
@@ -146,7 +144,6 @@ export function tovsiyeleriQur({ teqvim, daily, hektar, zona } = {}) {
       metnKey: "tovsiye.novbeti.metn",
       vars: { merhele: novbeti.map((m) => m.ad).join(", ") },
       menbeKey: "tovsiye.menbe.teqvim",
-      qeydKey: "tovsiye.qeyd.teqvim",
     });
   }
 

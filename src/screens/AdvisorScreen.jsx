@@ -110,17 +110,12 @@ export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [] }) {
             <TovsiyeKarti key={tovsiye.id} tovsiye={tovsiye} style={{ "--i": index + 1 }} />
           ))}
 
-          {/* Bölmənin sonunda ümumi xəbərdarlıq: fermer bütün siyahının
-              hansı dəqiqlik səviyyəsində olduğunu bilməlidir */}
-          <div
-            className="mt-1 flex items-start gap-2 rounded-xl p-3"
-            style={{ backgroundColor: C.goldSoft, border: `1px solid rgba(201,147,43,0.3)` }}
-          >
-            <Icon name="Info" size={13} color={C.goldDeep} />
-            <p className="flex-1 text-xs leading-relaxed" style={{ color: C.goldDeep }}>
-              {t("tovsiye.kalibrleme")}
-            </p>
-          </div>
+          {/* Bir sətir. Əvvəl burada abzas vardı və hər kartın altında da
+              ayrıca qeyd — hamısı bərabər xəbərdarlıq olanda heç biri
+              oxunmur. İndi yalnız pul xərclənə bilən yer vurğulanır. */}
+          <p className="mt-1 px-1 text-xs leading-relaxed" style={{ color: C.muted }}>
+            {t("tovsiye.kalibrleme")}
+          </p>
         </>
       )}
     </div>
