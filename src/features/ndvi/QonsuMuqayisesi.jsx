@@ -67,7 +67,7 @@ function Zolaq({ p25, medyan, p75, ndvi, reng }) {
   );
 }
 
-export function QonsuMuqayisesi({ qonsu, ndvi }) {
+export function QonsuMuqayisesi({ qonsu, ndvi, illik }) {
   const { t, lang } = useI18n();
 
   // Müqayisə bəzəkdir, məlumat deyil: alınmasa səssizcə buraxılır
@@ -101,6 +101,27 @@ export function QonsuMuqayisesi({ qonsu, ndvi }) {
         <span>{t("qonsu.you", { ndvi: formatNumber(ndvi, lang, iki) })}</span>
         <span>{t("qonsu.median", { ndvi: formatNumber(medyan, lang, iki) })}</span>
       </div>
+
+      {/* Keçən ilin eyni dövrü — qonşudan da güclü müqayisə: eyni sahə,
+          eyni sort, eyni torpaq. Ölçmə alınmasa sətir sadəcə olmur. */}
+      {illik && (
+        <div
+          className="mt-2.5 flex items-center gap-2 rounded-xl px-3 py-2"
+          style={{ backgroundColor: C.mist }}
+        >
+          <Icon
+            name={illik.istiqamet === "pis" ? "ArrowDownLeft" : "ArrowUpRight"}
+            size={13}
+            color={illik.istiqamet === "pis" ? C.danger : C.field}
+          />
+          <span className="flex-1 text-xs" style={{ color: C.ink }}>
+            {t(`qonsu.illik.${illik.istiqamet}`, {
+              kecen: formatNumber(illik.kecen, lang, iki),
+              faiz: illik.faiz == null ? "—" : Math.abs(illik.faiz),
+            })}
+          </span>
+        </div>
+      )}
 
       {/* Nə ilə müqayisə olunduğu açıq yazılır — "qonşu" sözü qeyri-dəqiqdir */}
       <p className="mt-2 text-xs leading-relaxed" style={{ color: C.muted }}>

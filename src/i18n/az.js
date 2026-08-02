@@ -304,6 +304,48 @@ export default {
   "qonsu.pille.alt": "Sahəniz ətrafın alt 25%-indədir",
   "qonsu.you": "Sizin sahə {ndvi}",
   "qonsu.median": "Ətrafın medianı {ndvi}",
+  "tovsiye.title": "Bu mərhələnin işləri",
+  "tovsiye.subtitle":
+    "Bitkinin təqvimi, sahənizin ölçüsü və hava proqnozundan çıxarılır. Siqnallardan fərqli olaraq bunlar təcili deyil — mövsümün planıdır.",
+  "tovsiye.kalibrleme":
+    "Bu tövsiyələr ümumi normativlərə əsaslanır və hələ Azərbaycan şəraiti üçün kalibrlənməyib. Mərhələ tarixləri Aran zonası üçündür, su əmsalları FAO beynəlxalq cədvəlindəndir. Oriyentir kimi istifadə edin, resept kimi yox — aqronomla dəqiqləşdirin.",
+
+  "tovsiye.menbe.teqvim": "Bitki təqvimi · iqlim zonanız",
+  "tovsiye.menbe.hesablama": "Hesablama · ET0 + peyk",
+  "tovsiye.menbe.peyk": "Sentinel-2 peyki · sizin sahə",
+  "tovsiye.menbe.sahe": "Sahənizin ölçüsü",
+
+  "tovsiye.qeyd.teqvim":
+    "Mərhələ ayları Aran zonası üçündür. Dağətəyi və Şəki–Zaqatalada 1–3 həftə gec başlayır. Aqronom yoxlamasından keçməyib.",
+  "tovsiye.qeyd.su":
+    "FAO-56 normativ əmsalı ilə hesablanıb. Torpaq növü, suvarma üsulu və sortdan asılı olaraq ±20% dəyişir. Suvarma normanızı buna görə tam dəyişməyin.",
+  "tovsiye.qeyd.zona":
+    "Künclər coğrafi kvadrantlardır, torpaq xəritəsi deyil. Zəiflik səbəbi peykdən görünmür — yerində baxmaq lazımdır.",
+
+  "tovsiye.su.basliq": "Bu həftə su tələbatı",
+  "tovsiye.su.metn":
+    "Bitkinin 7 günlük tələbatı təxminən {telebat} mm, gözlənilən yağış {yagis} mm. Kəsir {mm} mm — sahənizə təxminən {m3} m³ su deməkdir.",
+
+  "tovsiye.zona.basliq": "Sahənin bir küncü geri qalır",
+  "tovsiye.zona.metn":
+    "{kunc} sahənin ortasından {faiz}% zəifdir. İlk oraya baxın — suvarma çatmır, torpaq fərqlidir, yoxsa zərərverici var.",
+
+  "tovsiye.baxis.basliq": "Sahəni necə yoxlamalı",
+  "tovsiye.baxis.metn":
+    "{hektar} ha üçün {say} ayrı nöqtədən baxın. Kənarlardan başlayın — problem çox vaxt orada başlayır.",
+
+  "tovsiye.novbeti.basliq": "Növbəti ay: {merhele}",
+  "tovsiye.novbeti.metn": "Materialı və texnikanı indidən hazırlayın — mərhələ gələn ay başlayır.",
+
+  "zona.simalQerb": "Şimal-qərb küncü",
+  "zona.simalSerq": "Şimal-şərq küncü",
+  "zona.cenubQerb": "Cənub-qərb küncü",
+  "zona.cenubSerq": "Cənub-şərq küncü",
+
+  "qonsu.illik.yaxsi": "Keçən il bu vaxt {kecen} idi — sahəniz {faiz}% yaxşıdır.",
+  "qonsu.illik.pis": "Keçən il bu vaxt {kecen} idi — sahəniz {faiz}% geri qalır.",
+  "qonsu.illik.eyni": "Keçən il bu vaxt {kecen} idi — demək olar eyni səviyyə.",
+
   "qonsu.note":
     "5 km radiusda YALNIZ bitki örtüyü olan piksellər sayılır — yol, tikili və çılpaq torpaq müqayisəyə girmir. Eyni peyk keçidi, eyni gün.",
 };

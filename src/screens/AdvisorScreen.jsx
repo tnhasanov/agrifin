@@ -4,8 +4,9 @@ import { C, font } from "../theme/tokens.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
 import { SiqnalKarti } from "../features/signals/SiqnalKarti.jsx";
+import { TovsiyeKarti } from "../features/tovsiye/TovsiyeKarti.jsx";
 
-export function AdvisorScreen({ onOpenChat, siqnallar = [] }) {
+export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [] }) {
   const { t } = useI18n();
   const { actions } = useStore();
 
@@ -95,6 +96,32 @@ export function AdvisorScreen({ onOpenChat, siqnallar = [] }) {
             style={{ marginBottom: 10, "--i": index + 1 }}
           />
         ))
+      )}
+
+      {/* Tövsiyələr siqnallardan SONRA gəlir: siqnal bu gün görülməli işdir,
+          tövsiyə isə mövsümün bu mərhələsinin planıdır. */}
+      {tovsiyeler.length > 0 && (
+        <>
+          <SectionTitle>{t("tovsiye.title")}</SectionTitle>
+          <p className="-mt-1 mb-3 px-1 text-xs" style={{ color: C.muted }}>
+            {t("tovsiye.subtitle")}
+          </p>
+          {tovsiyeler.map((tovsiye, index) => (
+            <TovsiyeKarti key={tovsiye.id} tovsiye={tovsiye} style={{ "--i": index + 1 }} />
+          ))}
+
+          {/* Bölmənin sonunda ümumi xəbərdarlıq: fermer bütün siyahının
+              hansı dəqiqlik səviyyəsində olduğunu bilməlidir */}
+          <div
+            className="mt-1 flex items-start gap-2 rounded-xl p-3"
+            style={{ backgroundColor: C.goldSoft, border: `1px solid rgba(201,147,43,0.3)` }}
+          >
+            <Icon name="Info" size={13} color={C.goldDeep} />
+            <p className="flex-1 text-xs leading-relaxed" style={{ color: C.goldDeep }}>
+              {t("tovsiye.kalibrleme")}
+            </p>
+          </div>
+        </>
       )}
     </div>
   );

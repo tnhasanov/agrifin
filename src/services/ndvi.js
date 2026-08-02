@@ -63,7 +63,7 @@ export async function fetchNdvi({ noqteler, gun, signal, mecburi = false } = {})
   const uygun = kes && kes.acar === acar;
 
   if (!mecburi && uygun && Date.now() - kes.vaxt < KES_MS) {
-    return { seriya: kes.seriya, kohne: false, menbe: kes.menbe };
+    return { seriya: kes.seriya, kecenIl: kes.kecenIl ?? null, kohne: false, menbe: kes.menbe };
   }
 
   try {
@@ -71,7 +71,9 @@ export async function fetchNdvi({ noqteler, gun, signal, mecburi = false } = {})
       method: "POST",
       headers: { "Content-Type": "application/json" },
       signal,
-      body: JSON.stringify({ noqteler, gun }),
+      // Keçən ilin eyni tarixi də istənilir: fermerin öz sahəsi ilə müqayisə
+      // qonşu müqayisəsindən də güclüdür (eyni sort, eyni torpaq)
+      body: JSON.stringify({ noqteler, gun, kecenIl: true }),
     });
 
     if (!cavab.ok) {
@@ -80,15 +82,41 @@ export async function fetchNdvi({ noqteler, gun, signal, mecburi = false } = {})
       throw xeta;
     }
 
-    const { seriya = [], menbe } = await cavab.json();
-    storage.write(KES_ACAR, { acar, vaxt: Date.now(), seriya, menbe });
-    return { seriya, kohne: false, menbe };
+    const { seriya = [], kecenIl = null, menbe } = await cavab.json();
+    storage.write(KES_ACAR, { acar, vaxt: Date.now(), seriya, kecenIl, menbe });
+    return { seriya, kecenIl, kohne: false, menbe };
   } catch (error) {
     if (error?.name === "AbortError") throw error;
     // Şəbəkə yoxdursa köhnə ölçmə heç nədən yaxşıdır
-    if (uygun && kes.seriya?.length) return { seriya: kes.seriya, kohne: true, menbe: kes.menbe };
+    if (uygun && kes.seriya?.length) {
+      return { seriya: kes.seriya, kecenIl: kes.kecenIl ?? null, kohne: true, menbe: kes.menbe };
+    }
     throw error;
   }
+}
+
+/**
+ * Bu ilki ölçməni keçən ilin eyni dövrü ilə müqayisə edir.
+ *
+ * Faiz yalnız keçən il mənalı bitki örtüyü varsa hesablanır: 0,05-lik
+ * bazadan 0,1-ə qalxmaq "+100%" verir, bu isə fermeri çaşdırır.
+ *
+ * @returns {null | {ndvi, kecen, ferq, faiz, tarix, istiqamet}}
+ */
+export function illikMuqayise(ndvi, kecenIl) {
+  if (!Number.isFinite(ndvi) || !Number.isFinite(kecenIl?.ndvi)) return null;
+  const kecen = kecenIl.ndvi;
+  const ferq = Math.round((ndvi - kecen) * 1000) / 1000;
+  const faiz = kecen >= 0.1 ? Math.round((ferq / kecen) * 100) : null;
+  return {
+    ndvi,
+    kecen,
+    ferq,
+    faiz,
+    tarix: kecenIl.tarix,
+    // ±0.03 mövsüm sürüşməsi və ölçmə səs-küyü həddindədir
+    istiqamet: Math.abs(ferq) < 0.03 ? "eyni" : ferq > 0 ? "yaxsi" : "pis",
+  };
 }
 
 /**

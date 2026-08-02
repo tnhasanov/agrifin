@@ -23,6 +23,7 @@ import { C, font } from "./theme/tokens.js";
 import { useNdvi } from "./features/ndvi/useNdvi.js";
 import { useQonsu } from "./features/ndvi/useQonsu.js";
 import { useSiqnallar } from "./features/signals/useSiqnallar.js";
+import { useTovsiyeler } from "./features/tovsiye/useTovsiyeler.js";
 import { acigSiqnallar } from "./services/siqnal.js";
 import { havaNoqtesi } from "./services/saheYeri.js";
 import { DEFAULT_LOCATION } from "./services/location.js";
@@ -62,6 +63,13 @@ export default function App() {
     muqayise: qonsu.muqayise,
   });
   const siqnallar = acigSiqnallar(butunSiqnallar, state.bagliSiqnallar);
+  const tovsiyeler = useTovsiyeler({
+    sahe: state.sahe,
+    bitki: state.chat.crop,
+    lat: noqte.lat,
+    lon: noqte.lon,
+    ay: new Date().getMonth() + 1,
+  });
 
   // Sabit identifikator: alt komponentlərdəki effektlər hər render-də
   // yenidən qurulmasın
@@ -100,6 +108,7 @@ export default function App() {
                 peyk={peyk}
                 qonsu={qonsu}
                 siqnallar={siqnallar}
+                tovsiyeler={tovsiyeler}
                 onOpenLoan={() => setLoanOpen(true)}
                 onPickLocation={() => setLocationOpen(true)}
                 onOpenChat={() => setChatOpen(true)}

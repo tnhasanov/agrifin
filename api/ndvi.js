@@ -99,6 +99,52 @@ export function seriyaCixar(cavab) {
   return seriya.sort((a, b) => a.son.localeCompare(b.son));
 }
 
+/**
+ * Keçən ilin eyni tarixindəki ölçmə.
+ *
+ * Fermer üçün ən güclü müqayisə budur: qonşu başqa sort əkmiş ola bilər,
+ * amma keçən ilki sahə ELƏ ONUN sahəsidir. Copernicus arxivi 2015-dən
+ * başlayır, ona görə cavab bu gün alınır — bir il gözləmək lazım deyil.
+ *
+ * Dar pəncərə (±10 gün) götürülür ki, müqayisə mövsümün eyni nöqtəsində
+ * olsun; buludluluq üzündən dəqiq gün tapılmaya bilər.
+ */
+async function kecenIlOlcmesi({ polygon, token, indi }) {
+  const il = 365 * 24 * 60 * 60 * 1000;
+  const merkez = indi - il;
+  const gun = 10 * 24 * 60 * 60 * 1000;
+
+  const cavab = await fetch(STAT_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      input: {
+        bounds: {
+          geometry: polygon,
+          properties: { crs: "http://www.opengis.net/def/crs/EPSG/0/4326" },
+        },
+        data: [{ type: "sentinel-2-l2a", dataFilter: { mosaickingOrder: "leastCC" } }],
+      },
+      aggregation: {
+        timeRange: { from: `${gunISO(merkez - gun)}T00:00:00Z`, to: `${gunISO(merkez + gun)}T23:59:59Z` },
+        aggregationInterval: { of: "P20D" },
+        evalscript: EVALSCRIPT,
+        resx: 10,
+        resy: 10,
+      },
+      calculations: { ndvi: { statistics: { default: {} } } },
+    }),
+  });
+
+  if (!cavab.ok) return null;
+  const seriya = seriyaCixar(await cavab.json());
+  return seriya.length ? { ndvi: seriya.at(-1).ndvi, tarix: seriya.at(-1).son } : null;
+}
+
 export default async function handler(req, res) {
   // Ünvan sətrindən açılanda quraşdırmanı göstərir — açarı sızdırmadan.
   // Copernicus-a çıxışı da yoxlayır ki, səbəb bir dəfəyə aydın olsun.
@@ -118,7 +164,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { noqteler, gun } = req.body || {};
+    const { noqteler, gun, kecenIl } = req.body || {};
 
     const polygon = polygonaCevir(noqteler);
     if (!polygon) {
@@ -175,9 +221,19 @@ export default async function handler(req, res) {
     }
 
     const seriya = seriyaCixar(await cavab.json());
-    console.log(`[ndvi] dövr=${gunSayi}g nöqtə=${noqteler.length} ölçmə=${seriya.length}`);
 
-    return res.status(200).json({ seriya, menbe: "Sentinel-2 · Copernicus" });
+    // Keçən il yalnız soruşulduqda alınır — hər çağırışda ikiqat emal
+    // vahidi xərcləməyin mənası yoxdur. Alınmasa müqayisə sadəcə olmur.
+    let kecen = null;
+    if (kecenIl === true) {
+      kecen = await kecenIlOlcmesi({ polygon, token, indi }).catch(() => null);
+    }
+
+    console.log(
+      `[ndvi] dövr=${gunSayi}g nöqtə=${noqteler.length} ölçmə=${seriya.length} keçənİl=${kecen?.ndvi ?? "yox"}`,
+    );
+
+    return res.status(200).json({ seriya, kecenIl: kecen, menbe: "Sentinel-2 · Copernicus" });
   } catch (error) {
     console.error("ndvi error:", error?.status ?? "", acarlariGizle(error?.message).slice(0, 300));
     // Token alına bilmirsə səbəb konfiqurasiyadır, sahə deyil

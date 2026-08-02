@@ -239,7 +239,7 @@ export function HomeScreen({
       {state.sahe && <SaheXeritesi sahe={state.sahe} />}
 
       {/* "NDVI 0,68" mücərrəddir; "qonşulardan yaxşıdır" isə dərhal aydındır */}
-      <QonsuMuqayisesi qonsu={qonsu} ndvi={olculen?.ndvi} />
+      <QonsuMuqayisesi qonsu={qonsu} ndvi={olculen?.ndvi} illik={peyk.illik} />
 
       {/* key yeri dəyişdikdə komponenti sıfırdan qurur — yeni proqnoz yüklənir */}
       <WeatherStrip

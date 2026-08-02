@@ -305,6 +305,48 @@ export default {
   "qonsu.pille.alt": "Your field is in the area's bottom 25%",
   "qonsu.you": "Your field {ndvi}",
   "qonsu.median": "Area median {ndvi}",
+  "tovsiye.title": "Work for this stage",
+  "tovsiye.subtitle":
+    "Derived from the crop calendar, your field size and the forecast. Unlike signals, these are not urgent — they are the season's plan.",
+  "tovsiye.kalibrleme":
+    "These recommendations rest on general norms and are not yet calibrated for Azerbaijani conditions. Stage dates are for the Aran lowland; water coefficients come from the FAO international table. Treat them as orientation, not a prescription — confirm with an agronomist.",
+
+  "tovsiye.menbe.teqvim": "Crop calendar · your climate zone",
+  "tovsiye.menbe.hesablama": "Calculation · ET0 + satellite",
+  "tovsiye.menbe.peyk": "Sentinel-2 satellite · your field",
+  "tovsiye.menbe.sahe": "Your field's size",
+
+  "tovsiye.qeyd.teqvim":
+    "Stage months are for the Aran lowland. In the foothills and Sheki–Zagatala they start 1–3 weeks later. Not yet reviewed by an agronomist.",
+  "tovsiye.qeyd.su":
+    "Calculated with the FAO-56 standard coefficient. Soil type, irrigation method and variety shift it by ±20%. Do not overhaul your irrigation schedule on this figure alone.",
+  "tovsiye.qeyd.zona":
+    "The corners are geographic quadrants, not a soil map. The satellite cannot see why an area is weak — that needs a look on the ground.",
+
+  "tovsiye.su.basliq": "Water needed this week",
+  "tovsiye.su.metn":
+    "The crop needs roughly {telebat} mm over 7 days and {yagis} mm of rain is expected. The shortfall is {mm} mm — about {m3} m³ for your field.",
+
+  "tovsiye.zona.basliq": "One corner of the field is behind",
+  "tovsiye.zona.metn":
+    "The {kunc} is {faiz}% weaker than the field average. Look there first — irrigation not reaching, different soil, or a pest.",
+
+  "tovsiye.baxis.basliq": "How to scout the field",
+  "tovsiye.baxis.metn":
+    "For {hektar} ha, check {say} separate points. Start at the edges — that is usually where problems begin.",
+
+  "tovsiye.novbeti.basliq": "Next month: {merhele}",
+  "tovsiye.novbeti.metn": "Get materials and machinery ready now — the stage begins next month.",
+
+  "zona.simalQerb": "north-west corner",
+  "zona.simalSerq": "north-east corner",
+  "zona.cenubQerb": "south-west corner",
+  "zona.cenubSerq": "south-east corner",
+
+  "qonsu.illik.yaxsi": "Last year at this date it was {kecen} — your field is {faiz}% better.",
+  "qonsu.illik.pis": "Last year at this date it was {kecen} — your field is {faiz}% behind.",
+  "qonsu.illik.eyni": "Last year at this date it was {kecen} — practically the same level.",
+
   "qonsu.note":
     "Only vegetated pixels within a 5 km radius are counted — roads, buildings and bare soil are excluded. Same satellite pass, same day.",
 };
