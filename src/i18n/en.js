@@ -326,4 +326,17 @@ export default {
 
   "siqnal.dermanlama.basliq": "Spraying window",
   "siqnal.dermanlama.metn": "{gun} the wind is light and no rain is expected — good for spraying.",
+
+  "siqnal.qonsu.basliq": "Field is behind the area",
+  "siqnal.qonsu.metn":
+    "Your field's NDVI is {faiz}% below the median of surrounding crops (median {medyan}). The weather is the same for everyone, so the cause is specific to this field — soil, irrigation or nutrition. Talk it through with an agronomist.",
+
+  "qonsu.pille.ust": "Your field is in the area's top 25%",
+  "qonsu.pille.yuxari": "Your field is above the area's median",
+  "qonsu.pille.asagi": "Your field is below the area's median",
+  "qonsu.pille.alt": "Your field is in the area's bottom 25%",
+  "qonsu.you": "Your field {ndvi}",
+  "qonsu.median": "Area median {ndvi}",
+  "qonsu.note":
+    "Only vegetated pixels within a 5 km radius are counted — roads, buildings and bare soil are excluded. Same satellite pass, same day.",
 };

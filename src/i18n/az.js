@@ -325,4 +325,17 @@ export default {
 
   "siqnal.dermanlama.basliq": "Dərmanlama pəncərəsi",
   "siqnal.dermanlama.metn": "{gun} külək zəif və yağış gözlənmir — dərmanlama üçün əlverişlidir.",
+
+  "siqnal.qonsu.basliq": "Sahə ətrafdan geri qalır",
+  "siqnal.qonsu.metn":
+    "Sahənizin NDVI göstəricisi ətrafdakı əkinlərin medianından {faiz}% aşağıdır (median {medyan}). Hava hamıya eynidir, deməli səbəb sahəyə xasdır — torpaq, suvarma və ya qidalandırma. Aqronomla danışın.",
+
+  "qonsu.pille.ust": "Sahəniz ətrafın ən yaxşı 25%-indədir",
+  "qonsu.pille.yuxari": "Sahəniz ətrafın ortasından yuxarıdır",
+  "qonsu.pille.asagi": "Sahəniz ətrafın ortasından aşağıdır",
+  "qonsu.pille.alt": "Sahəniz ətrafın alt 25%-indədir",
+  "qonsu.you": "Sizin sahə {ndvi}",
+  "qonsu.median": "Ətrafın medianı {ndvi}",
+  "qonsu.note":
+    "5 km radiusda YALNIZ bitki örtüyü olan piksellər sayılır — yol, tikili və çılpaq torpaq müqayisəyə girmir. Eyni peyk keçidi, eyni gün.",
 };

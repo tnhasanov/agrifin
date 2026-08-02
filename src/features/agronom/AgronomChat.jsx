@@ -6,7 +6,6 @@ import { useStore } from "../../state/store.jsx";
 import { askAgronomist } from "../../services/agronom.js";
 import { CROP_KEYS } from "../../services/crops.js";
 import { DEFAULT_LOCATION } from "../../services/location.js";
-import { useNdvi } from "../ndvi/useNdvi.js";
 import { sekliHazirla } from "../../lib/sekil.js";
 
 const SAMPLE_KEYS = ["chat.sample.1", "chat.sample.2", "chat.sample.3", "chat.sample.4"];
@@ -37,14 +36,19 @@ function errorKeyFor(error) {
   }
 }
 
-export function AgronomChat({ onClose }) {
+export function AgronomChat({
+  onClose,
+  // Peyk ölçməsi və müqayisə App-də bir dəfə qurulur (bax: App.jsx) — burada
+  // yenidən soruşsaq eyni Copernicus sorğusu ikinci dəfə gedərdi
+  peyk = { xulase: null },
+  qonsu = { muqayise: null },
+}) {
   const { t, lang } = useI18n();
   const { state, actions } = useStore();
   const location = state.location ?? DEFAULT_LOCATION;
   const { messages, crop, referral } = state.chat;
   const sahe = state.sahe;
   // Keşdən gəlir — əsas ekran onsuz da yükləyib
-  const peyk = useNdvi(sahe);
 
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -121,6 +125,7 @@ export function AgronomChat({ onClose }) {
         location,
         sahe,
         ndvi: peyk.xulase,
+        qonsu: qonsu.muqayise,
         sekil: gonderilenSekil,
         lang,
         signal: controller.signal,

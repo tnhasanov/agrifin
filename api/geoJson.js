@@ -45,6 +45,42 @@ export function polygonaCevir(noqteler) {
   return { type: "Polygon", coordinates: [halqa] };
 }
 
+export const QONSU_RADIUS_KM = 5;
+const KM_DERECE = 111.32;
+
+/**
+ * Sahənin ətrafındakı kvadrat — qonşu müqayisəsi üçün.
+ *
+ * GeoJSON bbox sırası: [uzunluqMin, enMin, uzunluqMax, enMax] — yəni yenə
+ * uzunluq ƏVVƏL gəlir (bax: yuxarıdakı 1-ci qeyd).
+ *
+ * Uzunluq dərəcəsi ekvatordan uzaqlaşdıqca qısalır; kosinusla düzəliş
+ * etməsək Azərbaycan enində (~40°) qərb-şərq radiusu 30% böyük çıxar.
+ */
+export function qonsuCercevesi(noqteler, radiusKm = QONSU_RADIUS_KM) {
+  if (!Array.isArray(noqteler) || noqteler.length < MIN_NOQTE) return null;
+  if (!noqteler.every(noqteDuzgun)) return null;
+  if (!Number.isFinite(radiusKm) || radiusKm <= 0 || radiusKm > 50) return null;
+
+  const enler = noqteler.map((p) => p[0]);
+  const uzler = noqteler.map((p) => p[1]);
+  const enOrta = (Math.max(...enler) + Math.min(...enler)) / 2;
+  const uzOrta = (Math.max(...uzler) + Math.min(...uzler)) / 2;
+
+  const enDelta = radiusKm / KM_DERECE;
+  const kosinus = Math.cos((enOrta * Math.PI) / 180);
+  // Qütbə yaxın kosinus sıfıra gedir və bölmə sonsuzluq verir
+  if (!Number.isFinite(kosinus) || Math.abs(kosinus) < 0.01) return null;
+  const uzDelta = radiusKm / (KM_DERECE * kosinus);
+
+  return [
+    Math.max(-180, uzOrta - uzDelta),
+    Math.max(-90, enOrta - enDelta),
+    Math.min(180, uzOrta + uzDelta),
+    Math.min(90, enOrta + enDelta),
+  ];
+}
+
 /** Sahənin əhatə çərçivəsi — çox böyük sahəni erkən rədd etmək üçün */
 export function cerceve(noqteler) {
   const enler = noqteler.map((p) => p[0]);

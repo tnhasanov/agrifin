@@ -6,6 +6,7 @@ import * as storage from "../lib/storage.js";
 export const KES_MS = 12 * 60 * 60 * 1000;
 const KES_ACAR = "ndvi";
 const SEKIL_ACAR = "ndviSekil";
+const QONSU_ACAR = "ndviQonsu";
 
 /** Sahə dəyişdikdə keş etibarsızdır — açar konturdan çıxarılır */
 export function saheAcari(noqteler) {
@@ -88,6 +89,58 @@ export async function fetchNdvi({ noqteler, gun, signal, mecburi = false } = {})
     if (uygun && kes.seriya?.length) return { seriya: kes.seriya, kohne: true, menbe: kes.menbe };
     throw error;
   }
+}
+
+/**
+ * Sahəni ətrafdakı əkinlərin paylanmasında yerləşdirir.
+ *
+ * Median ilə müqayisə edilir, orta ilə yox: bir neçə çox zəif (və ya çox
+ * güclü) sahə ortanı çəkir, median isə "tipik qonşu"nu göstərir.
+ *
+ * @returns {null | {pille, ferq, medyan, p25, p75, tarix, piksel}}
+ *   pille: "ust" (üst çeyrək) | "yuxari" | "asagi" | "alt"
+ */
+export function qonsuMuqayisesi(ndvi, qonsu) {
+  if (!qonsu || !Number.isFinite(ndvi)) return null;
+  const { p25, medyan, p75 } = qonsu;
+  if (![p25, medyan, p75].every(Number.isFinite)) return null;
+
+  const pille = ndvi >= p75 ? "ust" : ndvi >= medyan ? "yuxari" : ndvi >= p25 ? "asagi" : "alt";
+  // Faiz fərqi yalnız median mənalı olduqda: 0-a yaxın medianda faiz partlayır
+  const ferq = medyan >= 0.05 ? Math.round(((ndvi - medyan) / medyan) * 100) : null;
+
+  return { pille, ferq, medyan, p25, p75, tarix: qonsu.son, piksel: qonsu.piksel };
+}
+
+/**
+ * Ətraf ərazinin NDVI paylanması. Ayrıca keşlənir və sahənin öz ölçmə
+ * tarixi ötürülür ki, server EYNİ dövrü seçsin.
+ */
+export async function fetchQonsu({ noqteler, son, signal, mecburi = false } = {}) {
+  if (!Array.isArray(noqteler) || noqteler.length < 3) return null;
+
+  const acar = `${saheAcari(noqteler)}|${son ?? ""}`;
+  const kes = storage.read(QONSU_ACAR);
+  if (!mecburi && kes && kes.acar === acar && Date.now() - kes.vaxt < KES_MS) {
+    return kes.qonsu;
+  }
+
+  const cavab = await fetch("/api/qonsu", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    signal,
+    body: JSON.stringify({ noqteler, son }),
+  });
+
+  if (!cavab.ok) {
+    const xeta = new Error(`qonsu ${cavab.status}`);
+    xeta.status = cavab.status;
+    throw xeta;
+  }
+
+  const { qonsu = null } = await cavab.json();
+  storage.write(QONSU_ACAR, { acar, vaxt: Date.now(), qonsu });
+  return qonsu;
 }
 
 /**

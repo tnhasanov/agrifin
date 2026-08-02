@@ -52,6 +52,7 @@ const NOV_SIRASI = [
   "suvar",
   "isti",
   "bitkiZeifleyir",
+  "qonsu",
   "suvarmaDayan",
   "yagis",
   "dermanlama",
@@ -215,6 +216,31 @@ function zeifləməSiqnali(xulase) {
   };
 }
 
+/**
+ * Sahə ətrafdakı əkinlərin alt çeyrəyindədirsə səbəb sahəyə xasdır: hava
+ * hamıya eynidir, ona görə problem torpaqda, suvarmada və ya idarəetmədədir.
+ *
+ * Yalnız alt çeyrək siqnal doğurur. "Üst çeyrəkdəsiniz" xoş xəbərdir, amma
+ * bildiriş deyil — zəngi təbrik mesajı ilə doldurmaq onu dəyərsizləşdirir.
+ */
+function qonsuSiqnali(muqayise, xulase) {
+  if (muqayise?.pille !== "alt" || !Number.isFinite(muqayise.ferq)) return null;
+  return {
+    id: `qonsu:${muqayise.tarix ?? xulase?.tarix ?? "?"}`,
+    nov: "qonsu",
+    ciddilik: "diqqet",
+    icon: "BarChart3",
+    basliqKey: "siqnal.qonsu.basliq",
+    metnKey: "siqnal.qonsu.metn",
+    vars: {
+      faiz: Math.abs(muqayise.ferq),
+      medyan: { number: muqayise.medyan, options: { maximumFractionDigits: 2 } },
+    },
+    menbeKey: "siqnal.menbe.peyk",
+    hereket: "chat",
+  };
+}
+
 function kohneOlcmeSiqnali(xulase, indi) {
   if (!xulase?.tarix) return null;
   const gun = necheGunEvvel(xulase.tarix, indi);
@@ -273,7 +299,7 @@ function dermanlamaSiqnali(hourly) {
  * @param {number}  arg.indi     Test üçün "indi" — standart Date.now()
  * @returns {Array} ciddiliyə görə sıralanmış siqnallar
  */
-export function siqnallariQur({ daily, hourly, xulase, indi = Date.now() } = {}) {
+export function siqnallariQur({ daily, hourly, xulase, muqayise, indi = Date.now() } = {}) {
   const yagis3 = topla(daily?.precipitation_sum, 3);
   const yagis7 = topla(daily?.precipitation_sum, 7);
   const buxar7 = topla(daily?.et0_fao_evapotranspiration, 7);
@@ -287,6 +313,7 @@ export function siqnallariQur({ daily, hourly, xulase, indi = Date.now() } = {})
     istiSiqnali(daily),
     suvarma,
     zeifləməSiqnali(xulase),
+    qonsuSiqnali(muqayise, xulase),
     yagisli,
     kohneOlcmeSiqnali(xulase, indi),
     // Yağış gələndə dərmanlama pəncərəsi məsləhət deyil — ziddiyyət olmasın

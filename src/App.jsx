@@ -21,6 +21,7 @@ import { useStore } from "./state/store.jsx";
 import { routeForPath } from "./routes.js";
 import { C, font } from "./theme/tokens.js";
 import { useNdvi } from "./features/ndvi/useNdvi.js";
+import { useQonsu } from "./features/ndvi/useQonsu.js";
 import { useSiqnallar } from "./features/signals/useSiqnallar.js";
 import { acigSiqnallar } from "./services/siqnal.js";
 import { havaNoqtesi } from "./services/saheYeri.js";
@@ -52,8 +53,14 @@ export default function App() {
   // əsas ekran və məsləhət ekranı eyni siyahını göstərməlidir və hər biri
   // ayrıca Copernicus sorğusu göndərməməlidir (emal kvotası pulludur).
   const peyk = useNdvi(state.sahe);
+  const qonsu = useQonsu(state.sahe, peyk.xulase);
   const noqte = havaNoqtesi({ location: state.location ?? DEFAULT_LOCATION, sahe: state.sahe });
-  const butunSiqnallar = useSiqnallar({ lat: noqte.lat, lon: noqte.lon, xulase: peyk.xulase });
+  const butunSiqnallar = useSiqnallar({
+    lat: noqte.lat,
+    lon: noqte.lon,
+    xulase: peyk.xulase,
+    muqayise: qonsu.muqayise,
+  });
   const siqnallar = acigSiqnallar(butunSiqnallar, state.bagliSiqnallar);
 
   // Sabit identifikator: alt komponentlərdəki effektlər hər render-də
@@ -91,6 +98,7 @@ export default function App() {
               <div key={route.id} className="ekran-giris">
                 <Screen
                 peyk={peyk}
+                qonsu={qonsu}
                 siqnallar={siqnallar}
                 onOpenLoan={() => setLoanOpen(true)}
                 onPickLocation={() => setLocationOpen(true)}
@@ -105,7 +113,7 @@ export default function App() {
 
             {loanOpen && <LoanSheet onClose={closeLoan} />}
 
-            {chatOpen && <AgronomChat onClose={closeChat} />}
+            {chatOpen && <AgronomChat peyk={peyk} qonsu={qonsu} onClose={closeChat} />}
 
             {fieldOpen && (
               <Suspense fallback={null}>

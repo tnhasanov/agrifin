@@ -17,6 +17,7 @@ import { havaNoqtesi } from "../services/saheYeri.js";
 import { necheGunEvvel } from "../services/ndvi.js";
 import { Sparkline } from "../components/Sparkline.jsx";
 import { SaheXeritesi } from "../features/ndvi/SaheXeritesi.jsx";
+import { QonsuMuqayisesi } from "../features/ndvi/QonsuMuqayisesi.jsx";
 import { SiqnalKarti } from "../features/signals/SiqnalKarti.jsx";
 
 function StatTile({ label, children }) {
@@ -32,6 +33,7 @@ function StatTile({ label, children }) {
 
 export function HomeScreen({
   peyk = { hal: "yoxdur", seriya: [], xulase: null },
+  qonsu = { hal: "yoxdur", muqayise: null },
   siqnallar = [],
   onOpenLoan,
   onPickLocation,
@@ -226,6 +228,9 @@ export function HomeScreen({
 
       {/* Sahə çəkilibsə: problemin HARADA olduğunu göstərən xəritə */}
       {state.sahe && <SaheXeritesi sahe={state.sahe} />}
+
+      {/* "NDVI 0,68" mücərrəddir; "qonşulardan yaxşıdır" isə dərhal aydındır */}
+      <QonsuMuqayisesi qonsu={qonsu} ndvi={olculen?.ndvi} />
 
       {/* key yeri dəyişdikdə komponenti sıfırdan qurur — yeni proqnoz yüklənir */}
       <WeatherStrip

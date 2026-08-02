@@ -326,6 +326,7 @@ export function kontekstQur({
   ndviTarix,
   ndviFerq,
   nemlik,
+  qonsu,
   sahe,
   havaDeqiq,
 }) {
@@ -364,6 +365,14 @@ export function kontekstQur({
   if (nemlik != null) {
     const hal = nemlik < 0 ? "su çatışmazlığı əlaməti" : nemlik < 0.2 ? "orta" : "su kifayətdir";
     mətn += `Peyklə ölçülmüş rütubət indeksi (NDMI): ${nemlik} — ${hal}\n`;
+  }
+
+  // Ətrafla müqayisə səbəbi daraldır: hava hamıya eynidir, ona görə sahə
+  // geri qalırsa problem sahəyə xasdır (torpaq, suvarma, idarəetmə).
+  if (qonsu?.medyan != null) {
+    mətn += `Ətrafdakı əkinlərin (5 km, yalnız bitki örtüyü) median NDVI: ${qonsu.medyan}`;
+    if (qonsu.ferq != null) mətn += ` — bu sahə ${qonsu.ferq > 0 ? "+" : ""}${qonsu.ferq}%`;
+    mətn += `\n`;
   }
 
   if (ndvi == null) {
