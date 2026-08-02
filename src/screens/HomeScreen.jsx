@@ -17,6 +17,7 @@ import { havaNoqtesi } from "../services/saheYeri.js";
 import { necheGunEvvel } from "../services/ndvi.js";
 import { useNdvi } from "../features/ndvi/useNdvi.js";
 import { Sparkline } from "../components/Sparkline.jsx";
+import { SaheXeritesi } from "../features/ndvi/SaheXeritesi.jsx";
 
 function StatTile({ label, children }) {
   return (
@@ -163,6 +164,9 @@ export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
           {t("home.loanNote")}
         </p>
       </div>
+
+      {/* Sahə çəkilibsə: problemin HARADA olduğunu göstərən xəritə */}
+      {state.sahe && <SaheXeritesi sahe={state.sahe} />}
 
       {/* key yeri dəyişdikdə komponenti sıfırdan qurur — yeni proqnoz yüklənir */}
       <WeatherStrip

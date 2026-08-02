@@ -50,6 +50,7 @@ export async function askAgronomist({
   location,
   sahe,
   ndvi,
+  sekil,
   lang,
   signal,
   onDelta,
@@ -89,6 +90,8 @@ export async function askAgronomist({
       ndvi: ndvi?.ndvi,
       ndviTarix: ndvi?.tarix,
       ndviFerq: ndvi?.ferq ?? undefined,
+      nemlik: ndvi?.nemlik ?? undefined,
+      sekil: sekil ? { mediaType: sekil.mediaType, data: sekil.data } : undefined,
       dil: lang,
     }),
   });

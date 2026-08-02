@@ -317,7 +317,18 @@ ağ qanadlı = whitefly | sünə = sunn pest
 // Bota veriləcək konteksti yığır — yalnız lazım olan bitki bloku
 // --------------------------------------------------------------------------
 
-export function kontekstQur({ bitkiKey, rayon, ay, hava, ndvi, ndviTarix, ndviFerq, sahe, havaDeqiq }) {
+export function kontekstQur({
+  bitkiKey,
+  rayon,
+  ay,
+  hava,
+  ndvi,
+  ndviTarix,
+  ndviFerq,
+  nemlik,
+  sahe,
+  havaDeqiq,
+}) {
   const zona = zonaTap(rayon);
   const b = BITKILER[bitkiKey];
 
@@ -346,7 +357,16 @@ export function kontekstQur({ bitkiKey, rayon, ay, hava, ndvi, ndviTarix, ndviFe
       mətn += `, son 2 həftədə ${ndviFerq > 0 ? "+" : ""}${ndviFerq}`;
     }
     mətn += `\n`;
-  } else {
+  }
+
+  // NDMI (rütubət indeksi) NDVI-dən fərqli sual cavablandırır: bitki zəifdirsə,
+  // səbəb SUDURMU? Suvarma tövsiyəsi buna bağlıdır.
+  if (nemlik != null) {
+    const hal = nemlik < 0 ? "su çatışmazlığı əlaməti" : nemlik < 0.2 ? "orta" : "su kifayətdir";
+    mətn += `Peyklə ölçülmüş rütubət indeksi (NDMI): ${nemlik} — ${hal}\n`;
+  }
+
+  if (ndvi == null) {
     mətn += `NDVI ölçüsü YOXDUR — bitki sağlamlığı barədə rəqəm uydurma.\n`;
   }
 
