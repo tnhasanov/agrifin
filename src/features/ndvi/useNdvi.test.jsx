@@ -94,17 +94,19 @@ describe("peyk ölçməsi — əsas ekran", () => {
     expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument();
   });
 
-  // NDVI "zəifdir" deyir, rütubət səbəbin su olduğunu göstərir — fermerin
-  // qərarı budur, ona görə ekranda rəqəm deyil, cümlə göstərilir
+  // Bu sətir ölçməni deyir, qərarı yox: "suvar" və ya "saxla" qərarı yağışdan
+  // da asılıdır və siqnal kartında verilir (bax: services/siqnal.js)
   it("su çatışmazlığını fermerə açıq dillə deyir", async () => {
     seedSahe();
     stubApi();
     renderApp(<App />);
 
     await waitFor(() =>
-      expect(screen.getByText("Su çatışmır — suvarmanı planlaşdırın")).toBeInTheDocument(),
+      expect(screen.getByText("Torpaqda su azdır")).toBeInTheDocument(),
     );
-    expect(screen.getByText(/NDMI -0,05/)).toBeInTheDocument();
+    // Dəqiq uyğunluq: eyni rəqəm suvarma siqnalının mətnində də keçir,
+    // burada isə rütubət sətrinin öz xanası yoxlanılır
+    expect(screen.getByText("NDMI -0,05")).toBeInTheDocument();
   });
 
   it("su kifayət edəndə xəbərdarlıq göstərmir", async () => {
@@ -113,7 +115,7 @@ describe("peyk ölçməsi — əsas ekran", () => {
     renderApp(<App />);
 
     await waitFor(() => expect(screen.getByText("Su kifayət edir")).toBeInTheDocument());
-    expect(screen.queryByText(/Su çatışmır/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Torpaqda su azdır/)).not.toBeInTheDocument();
   });
 
   it("rütubət ölçülməyibsə su sətri göstərilmir", async () => {
@@ -122,7 +124,7 @@ describe("peyk ölçməsi — əsas ekran", () => {
     renderApp(<App />);
 
     await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());
-    expect(screen.queryByText(/Su çatışmır|Su kifayət/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Torpaqda su azdır|Su kifayət/)).not.toBeInTheDocument();
   });
 
   it("konturu sorğuda serverə göndərir", async () => {

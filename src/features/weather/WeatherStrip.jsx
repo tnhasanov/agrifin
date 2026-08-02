@@ -40,7 +40,20 @@ function Skeleton({ days }) {
  * Koordinatlar dəyişəndə komponent `key` ilə yenidən qurulur (bax: HomeScreen) —
  * effektin içində vəziyyəti "loading"-ə qaytarmağa ehtiyac qalmır.
  */
-export function WeatherStrip({ lat, lon, days = 5, locationName, onPickLocation }) {
+/**
+ * @param {boolean} meslehetGoster Zolağın altındakı bir sətirlik məsləhət.
+ *   Sahə siqnalları varsa söndürülür: onlar eyni proqnozdan daha dəqiq
+ *   (peyk ölçməsi ilə birlikdə) nəticə çıxarır və eyni cümləni iki dəfə
+ *   göstərmək fermeri çaşdırır.
+ */
+export function WeatherStrip({
+  lat,
+  lon,
+  days = 5,
+  locationName,
+  onPickLocation,
+  meslehetGoster = true,
+}) {
   const { t } = useI18n();
   const [result, setResult] = useState({ status: "loading", data: null, stale: false });
   const { status, data: forecast, stale } = result;
@@ -138,13 +151,15 @@ export function WeatherStrip({ lat, lon, days = 5, locationName, onPickLocation 
           })}
         </div>
 
-        <div
-          className="mt-3 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium"
-          style={{ backgroundColor: tone.bg, color: tone.fg }}
-        >
-          <Icon name={tone.icon} size={14} color={tone.fg} />
-          {t(advisory.key, advisory.vars)}
-        </div>
+        {meslehetGoster && (
+          <div
+            className="mt-3 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium"
+            style={{ backgroundColor: tone.bg, color: tone.fg }}
+          >
+            <Icon name={tone.icon} size={14} color={tone.fg} />
+            {t(advisory.key, advisory.vars)}
+          </div>
+        )}
 
         {stale && (
           <div className="mt-2 flex items-center gap-1.5 px-1 text-xs" style={{ color: C.muted }}>

@@ -1,23 +1,21 @@
-import { Card } from "../components/Card.jsx";
 import { Chip } from "../components/Chip.jsx";
 import { FarmScoreGauge } from "../components/FarmScoreGauge.jsx";
 import { Icon } from "../components/Icon.jsx";
-import { SectionTitle } from "../components/SectionTitle.jsx";
 import { WeatherStrip } from "../features/weather/WeatherStrip.jsx";
-import { C, font, tone as TONES } from "../theme/tokens.js";
+import { C, font } from "../theme/tokens.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
 import { useRouter } from "../lib/router.jsx";
 import { formatNumber } from "../lib/format.js";
 import { pathFor } from "../routes.js";
-import { withCompletion } from "../services/advisor.js";
 import { FARM } from "../services/farm.js";
 import { DEFAULT_LOCATION } from "../services/location.js";
 import { havaNoqtesi } from "../services/saheYeri.js";
 import { necheGunEvvel } from "../services/ndvi.js";
-import { useNdvi } from "../features/ndvi/useNdvi.js";
 import { Sparkline } from "../components/Sparkline.jsx";
 import { SaheXeritesi } from "../features/ndvi/SaheXeritesi.jsx";
+import { QonsuMuqayisesi } from "../features/ndvi/QonsuMuqayisesi.jsx";
+import { SiqnalKarti } from "../features/signals/SiqnalKarti.jsx";
 
 function StatTile({ label, children }) {
   return (
@@ -30,9 +28,17 @@ function StatTile({ label, children }) {
   );
 }
 
-export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
+export function HomeScreen({
+  peyk = { hal: "yoxdur", seriya: [], xulase: null },
+  qonsu = { hal: "yoxdur", muqayise: null },
+  siqnallar = [],
+  onOpenLoan,
+  onPickLocation,
+  onDrawField,
+  onOpenChat,
+}) {
   const { t, money, lang } = useI18n();
-  const { state } = useStore();
+  const { state, actions } = useStore();
   const { navigate } = useRouter();
 
   // Yer seçilməyibsə default rayonun proqnozu göstərilir
@@ -42,12 +48,7 @@ export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
   // Proqnoz sahənin öz koordinatı üçün alınır — çatla eyni nöqtə olsun deyə
   const noqte = havaNoqtesi({ location, sahe: state.sahe });
 
-  const pending = withCompletion(state.completedRecs)
-    .filter((rec) => !rec.done)
-    .slice(0, 2);
-
-  // Peyk ölçməsi sahədən asılıdır; sahə yoxdursa hook "yoxdur" qaytarır
-  const peyk = useNdvi(state.sahe);
+  // Peyk ölçməsi App-də qurulur (bax: App.jsx) — burada yalnız göstərilir
   const olculen = peyk.xulase;
   const ndvi = formatNumber(olculen?.ndvi ?? FARM.ndvi, lang, {
     minimumFractionDigits: 2,
@@ -56,8 +57,34 @@ export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
   });
   const gunEvvel = olculen ? necheGunEvvel(olculen.tarix) : null;
 
+  // Yalnız ən vacib siqnal əsas ekrana çıxır. Fermer telefonu açanda bir iş
+  // görməlidir, siyahı oxumamalıdır — qalanı məsləhət ekranındadır.
+  const bas = siqnallar.find((s) => s.ciddilik !== "melumat");
+  const qalan = siqnallar.length - (bas ? 1 : 0);
+
   return (
     <div className="px-4 pb-4">
+      {bas && (
+        <div className="mt-3" aria-live="polite">
+          <SiqnalKarti
+            siqnal={bas}
+            onBagla={actions.siqnaliBagla}
+            onHereket={onOpenChat}
+            style={{ "--i": 1 }}
+          />
+          {qalan > 0 && (
+            <button
+              type="button"
+              onClick={() => navigate(pathFor("advisor"))}
+              className="mt-1.5 w-full py-1 text-xs font-semibold"
+              style={{ color: C.muted }}
+            >
+              {t("siqnal.qalan", { count: qalan })}
+            </button>
+          )}
+        </div>
+      )}
+
       <div
         className="mt-3 rounded-3xl px-4 pt-4 pb-3"
         style={{ background: `linear-gradient(160deg, ${C.pine} 0%, ${C.pineDeep} 70%)` }}
@@ -99,8 +126,24 @@ export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
         </button>
 
         <div className="-mb-1 flex justify-center">
-          <FarmScoreGauge score={FARM.farmScore} ndvi={FARM.ndvi} label={t("home.farmscore")} />
+          {/* Qövs ÖLÇÜLMÜŞ NDVI-dən çəkilir. Əvvəl nümunə 0.72 idi və yanındakı
+              xana həqiqi 0,33 göstərəndə qövs dolu görünürdü — eyni kartda iki
+              fərqli NDVI. Ölçmə yoxdursa qövs ümumiyyətlə çəkilmir. */}
+          <FarmScoreGauge
+            score={FARM.farmScore}
+            ndvi={olculen?.ndvi ?? 0}
+            label={t("home.farmscore")}
+          />
         </div>
+
+        {/* FarmScore və kredit limiti hələ hesablanmır. Fermer bunları peykdən
+            çıxarılmış təklif kimi oxuya bilər — açıq deyilməlidir. */}
+        <p
+          className="mt-1 text-center"
+          style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, lineHeight: 1.4 }}
+        >
+          {t("home.scoreNote")}
+        </p>
 
         <div className="mt-1 grid grid-cols-3 gap-2">
           <StatTile label={t("home.cropHealth")}>
@@ -195,6 +238,9 @@ export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
       {/* Sahə çəkilibsə: problemin HARADA olduğunu göstərən xəritə */}
       {state.sahe && <SaheXeritesi sahe={state.sahe} />}
 
+      {/* "NDVI 0,68" mücərrəddir; "qonşulardan yaxşıdır" isə dərhal aydındır */}
+      <QonsuMuqayisesi qonsu={qonsu} ndvi={olculen?.ndvi} illik={peyk.illik} />
+
       {/* key yeri dəyişdikdə komponenti sıfırdan qurur — yeni proqnoz yüklənir */}
       <WeatherStrip
         key={`${noqte.lat},${noqte.lon}`}
@@ -202,51 +248,8 @@ export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
         lon={noqte.lon}
         locationName={location.name}
         onPickLocation={onPickLocation}
+        meslehetGoster={siqnallar.length === 0}
       />
-
-      <SectionTitle action={t("home.openAdvisor")} onAction={() => navigate(pathFor("advisor"))}>
-        {t("home.todaySteps")}
-      </SectionTitle>
-
-      {pending.length === 0 ? (
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl p-2" style={{ backgroundColor: C.fieldSoft }}>
-              <Icon name="Check" size={16} color={C.field} />
-            </div>
-            <p className="text-sm font-semibold" style={{ color: C.ink }}>
-              {t("home.allDone")}
-            </p>
-          </div>
-        </Card>
-      ) : (
-        pending.map((rec) => {
-          const palette = TONES[rec.tone];
-          return (
-            <Card
-              key={rec.id}
-              style={{ marginBottom: 8 }}
-              onClick={() => navigate(pathFor("advisor"))}
-              ariaLabel={t(rec.titleKey)}
-            >
-              <div className="flex items-start gap-3">
-                <div className="rounded-xl p-2" style={{ backgroundColor: palette.bg }}>
-                  <Icon name={rec.icon} size={16} color={palette.color} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold" style={{ color: C.ink }}>
-                    {t(rec.titleKey)}
-                  </p>
-                  <p className="mt-0.5 text-xs" style={{ color: C.muted }}>
-                    {t(rec.sourceKey)}
-                  </p>
-                </div>
-                <Icon name="ChevronRight" size={16} color={C.muted} />
-              </div>
-            </Card>
-          );
-        })
-      )}
     </div>
   );
 }

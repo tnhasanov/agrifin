@@ -27,11 +27,9 @@ export default {
   "home.cropHealth": "Məhsul sağlamlığı",
   "home.creditLimit": "Kredit limiti",
   "home.wallet": "Pulqabı",
+  "home.scoreNote": "FarmScore və kredit limiti nümunə göstəricidir — real qiymətləndirmə modeli hazırlanır.",
   "home.loanCta": "Məhsul dövrü krediti al",
   "home.loanNote": "Peyklə təsdiqlənmiş əkininiz sizin kredit tarixçənizdir.",
-  "home.todaySteps": "Bugünkü addımlar",
-  "home.openAdvisor": "Məsləhətçini aç",
-  "home.allDone": "Bugünkü addımların hamısı tamamlandı. Yaxşı işdir.",
 
   "weather.title": "Sahədə hava",
   "weather.unavailable": "Hava məlumatı hazırda əlçatan deyil.",
@@ -61,37 +59,6 @@ export default {
   "location.later": "Sonra seçəcəyəm",
   "location.pick": "Yeri seçin",
   "location.close": "Yer seçimini bağla",
-
-  "advisor.title": "Tövsiyələr",
-  "advisor.subtitle":
-    "Məhsuldarlığa və gəlirinizə təsirinə görə sıralanıb. Mənbə hər kartda göstərilir.",
-
-  "rec.irrigate.title": "Şimal sahəsi, 3-cü zonanı suvarın",
-  "rec.irrigate.cta": "Planlaşdır",
-  "rec.irrigate.body":
-    "Peyk göstərir ki, 3-cü zonada NDVI 6 gündə 0.09 azalıb — erkən su stressi. 48 saat ərzində suvarma təxminən 0.4 t/ha məhsulu qoruyur.",
-  "rec.irrigate.source": "Peyk · Sentinel-2, dünən",
-  "rec.irrigate.impact": "təx. +310 ₼",
-
-  "rec.fertilizer.title": "Gübrələməni bazar gününə saxlayın",
-  "rec.fertilizer.cta": "Planı dəyiş",
-  "rec.fertilizer.body":
-    "Cümə–şənbə 34 mm yağış yağacaq. Yağışdan əvvəl azot vermək axıntı deməkdir — pul itkisi və karbon balınıza zərbə. Bazar günü şərait idealdır.",
-  "rec.fertilizer.source": "Hava · yerli stansiya + model",
-  "rec.fertilizer.impact": "210 ₼ qənaət",
-
-  "rec.sellWindow.title": "Buğda üçün satış pəncərəsi açılır",
-  "rec.sellWindow.cta": "Təkliflərə bax",
-  "rec.sellWindow.body":
-    "Qiymətlər bu həftə 2.4% artıb, model iyulun sonuna qədər +6–9% gözləyir. Zirvəni sabitləmək üçün məhsulun bir hissəsinə forvard müqaviləsi düşünün.",
-  "rec.sellWindow.source": "Bazar · qiymət proqnozu",
-  "rec.sellWindow.impact": "+6–9%",
-
-  "rec.aphid.title": "Mənənə riski artır",
-  "rec.aphid.cta": "Baxışı qeyd et",
-  "rec.aphid.body":
-    "Bu həftəki rütubət və temperatur bölgənizdə mənənə yayılması şəraitinə uyğundur. Bağın kənarlarını yoxlayın; erkən müdaxilə gecikmişdən qat-qat ucuzdur.",
-  "rec.aphid.source": "Aqronomiya · zərərverici modeli",
 
   "chat.open": "Aqronoma sual verin",
   "chat.openDesc": "Sahənizin havası və peyk göstəriciləri nəzərə alınır",
@@ -216,7 +183,6 @@ export default {
   "loan.successLine": "{amount} pulqabınızdadır",
   "loan.successNote": "{date} tarixində {repay} ödəyin. Taxıl satılanda sizə xatırladacağıq.",
 
-  "toast.recAdded": "Təsərrüfat planınıza əlavə olundu",
   "toast.creditsSold": "{amount} pulqabınıza əlavə olundu",
   "toast.locationSelected": "{name} üçün hava proqnozu yükləndi",
 
@@ -249,8 +215,8 @@ export default {
   "field.errorTooSmall": "Sahə çox kiçikdir. Yaxınlaşdırıb yenidən çəkin.",
   "field.errorTooLarge": "Sahə çox böyükdür. Yaxınlaşdırıb yalnız öz sahənizi çəkin.",
   "field.warnFarFromDistrict": "Sahə seçdiyiniz rayondan uzaqdır. Rayonu yoxlayın.",
-  "header.notificationsCount": "Bildirişlər — {count} gözləyən tövsiyə",
-  "header.notificationsEmpty": "Bildirişlər — gözləyən tövsiyə yoxdur",
+  "header.notificationsCount": "Bildirişlər — {count} yeni",
+  "header.notificationsEmpty": "Bildirişlər — yeni bildiriş yoxdur",
   "ndvi.loading": "Peyk ölçməsi yüklənir…",
   "ndvi.measured": "Peyk ölçməsi · {gun} gün əvvəl · {say} ölçmə",
   "ndvi.cached": "Saxlanmış ölçmə · {gun} gün əvvəl (şəbəkə yoxdur)",
@@ -274,7 +240,104 @@ export default {
   "chat.photoOnly": "Bu şəkildə nə görürsünüz?",
   "chat.photoBadType": "Yalnız şəkil göndərmək olar (JPG, PNG).",
   "chat.photoTooBig": "Şəkil çox böyükdür. Bir az uzaqdan çəkin.",
-  "ndvi.water.az": "Su çatışmır — suvarmanı planlaşdırın",
+  "ndvi.water.az": "Torpaqda su azdır",
   "ndvi.water.orta": "Su ehtiyatı orta səviyyədədir",
   "ndvi.water.kafi": "Su kifayət edir",
+
+  "siqnal.title": "Sahənizdən siqnallar",
+  "siqnal.subtitle":
+    "Bu xəbərdarlıqlar sizin sahənizin koordinatı üçün alınmış peyk ölçməsi və hava proqnozundan çıxarılır.",
+  "siqnal.bosBasliq": "Sahənizdə diqqət tələb edən heç nə yoxdur",
+  "siqnal.bosMetn": "Son peyk ölçməsi və hava proqnozu normaldır. Vəziyyət dəyişən kimi burada xəbərdarlıq görünəcək.",
+  "siqnal.bagla": "Siqnalı bağla",
+  "siqnal.sekilCek": "Şəkil çək",
+  "siqnal.qalan": "Daha {count} siqnal — hamısına bax",
+
+  "siqnal.menbe.hava": "Hava proqnozu · sahənin koordinatı",
+  "siqnal.menbe.peyk": "Sentinel-2 peyki · sizin sahə",
+  "siqnal.menbe.hamisi": "Peyk ölçməsi + hava proqnozu",
+
+  "siqnal.saxta.basliq": "Şaxta riski",
+  "siqnal.saxta.tecili":
+    "{gun} gecə hava {derece}°-yə düşür. Həssas əkinləri örtün, suvarmanı gecəyə saxlamayın.",
+  "siqnal.saxta.diqqet":
+    "{gun} gecə {derece}° gözlənilir. Açıq və küləksiz gecədə yer səthində şaxta ola bilər.",
+
+  "siqnal.isti.basliq": "İstilik stresi",
+  "siqnal.isti.tecili":
+    "{gun} {derece}° gözlənilir. Suvarmanı səhər tezdən və ya axşam edin — günorta su buxarlanır.",
+  "siqnal.isti.diqqet":
+    "{gun} başlayaraq ardıcıl iki gün {derece}°-ə qədər. Bitkinin su tələbatı artacaq.",
+
+  "siqnal.yagis.basliq": "Yağış gəlir",
+  "siqnal.yagis.metn":
+    "Növbəti 3 gündə {mm} mm yağış gözlənilir. Gübrələmə və dərmanlamanı təxirə salın — yuyulub gedər.",
+
+  "siqnal.suvar.basliq": "Suvarma vaxtıdır",
+  "siqnal.suvar.tecili":
+    "Peyk sahədə su çatışmazlığı görür (NDMI {nemlik}) və 3 gündə yağış gözlənmir.",
+  "siqnal.suvar.balans":
+    "Bu həftə buxarlanma yağışı {mm} mm üstələyir. Suvarmanı planlaşdırın.",
+
+  "siqnal.suvarmaDayan.basliq": "Suvarmanı saxlayın",
+  "siqnal.suvarmaDayan.metn":
+    "Sahə quraqdır, amma 3 gündə {mm} mm yağış gözlənilir. Suvarsanız suyu və yanacağı boş yerə xərcləyəcəksiniz.",
+
+  "siqnal.bitkiZeifleyir.basliq": "Bitki zəifləyir — səbəb su deyil",
+  "siqnal.bitkiZeifleyir.metn":
+    "Peyk son iki həftədə bitki örtüyünün {ferq} azaldığını göstərir, torpaqda isə su kifayətdir. Səbəb xəstəlik, zərərverici və ya qida çatışmazlığı ola bilər — peyk bunları görmür, yarpağın şəkli görür.",
+
+  "siqnal.olcmeKohne.basliq": "Peyk ölçməsi köhnəlib",
+  "siqnal.olcmeKohne.metn":
+    "{gun} gündür təmiz ölçmə yoxdur — səma buludlu olub. Hava açılan kimi avtomatik yenilənəcək.",
+
+  "siqnal.dermanlama.basliq": "Dərmanlama pəncərəsi",
+  "siqnal.dermanlama.metn": "{gun} külək zəif və yağış gözlənmir — dərmanlama üçün əlverişlidir.",
+
+  "siqnal.qonsu.basliq": "Sahə ətrafdan geri qalır",
+  "siqnal.qonsu.metn":
+    "Sahənizin NDVI göstəricisi ətrafdakı əkinlərin medianından {faiz}% aşağıdır (median {medyan}). Hava hamıya eynidir, deməli səbəb sahəyə xasdır — torpaq, suvarma və ya qidalandırma. Aqronomla danışın.",
+
+  "qonsu.pille.ust": "Sahəniz ətrafın ən yaxşı 25%-indədir",
+  "qonsu.pille.yuxari": "Sahəniz ətrafın ortasından yuxarıdır",
+  "qonsu.pille.asagi": "Sahəniz ətrafın ortasından aşağıdır",
+  "qonsu.pille.alt": "Sahəniz ətrafın alt 25%-indədir",
+  "qonsu.you": "Sizin sahə {ndvi}",
+  "qonsu.median": "Ətrafın medianı {ndvi}",
+  "tovsiye.title": "Bu mərhələnin işləri",
+  "tovsiye.subtitle":
+    "Bitkinin təqvimi, sahənizin ölçüsü və hava proqnozundan çıxarılır. Siqnallardan fərqli olaraq bunlar təcili deyil — mövsümün planıdır.",
+  "tovsiye.kalibrleme": "Tövsiyələr ümumi normativlərə əsaslanır. Suvarma normanızı dəyişməzdən əvvəl aqronomla dəqiqləşdirin.",
+
+  "tovsiye.menbe.teqvim": "Bitki təqvimi · iqlim zonanız",
+  "tovsiye.menbe.hesablama": "Hesablama · ET0 + peyk",
+  "tovsiye.menbe.peyk": "Sentinel-2 peyki · sizin sahə",
+  "tovsiye.menbe.sahe": "Sahənizin ölçüsü",
+
+  "tovsiye.su.basliq": "Bu həftə su tələbatı",
+  "tovsiye.su.metn":
+    "Bitkinin 7 günlük tələbatı təxminən {telebat} mm, gözlənilən yağış {yagis} mm. Kəsir {mm} mm — sahənizə təxminən {m3} m³ su deməkdir.",
+
+  "tovsiye.zona.basliq": "Sahənin bir küncü geri qalır",
+  "tovsiye.zona.metn":
+    "{kunc} sahənin ortasından {faiz}% zəifdir. İlk oraya baxın — suvarma çatmır, torpaq fərqlidir, yoxsa zərərverici var.",
+
+  "tovsiye.baxis.basliq": "Sahəni necə yoxlamalı",
+  "tovsiye.baxis.metn":
+    "{hektar} ha üçün {say} ayrı nöqtədən baxın. Kənarlardan başlayın — problem çox vaxt orada başlayır.",
+
+  "tovsiye.novbeti.basliq": "Növbəti ay: {merhele}",
+  "tovsiye.novbeti.metn": "Materialı və texnikanı indidən hazırlayın — mərhələ gələn ay başlayır.",
+
+  "zona.simalQerb": "Şimal-qərb küncü",
+  "zona.simalSerq": "Şimal-şərq küncü",
+  "zona.cenubQerb": "Cənub-qərb küncü",
+  "zona.cenubSerq": "Cənub-şərq küncü",
+
+  "qonsu.illik.yaxsi": "Keçən il bu vaxt {kecen} idi — sahəniz {faiz}% yaxşıdır.",
+  "qonsu.illik.pis": "Keçən il bu vaxt {kecen} idi — sahəniz {faiz}% geri qalır.",
+  "qonsu.illik.eyni": "Keçən il bu vaxt {kecen} idi — demək olar eyni səviyyə.",
+
+  "qonsu.note":
+    "5 km radiusda YALNIZ bitki örtüyü olan piksellər sayılır — yol, tikili və çılpaq torpaq müqayisəyə girmir. Eyni peyk keçidi, eyni gün.",
 };

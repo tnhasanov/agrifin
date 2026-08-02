@@ -20,6 +20,13 @@ import { useRouter } from "./lib/router.jsx";
 import { useStore } from "./state/store.jsx";
 import { routeForPath } from "./routes.js";
 import { C, font } from "./theme/tokens.js";
+import { useNdvi } from "./features/ndvi/useNdvi.js";
+import { useQonsu } from "./features/ndvi/useQonsu.js";
+import { useSiqnallar } from "./features/signals/useSiqnallar.js";
+import { useTovsiyeler } from "./features/tovsiye/useTovsiyeler.js";
+import { acigSiqnallar } from "./services/siqnal.js";
+import { havaNoqtesi } from "./services/saheYeri.js";
+import { DEFAULT_LOCATION } from "./services/location.js";
 
 const SCREENS = {
   home: HomeScreen,
@@ -42,6 +49,27 @@ export default function App() {
 
   const route = routeForPath(path);
   const Screen = SCREENS[route.id];
+
+  // Peyk ölçməsi və siqnallar BURADA qurulur, ekranlarda yox: başlıqdakı zəng,
+  // əsas ekran və məsləhət ekranı eyni siyahını göstərməlidir və hər biri
+  // ayrıca Copernicus sorğusu göndərməməlidir (emal kvotası pulludur).
+  const peyk = useNdvi(state.sahe);
+  const qonsu = useQonsu(state.sahe, peyk.xulase);
+  const noqte = havaNoqtesi({ location: state.location ?? DEFAULT_LOCATION, sahe: state.sahe });
+  const butunSiqnallar = useSiqnallar({
+    lat: noqte.lat,
+    lon: noqte.lon,
+    xulase: peyk.xulase,
+    muqayise: qonsu.muqayise,
+  });
+  const siqnallar = acigSiqnallar(butunSiqnallar, state.bagliSiqnallar);
+  const tovsiyeler = useTovsiyeler({
+    sahe: state.sahe,
+    bitki: state.chat.crop,
+    lat: noqte.lat,
+    lon: noqte.lon,
+    ay: new Date().getMonth() + 1,
+  });
 
   // Sabit identifikator: alt komponentlərdəki effektlər hər render-də
   // yenidən qurulmasın
@@ -71,12 +99,16 @@ export default function App() {
           <Onboarding />
         ) : (
           <>
-            <AppHeader />
+            <AppHeader siqnalSayi={siqnallar.length} />
 
             <main ref={scrollRef} className="flex-1 overflow-y-auto">
               {/* key ekran dəyişəndə remount edir — giriş animasiyası hər dəfə oynayır */}
               <div key={route.id} className="ekran-giris">
                 <Screen
+                peyk={peyk}
+                qonsu={qonsu}
+                siqnallar={siqnallar}
+                tovsiyeler={tovsiyeler}
                 onOpenLoan={() => setLoanOpen(true)}
                 onPickLocation={() => setLocationOpen(true)}
                 onOpenChat={() => setChatOpen(true)}
@@ -90,7 +122,7 @@ export default function App() {
 
             {loanOpen && <LoanSheet onClose={closeLoan} />}
 
-            {chatOpen && <AgronomChat onClose={closeChat} />}
+            {chatOpen && <AgronomChat peyk={peyk} qonsu={qonsu} onClose={closeChat} />}
 
             {fieldOpen && (
               <Suspense fallback={null}>

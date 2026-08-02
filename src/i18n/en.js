@@ -27,11 +27,9 @@ export default {
   "home.cropHealth": "Crop health",
   "home.creditLimit": "Credit limit",
   "home.wallet": "Wallet",
+  "home.scoreNote": "FarmScore and the credit limit are illustrative — the real scoring model is still being built.",
   "home.loanCta": "Get a crop-cycle loan",
   "home.loanNote": "Your satellite-verified field is your credit history.",
-  "home.todaySteps": "Today's steps",
-  "home.openAdvisor": "Open advisor",
-  "home.allDone": "Every step for today is done. Nice work.",
 
   "weather.title": "Weather in the field",
   "weather.unavailable": "Weather data is not available right now.",
@@ -61,37 +59,6 @@ export default {
   "location.later": "I'll choose later",
   "location.pick": "Pick a location",
   "location.close": "Close location picker",
-
-  "advisor.title": "Recommendations",
-  "advisor.subtitle":
-    "Ranked by impact on your yield and income. The source is shown on every card.",
-
-  "rec.irrigate.title": "Irrigate zone 3, north field",
-  "rec.irrigate.cta": "Schedule",
-  "rec.irrigate.body":
-    "Satellite shows NDVI in zone 3 down 0.09 over 6 days — early water stress. Irrigating within 48 hours protects roughly 0.4 t/ha of yield.",
-  "rec.irrigate.source": "Satellite · Sentinel-2, yesterday",
-  "rec.irrigate.impact": "approx. +310 ₼",
-
-  "rec.fertilizer.title": "Push fertilising to Sunday",
-  "rec.fertilizer.cta": "Change plan",
-  "rec.fertilizer.body":
-    "34 mm of rain is coming Friday–Saturday. Applying nitrogen before rain means runoff — lost money and a hit to your carbon score. Sunday conditions are ideal.",
-  "rec.fertilizer.source": "Weather · local station + model",
-  "rec.fertilizer.impact": "210 ₼ saved",
-
-  "rec.sellWindow.title": "Selling window for wheat is opening",
-  "rec.sellWindow.cta": "View offers",
-  "rec.sellWindow.body":
-    "Prices rose 2.4% this week and the model expects +6–9% by the end of July. Consider a forward contract on part of the harvest to lock in the peak.",
-  "rec.sellWindow.source": "Market · price forecast",
-  "rec.sellWindow.impact": "+6–9%",
-
-  "rec.aphid.title": "Aphid risk is rising",
-  "rec.aphid.cta": "Log an inspection",
-  "rec.aphid.body":
-    "This week's humidity and temperature match aphid spread conditions in your region. Check the field edges; early intervention is far cheaper than a late one.",
-  "rec.aphid.source": "Agronomy · pest model",
 
   "chat.open": "Ask the agronomist",
   "chat.openDesc": "Your field's weather and satellite readings are taken into account",
@@ -217,7 +184,6 @@ export default {
   "loan.successLine": "{amount} is in your wallet",
   "loan.successNote": "Repay {repay} on {date}. We'll remind you when the grain sells.",
 
-  "toast.recAdded": "Added to your farm plan",
   "toast.creditsSold": "{amount} added to your wallet",
   "toast.locationSelected": "Forecast loaded for {name}",
 
@@ -250,8 +216,8 @@ export default {
   "field.errorTooSmall": "The area is too small. Zoom in and draw again.",
   "field.errorTooLarge": "The area is too large. Zoom in and draw only your own field.",
   "field.warnFarFromDistrict": "The field is far from your selected district. Check the district.",
-  "header.notificationsCount": "Notifications — {count} pending recommendations",
-  "header.notificationsEmpty": "Notifications — no pending recommendations",
+  "header.notificationsCount": "Notifications — {count} new",
+  "header.notificationsEmpty": "Notifications — nothing new",
   "ndvi.loading": "Loading satellite reading…",
   "ndvi.measured": "Satellite reading · {gun} days ago · {say} readings",
   "ndvi.cached": "Saved reading · {gun} days ago (no network)",
@@ -275,7 +241,104 @@ export default {
   "chat.photoOnly": "What do you see in this photo?",
   "chat.photoBadType": "Only images can be sent (JPG, PNG).",
   "chat.photoTooBig": "The photo is too large. Try again from a little further away.",
-  "ndvi.water.az": "Low moisture — plan irrigation",
+  "ndvi.water.az": "Soil moisture is low",
   "ndvi.water.orta": "Moisture is moderate",
   "ndvi.water.kafi": "Moisture is sufficient",
+
+  "siqnal.title": "Signals from your field",
+  "siqnal.subtitle":
+    "These alerts come from satellite measurements and a forecast taken for your own field's coordinates.",
+  "siqnal.bosBasliq": "Nothing on your field needs attention",
+  "siqnal.bosMetn": "The latest satellite reading and the forecast are both normal. A warning will appear here as soon as that changes.",
+  "siqnal.bagla": "Dismiss signal",
+  "siqnal.sekilCek": "Take a photo",
+  "siqnal.qalan": "{count} more signals — see all",
+
+  "siqnal.menbe.hava": "Weather forecast · field coordinates",
+  "siqnal.menbe.peyk": "Sentinel-2 satellite · your field",
+  "siqnal.menbe.hamisi": "Satellite measurement + forecast",
+
+  "siqnal.saxta.basliq": "Frost risk",
+  "siqnal.saxta.tecili":
+    "{gun} night drops to {derece}°. Cover sensitive crops and do not leave irrigation running overnight.",
+  "siqnal.saxta.diqqet":
+    "{derece}° expected on {gun} night. On a clear, still night ground frost is possible.",
+
+  "siqnal.isti.basliq": "Heat stress",
+  "siqnal.isti.tecili":
+    "{derece}° expected on {gun}. Irrigate early morning or evening — midday water evaporates.",
+  "siqnal.isti.diqqet":
+    "Two consecutive days up to {derece}° from {gun}. Water demand will rise.",
+
+  "siqnal.yagis.basliq": "Rain is coming",
+  "siqnal.yagis.metn":
+    "{mm} mm of rain expected over the next 3 days. Postpone fertilising and spraying — it will wash off.",
+
+  "siqnal.suvar.basliq": "Time to irrigate",
+  "siqnal.suvar.tecili":
+    "The satellite sees a moisture deficit in the field (NDMI {nemlik}) and no rain is expected within 3 days.",
+  "siqnal.suvar.balans":
+    "This week evaporation exceeds rainfall by {mm} mm. Plan an irrigation.",
+
+  "siqnal.suvarmaDayan.basliq": "Hold the irrigation",
+  "siqnal.suvarmaDayan.metn":
+    "The field is dry, but {mm} mm of rain is expected within 3 days. Irrigating now wastes water and fuel.",
+
+  "siqnal.bitkiZeifleyir.basliq": "Crop is weakening — water is not the cause",
+  "siqnal.bitkiZeifleyir.metn":
+    "The satellite shows canopy down {ferq} over the last two weeks, while soil moisture is sufficient. The cause may be disease, pests or a nutrient shortage — the satellite cannot see those, a photo of the leaf can.",
+
+  "siqnal.olcmeKohne.basliq": "Satellite reading is stale",
+  "siqnal.olcmeKohne.metn":
+    "No clean measurement for {gun} days — the sky has been cloudy. It will refresh automatically once it clears.",
+
+  "siqnal.dermanlama.basliq": "Spraying window",
+  "siqnal.dermanlama.metn": "{gun} the wind is light and no rain is expected — good for spraying.",
+
+  "siqnal.qonsu.basliq": "Field is behind the area",
+  "siqnal.qonsu.metn":
+    "Your field's NDVI is {faiz}% below the median of surrounding crops (median {medyan}). The weather is the same for everyone, so the cause is specific to this field — soil, irrigation or nutrition. Talk it through with an agronomist.",
+
+  "qonsu.pille.ust": "Your field is in the area's top 25%",
+  "qonsu.pille.yuxari": "Your field is above the area's median",
+  "qonsu.pille.asagi": "Your field is below the area's median",
+  "qonsu.pille.alt": "Your field is in the area's bottom 25%",
+  "qonsu.you": "Your field {ndvi}",
+  "qonsu.median": "Area median {ndvi}",
+  "tovsiye.title": "Work for this stage",
+  "tovsiye.subtitle":
+    "Derived from the crop calendar, your field size and the forecast. Unlike signals, these are not urgent — they are the season's plan.",
+  "tovsiye.kalibrleme": "These recommendations rest on general norms. Check with an agronomist before changing your irrigation schedule.",
+
+  "tovsiye.menbe.teqvim": "Crop calendar · your climate zone",
+  "tovsiye.menbe.hesablama": "Calculation · ET0 + satellite",
+  "tovsiye.menbe.peyk": "Sentinel-2 satellite · your field",
+  "tovsiye.menbe.sahe": "Your field's size",
+
+  "tovsiye.su.basliq": "Water needed this week",
+  "tovsiye.su.metn":
+    "The crop needs roughly {telebat} mm over 7 days and {yagis} mm of rain is expected. The shortfall is {mm} mm — about {m3} m³ for your field.",
+
+  "tovsiye.zona.basliq": "One corner of the field is behind",
+  "tovsiye.zona.metn":
+    "The {kunc} is {faiz}% weaker than the field average. Look there first — irrigation not reaching, different soil, or a pest.",
+
+  "tovsiye.baxis.basliq": "How to scout the field",
+  "tovsiye.baxis.metn":
+    "For {hektar} ha, check {say} separate points. Start at the edges — that is usually where problems begin.",
+
+  "tovsiye.novbeti.basliq": "Next month: {merhele}",
+  "tovsiye.novbeti.metn": "Get materials and machinery ready now — the stage begins next month.",
+
+  "zona.simalQerb": "north-west corner",
+  "zona.simalSerq": "north-east corner",
+  "zona.cenubQerb": "south-west corner",
+  "zona.cenubSerq": "south-east corner",
+
+  "qonsu.illik.yaxsi": "Last year at this date it was {kecen} — your field is {faiz}% better.",
+  "qonsu.illik.pis": "Last year at this date it was {kecen} — your field is {faiz}% behind.",
+  "qonsu.illik.eyni": "Last year at this date it was {kecen} — practically the same level.",
+
+  "qonsu.note":
+    "Only vegetated pixels within a 5 km radius are counted — roads, buildings and bare soil are excluded. Same satellite pass, same day.",
 };

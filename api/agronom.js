@@ -5,8 +5,8 @@
 // Qeyd: `npm run dev` bu marşrutu vermir — /api/* yalnız Vercel-də (və ya
 // `vercel dev`-də) işləyir. Lokal Vite serverində çat 404 qaytaracaq.
 import Anthropic from "@anthropic-ai/sdk";
-import { BITKILER, kontekstQur } from "./knowledge.js";
-import { dozaQoruyucusuYarat } from "./dozaQoruyucu.js";
+import { BITKILER, kontekstQur } from "../lib/knowledge.js";
+import { dozaQoruyucusuYarat } from "../lib/dozaQoruyucu.js";
 
 // Sonnet: qısa aqronomik cavablar üçün sürət/qiymət balansı Opus-dan uyğundur.
 const MODEL = "claude-sonnet-5";
@@ -158,7 +158,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { messages = [], bitkiKey, rayon, ay, hava, sahe, havaDeqiq, ndvi, ndviTarix, ndviFerq, nemlik, sekil, dil } =
+    const { messages = [], bitkiKey, rayon, ay, hava, sahe, havaDeqiq, ndvi, ndviTarix, ndviFerq, nemlik, qonsu, sekil, dil } =
       req.body || {};
 
     if (!Array.isArray(messages) || messages.length === 0) {
@@ -203,6 +203,11 @@ export default async function handler(req, res) {
       ndviTarix: typeof ndviTarix === "string" ? ndviTarix.slice(0, 10) : undefined,
       ndviFerq: eded(ndviFerq, -2, 2) ?? undefined,
       nemlik: eded(nemlik, -1, 1) ?? undefined,
+      // Müqayisə də müştəridən gəlir və eyni qaydada həddlənir
+      qonsu:
+        qonsu && typeof qonsu === "object" && eded(qonsu.medyan, -1, 1) != null
+          ? { medyan: eded(qonsu.medyan, -1, 1), ferq: eded(qonsu.ferq, -500, 500) ?? undefined }
+          : undefined,
       // Sahə ölçüsü müştəridən gəlir — həddləri geo.js-dəki ilə eynidir
       sahe:
         sahe && typeof sahe === "object" && eded(sahe.hektar, 0.05, 1000) != null

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchNdvi, xulase } from "../../services/ndvi.js";
+import { fetchNdvi, illikMuqayise, xulase } from "../../services/ndvi.js";
 
 /**
  * Sahənin peyk ölçmələrini gətirir.
@@ -16,7 +16,7 @@ import { fetchNdvi, xulase } from "../../services/ndvi.js";
  *   qurulmayib— peyk açarları yoxdur (501)
  *   xeta      — qalan hallar
  */
-const BOS = { hal: "yoxdur", seriya: [], xulase: null };
+const BOS = { hal: "yoxdur", seriya: [], xulase: null, illik: null };
 
 export function useNdvi(sahe) {
   const [veziyyet, setVeziyyet] = useState(BOS);
@@ -36,12 +36,15 @@ export function useNdvi(sahe) {
     // həm "yüklənir" halını verir, həm də sahə dəyişəndə köhnə ölçmənin
     // bir an görünməsinin qarşısını alır.
     fetchNdvi({ noqteler, signal: controller.signal })
-      .then(({ seriya, kohne }) => {
+      .then(({ seriya, kohne, kecenIl }) => {
+        const cari = xulase(seriya);
         setVeziyyet({
           acar,
           hal: seriya.length ? "hazir" : "olcmeYox",
           seriya,
-          xulase: xulase(seriya),
+          xulase: cari,
+          // Keçən ilin eyni dövrü ilə müqayisə — alınmasa sadəcə null
+          illik: illikMuqayise(cari?.ndvi, kecenIl),
           kohne,
         });
       })
@@ -52,6 +55,7 @@ export function useNdvi(sahe) {
           hal: error?.status === 501 ? "qurulmayib" : "xeta",
           seriya: [],
           xulase: null,
+          illik: null,
         });
       });
 

@@ -50,6 +50,7 @@ export async function askAgronomist({
   location,
   sahe,
   ndvi,
+  qonsu,
   sekil,
   lang,
   signal,
@@ -91,6 +92,8 @@ export async function askAgronomist({
       ndviTarix: ndvi?.tarix,
       ndviFerq: ndvi?.ferq ?? undefined,
       nemlik: ndvi?.nemlik ?? undefined,
+      // Ətrafla müqayisə: model "sahəniz zəifdir" deyəndə səbəbi daraltsın
+      qonsu: qonsu ? { medyan: qonsu.medyan, ferq: qonsu.ferq ?? undefined } : undefined,
       sekil: sekil ? { mediaType: sekil.mediaType, data: sekil.data } : undefined,
       dil: lang,
     }),

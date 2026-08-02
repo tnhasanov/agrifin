@@ -32,10 +32,9 @@ describe("AgriFin tətbiqi", () => {
     renderApp(<App />);
 
     await waitFor(() => expect(screen.getByText("34°")).toBeInTheDocument());
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining("api.open-meteo.com"),
-      expect.anything(),
-    );
+    // İkinci arqument yoxdur: proqnoz sorğusu paylaşılır, ona görə heç bir
+    // çağıranın `signal`-ı ötürülmür (bax: services/weather.js)
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("api.open-meteo.com"));
   });
 
   it("aşağı naviqasiya ilə ekranlar arasında keçir və URL-i dəyişir", async () => {
@@ -94,17 +93,6 @@ describe("AgriFin tətbiqi", () => {
     expect(screen.getByText("360 ₼ pulqabınıza əlavə olundu")).toBeInTheDocument();
   });
 
-  it("tövsiyəni tamamlayır və məsləhət ekranında qeyd edir", async () => {
-    const user = userEvent.setup();
-    window.history.pushState({}, "", "/advisor");
-    renderApp(<App />);
-
-    await user.click(screen.getByRole("button", { name: "Planlaşdır" }));
-
-    expect(screen.getByText("Hazırdır")).toBeInTheDocument();
-    expect(screen.getByText("Təsərrüfat planınıza əlavə olundu")).toBeInTheDocument();
-  });
-
   it("dil düyməsi interfeysi ingiliscəyə keçirir", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
@@ -112,7 +100,7 @@ describe("AgriFin tətbiqi", () => {
     await user.click(screen.getByRole("button", { name: /Dili dəyiş/ }));
 
     expect(screen.getByRole("button", { name: "Market" })).toBeInTheDocument();
-    expect(screen.getByText("Today's steps")).toBeInTheDocument();
+    expect(screen.getByText("Crop health")).toBeInTheDocument();
   });
 
   it("vəziyyəti localStorage-da saxlayır", async () => {

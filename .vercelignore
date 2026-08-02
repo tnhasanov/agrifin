@@ -1,0 +1,12 @@
+# Vercel `api/` qovluğundakı HƏR faylı ayrıca serverless funksiyaya çevirir —
+# test faylları da daxil olmaqla. Onlar həm limitə (Hobby planda 12 funksiya)
+# yer tutur, həm də /api/qonsu.test kimi ünvanlarda ictimai açıq olurdu.
+#
+# Paylaşılan modullar `lib/` qovluğuna köçürülüb: `api/` xaricindəki fayllar
+# funksiya sayılmır, amma import olunduqda paketə daxil edilir.
+*.test.js
+*.test.jsx
+
+# Yerli quraşdırma qalıqları — deploy üçün lazım deyil
+dist
+scripts
