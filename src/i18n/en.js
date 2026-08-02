@@ -250,8 +250,8 @@ export default {
   "field.errorTooSmall": "The area is too small. Zoom in and draw again.",
   "field.errorTooLarge": "The area is too large. Zoom in and draw only your own field.",
   "field.warnFarFromDistrict": "The field is far from your selected district. Check the district.",
-  "header.notificationsCount": "Notifications — {count} pending recommendations",
-  "header.notificationsEmpty": "Notifications — no pending recommendations",
+  "header.notificationsCount": "Notifications — {count} new",
+  "header.notificationsEmpty": "Notifications — nothing new",
   "ndvi.loading": "Loading satellite reading…",
   "ndvi.measured": "Satellite reading · {gun} days ago · {say} readings",
   "ndvi.cached": "Saved reading · {gun} days ago (no network)",
@@ -275,7 +275,55 @@ export default {
   "chat.photoOnly": "What do you see in this photo?",
   "chat.photoBadType": "Only images can be sent (JPG, PNG).",
   "chat.photoTooBig": "The photo is too large. Try again from a little further away.",
-  "ndvi.water.az": "Low moisture — plan irrigation",
+  "ndvi.water.az": "Soil moisture is low",
   "ndvi.water.orta": "Moisture is moderate",
   "ndvi.water.kafi": "Moisture is sufficient",
+
+  "siqnal.title": "Signals from your field",
+  "siqnal.subtitle":
+    "These alerts come from satellite measurements and a forecast taken for your own field's coordinates.",
+  "siqnal.bagla": "Dismiss signal",
+  "siqnal.sekilCek": "Take a photo",
+  "siqnal.qalan": "{count} more signals — see all",
+
+  "siqnal.menbe.hava": "Weather forecast · field coordinates",
+  "siqnal.menbe.peyk": "Sentinel-2 satellite · your field",
+  "siqnal.menbe.hamisi": "Satellite measurement + forecast",
+
+  "siqnal.saxta.basliq": "Frost risk",
+  "siqnal.saxta.tecili":
+    "{gun} night drops to {derece}°. Cover sensitive crops and do not leave irrigation running overnight.",
+  "siqnal.saxta.diqqet":
+    "{derece}° expected on {gun} night. On a clear, still night ground frost is possible.",
+
+  "siqnal.isti.basliq": "Heat stress",
+  "siqnal.isti.tecili":
+    "{derece}° expected on {gun}. Irrigate early morning or evening — midday water evaporates.",
+  "siqnal.isti.diqqet":
+    "Two consecutive days up to {derece}° from {gun}. Water demand will rise.",
+
+  "siqnal.yagis.basliq": "Rain is coming",
+  "siqnal.yagis.metn":
+    "{mm} mm of rain expected over the next 3 days. Postpone fertilising and spraying — it will wash off.",
+
+  "siqnal.suvar.basliq": "Time to irrigate",
+  "siqnal.suvar.tecili":
+    "The satellite sees a moisture deficit in the field (NDMI {nemlik}) and no rain is expected within 3 days.",
+  "siqnal.suvar.balans":
+    "This week evaporation exceeds rainfall by {mm} mm. Plan an irrigation.",
+
+  "siqnal.suvarmaDayan.basliq": "Hold the irrigation",
+  "siqnal.suvarmaDayan.metn":
+    "The field is dry, but {mm} mm of rain is expected within 3 days. Irrigating now wastes water and fuel.",
+
+  "siqnal.bitkiZeifleyir.basliq": "Crop is weakening — water is not the cause",
+  "siqnal.bitkiZeifleyir.metn":
+    "The satellite shows canopy down {ferq} over the last two weeks, while soil moisture is sufficient. The cause may be disease, pests or a nutrient shortage — the satellite cannot see those, a photo of the leaf can.",
+
+  "siqnal.olcmeKohne.basliq": "Satellite reading is stale",
+  "siqnal.olcmeKohne.metn":
+    "No clean measurement for {gun} days — the sky has been cloudy. It will refresh automatically once it clears.",
+
+  "siqnal.dermanlama.basliq": "Spraying window",
+  "siqnal.dermanlama.metn": "{gun} the wind is light and no rain is expected — good for spraying.",
 };

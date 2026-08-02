@@ -16,6 +16,7 @@ export const C = {
   muted: "#6B7568",
   line: "#E3E8E0",
   danger: "#C24A3F",
+  dangerSoft: "#FBEAE7",
 };
 
 export const font = {

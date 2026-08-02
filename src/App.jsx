@@ -20,6 +20,11 @@ import { useRouter } from "./lib/router.jsx";
 import { useStore } from "./state/store.jsx";
 import { routeForPath } from "./routes.js";
 import { C, font } from "./theme/tokens.js";
+import { useNdvi } from "./features/ndvi/useNdvi.js";
+import { useSiqnallar } from "./features/signals/useSiqnallar.js";
+import { acigSiqnallar } from "./services/siqnal.js";
+import { havaNoqtesi } from "./services/saheYeri.js";
+import { DEFAULT_LOCATION } from "./services/location.js";
 
 const SCREENS = {
   home: HomeScreen,
@@ -42,6 +47,14 @@ export default function App() {
 
   const route = routeForPath(path);
   const Screen = SCREENS[route.id];
+
+  // Peyk ölçməsi və siqnallar BURADA qurulur, ekranlarda yox: başlıqdakı zəng,
+  // əsas ekran və məsləhət ekranı eyni siyahını göstərməlidir və hər biri
+  // ayrıca Copernicus sorğusu göndərməməlidir (emal kvotası pulludur).
+  const peyk = useNdvi(state.sahe);
+  const noqte = havaNoqtesi({ location: state.location ?? DEFAULT_LOCATION, sahe: state.sahe });
+  const butunSiqnallar = useSiqnallar({ lat: noqte.lat, lon: noqte.lon, xulase: peyk.xulase });
+  const siqnallar = acigSiqnallar(butunSiqnallar, state.bagliSiqnallar);
 
   // Sabit identifikator: alt komponentlərdəki effektlər hər render-də
   // yenidən qurulmasın
@@ -71,12 +84,14 @@ export default function App() {
           <Onboarding />
         ) : (
           <>
-            <AppHeader />
+            <AppHeader siqnalSayi={siqnallar.length} />
 
             <main ref={scrollRef} className="flex-1 overflow-y-auto">
               {/* key ekran dəyişəndə remount edir — giriş animasiyası hər dəfə oynayır */}
               <div key={route.id} className="ekran-giris">
                 <Screen
+                peyk={peyk}
+                siqnallar={siqnallar}
                 onOpenLoan={() => setLoanOpen(true)}
                 onPickLocation={() => setLocationOpen(true)}
                 onOpenChat={() => setChatOpen(true)}

@@ -82,10 +82,7 @@ describe("yer seçimi", () => {
     await user.click(screen.getByRole("button", { name: "Quba" }));
 
     await waitFor(() =>
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining("latitude=41.3608"),
-        expect.anything(),
-      ),
+      expect(fetch).toHaveBeenCalledWith(expect.stringContaining("latitude=41.3608")),
     );
   });
 

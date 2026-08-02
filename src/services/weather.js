@@ -110,6 +110,37 @@ export function summarizeForecast(daily) {
   };
 }
 
+// Eyni anda gedən eyni sorğular. Proqnozu bir neçə yer istəyir (hava zolağı,
+// sahə siqnalları) və hamısı eyni anda qurulur — keş hələ boş olduğu üçün
+// hər biri ayrıca sorğu göndərərdi.
+const gedenler = new Map();
+
+/**
+ * DİQQƏT: paylaşılan sorğuya heç bir çağıranın `signal`-ı ötürülmür. Əks
+ * halda bir komponent söküləndə (məsələn ekran dəyişəndə) sorğu ləğv olur və
+ * eyni cavabı gözləyən DİGƏR komponent də xəta alır. Ləğv yalnız çağıranın
+ * öz nəticəsinə aiddir: cavab gələndə onun siqnalı yoxlanılır.
+ */
+function tekSorgu(cacheKey, url) {
+  const geden = gedenler.get(cacheKey);
+  if (geden) return geden;
+
+  const soz = (async () => {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Open-Meteo ${response.status}`);
+    return response.json();
+  })().finally(() => gedenler.delete(cacheKey));
+
+  gedenler.set(cacheKey, soz);
+  return soz;
+}
+
+function legvXetasi() {
+  const xeta = new Error("Sorğu ləğv olundu");
+  xeta.name = "AbortError";
+  return xeta;
+}
+
 /**
  * @returns {Promise<{data: object, stale: boolean}>} stale=true olduqda
  *          məlumat keşdəndir və istifadəçiyə bunu bildirmək lazımdır.
@@ -123,9 +154,8 @@ export async function fetchForecast({ lat, lon, days = 7, signal } = {}) {
   }
 
   try {
-    const response = await fetch(forecastUrl({ lat, lon, days }), { signal });
-    if (!response.ok) throw new Error(`Open-Meteo ${response.status}`);
-    const data = await response.json();
+    const data = await tekSorgu(cacheKey, forecastUrl({ lat, lon, days }));
+    if (signal?.aborted) throw legvXetasi();
     storage.write(cacheKey, { savedAt: Date.now(), data });
     return { data, stale: false };
   } catch (error) {

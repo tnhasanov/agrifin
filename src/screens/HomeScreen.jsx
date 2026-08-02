@@ -15,9 +15,9 @@ import { FARM } from "../services/farm.js";
 import { DEFAULT_LOCATION } from "../services/location.js";
 import { havaNoqtesi } from "../services/saheYeri.js";
 import { necheGunEvvel } from "../services/ndvi.js";
-import { useNdvi } from "../features/ndvi/useNdvi.js";
 import { Sparkline } from "../components/Sparkline.jsx";
 import { SaheXeritesi } from "../features/ndvi/SaheXeritesi.jsx";
+import { SiqnalKarti } from "../features/signals/SiqnalKarti.jsx";
 
 function StatTile({ label, children }) {
   return (
@@ -30,9 +30,16 @@ function StatTile({ label, children }) {
   );
 }
 
-export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
+export function HomeScreen({
+  peyk = { hal: "yoxdur", seriya: [], xulase: null },
+  siqnallar = [],
+  onOpenLoan,
+  onPickLocation,
+  onDrawField,
+  onOpenChat,
+}) {
   const { t, money, lang } = useI18n();
-  const { state } = useStore();
+  const { state, actions } = useStore();
   const { navigate } = useRouter();
 
   // Yer seçilməyibsə default rayonun proqnozu göstərilir
@@ -46,8 +53,7 @@ export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
     .filter((rec) => !rec.done)
     .slice(0, 2);
 
-  // Peyk ölçməsi sahədən asılıdır; sahə yoxdursa hook "yoxdur" qaytarır
-  const peyk = useNdvi(state.sahe);
+  // Peyk ölçməsi App-də qurulur (bax: App.jsx) — burada yalnız göstərilir
   const olculen = peyk.xulase;
   const ndvi = formatNumber(olculen?.ndvi ?? FARM.ndvi, lang, {
     minimumFractionDigits: 2,
@@ -56,8 +62,34 @@ export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
   });
   const gunEvvel = olculen ? necheGunEvvel(olculen.tarix) : null;
 
+  // Yalnız ən vacib siqnal əsas ekrana çıxır. Fermer telefonu açanda bir iş
+  // görməlidir, siyahı oxumamalıdır — qalanı məsləhət ekranındadır.
+  const bas = siqnallar.find((s) => s.ciddilik !== "melumat");
+  const qalan = siqnallar.length - (bas ? 1 : 0);
+
   return (
     <div className="px-4 pb-4">
+      {bas && (
+        <div className="mt-3" aria-live="polite">
+          <SiqnalKarti
+            siqnal={bas}
+            onBagla={actions.siqnaliBagla}
+            onHereket={onOpenChat}
+            style={{ "--i": 1 }}
+          />
+          {qalan > 0 && (
+            <button
+              type="button"
+              onClick={() => navigate(pathFor("advisor"))}
+              className="mt-1.5 w-full py-1 text-xs font-semibold"
+              style={{ color: C.muted }}
+            >
+              {t("siqnal.qalan", { count: qalan })}
+            </button>
+          )}
+        </div>
+      )}
+
       <div
         className="mt-3 rounded-3xl px-4 pt-4 pb-3"
         style={{ background: `linear-gradient(160deg, ${C.pine} 0%, ${C.pineDeep} 70%)` }}
@@ -202,6 +234,7 @@ export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
         lon={noqte.lon}
         locationName={location.name}
         onPickLocation={onPickLocation}
+        meslehetGoster={siqnallar.length === 0}
       />
 
       <SectionTitle action={t("home.openAdvisor")} onAction={() => navigate(pathFor("advisor"))}>

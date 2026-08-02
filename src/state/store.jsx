@@ -16,7 +16,7 @@ import { duzgunSahe } from "../services/geo.js";
 export const PERSIST_KEY = "state";
 // Saxlanan formanı dəyişəndə bu rəqəmi artırın və MIQRASIYALAR-a keçid yazın.
 // Keçid yoxdursa köhnə məlumat səssizcə atılır.
-export const PERSIST_VERSION = 4;
+export const PERSIST_VERSION = 5;
 
 /**
  * Köhnə versiyadan yeniyə keçid. Fermerdən onsuz da bildiyimiz şeyi
@@ -28,6 +28,8 @@ const MIQRASIYALAR = {
   2: (state) => ({ ...state, onboarded: isValidLocation(state.location) }),
   // 3 → 4: fermerin öz çəkdiyi sahə konturu əlavə olundu
   3: (state) => ({ ...state, sahe: null }),
+  // 4 → 5: sahə siqnalları əlavə olundu; bağlananların siyahısı boş başlayır
+  4: (state) => ({ ...state, bagliSiqnallar: [] }),
 };
 
 function miqrasiyaEt(saved) {
@@ -74,6 +76,9 @@ export const initialState = {
   chat: { messages: [], crop: null, referral: false },
   creditsSold: false,
   completedRecs: [],
+  // Fermerin bağladığı sahə siqnallarının id-ləri. Id-də ölçmə/hadisə tarixi
+  // var, ona görə növbəti şaxta və ya yeni ölçmə yenidən görünür.
+  bagliSiqnallar: [],
   txns: INITIAL_TXNS,
   nextTxnId: 5,
   loan: { active: true, amount: 8000, repay: 8380, seasonProgress: 62 },
@@ -85,6 +90,13 @@ export function reducer(state, action) {
     case "rec/complete": {
       if (state.completedRecs.includes(action.id)) return state;
       return { ...state, completedRecs: [...state.completedRecs, action.id] };
+    }
+
+    case "siqnal/bagla": {
+      if (!action.id || state.bagliSiqnallar.includes(action.id)) return state;
+      // Siyahı sonsuz böyüməsin: id-lər tarixlidir, köhnələr bir daha
+      // qurulmur, ona görə saxlamağın mənası yoxdur
+      return { ...state, bagliSiqnallar: [...state.bagliSiqnallar, action.id].slice(-40) };
     }
 
     case "carbon/sell": {
@@ -218,6 +230,7 @@ function loadPersisted() {
 
   // Zədələnmiş sahə konturunu (əl ilə pozulmuş localStorage) yükləmirik
   if (base.sahe && !duzgunSahe(base.sahe)) base.sahe = null;
+  if (!Array.isArray(base.bagliSiqnallar)) base.bagliSiqnallar = [];
 
   // Köhnə prototipdə yer ayrı açarda saxlanılırdı — yenidən soruşmuruq
   if (!isValidLocation(base.location)) {
@@ -259,6 +272,7 @@ export function StoreProvider({ children }) {
         dispatch({ type: "carbon/sell" });
         showToast("toast.creditsSold", { amount: { money: carbonPayout() } });
       },
+      siqnaliBagla: (id) => dispatch({ type: "siqnal/bagla", id }),
       takeLoan: (amount) => dispatch({ type: "loan/take", amount }),
       setLocation: (location) => {
         dispatch({ type: "location/set", location });

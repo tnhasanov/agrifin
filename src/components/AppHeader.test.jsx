@@ -20,7 +20,7 @@ beforeEach(() => {
 describe("başlıqdaki bildiriş zəngi", () => {
   it("gözləyən tövsiyələrin sayını göstərir", () => {
     renderApp(<App />);
-    expect(zeng()).toHaveAccessibleName(`Bildirişlər — ${RECOMMENDATIONS.length} gözləyən tövsiyə`);
+    expect(zeng()).toHaveAccessibleName(`Bildirişlər — ${RECOMMENDATIONS.length} yeni`);
     expect(zeng()).toHaveTextContent(String(RECOMMENDATIONS.length));
   });
 
@@ -61,7 +61,7 @@ describe("başlıqdaki bildiriş zəngi", () => {
     );
     renderApp(<App />);
 
-    const dugme = screen.getByRole("button", { name: "Bildirişlər — gözləyən tövsiyə yoxdur" });
+    const dugme = screen.getByRole("button", { name: "Bildirişlər — yeni bildiriş yoxdur" });
     // Rəqəm də, nöqtə də olmamalıdır — yanlış "səni nəsə gözləyir" siqnalı verməsin
     expect(dugme).toHaveTextContent("");
     await user.click(dugme);

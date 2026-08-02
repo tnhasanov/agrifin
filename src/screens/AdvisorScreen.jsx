@@ -6,8 +6,9 @@ import { C, font, tone as TONES } from "../theme/tokens.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
 import { withCompletion } from "../services/advisor.js";
+import { SiqnalKarti } from "../features/signals/SiqnalKarti.jsx";
 
-export function AdvisorScreen({ onOpenChat }) {
+export function AdvisorScreen({ onOpenChat, siqnallar = [] }) {
   const { t } = useI18n();
   const { state, actions } = useStore();
   const recs = withCompletion(state.completedRecs);
@@ -63,6 +64,26 @@ export function AdvisorScreen({ onOpenChat }) {
           </div>
         </button>
       </div>
+
+      {/* Sahədən gələn siqnallar tövsiyələrdən ƏVVƏL gəlir: bunlar bu gün
+          ölçülmüş rəqəmlərdən çıxır, aşağıdakı siyahı isə nümunədir */}
+      {siqnallar.length > 0 && (
+        <>
+          <SectionTitle>{t("siqnal.title")}</SectionTitle>
+          <p className="-mt-1 mb-3 px-1 text-xs" style={{ color: C.muted }}>
+            {t("siqnal.subtitle")}
+          </p>
+          {siqnallar.map((siqnal, index) => (
+            <SiqnalKarti
+              key={siqnal.id}
+              siqnal={siqnal}
+              onBagla={actions.siqnaliBagla}
+              onHereket={onOpenChat}
+              style={{ marginBottom: 10, "--i": index + 1 }}
+            />
+          ))}
+        </>
+      )}
 
       <SectionTitle>{t("advisor.title")}</SectionTitle>
       <p className="-mt-1 mb-3 px-1 text-xs" style={{ color: C.muted }}>

@@ -249,8 +249,8 @@ export default {
   "field.errorTooSmall": "Sahə çox kiçikdir. Yaxınlaşdırıb yenidən çəkin.",
   "field.errorTooLarge": "Sahə çox böyükdür. Yaxınlaşdırıb yalnız öz sahənizi çəkin.",
   "field.warnFarFromDistrict": "Sahə seçdiyiniz rayondan uzaqdır. Rayonu yoxlayın.",
-  "header.notificationsCount": "Bildirişlər — {count} gözləyən tövsiyə",
-  "header.notificationsEmpty": "Bildirişlər — gözləyən tövsiyə yoxdur",
+  "header.notificationsCount": "Bildirişlər — {count} yeni",
+  "header.notificationsEmpty": "Bildirişlər — yeni bildiriş yoxdur",
   "ndvi.loading": "Peyk ölçməsi yüklənir…",
   "ndvi.measured": "Peyk ölçməsi · {gun} gün əvvəl · {say} ölçmə",
   "ndvi.cached": "Saxlanmış ölçmə · {gun} gün əvvəl (şəbəkə yoxdur)",
@@ -274,7 +274,55 @@ export default {
   "chat.photoOnly": "Bu şəkildə nə görürsünüz?",
   "chat.photoBadType": "Yalnız şəkil göndərmək olar (JPG, PNG).",
   "chat.photoTooBig": "Şəkil çox böyükdür. Bir az uzaqdan çəkin.",
-  "ndvi.water.az": "Su çatışmır — suvarmanı planlaşdırın",
+  "ndvi.water.az": "Torpaqda su azdır",
   "ndvi.water.orta": "Su ehtiyatı orta səviyyədədir",
   "ndvi.water.kafi": "Su kifayət edir",
+
+  "siqnal.title": "Sahənizdən siqnallar",
+  "siqnal.subtitle":
+    "Bu xəbərdarlıqlar sizin sahənizin koordinatı üçün alınmış peyk ölçməsi və hava proqnozundan çıxarılır.",
+  "siqnal.bagla": "Siqnalı bağla",
+  "siqnal.sekilCek": "Şəkil çək",
+  "siqnal.qalan": "Daha {count} siqnal — hamısına bax",
+
+  "siqnal.menbe.hava": "Hava proqnozu · sahənin koordinatı",
+  "siqnal.menbe.peyk": "Sentinel-2 peyki · sizin sahə",
+  "siqnal.menbe.hamisi": "Peyk ölçməsi + hava proqnozu",
+
+  "siqnal.saxta.basliq": "Şaxta riski",
+  "siqnal.saxta.tecili":
+    "{gun} gecə hava {derece}°-yə düşür. Həssas əkinləri örtün, suvarmanı gecəyə saxlamayın.",
+  "siqnal.saxta.diqqet":
+    "{gun} gecə {derece}° gözlənilir. Açıq və küləksiz gecədə yer səthində şaxta ola bilər.",
+
+  "siqnal.isti.basliq": "İstilik stresi",
+  "siqnal.isti.tecili":
+    "{gun} {derece}° gözlənilir. Suvarmanı səhər tezdən və ya axşam edin — günorta su buxarlanır.",
+  "siqnal.isti.diqqet":
+    "{gun} başlayaraq ardıcıl iki gün {derece}°-ə qədər. Bitkinin su tələbatı artacaq.",
+
+  "siqnal.yagis.basliq": "Yağış gəlir",
+  "siqnal.yagis.metn":
+    "Növbəti 3 gündə {mm} mm yağış gözlənilir. Gübrələmə və dərmanlamanı təxirə salın — yuyulub gedər.",
+
+  "siqnal.suvar.basliq": "Suvarma vaxtıdır",
+  "siqnal.suvar.tecili":
+    "Peyk sahədə su çatışmazlığı görür (NDMI {nemlik}) və 3 gündə yağış gözlənmir.",
+  "siqnal.suvar.balans":
+    "Bu həftə buxarlanma yağışı {mm} mm üstələyir. Suvarmanı planlaşdırın.",
+
+  "siqnal.suvarmaDayan.basliq": "Suvarmanı saxlayın",
+  "siqnal.suvarmaDayan.metn":
+    "Sahə quraqdır, amma 3 gündə {mm} mm yağış gözlənilir. Suvarsanız suyu və yanacağı boş yerə xərcləyəcəksiniz.",
+
+  "siqnal.bitkiZeifleyir.basliq": "Bitki zəifləyir — səbəb su deyil",
+  "siqnal.bitkiZeifleyir.metn":
+    "Peyk son iki həftədə bitki örtüyünün {ferq} azaldığını göstərir, torpaqda isə su kifayətdir. Səbəb xəstəlik, zərərverici və ya qida çatışmazlığı ola bilər — peyk bunları görmür, yarpağın şəkli görür.",
+
+  "siqnal.olcmeKohne.basliq": "Peyk ölçməsi köhnəlib",
+  "siqnal.olcmeKohne.metn":
+    "{gun} gündür təmiz ölçmə yoxdur — səma buludlu olub. Hava açılan kimi avtomatik yenilənəcək.",
+
+  "siqnal.dermanlama.basliq": "Dərmanlama pəncərəsi",
+  "siqnal.dermanlama.metn": "{gun} külək zəif və yağış gözlənmir — dərmanlama üçün əlverişlidir.",
 };

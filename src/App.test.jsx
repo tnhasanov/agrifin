@@ -32,10 +32,9 @@ describe("AgriFin tətbiqi", () => {
     renderApp(<App />);
 
     await waitFor(() => expect(screen.getByText("34°")).toBeInTheDocument());
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining("api.open-meteo.com"),
-      expect.anything(),
-    );
+    // İkinci arqument yoxdur: proqnoz sorğusu paylaşılır, ona görə heç bir
+    // çağıranın `signal`-ı ötürülmür (bax: services/weather.js)
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("api.open-meteo.com"));
   });
 
   it("aşağı naviqasiya ilə ekranlar arasında keçir və URL-i dəyişir", async () => {
