@@ -5,8 +5,8 @@
 // Qeyd: `npm run dev` bu marşrutu vermir — /api/* yalnız Vercel-də (və ya
 // `vercel dev`-də) işləyir. Lokal Vite serverində çat 404 qaytaracaq.
 import Anthropic from "@anthropic-ai/sdk";
-import { BITKILER, kontekstQur } from "./knowledge.js";
-import { dozaQoruyucusuYarat } from "./dozaQoruyucu.js";
+import { BITKILER, kontekstQur } from "../lib/knowledge.js";
+import { dozaQoruyucusuYarat } from "../lib/dozaQoruyucu.js";
 
 // Sonnet: qısa aqronomik cavablar üçün sürət/qiymət balansı Opus-dan uyğundur.
 const MODEL = "claude-sonnet-5";

@@ -6,7 +6,7 @@
 // tətbiqə inam yaranır. Orta rəqəm bunu heç vaxt edə bilmir.
 //
 // Process API rasteri özü hazırlayır; biz hazır PNG alırıq.
-import { cerceve, polygonaCevir } from "./geoJson.js";
+import { cerceve, polygonaCevir } from "../lib/geoJson.js";
 import {
   BAZA_URL,
   BULUD_SERTI,
@@ -16,7 +16,7 @@ import {
   ipTap,
   suretHeddiYarat,
   tokenAl,
-} from "./copernicus.js";
+} from "../lib/copernicus.js";
 
 const PROCESS_URL = `${BAZA_URL}/process`;
 

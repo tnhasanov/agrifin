@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { QONSU_RADIUS_KM, qonsuCercevesi } from "./geoJson.js";
+import { QONSU_RADIUS_KM, qonsuCercevesi } from "../lib/geoJson.js";
 import { MIN_PIKSEL, dovrSec, faizAl } from "./qonsu.js";
 
 const SAHE = [

@@ -7,7 +7,7 @@
 // Axın: client_credentials ilə token → Statistical API-yə çoxbucaqlı göndər →
 // hər dövr üçün orta NDVI qaytar. Şəkil endirilmir, hesablama Copernicus-da
 // olur; biz yalnız rəqəmləri alırıq.
-import { MIN_NOQTE, cerceve, polygonaCevir } from "./geoJson.js";
+import { MIN_NOQTE, cerceve, polygonaCevir } from "../lib/geoJson.js";
 import {
   BAZA_URL,
   BULUD_SERTI,
@@ -17,7 +17,7 @@ import {
   ipTap,
   suretHeddiYarat,
   tokenAl,
-} from "./copernicus.js";
+} from "../lib/copernicus.js";
 
 const STAT_URL = `${BAZA_URL}/statistics`;
 

@@ -5,7 +5,7 @@ import {
   IQLIM_ZONALARI,
   kontekstQur,
   zonaTap,
-} from "../../api/knowledge.js";
+} from "../../lib/knowledge.js";
 import { DISTRICTS } from "./location.js";
 import { CROP_KEYS } from "./crops.js";
 

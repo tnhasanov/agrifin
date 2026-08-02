@@ -9,7 +9,7 @@
 // "ortadan yuxarı" görünər — yəni müqayisə yaltaqlıq olar, məlumat yox.
 // Buna görə SCL === 4 (bitki örtüyü) filtri qoyulur: yalnız əkin sahələri
 // müqayisəyə girir.
-import { MIN_NOQTE, QONSU_RADIUS_KM, polygonaCevir, qonsuCercevesi } from "./geoJson.js";
+import { MIN_NOQTE, QONSU_RADIUS_KM, polygonaCevir, qonsuCercevesi } from "../lib/geoJson.js";
 import {
   BAZA_URL,
   acarQurulub,
@@ -18,7 +18,7 @@ import {
   ipTap,
   suretHeddiYarat,
   tokenAl,
-} from "./copernicus.js";
+} from "../lib/copernicus.js";
 
 const STAT_URL = `${BAZA_URL}/statistics`;
 
