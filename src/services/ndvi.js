@@ -30,7 +30,8 @@ export function xulase(seriya) {
   return {
     ndvi: son.ndvi,
     nemlik,
-    quraq: nemlik != null ? nemlik < 0 : null,
+    // Fermer üçün rəqəm yox, qərar lazımdır: suvarmalıyam, yoxsa yox
+    suSeviyyesi: nemlik == null ? null : nemlik < 0 ? "az" : nemlik < 0.2 ? "orta" : "kafi",
     tarix: son.son,
     ferq,
     // Trend yalnız mənalı fərqdə göstərilir: ±0.02 ölçmə səs-küyüdür

@@ -152,6 +152,33 @@ export function HomeScreen({ onOpenLoan, onPickLocation, onDrawField }) {
           </div>
         )}
 
+        {/* Su vəziyyəti ayrıca göstərilir: NDVI "zəifdir" deyir, rütubət isə
+            səbəbin su olub-olmadığını — suvarma qərarı buna bağlıdır. */}
+        {peyk.hal === "hazir" && olculen?.suSeviyyesi && (
+          <div
+            className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2"
+            style={{
+              backgroundColor:
+                olculen.suSeviyyesi === "az" ? "rgba(233,181,74,0.16)" : "rgba(255,255,255,0.08)",
+            }}
+          >
+            <Icon
+              name="Droplets"
+              size={13}
+              color={olculen.suSeviyyesi === "az" ? C.gold : "#7FD6A4"}
+            />
+            <span className="flex-1 text-xs" style={{ color: "rgba(255,255,255,0.78)" }}>
+              {t(`ndvi.water.${olculen.suSeviyyesi}`)}
+            </span>
+            <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 10 }}>
+              NDMI {formatNumber(olculen.nemlik, lang, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
+          </div>
+        )}
+
         <button
           type="button"
           onClick={onOpenLoan}

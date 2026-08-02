@@ -275,4 +275,7 @@ export default {
   "chat.photoOnly": "What do you see in this photo?",
   "chat.photoBadType": "Only images can be sent (JPG, PNG).",
   "chat.photoTooBig": "The photo is too large. Try again from a little further away.",
+  "ndvi.water.az": "Low moisture — plan irrigation",
+  "ndvi.water.orta": "Moisture is moderate",
+  "ndvi.water.kafi": "Moisture is sufficient",
 };

@@ -274,4 +274,7 @@ export default {
   "chat.photoOnly": "Bu şəkildə nə görürsünüz?",
   "chat.photoBadType": "Yalnız şəkil göndərmək olar (JPG, PNG).",
   "chat.photoTooBig": "Şəkil çox böyükdür. Bir az uzaqdan çəkin.",
+  "ndvi.water.az": "Su çatışmır — suvarmanı planlaşdırın",
+  "ndvi.water.orta": "Su ehtiyatı orta səviyyədədir",
+  "ndvi.water.kafi": "Su kifayət edir",
 };

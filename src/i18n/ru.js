@@ -276,4 +276,7 @@ export default {
   "chat.photoOnly": "Что вы видите на этом фото?",
   "chat.photoBadType": "Можно отправлять только изображения (JPG, PNG).",
   "chat.photoTooBig": "Фото слишком большое. Снимите немного издалека.",
+  "ndvi.water.az": "Мало влаги — запланируйте полив",
+  "ndvi.water.orta": "Запас влаги средний",
+  "ndvi.water.kafi": "Влаги достаточно",
 };

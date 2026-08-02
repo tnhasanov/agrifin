@@ -17,10 +17,10 @@ const SAHE = {
 /** Son 20 gündə azalan seriya — su stressi mənzərəsi */
 const bugun = new Date().toISOString().slice(0, 10);
 const SERIYA = [
-  { baslangic: "2026-07-02", son: "2026-07-07", ndvi: 0.78, ortulu: 0 },
-  { baslangic: "2026-07-07", son: "2026-07-12", ndvi: 0.76, ortulu: 0.1 },
-  { baslangic: "2026-07-12", son: "2026-07-17", ndvi: 0.71, ortulu: 0 },
-  { baslangic: "2026-07-17", son: bugun, ndvi: 0.68, ortulu: 0 },
+  { baslangic: "2026-07-02", son: "2026-07-07", ndvi: 0.78, nemlik: 0.24, ortulu: 0 },
+  { baslangic: "2026-07-07", son: "2026-07-12", ndvi: 0.76, nemlik: 0.18, ortulu: 0.1 },
+  { baslangic: "2026-07-12", son: "2026-07-17", ndvi: 0.71, nemlik: 0.06, ortulu: 0 },
+  { baslangic: "2026-07-17", son: bugun, ndvi: 0.68, nemlik: -0.05, ortulu: 0 },
 ];
 
 function seedSahe(sahe = SAHE) {
@@ -92,6 +92,37 @@ describe("peyk ölçməsi — əsas ekran", () => {
     await waitFor(() => expect(screen.getByText(/NDVI 0,68/)).toBeInTheDocument());
     expect(screen.getByText(/NDVI 0,68/).textContent).toContain("▼");
     expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument();
+  });
+
+  // NDVI "zəifdir" deyir, rütubət səbəbin su olduğunu göstərir — fermerin
+  // qərarı budur, ona görə ekranda rəqəm deyil, cümlə göstərilir
+  it("su çatışmazlığını fermerə açıq dillə deyir", async () => {
+    seedSahe();
+    stubApi();
+    renderApp(<App />);
+
+    await waitFor(() =>
+      expect(screen.getByText("Su çatışmır — suvarmanı planlaşdırın")).toBeInTheDocument(),
+    );
+    expect(screen.getByText(/NDMI -0,05/)).toBeInTheDocument();
+  });
+
+  it("su kifayət edəndə xəbərdarlıq göstərmir", async () => {
+    seedSahe();
+    stubApi({ seriya: SERIYA.map((n) => ({ ...n, nemlik: 0.3 })) });
+    renderApp(<App />);
+
+    await waitFor(() => expect(screen.getByText("Su kifayət edir")).toBeInTheDocument());
+    expect(screen.queryByText(/Su çatışmır/)).not.toBeInTheDocument();
+  });
+
+  it("rütubət ölçülməyibsə su sətri göstərilmir", async () => {
+    seedSahe();
+    stubApi({ seriya: SERIYA.map((n) => ({ ...n, nemlik: null })) });
+    renderApp(<App />);
+
+    await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());
+    expect(screen.queryByText(/Su çatışmır|Su kifayət/)).not.toBeInTheDocument();
   });
 
   it("konturu sorğuda serverə göndərir", async () => {
@@ -175,5 +206,7 @@ describe("peyk ölçməsi — aqronom çatı", () => {
     expect(yuk.ndviTarix).toBe(bugun);
     // 0.78 → 0.68 = azalma; model bunu şərh edə bilməlidir
     expect(yuk.ndviFerq).toBeCloseTo(-0.1, 2);
+    // Rütubət də gedir: model suvarma tövsiyəsini buna görə verir
+    expect(yuk.nemlik).toBe(-0.05);
   });
 });
