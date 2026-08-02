@@ -33,7 +33,9 @@ Node 22 tələb olunur (`.nvmrc`).
 ```
 api/
   agronom.js          serverless funksiya — Claude API açarı yalnız burada
-  ndvi.js             Copernicus Sentinel-2 → sahənin NDVI seriyası
+  ndvi.js             Copernicus Sentinel-2 → NDVI + rütubət seriyası
+  saheSekli.js        sahənin rəngli NDVI xəritəsi (şəkil)
+  copernicus.js       ortaq kimlik doğrulama və açar qorunması
   geoJson.js          kontur çevirmə (en/uzunluq sırası burada qorunur)
   knowledge.js        aqronomik bilik bazası — aqronom yoxlanışı gözləyir
   dozaQoruyucu.js     axında doza sızmasını tutan bufer
@@ -203,6 +205,16 @@ Qərarlar:
 Vəziyyətlər fermerə ayrı-ayrı cümlələrlə deyilir: yüklənir · ölçüldü ·
 buludlu olub · inteqrasiya qurulmayıb · alınmadı.
 
+**Sahənin xəritəsi.** Orta rəqəm problemin OLDUĞUNU deyir, xəritə isə
+HARADA olduğunu. Fermer öz sahəsini tanıyır: quru künc, susuz zolaq onun
+üçün tanış yerlərdir, və tətbiq onları göstərəndə inam yaranır. Process API
+rəngli PNG qaytarır; buludlu piksellər şəffafdır. Şəkil bəzəkdir, əsas
+məlumat deyil — alınmasa sükutla gizlənir.
+
+**Rütubət (NDMI).** NDVI "bitki zəifdir" deyir, NDMI isə səbəbin SU olub
+olmadığını göstərir — suvarma qərarı buna bağlıdır. B11 eyni məhsuldadır,
+ona görə eyni sorğuda gəlir: ayrıca çağırış emal kvotasını iki dəfə yandırardı.
+
 ---
 
 ## Aqronom köməkçisi
@@ -238,6 +250,14 @@ qədər funksiya hələ həqiqi 500/502 qaytara bilir.
   var (5 dəqiqədə 20 sorğu / IP), lakin serverless instanslar arasında
   paylaşılmadığı üçün tam qorunma deyil. Linki geniş yaymadan əvvəl Anthropic
   konsolunda xərc limiti və düzgün sürət həddi (KV/Redis) lazımdır.
+
+**Şəkil.** Fermer yarpağın şəklini çəkib göndərə bilir — simptomu sözlə
+təsvir etməkdən qat-qat asandır və savad maneəsini aradan qaldırır. Şəkil
+brauzerdə 1024 piksel/JPEG-ə kiçildilir (telefon şəkli 3–8 MB-dır, kənd
+internetində belə göndərmək dəqiqələr çəkərdi) və söhbət tarixçəsinə
+YAZILMIR: base64 localStorage kvotasını bir neçə şəkildə doldurar və
+saxlanan bütün vəziyyət itərdi. Server müştəri yoxlamasına güvənmir —
+növ, ölçü və base64 əlifbası yenidən yoxlanılır.
 
 **Təhlükəsizlik qaydası — preparat və doza verilmir.** Azərbaycanda yalnız
 dövlət qeydiyyatına alınmış preparatların istifadəsi qanunidir və reyestr

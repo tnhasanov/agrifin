@@ -20,6 +20,12 @@ DİL
 - Fermerin işlətdiyi termini saxla. Elmi ad lazım olanda mötərizədə ver.
 - Qısa yaz: 3–6 cümlə. Uzun mətn telefonda oxunmur.
 
+ŞƏKİL
+- Fermer yarpaq və ya bitki şəkli göndərə bilər. Şəkildə GÖRDÜYÜNÜ təsvir et,
+  sonra ehtimalları say. Şəkildə görünməyən şeyi "görürəm" demə.
+- Şəkil bulanıq, uzaqdan və ya qaranlıqdırsa bunu de və nə cür şəkil lazım
+  olduğunu izah et (yaxından, gündüz işığında, xəstə yarpaq tam görünsün).
+
 NƏ EDƏ BİLƏRSƏN
 - Əlamətlərə görə problemi adlandır və nə baş verdiyini izah et.
 - Fenoloji mərhələyə görə hansı işin vaxtı olduğunu deyə bilərsən.
@@ -59,6 +65,28 @@ Cavabın strukturu:
 4) Lazım olduqda: "Dəqiq preparat üçün dilerlə/aqronomla təsdiqlə"
 
 Başlıq, markdown ulduzu və emoji istifadə etmə. Sadə mətn və qısa abzaslar.`;
+
+// Şəkil həddi: müştəri onsuz da 1024 piksel/JPEG-ə kiçildir, bu isə
+// serverin öz qoruyucusudur — müştəriyə güvənmirik.
+const SEKIL_MAX_BAYT = 1_400_000;
+const SEKIL_NOVLERI = ["image/jpeg", "image/png", "image/webp"];
+
+/**
+ * Şəkli yoxlayır və Anthropic content bloku qaytarır. Yararsızdırsa null —
+ * sual şəkilsiz göndərilir, çünki fermerin sualı şəkildən vacibdir.
+ */
+function sekilBloku(sekil) {
+  if (!sekil || typeof sekil !== "object") return null;
+  const { mediaType, data } = sekil;
+  if (!SEKIL_NOVLERI.includes(String(mediaType))) return null;
+  if (typeof data !== "string" || data.length === 0) return null;
+  // base64 uzunluğundan bayt ölçüsü
+  if (Math.ceil((data.length * 3) / 4) > SEKIL_MAX_BAYT) return null;
+  // Yalnız base64 əlifbası — sətri olduğu kimi yuxarı ötürürük
+  if (!/^[A-Za-z0-9+/=]+$/.test(data)) return null;
+
+  return { type: "image", source: { type: "base64", media_type: mediaType, data } };
+}
 
 const CAVAB_DILLERI = {
   az: "Azərbaycan dili",
@@ -130,7 +158,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { messages = [], bitkiKey, rayon, ay, hava, sahe, havaDeqiq, ndvi, ndviTarix, ndviFerq, dil } =
+    const { messages = [], bitkiKey, rayon, ay, hava, sahe, havaDeqiq, ndvi, ndviTarix, ndviFerq, nemlik, sekil, dil } =
       req.body || {};
 
     if (!Array.isArray(messages) || messages.length === 0) {
@@ -149,6 +177,15 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Sual yoxdur." });
     }
 
+    // Şəkil YALNIZ son sual ilə göndərilir, tarixçəyə yazılmır: hər sonrakı
+    // mesajda təkrar göndərmək həm bahadır, həm də lazım deyil — modelin öz
+    // əvvəlki cavabı gördüyünü təsvir edir.
+    const blok = sekilBloku(sekil);
+    if (blok) {
+      const sonuncu = temiz[temiz.length - 1];
+      sonuncu.content = [blok, { type: "text", text: sonuncu.content }];
+    }
+
     // Sistem promptuna düşən sahələri yoxla — sərbəst mətn yalnız rayon adıdır
     const kontekst = kontekstQur({
       bitkiKey: typeof bitkiKey === "string" && BITKILER[bitkiKey] ? bitkiKey : undefined,
@@ -165,6 +202,7 @@ export default async function handler(req, res) {
       ndvi: eded(ndvi, -1, 1) ?? undefined,
       ndviTarix: typeof ndviTarix === "string" ? ndviTarix.slice(0, 10) : undefined,
       ndviFerq: eded(ndviFerq, -2, 2) ?? undefined,
+      nemlik: eded(nemlik, -1, 1) ?? undefined,
       // Sahə ölçüsü müştəridən gəlir — həddləri geo.js-dəki ilə eynidir
       sahe:
         sahe && typeof sahe === "object" && eded(sahe.hektar, 0.05, 1000) != null

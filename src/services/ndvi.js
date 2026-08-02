@@ -5,6 +5,7 @@ import * as storage from "../lib/storage.js";
 // Copernicus-un emal kvotasını qoruyur.
 export const KES_MS = 12 * 60 * 60 * 1000;
 const KES_ACAR = "ndvi";
+const SEKIL_ACAR = "ndviSekil";
 
 /** Sahə dəyişdikdə keş etibarsızdır — açar konturdan çıxarılır */
 export function saheAcari(noqteler) {
@@ -22,8 +23,15 @@ export function xulase(seriya) {
   const evvel = seriya[Math.max(0, seriya.length - 4)];
   const ferq = evvel && evvel !== son ? Math.round((son.ndvi - evvel.ndvi) * 1000) / 1000 : null;
 
+  // NDMI < 0 quraqlıq, 0–0.2 orta, > 0.2 kifayət qədər su deməkdir.
+  // NDVI "zəifdir" deyir; bu, səbəbin su olub-olmadığını ayırd edir.
+  const nemlik = Number.isFinite(son.nemlik) ? son.nemlik : null;
+
   return {
     ndvi: son.ndvi,
+    nemlik,
+    // Fermer üçün rəqəm yox, qərar lazımdır: suvarmalıyam, yoxsa yox
+    suSeviyyesi: nemlik == null ? null : nemlik < 0 ? "az" : nemlik < 0.2 ? "orta" : "kafi",
     tarix: son.son,
     ferq,
     // Trend yalnız mənalı fərqdə göstərilir: ±0.02 ölçmə səs-küyüdür
@@ -80,4 +88,39 @@ export async function fetchNdvi({ noqteler, gun, signal, mecburi = false } = {})
     if (uygun && kes.seriya?.length) return { seriya: kes.seriya, kohne: true, menbe: kes.menbe };
     throw error;
   }
+}
+
+/**
+ * Sahənin NDVI xəritəsi (şəkil).
+ *
+ * Ayrıca keşlənir, çünki şəkil seriyadan xeyli ağırdır (~50–150 kB) və
+ * eyni müddətdə dəyişmir. Keş dolubsa (localStorage kvotası) sükutla
+ * keçirik — şəkil olmadan da tətbiq işləyir.
+ */
+export async function fetchSaheSekli({ noqteler, signal, mecburi = false } = {}) {
+  if (!Array.isArray(noqteler) || noqteler.length < 3) return null;
+
+  const acar = saheAcari(noqteler);
+  const kes = storage.read(SEKIL_ACAR);
+  if (!mecburi && kes && kes.acar === acar && Date.now() - kes.vaxt < KES_MS) {
+    return kes.netice;
+  }
+
+  const cavab = await fetch("/api/saheSekli", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    signal,
+    body: JSON.stringify({ noqteler }),
+  });
+
+  if (!cavab.ok) {
+    const xeta = new Error(`saheSekli ${cavab.status}`);
+    xeta.status = cavab.status;
+    throw xeta;
+  }
+
+  const netice = await cavab.json();
+  // Kvota dolarsa write false qaytarır — şəkil yenə göstərilir, sadəcə keşlənmir
+  storage.write(SEKIL_ACAR, { acar, vaxt: Date.now(), netice });
+  return netice;
 }

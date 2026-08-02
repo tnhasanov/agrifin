@@ -45,10 +45,11 @@ const fail = (status, text = "xəta") => ({
 });
 
 /** Statistical API-nin bir dövrü */
-const dovr = (from, to, mean, sample = 640, noData = 0) => ({
+const dovr = (from, to, mean, sample = 640, noData = 0, nem = 0.18) => ({
   interval: { from: `${from}T00:00:00Z`, to: `${to}T00:00:00Z` },
   outputs: {
     ndvi: { bands: { B0: { stats: { mean, sampleCount: sample, noDataCount: noData } } } },
+    nemlik: { bands: { B0: { stats: { mean: nem, sampleCount: sample, noDataCount: noData } } } },
   },
 });
 
@@ -68,8 +69,8 @@ describe("seriyaCixar", () => {
       data: [dovr("2026-07-01", "2026-07-06", 0.7213), dovr("2026-07-06", "2026-07-11", 0.684)],
     });
     expect(seriya).toEqual([
-      { baslangic: "2026-07-01", son: "2026-07-06", ndvi: 0.721, ortulu: 0 },
-      { baslangic: "2026-07-06", son: "2026-07-11", ndvi: 0.684, ortulu: 0 },
+      { baslangic: "2026-07-01", son: "2026-07-06", ndvi: 0.721, nemlik: 0.18, ortulu: 0 },
+      { baslangic: "2026-07-06", son: "2026-07-11", ndvi: 0.684, nemlik: 0.18, ortulu: 0 },
     ]);
   });
 
@@ -101,6 +102,20 @@ describe("seriyaCixar", () => {
       data: [dovr("2026-07-16", "2026-07-21", 0.6), dovr("2026-07-01", "2026-07-06", 0.7)],
     });
     expect(seriya.map((s) => s.son)).toEqual(["2026-07-06", "2026-07-21"]);
+  });
+
+  // Rütubət ayrıca çıxışdır — gəlmirsə NDVI yenə işləməlidir (köhnə keş, natamam cavab)
+  it("rütubət olmadan da seriya qurur", () => {
+    const seriya = seriyaCixar({
+      data: [
+        {
+          interval: { from: "2026-07-01T00:00:00Z", to: "2026-07-06T00:00:00Z" },
+          outputs: { ndvi: { bands: { B0: { stats: { mean: 0.7, sampleCount: 640 } } } } },
+        },
+      ],
+    });
+    expect(seriya[0].ndvi).toBe(0.7);
+    expect(seriya[0].nemlik).toBeNull();
   });
 
   it("zədələnmiş cavabda çökmür", () => {
@@ -191,6 +206,23 @@ describe("api/ndvi — sorğu", () => {
     expect(halqa[0]).toEqual(halqa[halqa.length - 1]);
     // Buludu maskalayan skript göndərilir
     expect(yuk.aggregation.evalscript).toContain("SCL");
+  });
+
+  // Rütubət eyni sorğuda gəlir — ayrıca çağırış emal kvotasını iki dəfə yandırardı
+  it("NDVI və rütubəti bir sorğuda istəyir", async () => {
+    const fetchMock = vi.fn(async (url) =>
+      String(url).includes("token") ? ok({ access_token: "t" }) : ok({ data: [] }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    await handler(makeReq({ noqteler: SAHE }), makeRes());
+
+    const statCalls = fetchMock.mock.calls.filter(([url]) => String(url).includes("statistics"));
+    expect(statCalls).toHaveLength(1);
+
+    const yuk = JSON.parse(statCalls[0][1].body);
+    expect(Object.keys(yuk.calculations).sort()).toEqual(["ndvi", "nemlik"]);
+    // B11 rütubət üçün lazımdır və eyni məhsuldadır
+    expect(yuk.aggregation.evalscript).toContain("B11");
   });
 
   it("token sorğusunu düzgün formada göndərir", async () => {

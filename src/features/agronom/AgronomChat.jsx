@@ -7,6 +7,7 @@ import { askAgronomist } from "../../services/agronom.js";
 import { CROP_KEYS } from "../../services/crops.js";
 import { DEFAULT_LOCATION } from "../../services/location.js";
 import { useNdvi } from "../ndvi/useNdvi.js";
+import { sekliHazirla } from "../../lib/sekil.js";
 
 const SAMPLE_KEYS = ["chat.sample.1", "chat.sample.2", "chat.sample.3", "chat.sample.4"];
 
@@ -50,8 +51,12 @@ export function AgronomChat({ onClose }) {
   // Axın gedərkən yığılan mətn. Tamamlananda store-a bir dəfə yazılır —
   // hər parçada store-u yeniləsək, bütün tətbiq hər hərfdə render olunardı.
   const [axanMetn, setAxanMetn] = useState("");
+  // Göndərilməmiş şəkil: {mediaType, data, dataUrl}
+  const [sekil, setSekil] = useState(null);
+  const [sekilXetasi, setSekilXetasi] = useState(null);
   const bottomRef = useRef(null);
   const abortRef = useRef(null);
+  const faylRef = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -70,18 +75,39 @@ export function AgronomChat({ onClose }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
+  const sekilSec = async (event) => {
+    const fayl = event.target.files?.[0];
+    // Eyni faylı təkrar seçmək mümkün olsun deyə giriş sıfırlanır
+    event.target.value = "";
+    if (!fayl) return;
+
+    setSekilXetasi(null);
+    try {
+      setSekil(await sekliHazirla(fayl));
+    } catch (error) {
+      setSekilXetasi(error?.kod === "nov" ? "chat.photoBadType" : "chat.photoTooBig");
+    }
+  };
+
   const send = async (text) => {
     const question = (text ?? input).trim();
-    if (!question || busy) return;
+    // Şəkil varsa sual mətni məcburi deyil — "buna bax" kifayətdir
+    if ((!question && !sekil) || busy) return;
+    const sual = question || t("chat.photoOnly");
 
     // Xəta qabarcıqları söhbət tarixçəsi deyil — API-yə göndərilmir
     const history = [
       ...messages.filter((m) => !m.errorKey),
-      { role: "user", content: question },
+      { role: "user", content: sual },
     ];
 
-    actions.chatUser(question);
+    // Şəkil tarixçəyə YAZILMIR: base64 localStorage kvotasını bir neçə
+    // şəkildə doldurar. Sualda göndərilir, modelin cavabı kontekstdə qalır.
+    const gonderilenSekil = sekil;
+    actions.chatUser(sual);
     setInput("");
+    setSekil(null);
+    setSekilXetasi(null);
     setBusy(true);
     setAxanMetn("");
 
@@ -95,6 +121,7 @@ export function AgronomChat({ onClose }) {
         location,
         sahe,
         ndvi: peyk.xulase,
+        sekil: gonderilenSekil,
         lang,
         signal: controller.signal,
         // Serverin "replace" hadisəsi mətni tam əvəz edə bilər (doza qoruyucusu),
@@ -281,7 +308,56 @@ export function AgronomChat({ onClose }) {
 
       {/* Giriş */}
       <div className="px-3 py-2" style={{ backgroundColor: C.card, borderTop: `1px solid ${C.line}` }}>
+        {sekilXetasi && (
+          <p role="alert" className="mb-1.5 flex items-center gap-1.5 text-xs" style={{ color: C.danger }}>
+            <Icon name="AlertCircle" size={13} color={C.danger} /> {t(sekilXetasi)}
+          </p>
+        )}
+
+        {sekil && (
+          <div className="mb-2 flex items-center gap-2">
+            <img
+              src={sekil.dataUrl}
+              alt={t("chat.photoPreview")}
+              className="rounded-lg"
+              style={{ width: 44, height: 44, objectFit: "cover" }}
+            />
+            <span className="flex-1 text-xs" style={{ color: C.muted }}>
+              {t("chat.photoAttached")}
+            </span>
+            <button
+              type="button"
+              onClick={() => setSekil(null)}
+              aria-label={t("chat.photoRemove")}
+              className="rounded-full p-1.5"
+              style={{ backgroundColor: "#F1F4EF" }}
+            >
+              <Icon name="X" size={14} color={C.muted} />
+            </button>
+          </div>
+        )}
+
         <div className="flex items-end gap-2">
+          {/* capture="environment" telefonda birbaşa arxa kameranı açır */}
+          <input
+            ref={faylRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            capture="environment"
+            onChange={sekilSec}
+            className="hidden"
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+          <button
+            type="button"
+            onClick={() => faylRef.current?.click()}
+            aria-label={t("chat.photoAdd")}
+            className="rounded-xl p-2.5"
+            style={{ backgroundColor: "#F1F4EF" }}
+          >
+            <Icon name="Camera" size={16} color={C.pine} />
+          </button>
           <textarea
             value={input}
             onChange={(event) => setInput(event.target.value)}
@@ -300,10 +376,13 @@ export function AgronomChat({ onClose }) {
           <button
             type="button"
             onClick={() => send()}
-            disabled={busy || !input.trim()}
+            disabled={busy || (!input.trim() && !sekil)}
             aria-label={t("chat.send")}
             className="rounded-xl p-2.5"
-            style={{ backgroundColor: C.pine, opacity: busy || !input.trim() ? 0.45 : 1 }}
+            style={{
+              backgroundColor: C.pine,
+              opacity: busy || (!input.trim() && !sekil) ? 0.45 : 1,
+            }}
           >
             <Icon name="Send" size={15} color={C.gold} />
           </button>
