@@ -265,6 +265,64 @@ describe("api/agronom", () => {
     expect(mockStream.mock.calls[0][0].system[1].text).not.toContain("999999");
   });
 
+  it("şəkli son sual ilə birlikdə modelə ötürür", async () => {
+    mockStream.mockReturnValue(fakeStream(["Cavab"]));
+    await handler(
+      makeReq({
+        messages: [{ role: "user", content: "Bu nədir?" }],
+        sekil: { mediaType: "image/jpeg", data: "QUJDREVG" },
+      }),
+      makeRes(),
+    );
+
+    const sonuncu = mockStream.mock.calls[0][0].messages.at(-1);
+    expect(Array.isArray(sonuncu.content)).toBe(true);
+    expect(sonuncu.content[0]).toEqual({
+      type: "image",
+      source: { type: "base64", media_type: "image/jpeg", data: "QUJDREVG" },
+    });
+    expect(sonuncu.content[1]).toEqual({ type: "text", text: "Bu nədir?" });
+  });
+
+  // Müştəri yoxlamasına güvənmirik: sorğu birbaşa da göndərilə bilər
+  it.each([
+    ["yanlış növ", { mediaType: "application/pdf", data: "QUJD" }],
+    ["skript daşıya bilən SVG", { mediaType: "image/svg+xml", data: "QUJD" }],
+    ["boş məzmun", { mediaType: "image/jpeg", data: "" }],
+    ["base64 olmayan simvollar", { mediaType: "image/jpeg", data: "<script>x</script>" }],
+    ["obyekt deyil", "salam"],
+  ])("yararsız şəkli (%s) atır, sual yenə göndərilir", async (_ad, sekil) => {
+    mockStream.mockReturnValue(fakeStream(["Cavab"]));
+    const res = makeRes();
+    await handler(
+      makeReq({ messages: [{ role: "user", content: "Bu nədir?" }], sekil }),
+      res,
+    );
+
+    // Sual göndərilir, amma şəkilsiz — mətn bloku deyil, sadə sətir qalır
+    expect(typeof mockStream.mock.calls[0][0].messages.at(-1).content).toBe("string");
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("həddindən böyük şəkli atır", async () => {
+    mockStream.mockReturnValue(fakeStream(["Cavab"]));
+    await handler(
+      makeReq({
+        messages: [{ role: "user", content: "Bu nədir?" }],
+        // ~2 MB base64
+        sekil: { mediaType: "image/jpeg", data: "A".repeat(2_000_000) },
+      }),
+      makeRes(),
+    );
+    expect(typeof mockStream.mock.calls[0][0].messages.at(-1).content).toBe("string");
+  });
+
+  it("şəkilsiz sorğuda mesaj forması dəyişmir", async () => {
+    mockStream.mockReturnValue(fakeStream(["Cavab"]));
+    await handler(makeReq({ messages: [{ role: "user", content: "Bu nədir?" }] }), makeRes());
+    expect(mockStream.mock.calls[0][0].messages.at(-1).content).toBe("Bu nədir?");
+  });
+
   it("başda qalan assistant mesajlarını atır (API ilk user tələb edir)", async () => {
     mockStream.mockReturnValue(fakeStream(["Cavab"]));
     const res = makeRes();
