@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import handler, { PILLELER, olcuHesabla } from "./saheSekli.js";
+import handler, { QATLAR, olcuHesabla, qatDuzgun } from "./saheSekli.js";
 
 const SAHE = [
   [40.4, 47.1],
@@ -89,14 +89,41 @@ describe("olcuHesabla", () => {
   });
 });
 
-describe("PILLELER", () => {
-  it("rəng pillələri artan sıradadır və leyend açarı var", () => {
-    const hedler = PILLELER.map((p) => p.hedd);
-    expect([...hedler].sort((a, b) => a - b)).toEqual(hedler);
-    for (const p of PILLELER) {
-      expect(p.reng).toMatch(/^#[0-9A-F]{6}$/i);
-      expect(p.acar).toMatch(/^ndvi\.legend\./);
+describe("xəritə qatları", () => {
+  it("üç qat var və hər biri evalscript qaytarır", () => {
+    expect(Object.keys(QATLAR).sort()).toEqual(["bitki", "nemlik", "real"]);
+    for (const [ad, script] of Object.entries(QATLAR)) {
+      expect(script, ad).toContain("//VERSION=3");
+      expect(script, ad).toContain("evaluatePixel");
     }
+  });
+
+  // Sahədən kənar piksel şəffaf qalmalıdır, yoxsa düzbucaqlı qara fon çıxır
+  it("hər qat sahədən kənarı şəffaf saxlayır", () => {
+    for (const [ad, script] of Object.entries(QATLAR)) {
+      expect(script, ad).toContain("dataMask === 0");
+      expect(script, ad).toContain("[0, 0, 0, 0]");
+    }
+  });
+
+  // Əsl rəngdə bulud maskası OLMAMALIDIR: buludlu gün buludlu görünsün
+  it("yalnız indeks qatları buludu maskalayır", () => {
+    expect(QATLAR.bitki).toContain("SCL");
+    expect(QATLAR.nemlik).toContain("SCL");
+    expect(QATLAR.real).not.toContain("SCL");
+  });
+
+  it("nəmlik qatı SWIR zolağını istifadə edir", () => {
+    expect(QATLAR.nemlik).toContain("B11");
+    expect(QATLAR.real).toContain("B02");
+  });
+
+  it("bilinməyən qatı qəbul etmir", () => {
+    expect(qatDuzgun("bitki")).toBe(true);
+    expect(qatDuzgun("uydurma")).toBe(false);
+    expect(qatDuzgun(undefined)).toBe(false);
+    // Prototip zəncirindən gələn adlar qat sayılmamalıdır
+    expect(qatDuzgun("toString")).toBe(false);
   });
 });
 

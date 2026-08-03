@@ -34,11 +34,13 @@ export const maxDuration = 30;
 const suretHeddiKecilib = suretHeddiYarat({ pencereMs: 10 * 60 * 1000, hedd: 20 });
 
 /**
- * NDVI rəng pilləsi. Fermer üçün oxunaqlı olsun deyə kəskin pillələr
- * seçilib — hamar keçid gözəl görünür, amma "buradan bura zəifdir"
- * sərhədini itirir.
+ * Xəritə qatları. Fermer aşağıdakı düymələrlə keçir və YALNIZ açdığı qat
+ * yüklənir — üç qatı birdən çəkmək emal kvotasını üç dəfə xərcləyərdi.
+ *
+ * Rəng pillələri kəskindir, hamar keçid deyil: gözəl görünən qradiyent
+ * "buradan bura zəifdir" sərhədini itirir, fermerə isə məhz o sərhəd lazımdır.
  */
-const EVALSCRIPT = `//VERSION=3
+const BITKI_EVALSCRIPT = `//VERSION=3
 function setup() {
   return {
     input: [{ bands: ["B04", "B08", "SCL", "dataMask"] }],
@@ -59,15 +61,59 @@ function evaluatePixel(s) {
   return [0.09, 0.40, 0.17, 1];
 }`;
 
-/** Rəng pilləsinin izahı — leyendi UI-da bu siyahıdan qurulur */
-export const PILLELER = [
-  { hedd: 0.15, reng: "#8C6642", acar: "ndvi.legend.bare" },
-  { hedd: 0.3, reng: "#CAA657", acar: "ndvi.legend.verySparse" },
-  { hedd: 0.45, reng: "#E8D959", acar: "ndvi.legend.sparse" },
-  { hedd: 0.6, reng: "#9ECC54", acar: "ndvi.legend.medium" },
-  { hedd: 0.75, reng: "#47A04A", acar: "ndvi.legend.good" },
-  { hedd: 1, reng: "#17662B", acar: "ndvi.legend.dense" },
-];
+/**
+ * Əsl rəng — peykin gördüyü kimi. Fermer öz sahəsini TANIYIR: yol, arx,
+ * ağac sırası tanış nişanələrdir. İndeks xəritəsi mücərrəddir, bu isə
+ * şəkildir və "bəli, bu mənim sahəmdir" reaksiyasını verir.
+ *
+ * Bulud maskası QOYULMUR: buludlu gün buludlu görünməlidir, yoxsa fermer
+ * şəklin nə vaxtdan olduğuna inanmır.
+ */
+const REAL_EVALSCRIPT = `//VERSION=3
+function setup() {
+  return {
+    input: [{ bands: ["B02", "B03", "B04", "dataMask"] }],
+    output: { bands: 4, sampleType: "AUTO" }
+  };
+}
+function evaluatePixel(s) {
+  if (s.dataMask === 0) return [0, 0, 0, 0];
+  // L2A əkslilik dəyərləri qaranlıqdır; 2.5 gücləndirmə standart praktikadır
+  return [2.5 * s.B04, 2.5 * s.B03, 2.5 * s.B02, 1];
+}`;
+
+/**
+ * NDMI — bitkidəki su. NDVI "zəifdir" deyir, bu isə quru zolağı göstərir:
+ * suvarma çatmayan yer xəritədə dərhal görünür.
+ */
+const NEMLIK_EVALSCRIPT = `//VERSION=3
+function setup() {
+  return {
+    input: [{ bands: ["B08", "B11", "SCL", "dataMask"] }],
+    output: { bands: 4, sampleType: "AUTO" }
+  };
+}
+function evaluatePixel(s) {
+  var pis = ${BULUD_SERTI};
+  if (pis || s.dataMask === 0) return [0, 0, 0, 0];
+  var cem = s.B08 + s.B11;
+  var n = cem === 0 ? 0 : (s.B08 - s.B11) / cem;
+  if (n < -0.10) return [0.66, 0.44, 0.29, 1];
+  if (n < 0.00) return [0.85, 0.64, 0.25, 1];
+  if (n < 0.10) return [0.91, 0.85, 0.45, 1];
+  if (n < 0.20) return [0.55, 0.78, 0.79, 1];
+  if (n < 0.35) return [0.24, 0.61, 0.78, 1];
+  return [0.12, 0.37, 0.66, 1];
+}`;
+
+export const QATLAR = {
+  bitki: BITKI_EVALSCRIPT,
+  real: REAL_EVALSCRIPT,
+  nemlik: NEMLIK_EVALSCRIPT,
+};
+
+/** Naməlum qat sorğusu səssizcə bitki qatına düşməməlidir — açıq yoxlanır */
+export const qatDuzgun = (qat) => Object.hasOwn(QATLAR, String(qat));
 
 /**
  * Şəklin ölçüsünü sahənin formasından çıxarır ki, uzunsov sahə əzilməsin.
@@ -112,7 +158,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { noqteler, gun } = req.body || {};
+    const { noqteler, gun, qat = "bitki" } = req.body || {};
+    if (!qatDuzgun(qat)) {
+      return res.status(400).json({ error: "Bilinməyən xəritə qatı." });
+    }
 
     const polygon = polygonaCevir(noqteler);
     if (!polygon) {
@@ -162,7 +211,7 @@ export default async function handler(req, res) {
           height,
           responses: [{ identifier: "default", format: { type: "image/png" } }],
         },
-        evalscript: EVALSCRIPT,
+        evalscript: QATLAR[qat],
       }),
     });
 
@@ -175,9 +224,10 @@ export default async function handler(req, res) {
     // PNG-ni data URL kimi qaytarırıq: müştəri onu localStorage-də seriya ilə
     // yanaşı saxlaya bilir, ayrıca fayl anbarı lazım gəlmir.
     const bayt = Buffer.from(await cavab.arrayBuffer());
-    console.log(`[saheSekli] ${width}x${height} ${Math.round(bayt.length / 1024)}kB`);
+    console.log(`[saheSekli] qat=${qat} ${width}x${height} ${Math.round(bayt.length / 1024)}kB`);
 
     return res.status(200).json({
+      qat,
       sekil: `data:image/png;base64,${bayt.toString("base64")}`,
       en: width,
       hundurluk: height,
