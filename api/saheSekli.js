@@ -6,7 +6,7 @@
 // tətbiqə inam yaranır. Orta rəqəm bunu heç vaxt edə bilmir.
 //
 // Process API rasteri özü hazırlayır; biz hazır PNG alırıq.
-import { cerceve, polygonaCevir } from "../lib/geoJson.js";
+import { cerceve, pencereBbox, polygonaCevir, sahePenceresi } from "../lib/geoJson.js";
 import {
   BAZA_URL,
   BULUD_SERTI,
@@ -62,24 +62,32 @@ function evaluatePixel(s) {
 }`;
 
 /**
- * Əsl rəng — peykin gördüyü kimi. Fermer öz sahəsini TANIYIR: yol, arx,
- * ağac sırası tanış nişanələrdir. İndeks xəritəsi mücərrəddir, bu isə
- * şəkildir və "bəli, bu mənim sahəmdir" reaksiyasını verir.
+ * Əsl rəng — peykin gördüyü kimi.
  *
- * Bulud maskası QOYULMUR: buludlu gün buludlu görünməlidir, yoxsa fermer
+ * Kontur MASKALANMIR: sahə pəncərənin içində, ətrafı ilə birlikdə göstərilir
+ * (bax: sahePenceresi). Yol, arx və qonşu tarla konturdan kənardadır və
+ * sahəni məhz onlar tanınan edir. Konturu müştəri şəklin üstündən çəkir.
+ *
+ * Bulud maskası da yoxdur: buludlu gün buludlu görünməlidir, yoxsa fermer
  * şəklin nə vaxtdan olduğuna inanmır.
  */
 const REAL_EVALSCRIPT = `//VERSION=3
 function setup() {
   return {
-    input: [{ bands: ["B02", "B03", "B04", "dataMask"] }],
-    output: { bands: 4, sampleType: "AUTO" }
+    input: [{ bands: ["B02", "B03", "B04"] }],
+    output: { bands: 3, sampleType: "AUTO" }
   };
 }
+// L2A əkslilik dəyərləri qaranlıqdır. Düz vurma parlaq yerləri yandırır,
+// kölgəni isə qara qoyur — qamma əyrisi ikisini də oxunaqlı saxlayır.
+function ayarla(x) {
+  var v = x * 3.0;
+  if (v < 0) v = 0;
+  if (v > 1) v = 1;
+  return Math.pow(v, 0.8);
+}
 function evaluatePixel(s) {
-  if (s.dataMask === 0) return [0, 0, 0, 0];
-  // L2A əkslilik dəyərləri qaranlıqdır; 2.5 gücləndirmə standart praktikadır
-  return [2.5 * s.B04, 2.5 * s.B03, 2.5 * s.B02, 1];
+  return [ayarla(s.B04), ayarla(s.B03), ayarla(s.B02)];
 }`;
 
 /**
@@ -106,10 +114,20 @@ function evaluatePixel(s) {
   return [0.12, 0.37, 0.66, 1];
 }`;
 
+/**
+ * Qat konfiqurasiyası.
+ *
+ * `pencere` — sahənin ətrafı da göstərilsin (yalnız əsl rəngdə).
+ * `maxOlcu` — istənilən piksel sayı. İndeks qatlarında 10 m/piksel sensorun
+ *   həqiqi həddidir və ondan artığını istəmək uydurma detal yaradır. Əsl
+ *   rəngdə isə şəkil ORIYENTASIYA üçündür: 23×23 piksel telefonda kub
+ *   yığınına oxşayır, ona görə Sentinel Hub-a interpolyasiya etdiririk.
+ *   Bu detal həqiqi deyil və heç bir ölçmədə istifadə olunmur.
+ */
 export const QATLAR = {
-  bitki: BITKI_EVALSCRIPT,
-  real: REAL_EVALSCRIPT,
-  nemlik: NEMLIK_EVALSCRIPT,
+  bitki: { evalscript: BITKI_EVALSCRIPT, pencere: false, maxOlcu: 384 },
+  real: { evalscript: REAL_EVALSCRIPT, pencere: true, maxOlcu: 640 },
+  nemlik: { evalscript: NEMLIK_EVALSCRIPT, pencere: false, maxOlcu: 384 },
 };
 
 /** Naməlum qat sorğusu səssizcə bitki qatına düşməməlidir — açıq yoxlanır */
@@ -120,7 +138,7 @@ export const qatDuzgun = (qat) => Object.hasOwn(QATLAR, String(qat));
  * 10 m/piksel Sentinel-2-nin öz həlledicilik həddidir — ondan incə istəmək
  * yeni məlumat vermir, yalnız faylı böyüdür.
  */
-export function olcuHesabla({ enFerq, uzFerq }, orta) {
+export function olcuHesabla({ enFerq, uzFerq }, orta, { maxOlcu = MAX_OLCU, hedefBoyuk = 0 } = {}) {
   // Dərəcə → metr (uzunluq dərəcəsi enliyə görə qısalır)
   const enMetr = enFerq * 111_320;
   const uzMetr = uzFerq * 111_320 * Math.cos((orta * Math.PI) / 180);
@@ -133,7 +151,11 @@ export function olcuHesabla({ enFerq, uzFerq }, orta) {
   // aşağı həddə düşür və uzunsov sahə kvadrat kimi görünür — fermer öz
   // sahəsini tanımaz. Ona görə böyük tərəf hədlənir, kiçik tərəf nisbətlə
   // ondan çıxarılır.
-  const boyukPiksel = Math.max(MIN_OLCU, Math.min(MAX_OLCU, Math.round(boyuk / 10)));
+  // 10 m/piksel sensorun həqiqi həddidir. `hedefBoyuk` verilibsə şəkil
+  // ondan yuxarı miqyaslanır — yalnız baxmaq üçün, ölçmə üçün yox.
+  const tebii = Math.round(boyuk / 10);
+  const istenilen = hedefBoyuk > 0 ? Math.max(tebii, hedefBoyuk) : tebii;
+  const boyukPiksel = Math.max(MIN_OLCU, Math.min(maxOlcu, istenilen));
   const kicikPiksel = Math.max(1, Math.round(boyukPiksel * (kicik / boyuk)));
 
   return enMetr >= uzMetr
@@ -172,8 +194,23 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Sahə çox böyükdür." });
     }
 
+    const ayar = QATLAR[qat];
     const ortaEn = noqteler.reduce((c, p) => c + p[0], 0) / noqteler.length;
-    const { width, height } = olcuHesabla(cerc, ortaEn);
+
+    // Əsl rəngdə sahənin ətrafı da göstərilir; indekslərdə kontur kəsilir
+    const pencere = ayar.pencere ? sahePenceresi(noqteler) : null;
+    if (ayar.pencere && !pencere) {
+      return res.status(400).json({ error: "Sahə pəncərəsi hesablana bilmədi." });
+    }
+
+    const olcuCercevesi = pencere
+      ? { enFerq: pencere.enMax - pencere.enMin, uzFerq: pencere.uzMax - pencere.uzMin }
+      : cerc;
+    const { width, height } = olcuHesabla(olcuCercevesi, ortaEn, {
+      maxOlcu: ayar.maxOlcu,
+      // Şəkil kimi baxılan qat üçün 23×23 piksel telefonda kub yığınıdır
+      hedefBoyuk: ayar.pencere ? 480 : 0,
+    });
 
     const gunSayi =
       Number.isFinite(gun) && gun >= 5 && gun <= MAX_GUN ? Math.round(gun) : STANDART_GUN;
@@ -192,7 +229,9 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         input: {
           bounds: {
-            geometry: polygon,
+            ...(pencere
+              ? { bbox: pencereBbox(pencere) }
+              : { geometry: polygon }),
             properties: { crs: "http://www.opengis.net/def/crs/EPSG/0/4326" },
           },
           data: [
@@ -211,7 +250,7 @@ export default async function handler(req, res) {
           height,
           responses: [{ identifier: "default", format: { type: "image/png" } }],
         },
-        evalscript: QATLAR[qat],
+        evalscript: ayar.evalscript,
       }),
     });
 
@@ -228,6 +267,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       qat,
+      // Pəncərə göndərilir ki, müştəri konturu şəklin üstündən çəkə bilsin
+      pencere,
       sekil: `data:image/png;base64,${bayt.toString("base64")}`,
       en: width,
       hundurluk: height,

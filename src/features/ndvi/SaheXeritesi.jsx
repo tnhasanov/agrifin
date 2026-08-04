@@ -38,6 +38,42 @@ const LEYENDLER = {
   real: [],
 };
 
+/**
+ * Sahənin konturu şəklin üstündən.
+ *
+ * Əsl rəngdə şəkil sahədən genişdir (ətraf da görünür) — fermer öz sərhədini
+ * görməsə hansı hissənin onun olduğunu bilmir. Pəncərənin koordinatları
+ * serverdən gəlir, ona görə kontur piksel-piksel düzgün oturur.
+ */
+function KonturOrtusu({ noqteler, pencere }) {
+  if (!pencere) return null;
+  const enFerq = pencere.enMax - pencere.enMin;
+  const uzFerq = pencere.uzMax - pencere.uzMin;
+  if (!(enFerq > 0) || !(uzFerq > 0)) return null;
+
+  // Şimal yuxarıdadır: en böyüdükcə y kiçilir
+  const nöqtələr = noqteler
+    .map(([en, uz]) => {
+      const x = ((uz - pencere.uzMin) / uzFerq) * 100;
+      const y = ((pencere.enMax - en) / enFerq) * 100;
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(" ");
+
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+      className="pointer-events-none absolute inset-0 h-full w-full"
+      aria-hidden="true"
+    >
+      {/* İki xətt: tünd alt qat açıq fonda, ağ üst qat tünd fonda görünsün */}
+      <polygon points={nöqtələr} fill="none" stroke="rgba(0,0,0,0.55)" strokeWidth="1.6" />
+      <polygon points={nöqtələr} fill="none" stroke="#FFD264" strokeWidth="0.9" />
+    </svg>
+  );
+}
+
 export function SaheXeritesi({ sahe }) {
   const { t } = useI18n();
   // Qat başına ayrı nəticə və hal — keçid zamanı köhnə şəkil itməsin.
@@ -116,20 +152,32 @@ export function SaheXeritesi({ sahe }) {
         style={{ backgroundColor: "#EDF1EA", border: `1px solid ${C.line}` }}
       >
         {hal === "hazir" ? (
-          <img
-            src={netice.sekil}
-            width={netice.en}
-            height={netice.hundurluk}
-            alt={t(`ndvi.mapAlt.${aktiv}`)}
-            className="block w-full"
+          <div
+            className="relative mx-auto"
             style={{
-              // Piksellər 10 m-dir; hamarlamaq olmayan detalı uydurur
-              imageRendering: "pixelated",
-              maxHeight: 260,
-              objectFit: "contain",
-              backgroundColor: "#EDF1EA",
+              // Qutu şəklin nisbətini daşıyır — kontur ortüyü belə dəqiq oturur
+              aspectRatio: `${netice.en} / ${netice.hundurluk}`,
+              maxHeight: 280,
+              width: netice.pencere ? "100%" : undefined,
             }}
-          />
+          >
+            <img
+              src={netice.sekil}
+              width={netice.en}
+              height={netice.hundurluk}
+              alt={t(`ndvi.mapAlt.${aktiv}`)}
+              className="block h-full w-full"
+              style={{
+                // İndeks qatlarında piksel 10 m-dir və hamarlamaq olmayan
+                // detalı uydurur. Əsl rəngdə isə şəkil oriyentasiya üçündür —
+                // orada kub yığını görünməsindən hamar görüntü yaxşıdır.
+                imageRendering: netice.pencere ? "auto" : "pixelated",
+                objectFit: netice.pencere ? "cover" : "contain",
+                backgroundColor: "#EDF1EA",
+              }}
+            />
+            {netice.pencere && <KonturOrtusu noqteler={noqteler} pencere={netice.pencere} />}
+          </div>
         ) : (
           <div className="flex h-40 items-center justify-center gap-2 px-4 text-center">
             <Icon

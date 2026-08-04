@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import handler, { QATLAR, olcuHesabla, qatDuzgun } from "./saheSekli.js";
+import { pencereBbox, sahePenceresi } from "../lib/geoJson.js";
 
 const SAHE = [
   [40.4, 47.1],
@@ -90,32 +91,48 @@ describe("olcuHesabla", () => {
 });
 
 describe("xəritə qatları", () => {
+  const script = (ad) => QATLAR[ad].evalscript;
+
   it("üç qat var və hər biri evalscript qaytarır", () => {
     expect(Object.keys(QATLAR).sort()).toEqual(["bitki", "nemlik", "real"]);
-    for (const [ad, script] of Object.entries(QATLAR)) {
-      expect(script, ad).toContain("//VERSION=3");
-      expect(script, ad).toContain("evaluatePixel");
+    for (const ad of Object.keys(QATLAR)) {
+      expect(script(ad), ad).toContain("//VERSION=3");
+      expect(script(ad), ad).toContain("evaluatePixel");
     }
   });
 
-  // Sahədən kənar piksel şəffaf qalmalıdır, yoxsa düzbucaqlı qara fon çıxır
-  it("hər qat sahədən kənarı şəffaf saxlayır", () => {
-    for (const [ad, script] of Object.entries(QATLAR)) {
-      expect(script, ad).toContain("dataMask === 0");
-      expect(script, ad).toContain("[0, 0, 0, 0]");
+  // İndeks qatları konturla kəsilir; əsl rəng ətrafı da göstərir, ona görə
+  // orada şəffaflıq yoxdur — kəsmək kontekstsiz ləkə qoyardı
+  it("indeks qatları sahədən kənarı şəffaf saxlayır", () => {
+    for (const ad of ["bitki", "nemlik"]) {
+      expect(script(ad), ad).toContain("dataMask === 0");
+      expect(script(ad), ad).toContain("[0, 0, 0, 0]");
     }
+    expect(QATLAR.bitki.pencere).toBe(false);
+    expect(QATLAR.nemlik.pencere).toBe(false);
+  });
+
+  it("əsl rəng sahənin ətrafını da göstərir", () => {
+    expect(QATLAR.real.pencere).toBe(true);
+    expect(script("real")).not.toContain("dataMask");
   });
 
   // Əsl rəngdə bulud maskası OLMAMALIDIR: buludlu gün buludlu görünsün
   it("yalnız indeks qatları buludu maskalayır", () => {
-    expect(QATLAR.bitki).toContain("SCL");
-    expect(QATLAR.nemlik).toContain("SCL");
-    expect(QATLAR.real).not.toContain("SCL");
+    expect(script("bitki")).toContain("SCL");
+    expect(script("nemlik")).toContain("SCL");
+    expect(script("real")).not.toContain("SCL");
   });
 
   it("nəmlik qatı SWIR zolağını istifadə edir", () => {
-    expect(QATLAR.nemlik).toContain("B11");
-    expect(QATLAR.real).toContain("B02");
+    expect(script("nemlik")).toContain("B11");
+    expect(script("real")).toContain("B02");
+  });
+
+  // Düz vurma parlaq yerləri yandırır; qamma kölgəni də oxunaqlı saxlayır
+  it("əsl rəngdə hədləmə və qamma var", () => {
+    expect(script("real")).toContain("Math.pow");
+    expect(script("real")).toMatch(/v > 1/);
   });
 
   it("bilinməyən qatı qəbul etmir", () => {
@@ -124,6 +141,48 @@ describe("xəritə qatları", () => {
     expect(qatDuzgun(undefined)).toBe(false);
     // Prototip zəncirindən gələn adlar qat sayılmamalıdır
     expect(qatDuzgun("toString")).toBe(false);
+  });
+});
+
+describe("pəncərə", () => {
+  const SAHE = [
+    [40.4, 47.1],
+    [40.4021, 47.1],
+    [40.4021, 47.1027],
+    [40.4, 47.1027],
+  ];
+
+  it("sahəni tam əhatə edir və ətrafa yer buraxır", () => {
+    const p = sahePenceresi(SAHE);
+    expect(p.enMin).toBeLessThan(40.4);
+    expect(p.enMax).toBeGreaterThan(40.4021);
+    expect(p.uzMin).toBeLessThan(47.1);
+    expect(p.uzMax).toBeGreaterThan(47.1027);
+  });
+
+  // Çox kiçik sahədə faiz payı da kiçik olur — minimum metr həddi lazımdır
+  it("kiçik sahəyə minimum kontekst verir", () => {
+    const kicik = [
+      [40.4, 47.1],
+      [40.4002, 47.1],
+      [40.4002, 47.1002],
+    ];
+    const p = sahePenceresi(kicik);
+    // Ən azı 150 m hər tərəfə ≈ 0.00134 dərəcə
+    expect(p.enMax - 40.4002).toBeGreaterThan(0.0012);
+  });
+
+  it("bbox GeoJSON sırasındadır: uzunluq, en, uzunluq, en", () => {
+    const [uzMin, enMin, uzMax, enMax] = pencereBbox(sahePenceresi(SAHE));
+    expect(uzMin).toBeGreaterThan(46);
+    expect(uzMax).toBeLessThan(48);
+    expect(enMin).toBeGreaterThan(40);
+    expect(enMax).toBeLessThan(41);
+  });
+
+  it("yararsız girişdə null qaytarır", () => {
+    expect(sahePenceresi(null)).toBeNull();
+    expect(sahePenceresi([[40, 47]])).toBeNull();
   });
 });
 
