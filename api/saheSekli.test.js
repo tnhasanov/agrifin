@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import handler, { PILLELER, olcuHesabla } from "./saheSekli.js";
+import handler, { QATLAR, olcuHesabla, qatDuzgun } from "./saheSekli.js";
 
 const SAHE = [
   [40.4, 47.1],
@@ -89,14 +89,45 @@ describe("olcuHesabla", () => {
   });
 });
 
-describe("PILLELER", () => {
-  it("rəng pillələri artan sıradadır və leyend açarı var", () => {
-    const hedler = PILLELER.map((p) => p.hedd);
-    expect([...hedler].sort((a, b) => a - b)).toEqual(hedler);
-    for (const p of PILLELER) {
-      expect(p.reng).toMatch(/^#[0-9A-F]{6}$/i);
-      expect(p.acar).toMatch(/^ndvi\.legend\./);
+describe("xəritə qatları", () => {
+  const script = (ad) => QATLAR[ad].evalscript;
+
+  // Hər iki qat ÖLÇMƏDİR. "Əsl rəng" qatı bir müddət vardı və çıxarıldı:
+  // sahəni tanımaq işini sahə çəkmə xəritəsi daha yaxşı görür.
+  it("iki ölçmə qatı var və hər biri evalscript qaytarır", () => {
+    expect(Object.keys(QATLAR).sort()).toEqual(["bitki", "nemlik"]);
+    for (const ad of Object.keys(QATLAR)) {
+      expect(script(ad), ad).toContain("//VERSION=3");
+      expect(script(ad), ad).toContain("evaluatePixel");
     }
+  });
+
+  it("hər qat sahədən kənarı şəffaf saxlayır", () => {
+    for (const ad of Object.keys(QATLAR)) {
+      expect(script(ad), ad).toContain("dataMask === 0");
+      expect(script(ad), ad).toContain("[0, 0, 0, 0]");
+    }
+  });
+
+  // Buludun NDVI-si "bitki ölüb" kimi görünür — maska hər iki qatda vacibdir
+  it("hər iki qat buludu maskalayır", () => {
+    for (const ad of Object.keys(QATLAR)) {
+      expect(script(ad), ad).toContain("SCL");
+    }
+  });
+
+  it("nəmlik qatı SWIR zolağını istifadə edir", () => {
+    expect(script("nemlik")).toContain("B11");
+    expect(script("bitki")).toContain("B08");
+  });
+
+  it("bilinməyən qatı qəbul etmir", () => {
+    expect(qatDuzgun("bitki")).toBe(true);
+    expect(qatDuzgun("real")).toBe(false);
+    expect(qatDuzgun("uydurma")).toBe(false);
+    expect(qatDuzgun(undefined)).toBe(false);
+    // Prototip zəncirindən gələn adlar qat sayılmamalıdır
+    expect(qatDuzgun("toString")).toBe(false);
   });
 });
 

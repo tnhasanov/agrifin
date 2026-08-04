@@ -178,11 +178,14 @@ export async function fetchQonsu({ noqteler, son, signal, mecburi = false } = {}
  * eyni müddətdə dəyişmir. Keş dolubsa (localStorage kvotası) sükutla
  * keçirik — şəkil olmadan da tətbiq işləyir.
  */
-export async function fetchSaheSekli({ noqteler, signal, mecburi = false } = {}) {
+export async function fetchSaheSekli({ noqteler, qat = "bitki", signal, mecburi = false } = {}) {
   if (!Array.isArray(noqteler) || noqteler.length < 3) return null;
 
+  // Hər qat ayrıca keşlənir: fermer yalnız açdığı qatı yükləyir və eyni
+  // qata qayıdanda təkrar sorğu getmir
   const acar = saheAcari(noqteler);
-  const kes = storage.read(SEKIL_ACAR);
+  const kesAcari = `${SEKIL_ACAR}:${qat}`;
+  const kes = storage.read(kesAcari);
   if (!mecburi && kes && kes.acar === acar && Date.now() - kes.vaxt < KES_MS) {
     return kes.netice;
   }
@@ -191,7 +194,7 @@ export async function fetchSaheSekli({ noqteler, signal, mecburi = false } = {})
     method: "POST",
     headers: { "Content-Type": "application/json" },
     signal,
-    body: JSON.stringify({ noqteler }),
+    body: JSON.stringify({ noqteler, qat }),
   });
 
   if (!cavab.ok) {
@@ -202,6 +205,6 @@ export async function fetchSaheSekli({ noqteler, signal, mecburi = false } = {})
 
   const netice = await cavab.json();
   // Kvota dolarsa write false qaytarır — şəkil yenə göstərilir, sadəcə keşlənmir
-  storage.write(SEKIL_ACAR, { acar, vaxt: Date.now(), netice });
+  storage.write(kesAcari, { acar, vaxt: Date.now(), netice });
   return netice;
 }
