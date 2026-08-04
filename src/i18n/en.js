@@ -227,16 +227,12 @@ export default {
   "ndvi.mapTitle": "Satellite map of your field",
   "ndvi.mapLoading": "Preparing map…",
   "ndvi.layer.bitki": "Vegetation",
-  "ndvi.layer.real": "True colour",
   "ndvi.layer.nemlik": "Moisture",
   "ndvi.mapLayerError": "This layer could not be loaded right now.",
   "ndvi.mapAlt.bitki": "Vegetation map of the field",
-  "ndvi.mapAlt.real": "True-colour satellite view of the field",
   "ndvi.mapAlt.nemlik": "Moisture map of the field",
   "ndvi.mapNote.bitki":
     "Each pixel is 10×10 m. Light colours are sparse, dark green is dense canopy.",
-  "ndvi.mapNote.real":
-    "As the satellite saw it on its last cloud-free pass. Roads, ditches and tree lines make the field recognisable.",
   "ndvi.mapNote.nemlik":
     "Blue means more water in the crop, brown means dry. A strip irrigation does not reach shows up here.",
   "ndvi.moist.veryDry": "very dry",

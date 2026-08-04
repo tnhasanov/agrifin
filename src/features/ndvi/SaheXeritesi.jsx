@@ -5,19 +5,18 @@ import { useI18n } from "../../i18n/index.jsx";
 import { fetchSaheSekli } from "../../services/ndvi.js";
 
 /**
- * Sahənin peyk xəritəsi — üç qatla.
+ * Sahənin peyk xəritəsi — iki ölçmə qatı ilə.
  *
  * Orta rəqəm problemin OLDUĞUNU deyir, xəritə isə HARADA olduğunu. Fermer
  * öz sahəsini tanıyır: quru künc, susuz zolaq, zəif tala onun üçün tanış
  * yerlərdir.
  *
- * Qatlar TƏLƏB OLUNDUQDA yüklənir. Üçünü birdən çəkmək Copernicus emal
- * kvotasını üç dəfə xərcləyər, halbuki fermerlərin çoxu bir qata baxıb
+ * Qatlar TƏLƏB OLUNDUQDA yüklənir. İkisini birdən çəkmək Copernicus emal
+ * kvotasını iki dəfə xərcləyər, halbuki fermerlərin çoxu birinə baxıb
  * keçəcək. Açılmış qat keşdə qalır — geri qayıdanda sorğu getmir.
  */
 const QATLAR = [
   { id: "bitki", ikon: "Sprout", etiket: "ndvi.layer.bitki" },
-  { id: "real", ikon: "Satellite", etiket: "ndvi.layer.real" },
   { id: "nemlik", ikon: "Droplets", etiket: "ndvi.layer.nemlik" },
 ];
 
@@ -34,45 +33,7 @@ const LEYENDLER = {
     { reng: "#8CC7CA", acar: "ndvi.moist.ok" },
     { reng: "#1F5FA8", acar: "ndvi.moist.wet" },
   ],
-  // Əsl rəngdə leyend yoxdur: şəklin özü izahdır
-  real: [],
 };
-
-/**
- * Sahənin konturu şəklin üstündən.
- *
- * Əsl rəngdə şəkil sahədən genişdir (ətraf da görünür) — fermer öz sərhədini
- * görməsə hansı hissənin onun olduğunu bilmir. Pəncərənin koordinatları
- * serverdən gəlir, ona görə kontur piksel-piksel düzgün oturur.
- */
-function KonturOrtusu({ noqteler, pencere }) {
-  if (!pencere) return null;
-  const enFerq = pencere.enMax - pencere.enMin;
-  const uzFerq = pencere.uzMax - pencere.uzMin;
-  if (!(enFerq > 0) || !(uzFerq > 0)) return null;
-
-  // Şimal yuxarıdadır: en böyüdükcə y kiçilir
-  const nöqtələr = noqteler
-    .map(([en, uz]) => {
-      const x = ((uz - pencere.uzMin) / uzFerq) * 100;
-      const y = ((pencere.enMax - en) / enFerq) * 100;
-      return `${x.toFixed(2)},${y.toFixed(2)}`;
-    })
-    .join(" ");
-
-  return (
-    <svg
-      viewBox="0 0 100 100"
-      preserveAspectRatio="none"
-      className="pointer-events-none absolute inset-0 h-full w-full"
-      aria-hidden="true"
-    >
-      {/* İki xətt: tünd alt qat açıq fonda, ağ üst qat tünd fonda görünsün */}
-      <polygon points={nöqtələr} fill="none" stroke="rgba(0,0,0,0.55)" strokeWidth="1.6" />
-      <polygon points={nöqtələr} fill="none" stroke="#FFD264" strokeWidth="0.9" />
-    </svg>
-  );
-}
 
 export function SaheXeritesi({ sahe }) {
   const { t } = useI18n();
@@ -152,32 +113,20 @@ export function SaheXeritesi({ sahe }) {
         style={{ backgroundColor: "#EDF1EA", border: `1px solid ${C.line}` }}
       >
         {hal === "hazir" ? (
-          <div
-            className="relative mx-auto"
+          <img
+            src={netice.sekil}
+            width={netice.en}
+            height={netice.hundurluk}
+            alt={t(`ndvi.mapAlt.${aktiv}`)}
+            className="block w-full"
             style={{
-              // Qutu şəklin nisbətini daşıyır — kontur ortüyü belə dəqiq oturur
-              aspectRatio: `${netice.en} / ${netice.hundurluk}`,
-              maxHeight: 280,
-              width: netice.pencere ? "100%" : undefined,
+              // Piksel 10 m-dir; hamarlamaq olmayan detalı uydurur
+              imageRendering: "pixelated",
+              maxHeight: 260,
+              objectFit: "contain",
+              backgroundColor: "#EDF1EA",
             }}
-          >
-            <img
-              src={netice.sekil}
-              width={netice.en}
-              height={netice.hundurluk}
-              alt={t(`ndvi.mapAlt.${aktiv}`)}
-              className="block h-full w-full"
-              style={{
-                // İndeks qatlarında piksel 10 m-dir və hamarlamaq olmayan
-                // detalı uydurur. Əsl rəngdə isə şəkil oriyentasiya üçündür —
-                // orada kub yığını görünməsindən hamar görüntü yaxşıdır.
-                imageRendering: netice.pencere ? "auto" : "pixelated",
-                objectFit: netice.pencere ? "cover" : "contain",
-                backgroundColor: "#EDF1EA",
-              }}
-            />
-            {netice.pencere && <KonturOrtusu noqteler={noqteler} pencere={netice.pencere} />}
-          </div>
+          />
         ) : (
           <div className="flex h-40 items-center justify-center gap-2 px-4 text-center">
             <Icon

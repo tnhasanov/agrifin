@@ -32,11 +32,6 @@ function stubApi({ xeta = {} } = {}) {
               en: 64,
               hundurluk: 64,
               son: bugun,
-              // Yalnız əsl rəng qatında pəncərə gəlir
-              pencere:
-                qat === "real"
-                  ? { enMin: 40.399, enMax: 40.4033, uzMin: 47.0988, uzMax: 47.104 }
-                  : null,
             }),
         });
       }
@@ -82,18 +77,19 @@ afterEach(() => {
 });
 
 describe("xəritə qatları", () => {
-  it("üç qat düyməsi göstərir, ilk açılışda bitki qatı seçilidir", async () => {
+  it("iki qat düyməsi göstərir, ilk açılışda bitki qatı seçilidir", async () => {
     seed();
     stubApi();
     renderApp(<App />);
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Bitki" })).toBeInTheDocument());
-    expect(screen.getByRole("button", { name: "Əsl görüntü" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Nəmlik" })).toBeInTheDocument();
+    // Əsl rəng qatı çıxarılıb — sahəni tanımaq işini çəkmə xəritəsi görür
+    expect(screen.queryByRole("button", { name: "Əsl görüntü" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Bitki" })).toHaveAttribute("aria-pressed", "true");
   });
 
-  // ƏSAS: üç qat birdən yüklənsə Copernicus emal kvotası üç dəfə xərclənər
+  // ƏSAS: iki qat birdən yüklənsə Copernicus emal kvotası iki dəfə xərclənər
   it("yalnız açılmış qatı yükləyir", async () => {
     const user = userEvent.setup();
     seed();
@@ -133,69 +129,6 @@ describe("xəritə qatları", () => {
     await waitFor(() => expect(screen.getByText(/Mavi bitkidə su çoxdur/)).toBeInTheDocument());
     expect(screen.getByText("çox quru")).toBeInTheDocument();
     expect(screen.queryByText(/tünd yaşıl sıx bitki/)).not.toBeInTheDocument();
-  });
-
-  // Şəkil sahədən genişdir: fermer öz sərhədini görməsə hansı hissənin
-  // onun olduğunu bilmir
-  it("əsl görüntüdə sahənin konturu şəklin üstündən çəkilir", async () => {
-    const user = userEvent.setup();
-    seed();
-    stubApi();
-    renderApp(<App />);
-    await waitFor(() => expect(screen.getByRole("button", { name: "Əsl görüntü" })).toBeInTheDocument());
-
-    // İndeks qatında kontur yoxdur — şəkil onsuz da sahə ilə kəsilib
-    expect(document.querySelector("svg polygon")).toBeNull();
-
-    await user.click(screen.getByRole("button", { name: "Əsl görüntü" }));
-
-    await waitFor(() => expect(document.querySelector("svg polygon")).not.toBeNull());
-    const noqte = document.querySelector("svg polygon").getAttribute("points");
-    // Dörd künc, hamısı 0–100 aralığında
-    const cutler = noqte.split(" ");
-    expect(cutler).toHaveLength(4);
-    for (const cut of cutler) {
-      const [x, y] = cut.split(",").map(Number);
-      expect(x).toBeGreaterThanOrEqual(0);
-      expect(x).toBeLessThanOrEqual(100);
-      expect(y).toBeGreaterThanOrEqual(0);
-      expect(y).toBeLessThanOrEqual(100);
-    }
-  });
-
-  // Şimal yuxarıdadır: en böyük olan nöqtə ekranda YUXARIDA olmalıdır
-  it("konturu düzgün istiqamətdə çəkir", async () => {
-    const user = userEvent.setup();
-    seed();
-    stubApi();
-    renderApp(<App />);
-    await waitFor(() => expect(screen.getByRole("button", { name: "Əsl görüntü" })).toBeInTheDocument());
-    await user.click(screen.getByRole("button", { name: "Əsl görüntü" }));
-    await waitFor(() => expect(document.querySelector("svg polygon")).not.toBeNull());
-
-    const cutler = document
-      .querySelector("svg polygon")
-      .getAttribute("points")
-      .split(" ")
-      .map((c) => c.split(",").map(Number));
-    // Sahə: en 40.4 (cənub) və 40.4023 (şimal). Şimal nöqtəsinin y-i kiçikdir.
-    const yler = cutler.map(([, y]) => y);
-    expect(Math.min(...yler)).toBeLessThan(Math.max(...yler));
-  });
-
-  // Əsl rəngdə leyend olmamalıdır — şəkil özü izahdır
-  it("əsl görüntü qatında rəng leyendi göstərilmir", async () => {
-    const user = userEvent.setup();
-    seed();
-    stubApi();
-    renderApp(<App />);
-    await waitFor(() => expect(screen.getByRole("button", { name: "Əsl görüntü" })).toBeInTheDocument());
-
-    await user.click(screen.getByRole("button", { name: "Əsl görüntü" }));
-
-    await waitFor(() => expect(screen.getByText(/buludsuz keçidində/)).toBeInTheDocument());
-    expect(screen.queryByText("çox quru")).not.toBeInTheDocument();
-    expect(screen.queryByText("çılpaq")).not.toBeInTheDocument();
   });
 
   // Bir qat alınmasa qalanları işləməyə davam etməlidir

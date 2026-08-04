@@ -226,16 +226,12 @@ export default {
   "ndvi.mapTitle": "Sahənin peyk xəritəsi",
   "ndvi.mapLoading": "Xəritə hazırlanır…",
   "ndvi.layer.bitki": "Bitki",
-  "ndvi.layer.real": "Əsl görüntü",
   "ndvi.layer.nemlik": "Nəmlik",
   "ndvi.mapLayerError": "Bu qat hazırda alınmadı.",
   "ndvi.mapAlt.bitki": "Sahənin bitki örtüyü xəritəsi",
-  "ndvi.mapAlt.real": "Sahənin peykdən əsl rəngli görüntüsü",
   "ndvi.mapAlt.nemlik": "Sahənin nəmlik xəritəsi",
   "ndvi.mapNote.bitki":
     "Hər piksel 10×10 m. Açıq rənglər zəif, tünd yaşıl sıx bitki örtüyüdür.",
-  "ndvi.mapNote.real":
-    "Peykin son buludsuz keçidində gördüyü kimi. Yol, arx və ağac sıraları ilə sahəni tanıya bilərsiniz.",
   "ndvi.mapNote.nemlik":
     "Mavi bitkidə su çoxdur, qəhvəyi quraqdır. Suvarma çatmayan zolaq burada görünür.",
   "ndvi.moist.veryDry": "çox quru",
