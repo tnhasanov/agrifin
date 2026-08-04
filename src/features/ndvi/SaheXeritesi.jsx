@@ -1,8 +1,13 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Icon } from "../../components/Icon.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { fetchSaheSekli } from "../../services/ndvi.js";
+
+// Leaflet ~150 kB-dır və yalnız sahə çəkilibsə lazımdır — əsas paketə düşmür
+const XeriteQati = lazy(() =>
+  import("./XeriteQati.jsx").then((m) => ({ default: m.XeriteQati })),
+);
 
 /**
  * Sahənin peyk xəritəsi — iki ölçmə qatı ilə.
@@ -10,6 +15,9 @@ import { fetchSaheSekli } from "../../services/ndvi.js";
  * Orta rəqəm problemin OLDUĞUNU deyir, xəritə isə HARADA olduğunu. Fermer
  * öz sahəsini tanıyır: quru künc, susuz zolaq, zəif tala onun üçün tanış
  * yerlərdir.
+ *
+ * İndeks PEYK ŞƏKLİNİN ÜSTÜNƏ çəkilir (bax: XeriteQati). Boz fonda tək
+ * duran rəngli ləkə fermerə sahənin harası olduğunu demirdi.
  *
  * Qatlar TƏLƏB OLUNDUQDA yüklənir. İkisini birdən çəkmək Copernicus emal
  * kvotasını iki dəfə xərcləyər, halbuki fermerlərin çoxu birinə baxıb
@@ -113,20 +121,14 @@ export function SaheXeritesi({ sahe }) {
         style={{ backgroundColor: "#EDF1EA", border: `1px solid ${C.line}` }}
       >
         {hal === "hazir" ? (
-          <img
-            src={netice.sekil}
-            width={netice.en}
-            height={netice.hundurluk}
-            alt={t(`ndvi.mapAlt.${aktiv}`)}
-            className="block w-full"
-            style={{
-              // Piksel 10 m-dir; hamarlamaq olmayan detalı uydurur
-              imageRendering: "pixelated",
-              maxHeight: 260,
-              objectFit: "contain",
-              backgroundColor: "#EDF1EA",
-            }}
-          />
+          <Suspense fallback={<div style={{ height: 260 }} />}>
+            <XeriteQati
+              noqteler={noqteler}
+              sekil={netice.sekil}
+              sinirler={netice.sinirler}
+              etiket={t(`ndvi.mapAlt.${aktiv}`)}
+            />
+          </Suspense>
         ) : (
           <div className="flex h-40 items-center justify-center gap-2 px-4 text-center">
             <Icon

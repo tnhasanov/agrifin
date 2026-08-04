@@ -233,12 +233,12 @@ export default {
   "ndvi.mapAlt.nemlik": "Moisture map of the field",
   "ndvi.mapNote.bitki":
     "Each pixel is 10×10 m. Light colours are sparse, dark green is dense canopy.",
-  "ndvi.mapNote.nemlik":
-    "Blue means more water in the crop, brown means dry. A strip irrigation does not reach shows up here.",
-  "ndvi.moist.veryDry": "very dry",
-  "ndvi.moist.dry": "dry",
+  "ndvi.moist.veryDry": "dry — irrigation not reaching",
+  "ndvi.moist.dry": "low water",
   "ndvi.moist.ok": "normal",
-  "ndvi.moist.wet": "moist",
+  "ndvi.moist.wet": "excess water",
+  "ndvi.mapNote.nemlik":
+    "Blue means more water in the crop, brown means dry. A strip irrigation does not reach shows up here. The colour shows how much water, not why — a dry strip can be a blocked dripper or simply different soil.",
   "ndvi.legend.bare": "bare",
   "ndvi.legend.verySparse": "very sparse",
   "ndvi.legend.sparse": "sparse",

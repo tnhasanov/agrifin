@@ -4,6 +4,12 @@ import userEvent from "@testing-library/user-event";
 import App from "../../App.jsx";
 import { renderApp, seedState } from "../../test/render.jsx";
 
+// jsdom-da Leaflet ölçü hesablaya bilmir. Bu testin mövzusu qat keçidi və
+// sorğu sayıdır, ona görə xəritə qatı sadə şəkillə əvəz olunur.
+vi.mock("../ndvi/XeriteQati.jsx", () => ({
+  XeriteQati: ({ sekil, etiket }) => <img src={sekil} alt={etiket} />,
+}));
+
 const bugun = new Date().toISOString().slice(0, 10);
 const SERIYA = [{ baslangic: "2026-07-22", son: bugun, ndvi: 0.68, nemlik: 0.3, ortulu: 0 }];
 
@@ -127,7 +133,7 @@ describe("xəritə qatları", () => {
 
     await user.click(screen.getByRole("button", { name: "Nəmlik" }));
     await waitFor(() => expect(screen.getByText(/Mavi bitkidə su çoxdur/)).toBeInTheDocument());
-    expect(screen.getByText("çox quru")).toBeInTheDocument();
+    expect(screen.getByText("quru — suvarma çatmır")).toBeInTheDocument();
     expect(screen.queryByText(/tünd yaşıl sıx bitki/)).not.toBeInTheDocument();
   });
 

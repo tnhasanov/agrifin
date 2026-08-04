@@ -232,12 +232,12 @@ export default {
   "ndvi.mapAlt.nemlik": "Sahənin nəmlik xəritəsi",
   "ndvi.mapNote.bitki":
     "Hər piksel 10×10 m. Açıq rənglər zəif, tünd yaşıl sıx bitki örtüyüdür.",
-  "ndvi.mapNote.nemlik":
-    "Mavi bitkidə su çoxdur, qəhvəyi quraqdır. Suvarma çatmayan zolaq burada görünür.",
-  "ndvi.moist.veryDry": "çox quru",
-  "ndvi.moist.dry": "quru",
+  "ndvi.moist.veryDry": "quru — suvarma çatmır",
+  "ndvi.moist.dry": "az su",
   "ndvi.moist.ok": "normal",
-  "ndvi.moist.wet": "nəm",
+  "ndvi.moist.wet": "artıq su",
+  "ndvi.mapNote.nemlik":
+    "Mavi bitkidə su çoxdur, qəhvəyi quraqdır. Suvarma çatmayan zolaq burada görünür. Rəng suyun miqdarını göstərir, səbəbini yox — quru zolağın altında tıxanmış damcı da ola bilər, fərqli torpaq da.",
   "ndvi.legend.bare": "çılpaq",
   "ndvi.legend.verySparse": "çox seyrək",
   "ndvi.legend.sparse": "seyrək",

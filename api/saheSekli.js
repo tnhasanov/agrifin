@@ -162,6 +162,19 @@ export default async function handler(req, res) {
     const ortaEn = noqteler.reduce((c, p) => c + p[0], 0) / noqteler.length;
     const { width, height } = olcuHesabla(cerc, ortaEn);
 
+    // Şəklin coğrafi sərhədi. Process API `geometry` verildikdə onun əhatə
+    // çərçivəsini çəkir, kənar pikselləri isə şəffaf saxlayır — yəni şəklin
+    // künc koordinatları məhz bunlardır. Müştəri şəkli peyk xəritəsinin
+    // üstünə bu sərhədlə oturdur.
+    const enler = noqteler.map((n) => n[0]);
+    const uzler = noqteler.map((n) => n[1]);
+    const sinirler = {
+      enMin: Math.min(...enler),
+      enMax: Math.max(...enler),
+      uzMin: Math.min(...uzler),
+      uzMax: Math.max(...uzler),
+    };
+
     const gunSayi =
       Number.isFinite(gun) && gun >= 5 && gun <= MAX_GUN ? Math.round(gun) : STANDART_GUN;
     const indi = Date.now();
@@ -215,6 +228,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       qat,
+      sinirler,
       sekil: `data:image/png;base64,${bayt.toString("base64")}`,
       en: width,
       hundurluk: height,
