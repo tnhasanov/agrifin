@@ -100,7 +100,7 @@ describe("AgriFin tətbiqi", () => {
     await user.click(screen.getByRole("button", { name: /Dili dəyiş/ }));
 
     expect(screen.getByRole("button", { name: "Market" })).toBeInTheDocument();
-    expect(screen.getByText("Crop health")).toBeInTheDocument();
+    expect(screen.getByText("Canopy cover")).toBeInTheDocument();
   });
 
   it("vəziyyəti localStorage-da saxlayır", async () => {

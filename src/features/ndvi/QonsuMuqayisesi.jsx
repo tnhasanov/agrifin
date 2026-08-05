@@ -2,6 +2,7 @@ import { Icon } from "../../components/Icon.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { formatNumber } from "../../lib/format.js";
+import { ortukFaizi } from "../../services/ndvi.js";
 
 const PILLE_RENGI = {
   ust: C.field,
@@ -73,9 +74,14 @@ export function QonsuMuqayisesi({ qonsu, ndvi, illik }) {
   // Müqayisə bəzəkdir, məlumat deyil: alınmasa səssizcə buraxılır
   if (qonsu.hal !== "hazir" || !Number.isFinite(ndvi)) return null;
 
-  const { pille, ferq, p25, medyan, p75 } = qonsu.muqayise;
+  const { pille, p25, medyan, p75 } = qonsu.muqayise;
   const reng = PILLE_RENGI[pille] ?? C.muted;
-  const iki = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+  // Bütün rəqəmlər eyni ölçüdədir: örtük faizi. Əvvəl başlıqda "+9%" (medianla
+  // NİSBİ fərq) dururdu, altında isə 0,68 və 0,58 — üç fərqli miqyas bir
+  // kartda. İndi başlıqda rəqəm yoxdur (cümlə vəziyyəti deyir), alt sətir isə
+  // sahəni medianla yanaşı qoyur — fərqi fermer özü görür. Öz faizini burada
+  // təkrar etmirik: eyni "68%" yuxarıdakı xanada onsuz da var.
+  const seninFaiz = ortukFaizi(ndvi);
 
   return (
     <div
@@ -87,19 +93,13 @@ export function QonsuMuqayisesi({ qonsu, ndvi, illik }) {
         <h3 className="flex-1 text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
           {t(`qonsu.pille.${pille}`)}
         </h3>
-        {ferq != null && (
-          <span className="text-sm font-bold" style={{ color: reng }}>
-            {ferq > 0 ? "+" : ""}
-            {formatNumber(ferq, lang)}%
-          </span>
-        )}
       </div>
 
       <Zolaq p25={p25} medyan={medyan} p75={p75} ndvi={ndvi} reng={reng} />
 
       <div className="flex justify-between text-xs" style={{ color: C.muted }}>
-        <span>{t("qonsu.you", { ndvi: formatNumber(ndvi, lang, iki) })}</span>
-        <span>{t("qonsu.median", { ndvi: formatNumber(medyan, lang, iki) })}</span>
+        <span>{t("qonsu.you", { faiz: formatNumber(seninFaiz, lang) })}</span>
+        <span>{t("qonsu.median", { faiz: formatNumber(ortukFaizi(medyan), lang) })}</span>
       </div>
 
       {/* Keçən ilin eyni dövrü — qonşudan da güclü müqayisə: eyni sahə,
@@ -115,9 +115,12 @@ export function QonsuMuqayisesi({ qonsu, ndvi, illik }) {
             color={illik.istiqamet === "pis" ? C.danger : C.field}
           />
           <span className="flex-1 text-xs" style={{ color: C.ink }}>
+            {/* Nisbi faiz ("12% yaxşıdır") çıxarıldı: səviyyələr də faizlə
+                yazılanda bir cümlədə iki fərqli mənalı faiz qalırdı. İki
+                səviyyəni yan-yana qoymaq həm dəqiqdir, həm oxunaqlı. */}
             {t(`qonsu.illik.${illik.istiqamet}`, {
-              kecen: formatNumber(illik.kecen, lang, iki),
-              faiz: illik.faiz == null ? "—" : Math.abs(illik.faiz),
+              kecen: formatNumber(ortukFaizi(illik.kecen), lang),
+              indi: formatNumber(seninFaiz, lang),
             })}
           </span>
         </div>

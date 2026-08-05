@@ -1,4 +1,4 @@
-import { necheGunEvvel } from "./ndvi.js";
+import { necheGunEvvel, ortukFaizi } from "./ndvi.js";
 
 /**
  * Sahə siqnalları — proqnozla peyk ölçməsini birləşdirib fermerə RƏQƏM yox,
@@ -174,7 +174,9 @@ function suvarmaSiqnali(xulase, yagis3, balans, daily) {
       icon: "Droplets",
       basliqKey: "siqnal.suvar.basliq",
       metnKey: "siqnal.suvar.tecili",
-      vars: { nemlik: { number: xulase.nemlik, options: { maximumFractionDigits: 2 } } },
+      // Xam NDMI mətndən çıxarıldı: "-0,05" fermerə heç nə demir, cümlə isə
+      // qərarı onsuz da deyir (bax: services/ndvi.js — faizə çevirmə qeydi)
+      vars: {},
       menbeKey: "siqnal.menbe.hamisi",
     };
   }
@@ -209,7 +211,9 @@ function zeifləməSiqnali(xulase) {
     icon: "Camera",
     basliqKey: "siqnal.bitkiZeifleyir.basliq",
     metnKey: "siqnal.bitkiZeifleyir.metn",
-    vars: { ferq: { number: xulase.ferq, options: { maximumFractionDigits: 2 } } },
+    // İki səviyyə göstərilir, fərq yox: "0,07 azalıb" da, "7 vahid azalıb" da
+    // fermerə heç nə demir; "68%-dən 61%-ə düşüb" isə dərhal oxunur
+    vars: { evvel: ortukFaizi(xulase.ndvi - xulase.ferq), indi: ortukFaizi(xulase.ndvi) },
     menbeKey: "siqnal.menbe.peyk",
     // Bu siqnalın işi çatda görülür — düymə birbaşa ora aparır
     hereket: "chat",
@@ -224,7 +228,9 @@ function zeifləməSiqnali(xulase) {
  * bildiriş deyil — zəngi təbrik mesajı ilə doldurmaq onu dəyərsizləşdirir.
  */
 function qonsuSiqnali(muqayise, xulase) {
+  // Sahənin öz ölçməsi olmasa müqayisə cümləsi yarımçıq qalır
   if (muqayise?.pille !== "alt" || !Number.isFinite(muqayise.ferq)) return null;
+  if (!Number.isFinite(xulase?.ndvi) || !Number.isFinite(muqayise.medyan)) return null;
   return {
     id: `qonsu:${muqayise.tarix ?? xulase?.tarix ?? "?"}`,
     nov: "qonsu",
@@ -233,8 +239,8 @@ function qonsuSiqnali(muqayise, xulase) {
     basliqKey: "siqnal.qonsu.basliq",
     metnKey: "siqnal.qonsu.metn",
     vars: {
-      faiz: Math.abs(muqayise.ferq),
-      medyan: { number: muqayise.medyan, options: { maximumFractionDigits: 2 } },
+      sizin: ortukFaizi(xulase?.ndvi),
+      medyan: ortukFaizi(muqayise.medyan),
     },
     menbeKey: "siqnal.menbe.peyk",
     hereket: "chat",

@@ -83,14 +83,14 @@ afterEach(() => {
 });
 
 describe("peyk ölçməsi — əsas ekran", () => {
-  it("sahə çəkilibsə ölçülmüş NDVI-ni və azalma oxunu göstərir", async () => {
+  it("sahə çəkilibsə ölçülmüş örtük faizini və azalma oxunu göstərir", async () => {
     seedSahe();
     stubApi();
     renderApp(<App />);
 
-    // Nümunə 0,72 deyil, ölçülmüş 0,68
-    await waitFor(() => expect(screen.getByText(/NDVI 0,68/)).toBeInTheDocument());
-    expect(screen.getByText(/NDVI 0,68/).textContent).toContain("▼");
+    // Nümunə 0,72 deyil, ölçülmüş 0,68 — ekranda tam faizlə: 68%
+    await waitFor(() => expect(screen.getByText(/68%/)).toBeInTheDocument());
+    expect(screen.getByText(/68%/).textContent).toContain("▼");
     expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument();
   });
 
@@ -104,9 +104,8 @@ describe("peyk ölçməsi — əsas ekran", () => {
     await waitFor(() =>
       expect(screen.getByText("Torpaqda su azdır")).toBeInTheDocument(),
     );
-    // Dəqiq uyğunluq: eyni rəqəm suvarma siqnalının mətnində də keçir,
-    // burada isə rütubət sətrinin öz xanası yoxlanılır
-    expect(screen.getByText("NDMI -0,05")).toBeInTheDocument();
+    // Xam NDMI rəqəmi bilərəkdən göstərilmir — cümlə qərarı onsuz da deyir
+    expect(screen.queryByText(/NDMI/)).not.toBeInTheDocument();
   });
 
   it("su kifayət edəndə xəbərdarlıq göstərmir", async () => {
@@ -151,7 +150,7 @@ describe("peyk ölçməsi — əsas ekran", () => {
     stubApi();
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText(/NDVI/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Bitki örtüyü")).toBeInTheDocument());
     expect(fetch.mock.calls.some(([url]) => String(url).includes("/api/ndvi"))).toBe(false);
   });
 

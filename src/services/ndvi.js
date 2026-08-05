@@ -41,6 +41,22 @@ export function xulase(seriya) {
   };
 }
 
+/**
+ * NDVI-ni fermerin oxuya bildiyi faizə çevirir.
+ *
+ * Bitki örtüyü üçün NDVI 0–1 arasındadır (mənfi dəyər su və ya buluddur),
+ * ona görə 100-ə vurmaq YENİ hesablama deyil — eyni ölçmənin başqa yazılışı.
+ * "0,68" fermerə heç nə demir, "68%" isə dərhal oxunur.
+ *
+ * ONLUQ VERMİRİK. Bir piksel 10 metrdir, bulud maskası bir gündən digərinə
+ * dəyişəndə ölçmə özü bir-iki vahid oynayır. "68,3%" olmayan dəqiqlik iddia
+ * edir — rəqib tətbiqlər bunu edir, biz etmirik.
+ */
+export function ortukFaizi(ndvi) {
+  if (!Number.isFinite(ndvi)) return null;
+  return Math.round(Math.min(1, Math.max(0, ndvi)) * 100);
+}
+
 /** Neçə gün əvvəl ölçülüb — "köhnə məlumat" xəbərdarlığı üçün */
 export function necheGunEvvel(tarix, indi = Date.now()) {
   const ms = Date.parse(`${tarix}T12:00:00Z`);

@@ -11,7 +11,7 @@ import { pathFor } from "../routes.js";
 import { FARM } from "../services/farm.js";
 import { DEFAULT_LOCATION } from "../services/location.js";
 import { havaNoqtesi } from "../services/saheYeri.js";
-import { necheGunEvvel } from "../services/ndvi.js";
+import { necheGunEvvel, ortukFaizi } from "../services/ndvi.js";
 import { Sparkline } from "../components/Sparkline.jsx";
 import { SaheXeritesi } from "../features/ndvi/SaheXeritesi.jsx";
 import { QonsuMuqayisesi } from "../features/ndvi/QonsuMuqayisesi.jsx";
@@ -50,11 +50,9 @@ export function HomeScreen({
 
   // Peyk ölçməsi App-də qurulur (bax: App.jsx) — burada yalnız göstərilir
   const olculen = peyk.xulase;
-  const ndvi = formatNumber(olculen?.ndvi ?? FARM.ndvi, lang, {
-    minimumFractionDigits: 2,
-    // Üç onluq ölçmədə olmayan dəqiqlik iddia edir — NDVI iki onluqla oxunur
-    maximumFractionDigits: 2,
-  });
+  // "NDVI 0,68" texniki termindir; fermer "68%" oxuyur. Çevirmə eyni ölçmədir,
+  // onluqsuz — bax: services/ndvi.js
+  const faiz = ortukFaizi(olculen?.ndvi ?? FARM.ndvi);
   const gunEvvel = olculen ? necheGunEvvel(olculen.tarix) : null;
 
   // Yalnız ən vacib siqnal əsas ekrana çıxır. Fermer telefonu açanda bir iş
@@ -147,7 +145,7 @@ export function HomeScreen({
 
         <div className="mt-1 grid grid-cols-3 gap-2">
           <StatTile label={t("home.cropHealth")}>
-            NDVI {ndvi}{" "}
+            {formatNumber(faiz, lang)}%{" "}
             {olculen && olculen.istiqamet !== "sabit" && (
               <span style={{ color: olculen.istiqamet === "artir" ? "#7FD6A4" : "#F0A0A0" }}>
                 {olculen.istiqamet === "artir" ? "▲" : "▼"}
@@ -210,14 +208,13 @@ export function HomeScreen({
               size={13}
               color={olculen.suSeviyyesi === "az" ? C.gold : "#7FD6A4"}
             />
+            {/* Xam NDMI rəqəmi ("NDMI 0,30") burada idi və heç nəyə xidmət
+                etmirdi: fermer onu nə ilə müqayisə edəcəyini bilmir, cümlə
+                isə qərarı onsuz da deyir. Nəmlik faizə çevrilmir — NDMI quru
+                torpaqda mənfi olur, "0%" quru ilə çox quru arasındakı fərqi
+                itirər. Rəng xəritəsi bunu ayırd edir. */}
             <span className="flex-1 text-xs" style={{ color: "rgba(255,255,255,0.78)" }}>
               {t(`ndvi.water.${olculen.suSeviyyesi}`)}
-            </span>
-            <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 10 }}>
-              NDMI {formatNumber(olculen.nemlik, lang, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
             </span>
           </div>
         )}

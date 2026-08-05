@@ -24,7 +24,7 @@ export default {
   "home.farmLine": "{farm} · {ha} ha",
   "home.satelliteChip": "Bu gün təsdiqlənib",
   "home.farmscore": "FARMSCORE",
-  "home.cropHealth": "Məhsul sağlamlığı",
+  "home.cropHealth": "Bitki örtüyü",
   "home.creditLimit": "Kredit limiti",
   "home.wallet": "Pulqabı",
   "home.scoreNote": "FarmScore və kredit limiti nümunə göstəricidir — real qiymətləndirmə modeli hazırlanır.",
@@ -286,7 +286,7 @@ export default {
 
   "siqnal.suvar.basliq": "Suvarma vaxtıdır",
   "siqnal.suvar.tecili":
-    "Peyk sahədə su çatışmazlığı görür (NDMI {nemlik}) və 3 gündə yağış gözlənmir.",
+    "Peyk sahədə su çatışmazlığı görür və 3 gündə yağış gözlənmir.",
   "siqnal.suvar.balans":
     "Bu həftə buxarlanma yağışı {mm} mm üstələyir. Suvarmanı planlaşdırın.",
 
@@ -296,7 +296,7 @@ export default {
 
   "siqnal.bitkiZeifleyir.basliq": "Bitki zəifləyir — səbəb su deyil",
   "siqnal.bitkiZeifleyir.metn":
-    "Peyk son iki həftədə bitki örtüyünün {ferq} azaldığını göstərir, torpaqda isə su kifayətdir. Səbəb xəstəlik, zərərverici və ya qida çatışmazlığı ola bilər — peyk bunları görmür, yarpağın şəkli görür.",
+    "İki həftə əvvəl bitki örtüyü {evvel}% idi, indi {indi}% — torpaqda isə su kifayətdir. Səbəb xəstəlik, zərərverici və ya qida çatışmazlığı ola bilər — peyk bunları görmür, yarpağın şəkli görür.",
 
   "siqnal.olcmeKohne.basliq": "Peyk ölçməsi köhnəlib",
   "siqnal.olcmeKohne.metn":
@@ -307,14 +307,14 @@ export default {
 
   "siqnal.qonsu.basliq": "Sahə ətrafdan geri qalır",
   "siqnal.qonsu.metn":
-    "Sahənizin NDVI göstəricisi ətrafdakı əkinlərin medianından {faiz}% aşağıdır (median {medyan}). Hava hamıya eynidir, deməli səbəb sahəyə xasdır — torpaq, suvarma və ya qidalandırma. Aqronomla danışın.",
+    "Sahənizin bitki örtüyü {sizin}%, ətrafdakı əkinlərin medianı isə {medyan}%. Hava hamıya eynidir, deməli səbəb sahəyə xasdır — torpaq, suvarma və ya qidalandırma. Aqronomla danışın.",
 
   "qonsu.pille.ust": "Sahəniz ətrafın ən yaxşı 25%-indədir",
   "qonsu.pille.yuxari": "Sahəniz ətrafın ortasından yuxarıdır",
   "qonsu.pille.asagi": "Sahəniz ətrafın ortasından aşağıdır",
   "qonsu.pille.alt": "Sahəniz ətrafın alt 25%-indədir",
-  "qonsu.you": "Sizin sahə {ndvi}",
-  "qonsu.median": "Ətrafın medianı {ndvi}",
+  "qonsu.you": "Sizin sahə {faiz}%",
+  "qonsu.median": "Ətrafın medianı {faiz}%",
   "tovsiye.title": "Bu mərhələnin işləri",
   "tovsiye.subtitle":
     "Bitkinin təqvimi, sahənizin ölçüsü və hava proqnozundan çıxarılır. Siqnallardan fərqli olaraq bunlar təcili deyil — mövsümün planıdır.",
@@ -345,9 +345,9 @@ export default {
   "zona.cenubQerb": "Cənub-qərb küncü",
   "zona.cenubSerq": "Cənub-şərq küncü",
 
-  "qonsu.illik.yaxsi": "Keçən il bu vaxt {kecen} idi — sahəniz {faiz}% yaxşıdır.",
-  "qonsu.illik.pis": "Keçən il bu vaxt {kecen} idi — sahəniz {faiz}% geri qalır.",
-  "qonsu.illik.eyni": "Keçən il bu vaxt {kecen} idi — demək olar eyni səviyyə.",
+  "qonsu.illik.yaxsi": "Keçən il bu vaxt {kecen}% idi, indi {indi}% — sahəniz irəlidədir.",
+  "qonsu.illik.pis": "Keçən il bu vaxt {kecen}% idi, indi {indi}% — sahəniz geri qalır.",
+  "qonsu.illik.eyni": "Keçən il bu vaxt {kecen}% idi, indi {indi}% — demək olar eyni səviyyə.",
 
   "qonsu.note":
     "5 km radiusda YALNIZ bitki örtüyü olan piksellər sayılır — yol, tikili və çılpaq torpaq müqayisəyə girmir. Eyni peyk keçidi, eyni gün.",

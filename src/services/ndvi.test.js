@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { KES_MS, fetchNdvi, necheGunEvvel, saheAcari, xulase } from "./ndvi.js";
+import { KES_MS, fetchNdvi, necheGunEvvel, ortukFaizi, saheAcari, xulase } from "./ndvi.js";
 
 const SAHE = [
   [40.4, 47.1],
@@ -84,6 +84,32 @@ describe("necheGunEvvel", () => {
 
   it("yararsız tarixdə null qaytarır", () => {
     expect(necheGunEvvel("filan")).toBeNull();
+  });
+});
+
+describe("ortukFaizi", () => {
+  it("NDVI-ni tam faizə çevirir", () => {
+    expect(ortukFaizi(0.68)).toBe(68);
+    expect(ortukFaizi(0.582)).toBe(58);
+  });
+
+  // ƏSAS: onluq olmamalıdır. Peyk pikseli 10 m-dir, bulud maskası dəyişəndə
+  // ölçmə özü oynayır — "68,3%" olmayan dəqiqlik iddia edir
+  it("onluq vermir", () => {
+    expect(Number.isInteger(ortukFaizi(0.6849))).toBe(true);
+    expect(String(ortukFaizi(0.6849))).not.toContain(".");
+  });
+
+  // Mənfi NDVI su və ya buluddur, "-12%" örtük mənasızdır
+  it("aralığı 0–100 ilə məhdudlaşdırır", () => {
+    expect(ortukFaizi(-0.12)).toBe(0);
+    expect(ortukFaizi(1.4)).toBe(100);
+  });
+
+  it("ölçmə yoxdursa null qaytarır", () => {
+    expect(ortukFaizi(null)).toBeNull();
+    expect(ortukFaizi(undefined)).toBeNull();
+    expect(ortukFaizi(NaN)).toBeNull();
   });
 });
 

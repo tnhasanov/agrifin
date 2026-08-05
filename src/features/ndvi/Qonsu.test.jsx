@@ -140,9 +140,9 @@ describe("müqayisə kartı", () => {
     await waitFor(() =>
       expect(screen.getByText("Sahəniz ətrafın ortasından yuxarıdır")).toBeInTheDocument(),
     );
-    expect(screen.getByText("+17%")).toBeInTheDocument();
-    expect(screen.getByText("Sizin sahə 0,68")).toBeInTheDocument();
-    expect(screen.getByText("Ətrafın medianı 0,58")).toBeInTheDocument();
+    // Bütün rəqəmlər eyni miqyasda: örtük faizi, onluqsuz
+    expect(screen.getByText("Sizin sahə 68%")).toBeInTheDocument();
+    expect(screen.getByText("Ətrafın medianı 58%")).toBeInTheDocument();
   });
 
   // Yol və tikili sayılsaydı ortalama süni düşərdi və HƏR fermer "yaxşı"
@@ -204,7 +204,7 @@ describe("müqayisə siqnalı", () => {
     renderApp(<App />);
 
     await waitFor(() => expect(screen.getByText("Sahə ətrafdan geri qalır")).toBeInTheDocument());
-    expect(screen.getByText(/17% aşağıdır/)).toBeInTheDocument();
+    expect(screen.getByText(/bitki örtüyü 68%, ətrafdakı əkinlərin medianı isə 82%/)).toBeInTheDocument();
   });
 
   // Təbrik bildirişi zəngi dəyərsizləşdirir

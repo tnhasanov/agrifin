@@ -24,7 +24,7 @@ export default {
   "home.farmLine": "{farm} · {ha} ha",
   "home.satelliteChip": "Verified today",
   "home.farmscore": "FARMSCORE",
-  "home.cropHealth": "Crop health",
+  "home.cropHealth": "Canopy cover",
   "home.creditLimit": "Credit limit",
   "home.wallet": "Wallet",
   "home.scoreNote": "FarmScore and the credit limit are illustrative — the real scoring model is still being built.",
@@ -287,7 +287,7 @@ export default {
 
   "siqnal.suvar.basliq": "Time to irrigate",
   "siqnal.suvar.tecili":
-    "The satellite sees a moisture deficit in the field (NDMI {nemlik}) and no rain is expected within 3 days.",
+    "The satellite sees a moisture deficit in the field and no rain is expected within 3 days.",
   "siqnal.suvar.balans":
     "This week evaporation exceeds rainfall by {mm} mm. Plan an irrigation.",
 
@@ -297,7 +297,7 @@ export default {
 
   "siqnal.bitkiZeifleyir.basliq": "Crop is weakening — water is not the cause",
   "siqnal.bitkiZeifleyir.metn":
-    "The satellite shows canopy down {ferq} over the last two weeks, while soil moisture is sufficient. The cause may be disease, pests or a nutrient shortage — the satellite cannot see those, a photo of the leaf can.",
+    "Two weeks ago canopy cover was {evvel}%, now it is {indi}% — and soil moisture is sufficient. The cause may be disease, pests or a nutrient shortage — the satellite cannot see those, a photo of the leaf can.",
 
   "siqnal.olcmeKohne.basliq": "Satellite reading is stale",
   "siqnal.olcmeKohne.metn":
@@ -308,14 +308,14 @@ export default {
 
   "siqnal.qonsu.basliq": "Field is behind the area",
   "siqnal.qonsu.metn":
-    "Your field's NDVI is {faiz}% below the median of surrounding crops (median {medyan}). The weather is the same for everyone, so the cause is specific to this field — soil, irrigation or nutrition. Talk it through with an agronomist.",
+    "Your field's canopy cover is {sizin}%, the median of surrounding crops is {medyan}%. The weather is the same for everyone, so the cause is specific to this field — soil, irrigation or nutrition. Talk it through with an agronomist.",
 
   "qonsu.pille.ust": "Your field is in the area's top 25%",
   "qonsu.pille.yuxari": "Your field is above the area's median",
   "qonsu.pille.asagi": "Your field is below the area's median",
   "qonsu.pille.alt": "Your field is in the area's bottom 25%",
-  "qonsu.you": "Your field {ndvi}",
-  "qonsu.median": "Area median {ndvi}",
+  "qonsu.you": "Your field {faiz}%",
+  "qonsu.median": "Area median {faiz}%",
   "tovsiye.title": "Work for this stage",
   "tovsiye.subtitle":
     "Derived from the crop calendar, your field size and the forecast. Unlike signals, these are not urgent — they are the season's plan.",
@@ -346,9 +346,9 @@ export default {
   "zona.cenubQerb": "south-west corner",
   "zona.cenubSerq": "south-east corner",
 
-  "qonsu.illik.yaxsi": "Last year at this date it was {kecen} — your field is {faiz}% better.",
-  "qonsu.illik.pis": "Last year at this date it was {kecen} — your field is {faiz}% behind.",
-  "qonsu.illik.eyni": "Last year at this date it was {kecen} — practically the same level.",
+  "qonsu.illik.yaxsi": "Last year at this date it was {kecen}%, now {indi}% — your field is ahead.",
+  "qonsu.illik.pis": "Last year at this date it was {kecen}%, now {indi}% — your field is behind.",
+  "qonsu.illik.eyni": "Last year at this date it was {kecen}%, now {indi}% — practically the same level.",
 
   "qonsu.note":
     "Only vegetated pixels within a 5 km radius are counted — roads, buildings and bare soil are excluded. Same satellite pass, same day.",
