@@ -7,6 +7,8 @@ import { askAgronomist } from "../../services/agronom.js";
 import { CROP_KEYS } from "../../services/crops.js";
 import { DEFAULT_LOCATION } from "../../services/location.js";
 import { sekliHazirla } from "../../lib/sekil.js";
+import { hesabatSetirleri, paylas } from "../../services/paylas.js";
+import { necheGunEvvel, ortukFaizi } from "../../services/ndvi.js";
 
 const SAMPLE_KEYS = ["chat.sample.1", "chat.sample.2", "chat.sample.3", "chat.sample.4"];
 
@@ -58,6 +60,7 @@ export function AgronomChat({
   // Göndərilməmiş şəkil: {mediaType, data, dataUrl}
   const [sekil, setSekil] = useState(null);
   const [sekilXetasi, setSekilXetasi] = useState(null);
+  const [paylasHali, setPaylasHali] = useState(null);
   const bottomRef = useRef(null);
   const abortRef = useRef(null);
   const faylRef = useRef(null);
@@ -91,6 +94,35 @@ export function AgronomChat({
     } catch (error) {
       setSekilXetasi(error?.kod === "nov" ? "chat.photoBadType" : "chat.photoTooBig");
     }
+  };
+
+  /**
+   * Hesabatı və son sualı aqronoma göndərir. Peyk rəqəmləri olmadan sual
+   * yarımçıqdır: aqronom "sarı ləkə var" cümləsindən çox, "örtük 68%, su
+   * kifayətdir, ölçmə 2 gün əvvəl" sətirlərindən nəticə çıxarır.
+   */
+  const aqronomaGonder = async () => {
+    const sonSual = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
+    const setirler = hesabatSetirleri({
+      hektar: sahe?.hektar,
+      bitkiKey: crop ? `kbcrop.${crop}` : null,
+      faiz: ortukFaizi(peyk.xulase?.ndvi),
+      medyanFaiz: ortukFaizi(qonsu.muqayise?.medyan),
+      suSeviyyesi: peyk.xulase?.suSeviyyesi,
+      gun: peyk.xulase?.tarix ? necheGunEvvel(peyk.xulase.tarix) : null,
+    });
+    const metn = [
+      t("paylas.basliq"),
+      ...setirler.map((setir) => t(setir.key, setir.vars)),
+      sonSual ? `\n${t("paylas.sual")} ${sonSual}` : "",
+      globalThis.location?.origin ?? "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const netice = await paylas({ metn, basliq: t("paylas.basliq") });
+    // Vərəq açılıbsa fermer artıq oradadır — yalnız görünməyən nəticə deyilir
+    setPaylasHali(netice === "kopyalandi" || netice === "olmadi" ? netice : null);
   };
 
   const send = async (text) => {
@@ -298,14 +330,23 @@ export function AgronomChat({
           </div>
         )}
 
+        {/* Bu düymə əvvəl HEÇ NƏ etmirdi. İndi sahə hesabatını və son sualı
+            telefonun paylaşma vərəqinə verir — aqronomla söhbət WhatsApp-da
+            gedir, ora çatmayan məsləhət verilməmiş sayılır. */}
         {referral && !busy && (
           <button
             type="button"
+            onClick={aqronomaGonder}
             className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold"
             style={{ backgroundColor: C.gold, color: C.pine }}
           >
             <Icon name="UserCheck" size={14} color={C.pine} /> {t("chat.referral")}
           </button>
+        )}
+        {paylasHali && (
+          <p className="mb-3 text-center text-xs" role="status" style={{ color: C.muted }}>
+            {t(`paylas.${paylasHali}`)}
+          </p>
         )}
 
         <div ref={bottomRef} />

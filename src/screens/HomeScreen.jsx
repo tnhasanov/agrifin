@@ -15,6 +15,7 @@ import { necheGunEvvel, ortukFaizi } from "../services/ndvi.js";
 import { Sparkline } from "../components/Sparkline.jsx";
 import { SaheXeritesi } from "../features/ndvi/SaheXeritesi.jsx";
 import { QonsuMuqayisesi } from "../features/ndvi/QonsuMuqayisesi.jsx";
+import { HesabatPaylas } from "../features/share/HesabatPaylas.jsx";
 import { SiqnalKarti } from "../features/signals/SiqnalKarti.jsx";
 
 function StatTile({ label, children }) {
@@ -237,6 +238,15 @@ export function HomeScreen({
 
       {/* "NDVI 0,68" mücərrəddir; "qonşulardan yaxşıdır" isə dərhal aydındır */}
       <QonsuMuqayisesi qonsu={qonsu} ndvi={olculen?.ndvi} illik={peyk.illik} />
+
+      {/* Ölçmə WhatsApp-a çıxsın deyə: aqronomla söhbət orada gedir */}
+      <HesabatPaylas
+        hektar={state.sahe?.hektar}
+        bitkiKey={state.chat.crop ? `kbcrop.${state.chat.crop}` : null}
+        xulase={olculen}
+        muqayise={qonsu.muqayise}
+        siqnal={bas}
+      />
 
       {/* key yeri dəyişdikdə komponenti sıfırdan qurur — yeni proqnoz yüklənir */}
       <WeatherStrip

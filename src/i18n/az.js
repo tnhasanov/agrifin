@@ -351,4 +351,16 @@ export default {
 
   "qonsu.note":
     "5 km radiusda YALNIZ bitki örtüyü olan piksellər sayılır — yol, tikili və çılpaq torpaq müqayisəyə girmir. Eyni peyk keçidi, eyni gün.",
+
+  "paylas.duyme": "Hesabatı paylaş",
+  "paylas.basliq": "AgriFin — sahə hesabatı",
+  "paylas.sahe": "Sahə: {hektar} ha",
+  "paylas.saheBitki": "Sahə: {hektar} ha · {bitki}",
+  "paylas.ortuk": "Bitki örtüyü: {faiz}%",
+  "paylas.ortukQonsu": "Bitki örtüyü: {faiz}% (ətrafın medianı {medyan}%)",
+  "paylas.siqnal": "Diqqət: {basliq}",
+  "paylas.olcme": "Peyk ölçməsi: {gun} gün əvvəl · Sentinel-2",
+  "paylas.kopyalandi": "Hesabat mətn kimi kopyalandı",
+  "paylas.olmadi": "Paylaşmaq alınmadı",
+  "paylas.sual": "Sualım:",
 };

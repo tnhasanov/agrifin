@@ -353,4 +353,16 @@ export default {
 
   "qonsu.note":
     "Считаются ТОЛЬКО пиксели с растительностью в радиусе 5 км — дороги, здания и голая почва исключены. Тот же пролёт спутника, тот же день.",
+
+  "paylas.duyme": "Поделиться отчётом",
+  "paylas.basliq": "AgriFin — отчёт по полю",
+  "paylas.sahe": "Поле: {hektar} га",
+  "paylas.saheBitki": "Поле: {hektar} га · {bitki}",
+  "paylas.ortuk": "Покров растений: {faiz}%",
+  "paylas.ortukQonsu": "Покров растений: {faiz}% (медиана округи {medyan}%)",
+  "paylas.siqnal": "Внимание: {basliq}",
+  "paylas.olcme": "Спутниковое измерение: {gun} дн. назад · Sentinel-2",
+  "paylas.kopyalandi": "Отчёт скопирован как текст",
+  "paylas.olmadi": "Поделиться не удалось",
+  "paylas.sual": "Мой вопрос:",
 };

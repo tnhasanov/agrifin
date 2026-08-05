@@ -352,4 +352,16 @@ export default {
 
   "qonsu.note":
     "Only vegetated pixels within a 5 km radius are counted — roads, buildings and bare soil are excluded. Same satellite pass, same day.",
+
+  "paylas.duyme": "Share the report",
+  "paylas.basliq": "AgriFin — field report",
+  "paylas.sahe": "Field: {hektar} ha",
+  "paylas.saheBitki": "Field: {hektar} ha · {bitki}",
+  "paylas.ortuk": "Canopy cover: {faiz}%",
+  "paylas.ortukQonsu": "Canopy cover: {faiz}% (area median {medyan}%)",
+  "paylas.siqnal": "Attention: {basliq}",
+  "paylas.olcme": "Satellite reading: {gun} days ago · Sentinel-2",
+  "paylas.kopyalandi": "Report copied as text",
+  "paylas.olmadi": "Sharing did not work",
+  "paylas.sual": "My question:",
 };

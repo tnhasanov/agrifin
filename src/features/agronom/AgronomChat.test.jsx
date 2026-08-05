@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../../App.jsx";
-import { renderApp, seedLocation, WEATHER_FIXTURE } from "../../test/render.jsx";
+import { renderApp, seedLocation, seedState, WEATHER_FIXTURE } from "../../test/render.jsx";
 
 /** Server NDJSON axını göndərir — hər parça ayrı oxunuşda gəlir */
 function ndjsonResponse(parcalar) {
@@ -267,6 +267,36 @@ describe("Aqronom çatı", () => {
     await waitFor(() =>
       expect(screen.getByRole("button", { name: /Aqronoma göndər/ })).toBeInTheDocument(),
     );
+  });
+
+  // Bu düymə uzun müddət heç nə etmirdi. Aqronom sualı peyk rəqəmləri ilə
+  // birlikdə almalıdır — yoxsa cavab yalnız təxmindir.
+  it("'Aqronoma göndər' sualı və ölçməni paylaşma vərəqinə verir", async () => {
+    const share = vi.fn(async () => {});
+    vi.stubGlobal("navigator", { share });
+    stubApi({
+      cavab: "Sahədə baxış lazımdır.",
+      aqronomTeklif: true,
+      peykSeriyasi: [{ baslangic: "2026-07-22", son: "2026-08-01", ndvi: 0.68, nemlik: 0.31, ortulu: 0 }],
+    });
+    // Peyk ölçməsi yalnız sahə çəkilibsə gəlir
+    seedState({
+      location: { name: "Bərdə", lat: 40.3705, lon: 47.1265, gps: false },
+      onboarded: true,
+      sahe: { hektar: 6.5, noqteler: [[40.4, 47.1], [40.4023, 47.1], [40.4023, 47.1029], [40.4, 47.1029]] },
+      chat: { messages: [], crop: "bugda", referral: false },
+    });
+    const user = userEvent.setup();
+    renderApp(<App />);
+    await openChat(user);
+
+    await user.click(screen.getByRole("button", { name: "Yarpaqlarda sarı ləkələr var, nə ola bilər?" }));
+    await waitFor(() => screen.getByRole("button", { name: /Aqronoma göndər/ }));
+    await user.click(screen.getByRole("button", { name: /Aqronoma göndər/ }));
+
+    const { text } = share.mock.calls[0][0];
+    expect(text).toContain("Bitki örtüyü: 68%");
+    expect(text).toContain("Sualım: Yarpaqlarda sarı ləkələr var, nə ola bilər?");
   });
 
   it("söhbət bağlanıb-açılanda tarixçə qalır", async () => {
