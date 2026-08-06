@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildAdvisory,
   forecastUrl,
+  gunlukYagis,
   iconForCode,
   proqnozIsleyir,
   summarizeForecast,
@@ -15,6 +16,25 @@ describe("iconForCode", () => {
     expect(iconForCode(61)).toEqual({ name: "CloudRain", wet: true });
     expect(iconForCode(71)).toEqual({ name: "CloudSnow", wet: true });
     expect(iconForCode(95)).toEqual({ name: "CloudLightning", wet: true });
+  });
+});
+
+describe("gunlukYagis", () => {
+  // Bulud ikonu 0,3 mm-də də çıxır — rəqəm olmasa fermer onu yağış sayır
+  it("damcını 'azdır' kimi göstərir, sıfırı ümumiyyətlə göstərmir", () => {
+    expect(gunlukYagis(0)).toBeNull();
+    expect(gunlukYagis(0.05)).toBeNull();
+    expect(gunlukYagis(0.4)).toEqual({ az: true, mm: 1 });
+  });
+
+  it("mənalı yağışı tam mm ilə verir", () => {
+    expect(gunlukYagis(2.6)).toEqual({ az: false, mm: 3 });
+    expect(gunlukYagis(12)).toEqual({ az: false, mm: 12 });
+  });
+
+  it("ölçmə yoxdursa null qaytarır", () => {
+    expect(gunlukYagis(undefined)).toBeNull();
+    expect(gunlukYagis(null)).toBeNull();
   });
 });
 

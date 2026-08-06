@@ -366,4 +366,8 @@ export default {
   "paylas.sual": "My question:",
   "ndvi.mapExpand": "Expand",
   "ndvi.mapZoomNote": "Zooming adds no detail: one colour cell is 10×10 metres. The satellite photo is sharper, but the measurement always arrives in 10 m cells.",
+  "siqnal.suvar.azYagis":
+    "The satellite sees a moisture deficit in the field. Only {mm} mm of rain is expected over 3 days — that will not wet the soil, so irrigation is still needed.",
+  "weather.mm": "{mm} mm",
+  "weather.mmAz": "<1 mm",
 };

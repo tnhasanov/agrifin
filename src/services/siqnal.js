@@ -29,6 +29,11 @@ export const HEDDLER = {
   yagisMm: 15,
   // Yağış bundan çoxdursa suvarmağa ehtiyac yoxdur — pul və su qənaəti
   suvarmaSaxlaMm: 8,
+  // "Yağış gözlənmir" YALNIZ bundan az yağışda deyilə bilər. Proqnozda 2 mm
+  // varsa zolaqda yağış buludu görünür; "yağış gözlənmir" cümləsi isə onu
+  // təkzib edir və fermer tətbiqə inamını itirir. Az yağış suvarmanı əvəz
+  // etmir, amma bunu susmaqla yox, rəqəmlə demək lazımdır.
+  yagisYoxMm: 1,
   // Dərmanlama üçün: külək zəif, yağış ehtimalı aşağı
   kulekMaxKmS: 12,
   yagisEhtimaliMax: 20,
@@ -167,16 +172,19 @@ function suvarmaSiqnali(xulase, yagis3, balans, daily) {
         menbeKey: "siqnal.menbe.hamisi",
       };
     }
+    // Yağış var, amma azdır: cümlə bunu rəqəmlə deməlidir. Əks halda zolaqda
+    // sabaha yağış buludu, altında isə "3 gündə yağış gözlənmir" yazılırdı.
+    const azYagis = yagis3 >= HEDDLER.yagisYoxMm;
     return {
       id: `suvar:${tarix}`,
       nov: "suvar",
       ciddilik: "tecili",
       icon: "Droplets",
       basliqKey: "siqnal.suvar.basliq",
-      metnKey: "siqnal.suvar.tecili",
+      metnKey: azYagis ? "siqnal.suvar.azYagis" : "siqnal.suvar.tecili",
       // Xam NDMI mətndən çıxarıldı: "-0,05" fermerə heç nə demir, cümlə isə
       // qərarı onsuz da deyir (bax: services/ndvi.js — faizə çevirmə qeydi)
-      vars: {},
+      vars: azYagis ? { mm: Math.round(yagis3) } : {},
       menbeKey: "siqnal.menbe.hamisi",
     };
   }

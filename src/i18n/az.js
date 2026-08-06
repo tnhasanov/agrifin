@@ -365,4 +365,8 @@ export default {
   "paylas.sual": "Sualım:",
   "ndvi.mapExpand": "Böyüt",
   "ndvi.mapZoomNote": "Yaxınlaşdırmaq detalı artırmır: bir rəng xanası 10×10 metrdir. Peyk şəkli daha dəqiqdir, ölçmə isə həmişə 10 metrlik xanalarla gəlir.",
+  "siqnal.suvar.azYagis":
+    "Peyk sahədə su çatışmazlığı görür. 3 gündə cəmi {mm} mm yağış gözlənilir — bu qədər yağış torpağı islatmır, suvarma yenə lazımdır.",
+  "weather.mm": "{mm} mm",
+  "weather.mmAz": "<1 mm",
 };

@@ -3,7 +3,7 @@ import { Icon } from "../../components/Icon.jsx";
 import { SectionTitle } from "../../components/SectionTitle.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
-import { buildAdvisory, fetchForecast, iconForCode, proqnozIsleyir } from "../../services/weather.js";
+import { buildAdvisory, fetchForecast, gunlukYagis, iconForCode, proqnozIsleyir } from "../../services/weather.js";
 
 const TONE = {
   wet: { bg: C.blueSoft, fg: "#2C5BC7", icon: "Droplets" },
@@ -137,6 +137,8 @@ export function WeatherStrip({
             const { name, wet } = iconForCode(daily.weather_code[index]);
             const label =
               index === 0 ? t("common.today") : t(`weather.day.${new Date(iso).getDay()}`);
+            // Neçə mm — buludun nə demək olduğunu ancaq bu rəqəm deyir
+            const yagis = gunlukYagis(daily.precipitation_sum?.[index]);
             return (
               <div key={iso} className="flex flex-col items-center gap-1">
                 <span className="text-xs font-semibold" style={{ color: C.muted }}>
@@ -145,6 +147,10 @@ export function WeatherStrip({
                 <Icon name={name} size={18} color={wet ? C.blue : C.goldDeep} />
                 <span className="text-xs font-bold" style={{ color: C.ink, fontFamily: font.body }}>
                   {Math.round(daily.temperature_2m_max[index])}°
+                </span>
+                {/* Yağışsız günlərdə də yer saxlanılır ki, sütunlar sürüşməsin */}
+                <span style={{ color: C.blue, fontSize: 10, minHeight: 12 }}>
+                  {yagis ? t(yagis.az ? "weather.mmAz" : "weather.mm", { mm: yagis.mm }) : ""}
                 </span>
               </div>
             );

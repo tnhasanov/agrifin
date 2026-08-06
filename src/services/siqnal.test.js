@@ -115,6 +115,37 @@ describe("peyk + hava birləşməsi", () => {
     );
     expect(s.ciddilik).toBe("tecili");
     expect(s.menbeKey).toBe("siqnal.menbe.hamisi");
+    expect(s.metnKey).toBe("siqnal.suvar.tecili");
+  });
+
+  // ZİDDİYYƏT: zolaqda sabaha yağış buludu görünürdü, altında isə "3 gündə
+  // yağış gözlənmir". Az yağış suvarmanı əvəz etmir, amma "yoxdur" deyil.
+  it("az yağış gözlənirsə bunu inkar etmir, rəqəmlə deyir", () => {
+    const s = tap(
+      siqnallariQur({
+        ...hava({ precipitation_sum: [0, 3, 0, 0, 0, 0, 0] }),
+        xulase: peyk({ suSeviyyesi: "az", nemlik: -0.08 }),
+        indi: INDI,
+      }),
+      "suvar",
+    );
+    // Qərar dəyişmir — suvarmaq lazımdır, amma səbəb düzgün yazılır
+    expect(s.ciddilik).toBe("tecili");
+    expect(s.metnKey).toBe("siqnal.suvar.azYagis");
+    expect(s.vars.mm).toBe(3);
+  });
+
+  // 0,4 mm yağış "yağış var" saymır: sərhəd bir yerdə olmalıdır
+  it("damcı səviyyəsində yağışda yenə 'gözlənmir' deyir", () => {
+    const s = tap(
+      siqnallariQur({
+        ...hava({ precipitation_sum: [0.3, 0.2, 0, 0, 0, 0, 0] }),
+        xulase: peyk({ suSeviyyesi: "az", nemlik: -0.08 }),
+        indi: INDI,
+      }),
+      "suvar",
+    );
+    expect(s.metnKey).toBe("siqnal.suvar.tecili");
   });
 
   // ƏSAS DƏYƏR: quraq sahəyə yağış gəlirsə suvarmamaq fermerə birbaşa

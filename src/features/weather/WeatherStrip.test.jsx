@@ -26,6 +26,26 @@ describe("hava zolağı", () => {
     await waitFor(() => expect(screen.getByText("Bu gün")).toBeInTheDocument());
   });
 
+  // Bulud ikonu "sabah yağış var" deməkdir, amma NƏ QƏDƏR olduğunu demir.
+  // Fermer 0,3 mm-lik damcını da yağış sayıb siqnala inanmırdı.
+  it("yağışlı günlərdə neçə mm olduğunu yazır", async () => {
+    cavabVer(WEATHER_FIXTURE);
+    renderApp(<App />);
+
+    await waitFor(() => expect(screen.getByText("12 mm")).toBeInTheDocument());
+    expect(screen.getByText("4 mm")).toBeInTheDocument();
+  });
+
+  it("damcı səviyyəsində yağışı '<1 mm' kimi verir", async () => {
+    cavabVer({
+      ...WEATHER_FIXTURE,
+      daily: { ...WEATHER_FIXTURE.daily, precipitation_sum: [0, 0.4, 0, 0, 0] },
+    });
+    renderApp(<App />);
+
+    await waitFor(() => expect(screen.getByText("<1 mm")).toBeInTheDocument());
+  });
+
   // Reqressiya: API 200 qaytarıb boş məzmun verəndə render `undefined.slice`
   // ilə çökürdü. Xəta sərhədi olmadığı üçün BÜTÜN tətbiq ağ ekrana düşürdü —
   // fermer üçün tətbiqin tamamilə itməsi. Brauzerdə təsdiqlənib.

@@ -38,6 +38,21 @@ export function iconForCode(code) {
   return { name: "CloudLightning", wet: true };
 }
 
+/**
+ * Günün yağışını zolaqda göstərmək üçün qısa yazılış.
+ *
+ * Niyə lazımdır: zolaqdakı bulud ikonu `weather_code`-dan gəlir və "zəif
+ * yağış" kodu 0,3 mm-də də verilir. Fermer buludu görüb "sabah yağış var"
+ * deyir, siqnal isə "yağış gözlənmir" yazırdı. Rəqəm bu ziddiyyəti aradan
+ * qaldırır: 0,3 mm yağışdır, amma suvarmanı əvəz edən yağış deyil.
+ *
+ * @returns {null | {az: boolean, mm: number}} null — göstəriləsi yağış yoxdur
+ */
+export function gunlukYagis(mm) {
+  if (!Number.isFinite(mm) || mm < 0.1) return null;
+  return mm < 1 ? { az: true, mm: 1 } : { az: false, mm: Math.round(mm) };
+}
+
 const sumFirst = (values, count) =>
   (values ?? []).slice(0, count).reduce((total, value) => total + (value || 0), 0);
 
