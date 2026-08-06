@@ -3,10 +3,15 @@ import { Icon } from "../../components/Icon.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { fetchSaheSekli } from "../../services/ndvi.js";
+import { QatSecici, Leyend } from "./QatSecici.jsx";
 
 // Leaflet ~150 kB-dır və yalnız sahə çəkilibsə lazımdır — əsas paketə düşmür
 const XeriteQati = lazy(() =>
   import("./XeriteQati.jsx").then((m) => ({ default: m.XeriteQati })),
+);
+// Tam ekran yalnız fermer "böyüt" düyməsinə basanda gəlir
+const TamEkranXerite = lazy(() =>
+  import("./TamEkranXerite.jsx").then((m) => ({ default: m.TamEkranXerite })),
 );
 
 /**
@@ -23,26 +28,6 @@ const XeriteQati = lazy(() =>
  * kvotasını iki dəfə xərcləyər, halbuki fermerlərin çoxu birinə baxıb
  * keçəcək. Açılmış qat keşdə qalır — geri qayıdanda sorğu getmir.
  */
-const QATLAR = [
-  { id: "bitki", ikon: "Sprout", etiket: "ndvi.layer.bitki" },
-  { id: "nemlik", ikon: "Droplets", etiket: "ndvi.layer.nemlik" },
-];
-
-const LEYENDLER = {
-  bitki: [
-    { reng: "#8C6642", acar: "ndvi.legend.bare" },
-    { reng: "#E8D959", acar: "ndvi.legend.sparse" },
-    { reng: "#9ECC54", acar: "ndvi.legend.medium" },
-    { reng: "#17662B", acar: "ndvi.legend.dense" },
-  ],
-  nemlik: [
-    { reng: "#A9714B", acar: "ndvi.moist.veryDry" },
-    { reng: "#E8D973", acar: "ndvi.moist.dry" },
-    { reng: "#8CC7CA", acar: "ndvi.moist.ok" },
-    { reng: "#1F5FA8", acar: "ndvi.moist.wet" },
-  ],
-};
-
 export function SaheXeritesi({ sahe }) {
   const { t } = useI18n();
   // Qat başına ayrı nəticə və hal — keçid zamanı köhnə şəkil itməsin.
@@ -54,6 +39,7 @@ export function SaheXeritesi({ sahe }) {
     neticeler: {},
     hallar: {},
   });
+  const [tamEkran, setTamEkran] = useState(false);
 
   const noqteler = sahe?.noqteler;
   const acar = noqteler ? JSON.stringify(noqteler) : "";
@@ -104,7 +90,7 @@ export function SaheXeritesi({ sahe }) {
   // Qeyd yoxdursa sorğu yenicə başlayıb — ayrıca "yuklenir" yazmağa ehtiyac yoxdur
   const hal = hallar[aktiv] ?? "yuklenir";
   const netice = neticeler[aktiv];
-  const leyend = LEYENDLER[aktiv] ?? [];
+  const qatSec = (id) => yenile(() => ({ aktiv: id }));
 
   return (
     <div className="mt-3">
@@ -117,7 +103,7 @@ export function SaheXeritesi({ sahe }) {
       </p>
 
       <div
-        className="overflow-hidden rounded-2xl"
+        className="relative overflow-hidden rounded-2xl"
         style={{ backgroundColor: "#EDF1EA", border: `1px solid ${C.line}` }}
       >
         {hal === "hazir" ? (
@@ -128,6 +114,18 @@ export function SaheXeritesi({ sahe }) {
               sinirler={netice.sinirler}
               etiket={t(`ndvi.mapAlt.${aktiv}`)}
             />
+            {/* Kartdakı xəritə hərəkətsizdir (səhifə sürüşməsi üçün) —
+                yaxınlaşdırmaq bu düymə ilə tam ekranda olur */}
+            <button
+              type="button"
+              onClick={() => setTamEkran(true)}
+              aria-label={t("ndvi.mapExpand")}
+              className="absolute top-2 right-2 z-[500] flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold"
+              style={{ backgroundColor: "rgba(20,53,31,0.82)", color: "#fff" }}
+            >
+              <Icon name="Maximize2" size={13} color={C.gold} />
+              {t("ndvi.mapExpand")}
+            </button>
           </Suspense>
         ) : (
           <div className="flex h-40 items-center justify-center gap-2 px-4 text-center">
@@ -145,44 +143,15 @@ export function SaheXeritesi({ sahe }) {
 
       {/* Qat seçicisi xəritənin ALTINDADIR: fermer əvvəl şəkli görür,
           sonra başqa cür baxmaq istəyirsə keçir */}
-      <div className="mt-2 flex gap-1.5">
-        {QATLAR.map((qat) => {
-          const secili = qat.id === aktiv;
-          return (
-            <button
-              key={qat.id}
-              type="button"
-              onClick={() => yenile(() => ({ aktiv: qat.id }))}
-              aria-pressed={secili}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold"
-              style={{
-                backgroundColor: secili ? C.pine : C.card,
-                color: secili ? "#fff" : C.ink,
-                border: `1px solid ${secili ? C.pine : C.line}`,
-              }}
-            >
-              <Icon name={qat.ikon} size={13} color={secili ? C.gold : C.muted} />
-              {t(qat.etiket)}
-            </button>
-          );
-        })}
+      <div className="mt-2">
+        <QatSecici aktiv={aktiv} onSec={qatSec} />
       </div>
 
       {hal === "hazir" && (
         <>
-          {leyend.length > 0 && (
-            <div className="mt-2 flex items-center gap-2">
-              {leyend.map((p) => (
-                <span key={p.acar} className="flex items-center gap-1">
-                  <span
-                    className="inline-block h-2.5 w-2.5 rounded-sm"
-                    style={{ backgroundColor: p.reng }}
-                  />
-                  <span style={{ color: C.muted, fontSize: 10 }}>{t(p.acar)}</span>
-                </span>
-              ))}
-            </div>
-          )}
+          <div className="mt-2">
+            <Leyend qat={aktiv} />
+          </div>
           <p
             className="mt-1.5 px-0.5"
             style={{ color: C.muted, fontSize: 10, fontFamily: font.body }}
@@ -190,6 +159,18 @@ export function SaheXeritesi({ sahe }) {
             {t(`ndvi.mapNote.${aktiv}`)}
           </p>
         </>
+      )}
+
+      {tamEkran && hal === "hazir" && (
+        <Suspense fallback={null}>
+          <TamEkranXerite
+            noqteler={noqteler}
+            netice={netice}
+            aktiv={aktiv}
+            onQat={qatSec}
+            onBagla={() => setTamEkran(false)}
+          />
+        </Suspense>
       )}
     </div>
   );

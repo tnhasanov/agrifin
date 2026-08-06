@@ -20,6 +20,9 @@ const { qeydler, leafletDusur } = vi.hoisted(() => ({
     fitBounds: [],
     mapAyarlari: null,
     silinen: 0,
+    maxBounds: null,
+    minZoom: null,
+    olcuYenilendi: 0,
   },
   leafletDusur: { deyer: false },
 }));
@@ -39,9 +42,14 @@ vi.mock("leaflet", () => {
         qeydler.mapAyarlari = ayarlar;
         return {
           fitBounds: (...args) => qeydler.fitBounds.push(args),
+          setMaxBounds: (b) => (qeydler.maxBounds = b),
+          setMinZoom: (z) => (qeydler.minZoom = z),
+          getZoom: () => 16,
+          invalidateSize: () => (qeydler.olcuYenilendi += 1),
           remove: () => {},
         };
       },
+      latLngBounds: (noqteler) => ({ noqteler, pad: (n) => ({ noqteler, pad: n }) }),
       tileLayer: qat(qeydler.tileLayer),
       imageOverlay: qat(qeydler.imageOverlay),
       polygon: qat(qeydler.polygon),
@@ -58,6 +66,9 @@ beforeEach(() => {
   qeydler.fitBounds.length = 0;
   qeydler.mapAyarlari = null;
   qeydler.silinen = 0;
+  qeydler.maxBounds = null;
+  qeydler.minZoom = null;
+  qeydler.olcuYenilendi = 0;
   leafletDusur.deyer = false;
 });
 
@@ -117,6 +128,30 @@ describe("xəritə qatı", () => {
     expect(qeydler.mapAyarlari.dragging).toBe(false);
     expect(qeydler.mapAyarlari.scrollWheelZoom).toBe(false);
     expect(qeydler.mapAyarlari.touchZoom).toBe(false);
+  });
+
+  // Tam ekranda yaxınlaşdırma açılır — kartda isə bağlı qalır
+  it("hərəkətli rejimdə zoom və sürüşdürmə işə düşür", async () => {
+    cek({ hereketli: true });
+    await waitFor(() => expect(qeydler.mapAyarlari).not.toBeNull());
+    expect(qeydler.mapAyarlari.dragging).toBe(true);
+    expect(qeydler.mapAyarlari.touchZoom).toBe(true);
+    expect(qeydler.mapAyarlari.zoomControl).toBe(true);
+  });
+
+  // Fermer sürüşdürüb qonşu rayonda itməsin
+  it("hərəkətli rejimdə sürüşdürməni sahənin ətrafı ilə məhdudlaşdırır", async () => {
+    cek({ hereketli: true });
+    await waitFor(() => expect(qeydler.maxBounds).not.toBeNull());
+    expect(qeydler.maxBounds.noqteler).toEqual(NOQTELER);
+    // Fit z16-dır (mock), iki pillə uzaqlaşmağa yer qalır
+    expect(qeydler.minZoom).toBe(14);
+  });
+
+  it("kartdakı xəritədə məhdudiyyət qoyulmur", async () => {
+    cek();
+    await waitFor(() => expect(qeydler.mapAyarlari).not.toBeNull());
+    expect(qeydler.maxBounds).toBeNull();
   });
 
   it("qat dəyişəndə köhnə örtük silinir", async () => {

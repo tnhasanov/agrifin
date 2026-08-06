@@ -363,4 +363,6 @@ export default {
   "paylas.kopyalandi": "Hesabat mətn kimi kopyalandı",
   "paylas.olmadi": "Paylaşmaq alınmadı",
   "paylas.sual": "Sualım:",
+  "ndvi.mapExpand": "Böyüt",
+  "ndvi.mapZoomNote": "Yaxınlaşdırmaq detalı artırmır: bir rəng xanası 10×10 metrdir. Peyk şəkli daha dəqiqdir, ölçmə isə həmişə 10 metrlik xanalarla gəlir.",
 };

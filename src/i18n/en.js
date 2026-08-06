@@ -364,4 +364,6 @@ export default {
   "paylas.kopyalandi": "Report copied as text",
   "paylas.olmadi": "Sharing did not work",
   "paylas.sual": "My question:",
+  "ndvi.mapExpand": "Expand",
+  "ndvi.mapZoomNote": "Zooming adds no detail: one colour cell is 10×10 metres. The satellite photo is sharper, but the measurement always arrives in 10 m cells.",
 };
