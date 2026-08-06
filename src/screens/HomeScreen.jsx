@@ -255,6 +255,8 @@ export function HomeScreen({
         lon={noqte.lon}
         locationName={location.name}
         onPickLocation={onPickLocation}
+        onDrawField={onDrawField}
+        deqiq={noqte.deqiq}
         meslehetGoster={siqnallar.length === 0}
       />
     </div>

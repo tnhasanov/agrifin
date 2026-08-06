@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import App from "../../App.jsx";
-import { renderApp, seedLocation, WEATHER_FIXTURE } from "../../test/render.jsx";
+import { renderApp, seedLocation, seedState, WEATHER_FIXTURE } from "../../test/render.jsx";
 
 beforeEach(() => {
   window.history.pushState({}, "", "/");
@@ -44,6 +44,40 @@ describe("hava zolağı", () => {
     renderApp(<App />);
 
     await waitFor(() => expect(screen.getByText("<1 mm")).toBeInTheDocument());
+  });
+
+  // Fermer "hava mənim sahəm üçündürmü?" deyə soruşur — zolaq özü cavab
+  // verməlidir. Sahə çəkilməyibsə proqnoz rayon mərkəzinindir.
+  it("sahə çəkilməyibsə proqnozun rayon mərkəzinə aid olduğunu deyir", async () => {
+    cavabVer(WEATHER_FIXTURE);
+    renderApp(<App />);
+
+    await waitFor(() =>
+      expect(screen.getByText(/Proqnoz rayon mərkəzi üçündür/)).toBeInTheDocument(),
+    );
+  });
+
+  it("sahə çəkilibsə proqnozun sahənin nöqtəsinə aid olduğunu deyir", async () => {
+    seedState({
+      location: { name: "Ağdam", lat: 39.9911, lon: 46.9297, gps: false },
+      onboarded: true,
+      sahe: {
+        hektar: 4.4,
+        noqteler: [
+          [39.99, 46.93],
+          [39.9923, 46.93],
+          [39.9923, 46.9329],
+          [39.99, 46.9329],
+        ],
+      },
+      chat: { messages: [], crop: "bugda", referral: false },
+    });
+    cavabVer(WEATHER_FIXTURE);
+    renderApp(<App />);
+
+    await waitFor(() =>
+      expect(screen.getByText("Proqnoz sahənizin öz nöqtəsi üçündür.")).toBeInTheDocument(),
+    );
   });
 
   // Reqressiya: API 200 qaytarıb boş məzmun verəndə render `undefined.slice`

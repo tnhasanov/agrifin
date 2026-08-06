@@ -370,4 +370,7 @@ export default {
     "The satellite sees a moisture deficit in the field. Only {mm} mm of rain is expected over 3 days — that will not wet the soil, so irrigation is still needed.",
   "weather.mm": "{mm} mm",
   "weather.mmAz": "<1 mm",
+  "weather.pointField": "The forecast is for your field's own point.",
+  "weather.pointDistrict": "The forecast is for the district centre — that can be 10-20 km from your field.",
+  "weather.pointDistrictCta": "The forecast is for the district centre. Draw your field to move it to your own point.",
 };

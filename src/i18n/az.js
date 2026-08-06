@@ -369,4 +369,7 @@ export default {
     "Peyk sahədə su çatışmazlığı görür. 3 gündə cəmi {mm} mm yağış gözlənilir — bu qədər yağış torpağı islatmır, suvarma yenə lazımdır.",
   "weather.mm": "{mm} mm",
   "weather.mmAz": "<1 mm",
+  "weather.pointField": "Proqnoz sahənizin öz nöqtəsi üçündür.",
+  "weather.pointDistrict": "Proqnoz rayon mərkəzi üçündür — sahənizdən 10–20 km uzaq ola bilər.",
+  "weather.pointDistrictCta": "Proqnoz rayon mərkəzi üçündür. Sahənizi çəkin — öz nöqtənizə keçsin.",
 };

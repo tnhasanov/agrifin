@@ -52,6 +52,9 @@ export function WeatherStrip({
   days = 5,
   locationName,
   onPickLocation,
+  onDrawField,
+  // Proqnoz sahənin öz mərkəzinə aiddirsə true; rayon mərkəzinə aiddirsə false
+  deqiq = false,
   meslehetGoster = true,
 }) {
   const { t } = useI18n();
@@ -165,6 +168,26 @@ export function WeatherStrip({
             <Icon name={tone.icon} size={14} color={tone.fg} />
             {t(advisory.key, advisory.vars)}
           </div>
+        )}
+
+        {/* Proqnozun HANSI nöqtəyə aid olduğu. Bunu yazmasaq zolağın başlığı
+            "Ağdam" göstərir, rəqəmlər isə sahənin öz nöqtəsindən gəlir — və ya
+            əksinə, fermer rayon mərkəzinin proqnozunu öz sahəsininki sanır.
+            Azərbaycanda yağış çox yerlidir: fərq 10–20 km-də real fərqdir. */}
+        {deqiq ? (
+          <p className="mt-2 px-1" style={{ color: C.muted, fontSize: 10 }}>
+            {t("weather.pointField")}
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={onDrawField}
+            disabled={!onDrawField}
+            className="mt-2 px-1 text-left"
+            style={{ color: C.muted, fontSize: 10 }}
+          >
+            {t(onDrawField ? "weather.pointDistrictCta" : "weather.pointDistrict")}
+          </button>
         )}
 
         {stale && (
