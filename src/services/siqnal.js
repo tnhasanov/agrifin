@@ -54,6 +54,7 @@ const CIDDILIK_SIRASI = { tecili: 3, diqqet: 2, melumat: 1 };
  */
 const NOV_SIRASI = [
   "saxta",
+  "suGolu",
   "suvar",
   "isti",
   "bitkiZeifleyir",
@@ -205,6 +206,29 @@ function suvarmaSiqnali(xulase, yagis3, balans, daily) {
 }
 
 /**
+ * Sahədə su durub — radar ölçməsindən.
+ *
+ * Bu, peykin ən etibarlı gördüyü haldır: hamar su səthi radar dalğasını geri
+ * qaytarmır, ona görə su altındakı piksel qara görünür. Bulud maneə deyil.
+ *
+ * Fermer üçün təcilidir: kök 2–3 gün suyun altında qalsa boğulur, texnika
+ * sahəyə girə bilmir, gübrə yuyulur.
+ */
+function suGoluSiqnali(radar) {
+  if (!radar?.suVar || !Number.isFinite(radar.suPayi)) return null;
+  return {
+    id: `suGolu:${radar.tarix ?? "?"}`,
+    nov: "suGolu",
+    ciddilik: "tecili",
+    icon: "Droplets",
+    basliqKey: "siqnal.suGolu.basliq",
+    metnKey: "siqnal.suGolu.metn",
+    vars: { faiz: Math.round(radar.suPayi * 100) },
+    menbeKey: "siqnal.menbe.radar",
+  };
+}
+
+/**
  * NDVI düşür, amma su kifayətdir. Su səbəb deyilsə səbəb xəstəlik, zərərverici
  * və ya qida çatışmazlığıdır — bunları peyk görmür, yarpağın şəkli görür.
  */
@@ -310,21 +334,27 @@ function dermanlamaSiqnali(hourly) {
  * @param {object}  arg.daily    Open-Meteo günlük massivləri
  * @param {object}  arg.hourly   Open-Meteo saatlıq massivləri
  * @param {object}  arg.xulase   NDVI xülasəsi (bax: services/ndvi.js)
+ * @param {object}  arg.radar    Sentinel-1 xülasəsi (bax: services/radar.js)
  * @param {number}  arg.indi     Test üçün "indi" — standart Date.now()
  * @returns {Array} ciddiliyə görə sıralanmış siqnallar
  */
-export function siqnallariQur({ daily, hourly, xulase, muqayise, indi = Date.now() } = {}) {
+export function siqnallariQur({ daily, hourly, xulase, muqayise, radar, indi = Date.now() } = {}) {
   const yagis3 = topla(daily?.precipitation_sum, 3);
   const yagis7 = topla(daily?.precipitation_sum, 7);
   const buxar7 = topla(daily?.et0_fao_evapotranspiration, 7);
   const balans = buxar7 - yagis7;
 
-  const suvarma = suvarmaSiqnali(xulase, yagis3, balans, daily);
+  const suGolu = suGoluSiqnali(radar);
+  // Sahədə su durubsa suvarma məsləhəti VERİLMİR. İki ölçmə ziddiyyət
+  // göstərəndə (optik ölçmə köhnədir, radar bu günkü suyu görür) fermerə
+  // "suvar" deyib altından "sahədə su var" yazmaq etibarı birdəfəlik öldürür.
+  const suvarma = suGolu ? null : suvarmaSiqnali(xulase, yagis3, balans, daily);
   const yagisli = yagisSiqnali(daily, yagis3);
 
   const hamisi = [
     saxtaSiqnali(daily),
     istiSiqnali(daily),
+    suGolu,
     suvarma,
     zeifləməSiqnali(xulase),
     qonsuSiqnali(muqayise, xulase),

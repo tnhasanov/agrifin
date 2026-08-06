@@ -22,6 +22,7 @@ import { routeForPath } from "./routes.js";
 import { C, font } from "./theme/tokens.js";
 import { useNdvi } from "./features/ndvi/useNdvi.js";
 import { useQonsu } from "./features/ndvi/useQonsu.js";
+import { useRadar } from "./features/ndvi/useRadar.js";
 import { useSiqnallar } from "./features/signals/useSiqnallar.js";
 import { useTovsiyeler } from "./features/tovsiye/useTovsiyeler.js";
 import { acigSiqnallar } from "./services/siqnal.js";
@@ -55,12 +56,15 @@ export default function App() {
   // ayrıca Copernicus sorğusu göndərməməlidir (emal kvotası pulludur).
   const peyk = useNdvi(state.sahe);
   const qonsu = useQonsu(state.sahe, peyk.xulase);
+  // Radar YALNIZ optik ölçmə buludun altında qalanda çağırılır (bax: useRadar)
+  const radar = useRadar(state.sahe, peyk);
   const noqte = havaNoqtesi({ location: state.location ?? DEFAULT_LOCATION, sahe: state.sahe });
   const butunSiqnallar = useSiqnallar({
     lat: noqte.lat,
     lon: noqte.lon,
     xulase: peyk.xulase,
     muqayise: qonsu.muqayise,
+    radar: radar.xulase,
   });
   const siqnallar = acigSiqnallar(butunSiqnallar, state.bagliSiqnallar);
   const tovsiyeler = useTovsiyeler({
@@ -107,6 +111,7 @@ export default function App() {
                 <Screen
                 peyk={peyk}
                 qonsu={qonsu}
+                radar={radar}
                 siqnallar={siqnallar}
                 tovsiyeler={tovsiyeler}
                 onOpenLoan={() => setLoanOpen(true)}

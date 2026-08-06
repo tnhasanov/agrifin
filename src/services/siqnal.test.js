@@ -175,6 +175,53 @@ describe("peyk + hava birləşməsi", () => {
     expect(tap(siqnallariQur({ ...hava(), xulase: peyk(), indi: INDI }), "suvar")).toBeUndefined();
   });
 
+  // Radar buludun arxasından ölçür — optik peyk susanda danışan yeganə mənbə
+  it("radar durmuş su görəndə təcili siqnal verir", () => {
+    const s = tap(
+      siqnallariQur({
+        ...hava(),
+        radar: { suVar: true, suPayi: 0.32, tarix: "2026-08-01" },
+        indi: INDI,
+      }),
+      "suGolu",
+    );
+    expect(s.ciddilik).toBe("tecili");
+    expect(s.vars.faiz).toBe(32);
+    expect(s.menbeKey).toBe("siqnal.menbe.radar");
+  });
+
+  // ƏSAS: iki peyk ziddiyyət göstərəndə fermerə eyni anda "suvar" və
+  // "sahədə su durub" demək olmaz. Optik ölçmə köhnə, radar bugünkü sudur.
+  it("sahədə su durubsa suvarma məsləhəti verilmir", () => {
+    const siqnallar = siqnallariQur({
+      ...hava(),
+      xulase: peyk({ suSeviyyesi: "az", nemlik: -0.08 }),
+      radar: { suVar: true, suPayi: 0.4, tarix: "2026-08-01" },
+      indi: INDI,
+    });
+    expect(tap(siqnallar, "suGolu")).toBeTruthy();
+    expect(tap(siqnallar, "suvar")).toBeUndefined();
+  });
+
+  it("su az olanda radar siqnalı yaranmır", () => {
+    const siqnallar = siqnallariQur({
+      ...hava(),
+      radar: { suVar: false, suPayi: 0.02, tarix: "2026-08-01" },
+      indi: INDI,
+    });
+    expect(tap(siqnallar, "suGolu")).toBeUndefined();
+  });
+
+  it("radar ölçməsi yoxdursa heç nə dəyişmir", () => {
+    const siqnallar = siqnallariQur({
+      ...hava(),
+      xulase: peyk({ suSeviyyesi: "az", nemlik: -0.08 }),
+      indi: INDI,
+    });
+    expect(tap(siqnallar, "suGolu")).toBeUndefined();
+    expect(tap(siqnallar, "suvar")).toBeTruthy();
+  });
+
   // NDVI düşməsinin İKİ tamam fərqli səbəbi var və iş də fərqlidir
   it("NDVI düşür, su kifayətdirsə səbəbi yarpaqda axtarmağı deyir", () => {
     const s = tap(

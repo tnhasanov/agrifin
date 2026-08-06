@@ -34,6 +34,7 @@ Node 22 tələb olunur (`.nvmrc`).
 api/
   agronom.js          serverless funksiya — Claude API açarı yalnız burada
   ndvi.js             Copernicus Sentinel-2 → NDVI + rütubət seriyası
+  radar.js            Copernicus Sentinel-1 → buludun arxasından radar ölçməsi
   saheSekli.js        sahənin rəngli NDVI xəritəsi (şəkil)
   copernicus.js       ortaq kimlik doğrulama və açar qorunması
   geoJson.js          kontur çevirmə (en/uzunluq sırası burada qorunur)
@@ -210,6 +211,29 @@ HARADA olduğunu. Fermer öz sahəsini tanıyır: quru künc, susuz zolaq onun
 üçün tanış yerlərdir, və tətbiq onları göstərəndə inam yaranır. Process API
 rəngli PNG qaytarır; buludlu piksellər şəffafdır. Şəkil bəzəkdir, əsas
 məlumat deyil — alınmasa sükutla gizlənir.
+
+**Radar (Sentinel-1) — buludun arxasından.** Optik peyk buluda baxa bilmir və
+Azərbaycanda payız-yaz aylarında sahə həftələrlə buludun altında qalır: tətbiq
+elə fermerin ən çox ehtiyacı olan vaxtda susurdu. Sentinel-1 radar dalğası
+buludu deşib keçir.
+
+Qərarlar:
+
+- **Radar YALNIZ optik ölçmə çatmayanda çağırılır** (8 gündür təmiz ölçmə
+  yoxdursa). Daimi ikinci sorğu emal kvotasını iki dəfə artırardı, halbuki
+  günəşli həftədə Sentinel-2 daha çox şey deyir.
+- **Mütləq rəqəm iddia edilmir.** Radar geriyə səpilmə qaytarır, "torpaqda
+  23% su var" yox: səpilməyə su ilə yanaşı səthin kələ-kötürlüyü və bitki
+  örtüyü də təsir edir. Ona görə yalnız sahənin ÖZ keçmişi ilə müqayisə
+  göstərilir ("son ölçmələrə nisbətən nəmlənib").
+- **Orbit istiqaməti sabitdir** (ASCENDING). Fərqli orbit = fərqli baxış
+  bucağı = başqa səpilmə; qarışdırsaq "nəmlik artdı" siqnalı əslində peykin
+  başqa yoldan keçməsi olardı.
+- **Durmuş su ən etibarlı nəticədir.** Hamar su səthi dalğanı geri
+  qaytarmır — bu, təxmin deyil, fizikadır. VV < −18 dB piksel payı sahənin
+  15%-ni keçirsə təcili siqnal verilir. Hədd KALİBRLƏMƏ tələb edir.
+- **Ziddiyyət bloklanır.** Radar durmuş su görürsə suvarma məsləhəti
+  verilmir: "suvar" ilə "sahədə su durub" eyni ekranda dayana bilməz.
 
 **Rütubət (NDMI).** NDVI "bitki zəifdir" deyir, NDMI isə səbəbin SU olub
 olmadığını göstərir — suvarma qərarı buna bağlıdır. B11 eyni məhsuldadır,

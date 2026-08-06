@@ -32,6 +32,7 @@ function StatTile({ label, children }) {
 export function HomeScreen({
   peyk = { hal: "yoxdur", seriya: [], xulase: null },
   qonsu = { hal: "yoxdur", muqayise: null },
+  radar = { hal: "yoxdur", xulase: null },
   siqnallar = [],
   onOpenLoan,
   onPickLocation,
@@ -53,7 +54,12 @@ export function HomeScreen({
   const olculen = peyk.xulase;
   // "NDVI 0,68" texniki termindir; fermer "68%" oxuyur. Çevirmə eyni ölçmədir,
   // onluqsuz — bax: services/ndvi.js
-  const faiz = ortukFaizi(olculen?.ndvi ?? FARM.ndvi);
+  //
+  // Sahə çəkilib, amma ölçmə gəlməyibsə NÜMUNƏ RƏQƏMİ göstərmirik. Əvvəl
+  // burada FARM.ndvi qalırdı və ekranda "Bitki örtüyü 72%" ilə "bu dövrdə
+  // təmiz ölçmə yoxdur" yan-yana dururdu — biri o birini yalanlayırdı.
+  const olcmeVar = Number.isFinite(olculen?.ndvi);
+  const faiz = ortukFaizi(olcmeVar ? olculen.ndvi : state.sahe ? null : FARM.ndvi);
   const gunEvvel = olculen ? necheGunEvvel(olculen.tarix) : null;
 
   // Yalnız ən vacib siqnal əsas ekrana çıxır. Fermer telefonu açanda bir iş
@@ -146,7 +152,7 @@ export function HomeScreen({
 
         <div className="mt-1 grid grid-cols-3 gap-2">
           <StatTile label={t("home.cropHealth")}>
-            {formatNumber(faiz, lang)}%{" "}
+            {faiz == null ? "—" : `${formatNumber(faiz, lang)}%`}{" "}
             {olculen && olculen.istiqamet !== "sabit" && (
               <span style={{ color: olculen.istiqamet === "artir" ? "#7FD6A4" : "#F0A0A0" }}>
                 {olculen.istiqamet === "artir" ? "▲" : "▼"}
@@ -191,6 +197,44 @@ export function HomeScreen({
                 height={20}
               />
             )}
+          </div>
+        )}
+
+        {/* Radar: optik ölçmə buludun altında qalanda görünür. Bura fermerin
+            "bu dövrdə təmiz ölçmə yoxdur" oxuduğu yerdir — indi ondan sonra
+            ikinci peykin nə gördüyü yazılır. */}
+        {radar.hal !== "yoxdur" && (
+          <div
+            className="mt-2 flex items-start gap-2 rounded-xl px-3 py-2"
+            style={{
+              backgroundColor: radar.xulase?.suVar
+                ? "rgba(74,144,226,0.20)"
+                : "rgba(255,255,255,0.08)",
+            }}
+            aria-live="polite"
+          >
+            <Icon
+              name={radar.hal === "yuklenir" ? "LoaderCircle" : "Radar"}
+              size={13}
+              color={radar.hal === "hazir" ? "#9AC8F0" : "rgba(255,255,255,0.6)"}
+            />
+            <div className="flex-1">
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.78)" }}>
+                {radar.hal === "yuklenir" && t("radar.loading")}
+                {radar.hal === "olcmeYox" && t("radar.noReading")}
+                {radar.hal === "qurulmayib" && t("ndvi.notConfigured")}
+                {radar.hal === "xeta" && t("radar.error")}
+                {radar.hal === "hazir" &&
+                  (radar.xulase?.suVar
+                    ? t("radar.suVar", { faiz: Math.round(radar.xulase.suPayi * 100) })
+                    : t(`radar.${radar.xulase?.istiqamet ?? "sabit"}`))}
+              </p>
+              {radar.hal === "hazir" && (
+                <p className="mt-0.5" style={{ color: "rgba(255,255,255,0.45)", fontSize: 10 }}>
+                  {t("radar.measured", { gun: necheGunEvvel(radar.xulase.tarix) ?? 0 })}
+                </p>
+              )}
+            </div>
           </div>
         )}
 

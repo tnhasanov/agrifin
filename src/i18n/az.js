@@ -372,4 +372,20 @@ export default {
   "weather.pointField": "Proqnoz sahənizin öz nöqtəsi üçündür.",
   "weather.pointDistrict": "Proqnoz rayon mərkəzi üçündür — sahənizdən 10–20 km uzaq ola bilər.",
   "weather.pointDistrictCta": "Proqnoz rayon mərkəzi üçündür. Sahənizi çəkin — öz nöqtənizə keçsin.",
+  "siqnal.menbe.radar": "Sentinel-1 radar peyki · sizin sahə",
+  "siqnal.suGolu.basliq": "Sahədə su durub",
+  "siqnal.suGolu.metn":
+    "Radar sahənin təxminən {faiz}%-ni su altında görür. Kök bir neçə gün suyun altında qalsa boğulur — suyun axıdılması üçün arxı yoxlayın. Radar buludun arxasından ölçür, ona görə bu xəbər havadan asılı deyil.",
+
+  "radar.title": "Radar ölçməsi",
+  "radar.loading": "Radar ölçməsi yüklənir…",
+  "radar.measured": "Radar · {gun} gün əvvəl · buludun arxasından",
+  "radar.noReading": "Radar ölçməsi də tapılmadı",
+  "radar.error": "Radar ölçməsi alınmadı",
+  "radar.nemlenib": "Torpaq son ölçmələrə nisbətən nəmlənib.",
+  "radar.quruyub": "Torpaq son ölçmələrə nisbətən quruyub.",
+  "radar.sabit": "Torpaqda ciddi dəyişmə yoxdur.",
+  "radar.suVar": "Sahənin təxminən {faiz}%-i su altındadır.",
+  "radar.note":
+    "Radar buludu deşib keçir, ona görə optik peyk susanda da ölçür. Rəqəm deyil, sahənin öz keçmişi ilə müqayisə verir.",
 };

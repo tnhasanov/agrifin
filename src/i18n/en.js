@@ -373,4 +373,20 @@ export default {
   "weather.pointField": "The forecast is for your field's own point.",
   "weather.pointDistrict": "The forecast is for the district centre — that can be 10-20 km from your field.",
   "weather.pointDistrictCta": "The forecast is for the district centre. Draw your field to move it to your own point.",
+  "siqnal.menbe.radar": "Sentinel-1 radar satellite · your field",
+  "siqnal.suGolu.basliq": "Water is standing in the field",
+  "siqnal.suGolu.metn":
+    "Radar sees roughly {faiz}% of the field under water. Roots suffocate after a few days submerged — check the drainage channel. Radar measures through cloud, so this reading does not depend on the weather.",
+
+  "radar.title": "Radar reading",
+  "radar.loading": "Loading the radar reading…",
+  "radar.measured": "Radar · {gun} days ago · through the cloud",
+  "radar.noReading": "No radar reading found either",
+  "radar.error": "The radar reading could not be fetched",
+  "radar.nemlenib": "The soil is wetter than in recent readings.",
+  "radar.quruyub": "The soil is drier than in recent readings.",
+  "radar.sabit": "No significant change in the soil.",
+  "radar.suVar": "About {faiz}% of the field is under water.",
+  "radar.note":
+    "Radar passes through cloud, so it measures when the optical satellite cannot. It gives a comparison against the field's own history, not an absolute figure.",
 };
