@@ -26,6 +26,17 @@ describe("hava zolağı", () => {
     await waitFor(() => expect(screen.getByText("Bu gün")).toBeInTheDocument());
   });
 
+  // Şaxta gecə vurur: gündüz 34° olan gündə gecə 21° ola bilər və fermerin
+  // qərarı gecə rəqəmindən asılıdır
+  it("hər gün üçün gündüz və gecə temperaturunu göstərir", async () => {
+    cavabVer(WEATHER_FIXTURE);
+    renderApp(<App />);
+
+    // Fikstur: gündüz 34,2 / gecə 21
+    await waitFor(() => expect(screen.getByText("34°")).toBeInTheDocument());
+    expect(screen.getByText("21°")).toBeInTheDocument();
+  });
+
   // Bulud ikonu "sabah yağış var" deməkdir, amma NƏ QƏDƏR olduğunu demir.
   // Fermer 0,3 mm-lik damcını da yağış sayıb siqnala inanmırdı.
   it("yağışlı günlərdə neçə mm olduğunu yazır", async () => {

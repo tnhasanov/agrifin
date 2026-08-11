@@ -151,6 +151,13 @@ export function WeatherStrip({
                 <span className="text-xs font-bold" style={{ color: C.ink, fontFamily: font.body }}>
                   {Math.round(daily.temperature_2m_max[index])}°
                 </span>
+                {/* Gecə temperaturu ARTIQ gətirilirdi (şaxta siqnalı onu
+                    işlədir), sadəcə göstərilmirdi. Fermer üçün gecə gündüzdən
+                    vacibdir: şaxta gecə vurur, meyvə gecə-gündüz fərqi ilə
+                    şirinləşir. Əlavə sorğu getmir. */}
+                <span style={{ color: C.muted, fontSize: 11, fontFamily: font.body }}>
+                  {Math.round(daily.temperature_2m_min[index])}°
+                </span>
                 {/* Yağışsız günlərdə də yer saxlanılır ki, sütunlar sürüşməsin */}
                 <span style={{ color: C.blue, fontSize: 10, minHeight: 12 }}>
                   {yagis ? t(yagis.az ? "weather.mmAz" : "weather.mm", { mm: yagis.mm }) : ""}
