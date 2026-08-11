@@ -404,4 +404,11 @@ export default {
   "siqnal.xesteliyRiski.basliq": "Xəstəlik üçün əlverişli şərait",
   "siqnal.xesteliyRiski.metn":
     "Növbəti günlərdə {saat} saat ardıcıl yüksək rütubət və ilıq hava gözlənilir — göbələk xəstəlikləri məhz belə şəraitdə yayılır. Sahəni yoxlayın; şübhəli yarpaq görsəniz şəklini çəkin. Bu, xəstəlik diaqnozu deyil, yalnız şəraitin xəbərdarlığıdır.",
+  "tovsiye.menbe.istilik": "Dərəcə-gün · keçən illə müqayisə",
+  "tovsiye.istilik.qabaqBasliq": "Mövsüm keçən ildən tezdir",
+  "tovsiye.istilik.qabaqMetn":
+    "Bu il indiyə qədər toplanan istilik keçən ilin eyni tarixindən çoxdur — inkişaf təxminən {gun} gün qabaqdadır. Çiləmə, gübrələmə və biçin planını bu qədər tezləşdirmək lazım gələ bilər.",
+  "tovsiye.istilik.geriBasliq": "Mövsüm keçən ildən gecdir",
+  "tovsiye.istilik.geriMetn":
+    "Bu il indiyə qədər toplanan istilik keçən ilin eyni tarixindən azdır — inkişaf təxminən {gun} gün geridədir. Tələsməyin: mərhələ gəlməmiş çilənən dərman itir.",
 };

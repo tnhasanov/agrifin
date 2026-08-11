@@ -405,4 +405,11 @@ export default {
   "siqnal.xesteliyRiski.basliq": "Conditions favour disease",
   "siqnal.xesteliyRiski.metn":
     "{saat} consecutive hours of high humidity and mild temperatures are expected — exactly the conditions fungal diseases spread in. Walk the field; photograph any suspect leaf. This is a warning about conditions, not a diagnosis.",
+  "tovsiye.menbe.istilik": "Degree-days · compared with last year",
+  "tovsiye.istilik.qabaqBasliq": "The season is ahead of last year",
+  "tovsiye.istilik.qabaqMetn":
+    "Heat accumulated so far this year is above the same date last year — development is roughly {gun} days ahead. Spraying, fertilising and harvest plans may need to move earlier by about that much.",
+  "tovsiye.istilik.geriBasliq": "The season is behind last year",
+  "tovsiye.istilik.geriMetn":
+    "Heat accumulated so far this year is below the same date last year — development is roughly {gun} days behind. Do not rush: a treatment applied before the stage arrives is wasted.",
 };

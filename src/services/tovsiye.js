@@ -90,7 +90,7 @@ export function sepinHazirligi({ teqvim, hourly } = {}) {
   return { hazir: derece >= hedd, derece, hedd };
 }
 
-export function tovsiyeleriQur({ teqvim, daily, hourly, hektar, zona } = {}) {
+export function tovsiyeleriQur({ teqvim, daily, hourly, hektar, zona, istilik } = {}) {
   const tovsiyeler = [];
 
   // 1. Bu ayın işləri — bilik bazasından, bitkiyə və aya görə
@@ -124,7 +124,21 @@ export function tovsiyeleriQur({ teqvim, daily, hourly, hektar, zona } = {}) {
     });
   }
 
-  // 3. Suvarma miqdarı — "nə vaxt" deyil, "nə qədər"
+  // 3. Mövsümün istiliyi keçən illə müqayisədə. Mərhələlər təqvimlə yox,
+  // toplanmış istiliklə gəlir — isti il hər işi tezləşdirir.
+  if (istilik && istilik.istiqamet !== "eyni") {
+    tovsiyeler.push({
+      id: `istilik:${istilik.istiqamet}:${istilik.gun}`,
+      nov: "istilik",
+      icon: "TrendingUp",
+      basliqKey: `tovsiye.istilik.${istilik.istiqamet}Basliq`,
+      metnKey: `tovsiye.istilik.${istilik.istiqamet}Metn`,
+      vars: { gun: istilik.gun },
+      menbeKey: "tovsiye.menbe.istilik",
+    });
+  }
+
+  // 4. Suvarma miqdarı — "nə vaxt" deyil, "nə qədər"
   const kesir = suKesiri({ daily, kc: teqvim?.kc, hektar });
   if (kesir) {
     tovsiyeler.push({

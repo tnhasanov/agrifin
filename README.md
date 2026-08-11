@@ -212,6 +212,30 @@ HARADA olduğunu. Fermer öz sahəsini tanıyır: quru künc, susuz zolaq onun
 rəngli PNG qaytarır; buludlu piksellər şəffafdır. Şəkil bəzəkdir, əsas
 məlumat deyil — alınmasa sükutla gizlənir.
 
+**Hava: gündən saata.** Zolaqda hər gün üçün gündüz və gecə temperaturu,
+yağış varsa mm-i var; günə toxunanda 3 saatlıq addımla saatlar açılır. Səbəb:
+fermerin sualı çox vaxt "sabah necədir" yox, "NEÇƏDƏ"-dir — şaxta gecə 4-də
+vurur, külək günortadan sonra qalxır.
+
+Havadan çıxarılan üç yeni qərar:
+
+- **Çiləmə pəncərəsi güləyə görə.** Dərmanı aparan orta külək deyil, qəfil
+  gülәkdir; əvvəl yalnız ortalamaya baxırdıq və gülәkli günü "əlverişli"
+  sayırdıq.
+- **Səpin torpaq temperaturuna görə.** Toxum soyuq torpaqda cücərmir, çürüyür.
+  6 sm-dəki ölçmə səpin mərhələsində bitkinin öz həddi ilə müqayisə olunur.
+- **Xəstəlik şəraiti.** 8 saatdan uzun yüksək rütubət + ilıq hava göbələk
+  sporunun cücərmə pəncərəsidir. Siqnal DİAQNOZ QOYMUR — mətn bunu açıq
+  yazır və şəkil çəkməyə yönləndirir, çünki "şərait var" ilə "xəstəlik var"
+  arasındakı fərq silinsə fermer boş yerə dərman çiləyər.
+
+**İstilik toplanması (dərəcə-gün).** Mərhələlər təqvimlə yox, toplanmış
+istiliklə gəlir. Arxiv API-dən bu mövsümün və keçən ilin EYNİ təqvim
+pəncərəsi alınır və fərq günə çevrilir ("təxminən 9 gün qabaqda"). Mütləq
+proqnoz verilmir — mərhələ hədləri sorta görə dəyişir və bizdə yerli sortların
+hədləri yoxdur. Başlanğıc tarixi təxminidir, amma müqayisəni pozmur: hər iki
+il eyni tarixdən sayılır.
+
 **Radar (Sentinel-1) — buludun arxasından.** Optik peyk buluda baxa bilmir və
 Azərbaycanda payız-yaz aylarında sahə həftələrlə buludun altında qalır: tətbiq
 elə fermerin ən çox ehtiyacı olan vaxtda susurdu. Sentinel-1 radar dalğası
