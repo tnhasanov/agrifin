@@ -412,4 +412,8 @@ export default {
   "tovsiye.istilik.geriBasliq": "The season is behind last year",
   "tovsiye.istilik.geriMetn":
     "Heat accumulated so far this year is below the same date last year — development is roughly {gun} days behind. Do not rush: a treatment applied before the stage arrives is wasted.",
+  "siqnal.panelBasliq": "Notifications",
+  "siqnal.panelAltYazi": "{count} open signals from your field",
+  "siqnal.panelBosAltYazi": "No open signals from your field",
+  "siqnal.panelHamisi": "See everything on the advisor screen",
 };

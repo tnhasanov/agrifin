@@ -1,12 +1,9 @@
 import { Icon } from "./Icon.jsx";
 import { C, font } from "../theme/tokens.js";
 import { LANGUAGES, useI18n } from "../i18n/index.jsx";
-import { useRouter } from "../lib/router.jsx";
-import { pathFor } from "../routes.js";
 
-export function AppHeader({ siqnalSayi = 0 }) {
+export function AppHeader({ siqnalSayi = 0, onZeng, panelAcilib = false }) {
   const { t, lang, cycleLang } = useI18n();
-  const { navigate } = useRouter();
   const current = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0];
 
   // Nişan uydurma deyil: sahədən gələn açıq siqnalların sayıdır. Əvvəl bura
@@ -37,16 +34,23 @@ export function AppHeader({ siqnalSayi = 0 }) {
           {current.label}
         </button>
 
+        {/* Zəng ayrı ekrana aparmır: bildirişlər üstdə panel kimi açılır və
+            bağlananda fermer eyni yerdə qalır (bax: features/signals) */}
         <button
           type="button"
-          onClick={() => navigate(pathFor("advisor"))}
+          onClick={onZeng}
+          aria-haspopup="dialog"
+          aria-expanded={panelAcilib}
           aria-label={
             gozleyen > 0
               ? t("header.notificationsCount", { count: gozleyen })
               : t("header.notificationsEmpty")
           }
           className="relative rounded-full p-2"
-          style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}
+          style={{
+            backgroundColor: panelAcilib ? C.mist : C.card,
+            border: `1px solid ${panelAcilib ? C.field : C.line}`,
+          }}
         >
           <Icon name="Bell" size={15} color={C.ink} />
           {gozleyen > 0 && (

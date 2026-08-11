@@ -11,6 +11,7 @@ const FieldDraw = lazy(() =>
   import("./features/field/FieldDraw.jsx").then((m) => ({ default: m.FieldDraw })),
 );
 import { AgronomChat } from "./features/agronom/AgronomChat.jsx";
+import { SiqnalPaneli } from "./features/signals/SiqnalPaneli.jsx";
 import { HomeScreen } from "./screens/HomeScreen.jsx";
 import { AdvisorScreen } from "./screens/AdvisorScreen.jsx";
 import { MoneyScreen } from "./screens/MoneyScreen.jsx";
@@ -18,7 +19,7 @@ import { MarketScreen } from "./screens/MarketScreen.jsx";
 import { CarbonScreen } from "./screens/CarbonScreen.jsx";
 import { useRouter } from "./lib/router.jsx";
 import { useStore } from "./state/store.jsx";
-import { routeForPath } from "./routes.js";
+import { pathFor, routeForPath } from "./routes.js";
 import { C, font } from "./theme/tokens.js";
 import { useNdvi } from "./features/ndvi/useNdvi.js";
 import { useQonsu } from "./features/ndvi/useQonsu.js";
@@ -38,11 +39,13 @@ const SCREENS = {
 };
 
 export default function App() {
-  const { path } = useRouter();
+  const { path, navigate } = useRouter();
   const { state, actions } = useStore();
   const [loanOpen, setLoanOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [fieldOpen, setFieldOpen] = useState(false);
+  // Bildirişlər paneli: zəng ekran dəyişmir, üstdə açılır
+  const [siqnalOpen, setSiqnalOpen] = useState(false);
   // Yer seçimi paneli sonradan rayonu dəyişmək üçündür; ilk açılışda
   // qeydiyyat axını bu işi görür
   const [locationOpen, setLocationOpen] = useState(false);
@@ -78,6 +81,7 @@ export default function App() {
   // Sabit identifikator: alt komponentlərdəki effektlər hər render-də
   // yenidən qurulmasın
   const closeChat = useCallback(() => setChatOpen(false), []);
+  const closeSiqnal = useCallback(() => setSiqnalOpen(false), []);
   const closeField = useCallback(() => setFieldOpen(false), []);
   const closeLoan = useCallback(() => setLoanOpen(false), []);
   const closeLocation = useCallback(() => setLocationOpen(false), []);
@@ -103,7 +107,11 @@ export default function App() {
           <Onboarding />
         ) : (
           <>
-            <AppHeader siqnalSayi={siqnallar.length} />
+            <AppHeader
+              siqnalSayi={siqnallar.length}
+              panelAcilib={siqnalOpen}
+              onZeng={() => setSiqnalOpen(true)}
+            />
 
             <main ref={scrollRef} className="flex-1 overflow-y-auto">
               {/* key ekran dəyişəndə remount edir — giriş animasiyası hər dəfə oynayır */}
@@ -126,6 +134,18 @@ export default function App() {
             <BottomNav />
 
             {loanOpen && <LoanSheet onClose={closeLoan} />}
+
+            <SiqnalPaneli
+              acilib={siqnalOpen}
+              siqnallar={siqnallar}
+              onBagla={closeSiqnal}
+              onSiqnaliBagla={actions.siqnaliBagla}
+              onHereket={() => setChatOpen(true)}
+              onHamisi={() => {
+                setSiqnalOpen(false);
+                navigate(pathFor("advisor"));
+              }}
+            />
 
             {chatOpen && <AgronomChat peyk={peyk} qonsu={qonsu} onClose={closeChat} />}
 

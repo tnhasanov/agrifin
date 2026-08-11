@@ -173,7 +173,7 @@ describe("sahə siqnalları — bildiriş mərkəzi", () => {
     await waitFor(() => expect(zeng()).toHaveTextContent("2"));
   });
 
-  it("məsləhət ekranı bütün siqnalları ciddiliyə görə sıralayır", async () => {
+  it("bildiriş paneli bütün siqnalları ciddiliyə görə sıralayır", async () => {
     const user = userEvent.setup();
     seed();
     stubApi({ proqnoz: hava({ temperature_2m_min: [17, -3, 18, 17, 16, 17, 17] }) });
@@ -182,8 +182,10 @@ describe("sahə siqnalları — bildiriş mərkəzi", () => {
 
     await user.click(zeng());
 
-    expect(screen.getByText("Sahənizdən siqnallar")).toBeInTheDocument();
-    const basliqlar = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
+    const panel = await screen.findByRole("dialog", { name: "Bildirişlər" });
+    const basliqlar = within(panel)
+      .getAllByRole("heading", { level: 3 })
+      .map((h) => h.textContent);
     expect(basliqlar.slice(0, 2)).toEqual(["Şaxta riski", "Suvarma vaxtıdır"]);
   });
 
@@ -239,7 +241,7 @@ describe("sahə siqnalları — sorğu sayı", () => {
     await waitFor(() => expect(screen.getByText("Suvarma vaxtıdır")).toBeInTheDocument());
 
     await user.click(zeng());
-    await waitFor(() => expect(screen.getByText("Sahənizdən siqnallar")).toBeInTheDocument());
+    await screen.findByRole("dialog", { name: "Bildirişlər" });
 
     const peykSorgusu = fetch.mock.calls.filter(([url]) => String(url).includes("/api/ndvi"));
     expect(peykSorgusu).toHaveLength(1);

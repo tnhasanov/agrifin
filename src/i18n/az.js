@@ -411,4 +411,8 @@ export default {
   "tovsiye.istilik.geriBasliq": "Mövsüm keçən ildən gecdir",
   "tovsiye.istilik.geriMetn":
     "Bu il indiyə qədər toplanan istilik keçən ilin eyni tarixindən azdır — inkişaf təxminən {gun} gün geridədir. Tələsməyin: mərhələ gəlməmiş çilənən dərman itir.",
+  "siqnal.panelBasliq": "Bildirişlər",
+  "siqnal.panelAltYazi": "Sahənizdən {count} açıq siqnal",
+  "siqnal.panelBosAltYazi": "Sahənizdən açıq siqnal yoxdur",
+  "siqnal.panelHamisi": "Məsləhət ekranında hamısına bax",
 };

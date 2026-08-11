@@ -413,4 +413,8 @@ export default {
   "tovsiye.istilik.geriBasliq": "Сезон отстаёт от прошлого года",
   "tovsiye.istilik.geriMetn":
     "Накопленное тепло ниже, чем на ту же дату в прошлом году — развитие примерно на {gun} дн. позади. Не спешите: препарат, внесённый до наступления фазы, пропадает.",
+  "siqnal.panelBasliq": "Уведомления",
+  "siqnal.panelAltYazi": "{count} открытых сигналов с вашего поля",
+  "siqnal.panelBosAltYazi": "Открытых сигналов с вашего поля нет",
+  "siqnal.panelHamisi": "Посмотреть всё на экране советов",
 };
