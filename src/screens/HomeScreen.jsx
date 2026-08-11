@@ -11,10 +11,11 @@ import { pathFor } from "../routes.js";
 import { FARM } from "../services/farm.js";
 import { DEFAULT_LOCATION } from "../services/location.js";
 import { havaNoqtesi } from "../services/saheYeri.js";
-import { necheGunEvvel } from "../services/ndvi.js";
+import { necheGunEvvel, ortukFaizi } from "../services/ndvi.js";
 import { Sparkline } from "../components/Sparkline.jsx";
 import { SaheXeritesi } from "../features/ndvi/SaheXeritesi.jsx";
 import { QonsuMuqayisesi } from "../features/ndvi/QonsuMuqayisesi.jsx";
+import { HesabatPaylas } from "../features/share/HesabatPaylas.jsx";
 import { SiqnalKarti } from "../features/signals/SiqnalKarti.jsx";
 
 function StatTile({ label, children }) {
@@ -31,6 +32,7 @@ function StatTile({ label, children }) {
 export function HomeScreen({
   peyk = { hal: "yoxdur", seriya: [], xulase: null },
   qonsu = { hal: "yoxdur", muqayise: null },
+  radar = { hal: "yoxdur", xulase: null },
   siqnallar = [],
   onOpenLoan,
   onPickLocation,
@@ -50,11 +52,14 @@ export function HomeScreen({
 
   // Peyk ölçməsi App-də qurulur (bax: App.jsx) — burada yalnız göstərilir
   const olculen = peyk.xulase;
-  const ndvi = formatNumber(olculen?.ndvi ?? FARM.ndvi, lang, {
-    minimumFractionDigits: 2,
-    // Üç onluq ölçmədə olmayan dəqiqlik iddia edir — NDVI iki onluqla oxunur
-    maximumFractionDigits: 2,
-  });
+  // "NDVI 0,68" texniki termindir; fermer "68%" oxuyur. Çevirmə eyni ölçmədir,
+  // onluqsuz — bax: services/ndvi.js
+  //
+  // Sahə çəkilib, amma ölçmə gəlməyibsə NÜMUNƏ RƏQƏMİ göstərmirik. Əvvəl
+  // burada FARM.ndvi qalırdı və ekranda "Bitki örtüyü 72%" ilə "bu dövrdə
+  // təmiz ölçmə yoxdur" yan-yana dururdu — biri o birini yalanlayırdı.
+  const olcmeVar = Number.isFinite(olculen?.ndvi);
+  const faiz = ortukFaizi(olcmeVar ? olculen.ndvi : state.sahe ? null : FARM.ndvi);
   const gunEvvel = olculen ? necheGunEvvel(olculen.tarix) : null;
 
   // Yalnız ən vacib siqnal əsas ekrana çıxır. Fermer telefonu açanda bir iş
@@ -147,7 +152,7 @@ export function HomeScreen({
 
         <div className="mt-1 grid grid-cols-3 gap-2">
           <StatTile label={t("home.cropHealth")}>
-            NDVI {ndvi}{" "}
+            {faiz == null ? "—" : `${formatNumber(faiz, lang)}%`}{" "}
             {olculen && olculen.istiqamet !== "sabit" && (
               <span style={{ color: olculen.istiqamet === "artir" ? "#7FD6A4" : "#F0A0A0" }}>
                 {olculen.istiqamet === "artir" ? "▲" : "▼"}
@@ -195,6 +200,44 @@ export function HomeScreen({
           </div>
         )}
 
+        {/* Radar: optik ölçmə buludun altında qalanda görünür. Bura fermerin
+            "bu dövrdə təmiz ölçmə yoxdur" oxuduğu yerdir — indi ondan sonra
+            ikinci peykin nə gördüyü yazılır. */}
+        {radar.hal !== "yoxdur" && (
+          <div
+            className="mt-2 flex items-start gap-2 rounded-xl px-3 py-2"
+            style={{
+              backgroundColor: radar.xulase?.suVar
+                ? "rgba(74,144,226,0.20)"
+                : "rgba(255,255,255,0.08)",
+            }}
+            aria-live="polite"
+          >
+            <Icon
+              name={radar.hal === "yuklenir" ? "LoaderCircle" : "Radar"}
+              size={13}
+              color={radar.hal === "hazir" ? "#9AC8F0" : "rgba(255,255,255,0.6)"}
+            />
+            <div className="flex-1">
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.78)" }}>
+                {radar.hal === "yuklenir" && t("radar.loading")}
+                {radar.hal === "olcmeYox" && t("radar.noReading")}
+                {radar.hal === "qurulmayib" && t("ndvi.notConfigured")}
+                {radar.hal === "xeta" && t("radar.error")}
+                {radar.hal === "hazir" &&
+                  (radar.xulase?.suVar
+                    ? t("radar.suVar", { faiz: Math.round(radar.xulase.suPayi * 100) })
+                    : t(`radar.${radar.xulase?.istiqamet ?? "sabit"}`))}
+              </p>
+              {radar.hal === "hazir" && (
+                <p className="mt-0.5" style={{ color: "rgba(255,255,255,0.45)", fontSize: 10 }}>
+                  {t("radar.measured", { gun: necheGunEvvel(radar.xulase.tarix) ?? 0 })}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Su vəziyyəti ayrıca göstərilir: NDVI "zəifdir" deyir, rütubət isə
             səbəbin su olub-olmadığını — suvarma qərarı buna bağlıdır. */}
         {peyk.hal === "hazir" && olculen?.suSeviyyesi && (
@@ -210,14 +253,13 @@ export function HomeScreen({
               size={13}
               color={olculen.suSeviyyesi === "az" ? C.gold : "#7FD6A4"}
             />
+            {/* Xam NDMI rəqəmi ("NDMI 0,30") burada idi və heç nəyə xidmət
+                etmirdi: fermer onu nə ilə müqayisə edəcəyini bilmir, cümlə
+                isə qərarı onsuz da deyir. Nəmlik faizə çevrilmir — NDMI quru
+                torpaqda mənfi olur, "0%" quru ilə çox quru arasındakı fərqi
+                itirər. Rəng xəritəsi bunu ayırd edir. */}
             <span className="flex-1 text-xs" style={{ color: "rgba(255,255,255,0.78)" }}>
               {t(`ndvi.water.${olculen.suSeviyyesi}`)}
-            </span>
-            <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 10 }}>
-              NDMI {formatNumber(olculen.nemlik, lang, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
             </span>
           </div>
         )}
@@ -241,6 +283,15 @@ export function HomeScreen({
       {/* "NDVI 0,68" mücərrəddir; "qonşulardan yaxşıdır" isə dərhal aydındır */}
       <QonsuMuqayisesi qonsu={qonsu} ndvi={olculen?.ndvi} illik={peyk.illik} />
 
+      {/* Ölçmə WhatsApp-a çıxsın deyə: aqronomla söhbət orada gedir */}
+      <HesabatPaylas
+        hektar={state.sahe?.hektar}
+        bitkiKey={state.chat.crop ? `kbcrop.${state.chat.crop}` : null}
+        xulase={olculen}
+        muqayise={qonsu.muqayise}
+        siqnal={bas}
+      />
+
       {/* key yeri dəyişdikdə komponenti sıfırdan qurur — yeni proqnoz yüklənir */}
       <WeatherStrip
         key={`${noqte.lat},${noqte.lon}`}
@@ -248,6 +299,8 @@ export function HomeScreen({
         lon={noqte.lon}
         locationName={location.name}
         onPickLocation={onPickLocation}
+        onDrawField={onDrawField}
+        deqiq={noqte.deqiq}
         meslehetGoster={siqnallar.length === 0}
       />
     </div>

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
+import { SaatlarPaneli } from "./SaatlarPaneli.jsx";
 import { Icon } from "../../components/Icon.jsx";
 import { SectionTitle } from "../../components/SectionTitle.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
-import { buildAdvisory, fetchForecast, iconForCode, proqnozIsleyir } from "../../services/weather.js";
+import { buildAdvisory, fetchForecast, gunlukYagis, iconForCode, proqnozIsleyir } from "../../services/weather.js";
 
 const TONE = {
   wet: { bg: C.blueSoft, fg: "#2C5BC7", icon: "Droplets" },
@@ -52,9 +53,15 @@ export function WeatherStrip({
   days = 5,
   locationName,
   onPickLocation,
+  onDrawField,
+  // Proqnoz sahənin öz mərkəzinə aiddirsə true; rayon mərkəzinə aiddirsə false
+  deqiq = false,
   meslehetGoster = true,
 }) {
   const { t } = useI18n();
+  // Açıq gün: fermer sütuna toxunanda o günün saatları açılır. Standart
+  // bağlıdır — zolaq ilk baxışda qısa qalmalıdır.
+  const [aciqGun, setAciqGun] = useState(null);
   const [result, setResult] = useState({ status: "loading", data: null, stale: false });
   const { status, data: forecast, stale } = result;
 
@@ -137,8 +144,18 @@ export function WeatherStrip({
             const { name, wet } = iconForCode(daily.weather_code[index]);
             const label =
               index === 0 ? t("common.today") : t(`weather.day.${new Date(iso).getDay()}`);
+            // Neçə mm — buludun nə demək olduğunu ancaq bu rəqəm deyir
+            const yagis = gunlukYagis(daily.precipitation_sum?.[index]);
+            const acilib = aciqGun === iso;
             return (
-              <div key={iso} className="flex flex-col items-center gap-1">
+              <button
+                key={iso}
+                type="button"
+                onClick={() => setAciqGun(acilib ? null : iso)}
+                aria-expanded={acilib}
+                className="flex flex-col items-center gap-1 rounded-lg px-1 py-1"
+                style={{ backgroundColor: acilib ? C.mist : "transparent" }}
+              >
                 <span className="text-xs font-semibold" style={{ color: C.muted }}>
                   {label}
                 </span>
@@ -146,10 +163,25 @@ export function WeatherStrip({
                 <span className="text-xs font-bold" style={{ color: C.ink, fontFamily: font.body }}>
                   {Math.round(daily.temperature_2m_max[index])}°
                 </span>
-              </div>
+                {/* Gecə temperaturu ARTIQ gətirilirdi (şaxta siqnalı onu
+                    işlədir), sadəcə göstərilmirdi. Fermer üçün gecə gündüzdən
+                    vacibdir: şaxta gecə vurur, meyvə gecə-gündüz fərqi ilə
+                    şirinləşir. Əlavə sorğu getmir. */}
+                <span style={{ color: C.muted, fontSize: 11, fontFamily: font.body }}>
+                  {Math.round(daily.temperature_2m_min[index])}°
+                </span>
+                {/* Yağışsız günlərdə də yer saxlanılır ki, sütunlar sürüşməsin */}
+                <span style={{ color: C.blue, fontSize: 10, minHeight: 12 }}>
+                  {yagis ? t(yagis.az ? "weather.mmAz" : "weather.mm", { mm: yagis.mm }) : ""}
+                </span>
+              </button>
             );
           })}
         </div>
+
+        {/* Seçilmiş günün saatları. Yalnız tələb olunanda açılır: 24 sətir
+            hər gün üçün açıq dursa zolaq oxunmaz olur. */}
+        {aciqGun && <SaatlarPaneli hourly={forecast.hourly} gunISO={aciqGun} />}
 
         {meslehetGoster && (
           <div
@@ -159,6 +191,26 @@ export function WeatherStrip({
             <Icon name={tone.icon} size={14} color={tone.fg} />
             {t(advisory.key, advisory.vars)}
           </div>
+        )}
+
+        {/* Proqnozun HANSI nöqtəyə aid olduğu. Bunu yazmasaq zolağın başlığı
+            "Ağdam" göstərir, rəqəmlər isə sahənin öz nöqtəsindən gəlir — və ya
+            əksinə, fermer rayon mərkəzinin proqnozunu öz sahəsininki sanır.
+            Azərbaycanda yağış çox yerlidir: fərq 10–20 km-də real fərqdir. */}
+        {deqiq ? (
+          <p className="mt-2 px-1" style={{ color: C.muted, fontSize: 10 }}>
+            {t("weather.pointField")}
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={onDrawField}
+            disabled={!onDrawField}
+            className="mt-2 px-1 text-left"
+            style={{ color: C.muted, fontSize: 10 }}
+          >
+            {t(onDrawField ? "weather.pointDistrictCta" : "weather.pointDistrict")}
+          </button>
         )}
 
         {stale && (

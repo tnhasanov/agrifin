@@ -4,6 +4,12 @@ import userEvent from "@testing-library/user-event";
 import App from "../../App.jsx";
 import { renderApp, seedState } from "../../test/render.jsx";
 
+// jsdom-da Leaflet ölçü hesablaya bilmir. Bu testin mövzusu qat keçidi və
+// sorğu sayıdır, ona görə xəritə qatı sadə şəkillə əvəz olunur.
+vi.mock("../ndvi/XeriteQati.jsx", () => ({
+  XeriteQati: ({ sekil, etiket }) => <img src={sekil} alt={etiket} />,
+}));
+
 const bugun = new Date().toISOString().slice(0, 10);
 const SERIYA = [{ baslangic: "2026-07-22", son: bugun, ndvi: 0.68, nemlik: 0.3, ortulu: 0 }];
 
@@ -127,7 +133,7 @@ describe("xəritə qatları", () => {
 
     await user.click(screen.getByRole("button", { name: "Nəmlik" }));
     await waitFor(() => expect(screen.getByText(/Mavi bitkidə su çoxdur/)).toBeInTheDocument());
-    expect(screen.getByText("çox quru")).toBeInTheDocument();
+    expect(screen.getByText("quru — suvarma çatmır")).toBeInTheDocument();
     expect(screen.queryByText(/tünd yaşıl sıx bitki/)).not.toBeInTheDocument();
   });
 
@@ -144,6 +150,62 @@ describe("xəritə qatları", () => {
     await waitFor(() => expect(screen.getByText(/Bu qat hazırda alınmadı/)).toBeInTheDocument());
     // Bitki qatına qayıtmaq mümkün olmalıdır
     expect(screen.getByRole("button", { name: "Bitki" })).toBeInTheDocument();
+  });
+
+  // Kartdakı xəritə bilərəkdən hərəkətsizdir — yaxınlaşdırmaq üçün tam ekran
+  it("böyüt düyməsi xəritəni tam ekranda açır", async () => {
+    const user = userEvent.setup();
+    seed();
+    stubApi();
+    renderApp(<App />);
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Böyüt" })).toBeInTheDocument());
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Böyüt" }));
+
+    const pencere = await screen.findByRole("dialog");
+    expect(pencere).toBeInTheDocument();
+    // Yaxınlaşdırmanın detal artırmadığı açıq yazılır
+    expect(screen.getByText(/bir rəng xanası 10×10 metrdir/)).toBeInTheDocument();
+  });
+
+  it("tam ekran Escape və bağla düyməsi ilə bağlanır", async () => {
+    const user = userEvent.setup();
+    seed();
+    stubApi();
+    renderApp(<App />);
+    await waitFor(() => screen.getByRole("button", { name: "Böyüt" }));
+
+    await user.click(screen.getByRole("button", { name: "Böyüt" }));
+    await screen.findByRole("dialog");
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+
+    await user.click(screen.getByRole("button", { name: "Böyüt" }));
+    await screen.findByRole("dialog");
+    await user.click(screen.getByRole("button", { name: "Bağla" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  // Tam ekranda qat dəyişmək eyni keşdən gəlir — kvota ikinci dəfə xərclənmir
+  it("tam ekranda qat dəyişəndə təkrar sorğu getmir", async () => {
+    const user = userEvent.setup();
+    seed();
+    stubApi();
+    renderApp(<App />);
+    await waitFor(() => expect(sekilSorgulari).toEqual(["bitki"]));
+
+    await user.click(screen.getByRole("button", { name: "Nəmlik" }));
+    await waitFor(() => expect(sekilSorgulari).toEqual(["bitki", "nemlik"]));
+    await user.click(screen.getByRole("button", { name: "Böyüt" }));
+    await screen.findByRole("dialog");
+
+    // Tam ekrandakı qat düymələri — kartdakılarla eyni siyahı
+    const bitkiDuymeleri = screen.getAllByRole("button", { name: "Bitki" });
+    await user.click(bitkiDuymeleri[bitkiDuymeleri.length - 1]);
+
+    expect(sekilSorgulari).toEqual(["bitki", "nemlik"]);
   });
 
   // Əsas qat alınmasa xəritə ümumiyyətlə göstərilmir (statusu peyk zolağı deyir)

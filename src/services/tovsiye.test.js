@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MIN_KESIR_MM, baxisNoqteleri, suKesiri, tovsiyeleriQur } from "./tovsiye.js";
+import { MIN_KESIR_MM, baxisNoqteleri, sepinHazirligi, suKesiri, tovsiyeleriQur } from "./tovsiye.js";
 import { ICONS } from "../components/icons.js";
 
 const hava = (et0, yagis) => ({
@@ -60,6 +60,40 @@ describe("baxış nöqtələri", () => {
     expect(baxisNoqteleri(1000)).toBe(12);
     expect(baxisNoqteleri(0)).toBeNull();
     expect(baxisNoqteleri(NaN)).toBeNull();
+  });
+});
+
+describe("səpin üçün torpaq", () => {
+  const saatlar = (derece) => ({
+    time: Array.from({ length: 24 }, (_, i) => `2026-10-15T${String(i).padStart(2, "0")}:00`),
+    soil_temperature_6cm: Array.from({ length: 24 }, () => derece),
+  });
+  const sepinTeqvimi = { sepin: { aktiv: true, torpaqMin: 8 } };
+
+  // Toxum soyuq torpaqda cücərmir, çürüyür — qərar havadan yox, torpaqdan
+  it("torpaq həddin altındadırsa gözləməyi deyir", () => {
+    const netice = sepinHazirligi({ teqvim: sepinTeqvimi, hourly: saatlar(5) });
+    expect(netice).toEqual({ hazir: false, derece: 5, hedd: 8 });
+  });
+
+  it("torpaq isinibsə pəncərənin açıq olduğunu deyir", () => {
+    expect(sepinHazirligi({ teqvim: sepinTeqvimi, hourly: saatlar(11) }).hazir).toBe(true);
+  });
+
+  // Səpin ayı deyilsə torpaq temperaturu qərar vermir — mayda buğda üçün
+  // "torpaq hazırdır" demək mənasızdır
+  it("səpin mərhələsi deyilsə heç nə deməz", () => {
+    const netice = sepinHazirligi({
+      teqvim: { sepin: { aktiv: false, torpaqMin: 8 } },
+      hourly: saatlar(11),
+    });
+    expect(netice).toBeNull();
+  });
+
+  it("hədd və ya ölçmə yoxdursa iddia etmir", () => {
+    expect(sepinHazirligi({ teqvim: { sepin: { aktiv: true, torpaqMin: null } }, hourly: saatlar(11) })).toBeNull();
+    expect(sepinHazirligi({ teqvim: sepinTeqvimi, hourly: { time: [] } })).toBeNull();
+    expect(sepinHazirligi({})).toBeNull();
   });
 });
 

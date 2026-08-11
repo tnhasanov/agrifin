@@ -12,7 +12,24 @@ const DAILY_FIELDS = [
   "et0_fao_evapotranspiration",
 ];
 
-const HOURLY_FIELDS = ["wind_speed_10m", "precipitation_probability", "soil_moisture_0_to_7cm"];
+// Saatlıq sahələr. Fermerin sualı çox vaxt "hansı gün" yox, "neçədə" olur:
+// şaxta gecə 4-də vurur, külək günorta qalxır, yağış axşam başlayır.
+const HOURLY_FIELDS = [
+  "temperature_2m",
+  "precipitation",
+  "precipitation_probability",
+  "wind_speed_10m",
+  // Dərmanı sahədən aparan ORTA külək deyil, qəfil güləkdir. Orta 8 km/s,
+  // gülək 25 km/s olan gün çiləmə günü deyil — əvvəl bunu görmürdük.
+  "wind_gusts_10m",
+  // Xəstəlik təzyiqi: uzun sürən yüksək rütubət + ilıq hava = yoluxma pəncərəsi
+  "relative_humidity_2m",
+  // Şeh nöqtəsi havanın temperaturuna yaxınlaşanda yarpaq islanır
+  "dew_point_2m",
+  // Səpin qərarı torpaq temperaturundan asılıdır, havadan yox
+  "soil_temperature_6cm",
+  "soil_moisture_0_to_7cm",
+];
 
 export function forecastUrl({ lat, lon, days = 7 }) {
   const params = new URLSearchParams({
@@ -36,6 +53,21 @@ export function iconForCode(code) {
   if (code <= 82) return { name: "CloudRain", wet: true };
   if (code <= 86) return { name: "CloudSnow", wet: true };
   return { name: "CloudLightning", wet: true };
+}
+
+/**
+ * Günün yağışını zolaqda göstərmək üçün qısa yazılış.
+ *
+ * Niyə lazımdır: zolaqdakı bulud ikonu `weather_code`-dan gəlir və "zəif
+ * yağış" kodu 0,3 mm-də də verilir. Fermer buludu görüb "sabah yağış var"
+ * deyir, siqnal isə "yağış gözlənmir" yazırdı. Rəqəm bu ziddiyyəti aradan
+ * qaldırır: 0,3 mm yağışdır, amma suvarmanı əvəz edən yağış deyil.
+ *
+ * @returns {null | {az: boolean, mm: number}} null — göstəriləsi yağış yoxdur
+ */
+export function gunlukYagis(mm) {
+  if (!Number.isFinite(mm) || mm < 0.1) return null;
+  return mm < 1 ? { az: true, mm: 1 } : { az: false, mm: Math.round(mm) };
 }
 
 const sumFirst = (values, count) =>

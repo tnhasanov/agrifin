@@ -34,6 +34,7 @@ Node 22 tələb olunur (`.nvmrc`).
 api/
   agronom.js          serverless funksiya — Claude API açarı yalnız burada
   ndvi.js             Copernicus Sentinel-2 → NDVI + rütubət seriyası
+  radar.js            Copernicus Sentinel-1 → buludun arxasından radar ölçməsi
   saheSekli.js        sahənin rəngli NDVI xəritəsi (şəkil)
   copernicus.js       ortaq kimlik doğrulama və açar qorunması
   geoJson.js          kontur çevirmə (en/uzunluq sırası burada qorunur)
@@ -210,6 +211,53 @@ HARADA olduğunu. Fermer öz sahəsini tanıyır: quru künc, susuz zolaq onun
 üçün tanış yerlərdir, və tətbiq onları göstərəndə inam yaranır. Process API
 rəngli PNG qaytarır; buludlu piksellər şəffafdır. Şəkil bəzəkdir, əsas
 məlumat deyil — alınmasa sükutla gizlənir.
+
+**Hava: gündən saata.** Zolaqda hər gün üçün gündüz və gecə temperaturu,
+yağış varsa mm-i var; günə toxunanda 3 saatlıq addımla saatlar açılır. Səbəb:
+fermerin sualı çox vaxt "sabah necədir" yox, "NEÇƏDƏ"-dir — şaxta gecə 4-də
+vurur, külək günortadan sonra qalxır.
+
+Havadan çıxarılan üç yeni qərar:
+
+- **Çiləmə pəncərəsi güləyə görə.** Dərmanı aparan orta külək deyil, qəfil
+  gülәkdir; əvvəl yalnız ortalamaya baxırdıq və gülәkli günü "əlverişli"
+  sayırdıq.
+- **Səpin torpaq temperaturuna görə.** Toxum soyuq torpaqda cücərmir, çürüyür.
+  6 sm-dəki ölçmə səpin mərhələsində bitkinin öz həddi ilə müqayisə olunur.
+- **Xəstəlik şəraiti.** 8 saatdan uzun yüksək rütubət + ilıq hava göbələk
+  sporunun cücərmə pəncərəsidir. Siqnal DİAQNOZ QOYMUR — mətn bunu açıq
+  yazır və şəkil çəkməyə yönləndirir, çünki "şərait var" ilə "xəstəlik var"
+  arasındakı fərq silinsə fermer boş yerə dərman çiləyər.
+
+**İstilik toplanması (dərəcə-gün).** Mərhələlər təqvimlə yox, toplanmış
+istiliklə gəlir. Arxiv API-dən bu mövsümün və keçən ilin EYNİ təqvim
+pəncərəsi alınır və fərq günə çevrilir ("təxminən 9 gün qabaqda"). Mütləq
+proqnoz verilmir — mərhələ hədləri sorta görə dəyişir və bizdə yerli sortların
+hədləri yoxdur. Başlanğıc tarixi təxminidir, amma müqayisəni pozmur: hər iki
+il eyni tarixdən sayılır.
+
+**Radar (Sentinel-1) — buludun arxasından.** Optik peyk buluda baxa bilmir və
+Azərbaycanda payız-yaz aylarında sahə həftələrlə buludun altında qalır: tətbiq
+elə fermerin ən çox ehtiyacı olan vaxtda susurdu. Sentinel-1 radar dalğası
+buludu deşib keçir.
+
+Qərarlar:
+
+- **Radar YALNIZ optik ölçmə çatmayanda çağırılır** (8 gündür təmiz ölçmə
+  yoxdursa). Daimi ikinci sorğu emal kvotasını iki dəfə artırardı, halbuki
+  günəşli həftədə Sentinel-2 daha çox şey deyir.
+- **Mütləq rəqəm iddia edilmir.** Radar geriyə səpilmə qaytarır, "torpaqda
+  23% su var" yox: səpilməyə su ilə yanaşı səthin kələ-kötürlüyü və bitki
+  örtüyü də təsir edir. Ona görə yalnız sahənin ÖZ keçmişi ilə müqayisə
+  göstərilir ("son ölçmələrə nisbətən nəmlənib").
+- **Orbit istiqaməti sabitdir** (ASCENDING). Fərqli orbit = fərqli baxış
+  bucağı = başqa səpilmə; qarışdırsaq "nəmlik artdı" siqnalı əslində peykin
+  başqa yoldan keçməsi olardı.
+- **Durmuş su ən etibarlı nəticədir.** Hamar su səthi dalğanı geri
+  qaytarmır — bu, təxmin deyil, fizikadır. VV < −18 dB piksel payı sahənin
+  15%-ni keçirsə təcili siqnal verilir. Hədd KALİBRLƏMƏ tələb edir.
+- **Ziddiyyət bloklanır.** Radar durmuş su görürsə suvarma məsləhəti
+  verilmir: "suvar" ilə "sahədə su durub" eyni ekranda dayana bilməz.
 
 **Rütubət (NDMI).** NDVI "bitki zəifdir" deyir, NDMI isə səbəbin SU olub
 olmadığını göstərir — suvarma qərarı buna bağlıdır. B11 eyni məhsuldadır,

@@ -98,12 +98,69 @@ describe("hava siqnalları", () => {
     expect(tap(siqnallariQur(arqument), "dermanlama")).toBeTruthy();
   });
 
+  // Dərmanı aparan orta külək deyil, qəfil gülәkdir
+  it("orta külək zəif, gülək güclüdürsə dərmanlama təklif etmir", () => {
+    const arqument = hava();
+    arqument.hourly.wind_speed_10m = Array.from({ length: 48 }, () => 6);
+    arqument.hourly.wind_gusts_10m = Array.from({ length: 48 }, () => 28);
+    arqument.hourly.precipitation_probability = Array.from({ length: 48 }, () => 5);
+    expect(tap(siqnallariQur(arqument), "dermanlama")).toBeUndefined();
+  });
+
+  it("külək də, gülək də zəifdirsə pəncərəni açır", () => {
+    const arqument = hava();
+    arqument.hourly.wind_speed_10m = Array.from({ length: 48 }, () => 6);
+    arqument.hourly.wind_gusts_10m = Array.from({ length: 48 }, () => 11);
+    arqument.hourly.precipitation_probability = Array.from({ length: 48 }, () => 5);
+    expect(tap(siqnallariQur(arqument), "dermanlama")).toBeTruthy();
+  });
+
   // Ziddiyyətli məsləhət etibarı öldürür: "yağış gəlir" + "dərmanla" olmaz
   it("yağış gələndə dərmanlama pəncərəsi göstərilmir", () => {
     const arqument = hava({ precipitation_sum: [6, 8, 4, 0, 0, 0, 0] });
     arqument.hourly.wind_speed_10m = Array.from({ length: 48 }, () => 6);
     arqument.hourly.precipitation_probability = Array.from({ length: 48 }, () => 5);
     expect(tap(siqnallariQur(arqument), "dermanlama")).toBeUndefined();
+  });
+});
+
+describe("xəstəlik şəraiti", () => {
+  /** Saatlıq rütubət və temperatur — göbələk üçün əlverişli pəncərə */
+  const yas = (saat, { rutubet = 92, temp = 18 } = {}) => {
+    const arqument = hava();
+    arqument.hourly.relative_humidity_2m = Array.from({ length: 48 }, (_, i) =>
+      i < saat ? rutubet : 50,
+    );
+    arqument.hourly.temperature_2m = Array.from({ length: 48 }, () => temp);
+    return arqument;
+  };
+
+  it("uzun yaş dövr xəbərdarlıq doğurur", () => {
+    const s = tap(siqnallariQur(yas(10)), "xesteliyRiski");
+    expect(s.ciddilik).toBe("diqqet");
+    expect(s.vars.saat).toBe(10);
+    // Şəkil çəkmək işi çatda görülür
+    expect(s.hereket).toBe("chat");
+  });
+
+  // Qısa dövr sporun cücərməsinə çatmır — hər səhər şehə siqnal versək
+  // fermer siqnalları oxumağı dayandırar
+  it("qısa yaş dövr siqnal doğurmur", () => {
+    expect(tap(siqnallariQur(yas(5)), "xesteliyRiski")).toBeUndefined();
+  });
+
+  it("hava soyuq olanda rütubət tək başına kifayət etmir", () => {
+    expect(tap(siqnallariQur(yas(20, { temp: 4 })), "xesteliyRiski")).toBeUndefined();
+  });
+
+  it("isti və quru havada siqnal yoxdur", () => {
+    expect(tap(siqnallariQur(yas(20, { rutubet: 40, temp: 30 })), "xesteliyRiski")).toBeUndefined();
+  });
+
+  it("rütubət ölçülməyibsə iddia etmir", () => {
+    const arqument = hava();
+    arqument.hourly.temperature_2m = Array.from({ length: 48 }, () => 18);
+    expect(tap(siqnallariQur(arqument), "xesteliyRiski")).toBeUndefined();
   });
 });
 
@@ -115,6 +172,37 @@ describe("peyk + hava birləşməsi", () => {
     );
     expect(s.ciddilik).toBe("tecili");
     expect(s.menbeKey).toBe("siqnal.menbe.hamisi");
+    expect(s.metnKey).toBe("siqnal.suvar.tecili");
+  });
+
+  // ZİDDİYYƏT: zolaqda sabaha yağış buludu görünürdü, altında isə "3 gündə
+  // yağış gözlənmir". Az yağış suvarmanı əvəz etmir, amma "yoxdur" deyil.
+  it("az yağış gözlənirsə bunu inkar etmir, rəqəmlə deyir", () => {
+    const s = tap(
+      siqnallariQur({
+        ...hava({ precipitation_sum: [0, 3, 0, 0, 0, 0, 0] }),
+        xulase: peyk({ suSeviyyesi: "az", nemlik: -0.08 }),
+        indi: INDI,
+      }),
+      "suvar",
+    );
+    // Qərar dəyişmir — suvarmaq lazımdır, amma səbəb düzgün yazılır
+    expect(s.ciddilik).toBe("tecili");
+    expect(s.metnKey).toBe("siqnal.suvar.azYagis");
+    expect(s.vars.mm).toBe(3);
+  });
+
+  // 0,4 mm yağış "yağış var" saymır: sərhəd bir yerdə olmalıdır
+  it("damcı səviyyəsində yağışda yenə 'gözlənmir' deyir", () => {
+    const s = tap(
+      siqnallariQur({
+        ...hava({ precipitation_sum: [0.3, 0.2, 0, 0, 0, 0, 0] }),
+        xulase: peyk({ suSeviyyesi: "az", nemlik: -0.08 }),
+        indi: INDI,
+      }),
+      "suvar",
+    );
+    expect(s.metnKey).toBe("siqnal.suvar.tecili");
   });
 
   // ƏSAS DƏYƏR: quraq sahəyə yağış gəlirsə suvarmamaq fermerə birbaşa
@@ -142,6 +230,53 @@ describe("peyk + hava birləşməsi", () => {
 
   it("su kifayət edəndə suvarma siqnalı yoxdur", () => {
     expect(tap(siqnallariQur({ ...hava(), xulase: peyk(), indi: INDI }), "suvar")).toBeUndefined();
+  });
+
+  // Radar buludun arxasından ölçür — optik peyk susanda danışan yeganə mənbə
+  it("radar durmuş su görəndə təcili siqnal verir", () => {
+    const s = tap(
+      siqnallariQur({
+        ...hava(),
+        radar: { suVar: true, suPayi: 0.32, tarix: "2026-08-01" },
+        indi: INDI,
+      }),
+      "suGolu",
+    );
+    expect(s.ciddilik).toBe("tecili");
+    expect(s.vars.faiz).toBe(32);
+    expect(s.menbeKey).toBe("siqnal.menbe.radar");
+  });
+
+  // ƏSAS: iki peyk ziddiyyət göstərəndə fermerə eyni anda "suvar" və
+  // "sahədə su durub" demək olmaz. Optik ölçmə köhnə, radar bugünkü sudur.
+  it("sahədə su durubsa suvarma məsləhəti verilmir", () => {
+    const siqnallar = siqnallariQur({
+      ...hava(),
+      xulase: peyk({ suSeviyyesi: "az", nemlik: -0.08 }),
+      radar: { suVar: true, suPayi: 0.4, tarix: "2026-08-01" },
+      indi: INDI,
+    });
+    expect(tap(siqnallar, "suGolu")).toBeTruthy();
+    expect(tap(siqnallar, "suvar")).toBeUndefined();
+  });
+
+  it("su az olanda radar siqnalı yaranmır", () => {
+    const siqnallar = siqnallariQur({
+      ...hava(),
+      radar: { suVar: false, suPayi: 0.02, tarix: "2026-08-01" },
+      indi: INDI,
+    });
+    expect(tap(siqnallar, "suGolu")).toBeUndefined();
+  });
+
+  it("radar ölçməsi yoxdursa heç nə dəyişmir", () => {
+    const siqnallar = siqnallariQur({
+      ...hava(),
+      xulase: peyk({ suSeviyyesi: "az", nemlik: -0.08 }),
+      indi: INDI,
+    });
+    expect(tap(siqnallar, "suGolu")).toBeUndefined();
+    expect(tap(siqnallar, "suvar")).toBeTruthy();
   });
 
   // NDVI düşməsinin İKİ tamam fərqli səbəbi var və iş də fərqlidir

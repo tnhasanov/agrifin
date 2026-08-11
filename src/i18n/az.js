@@ -24,7 +24,7 @@ export default {
   "home.farmLine": "{farm} · {ha} ha",
   "home.satelliteChip": "Bu gün təsdiqlənib",
   "home.farmscore": "FARMSCORE",
-  "home.cropHealth": "Məhsul sağlamlığı",
+  "home.cropHealth": "Bitki örtüyü",
   "home.creditLimit": "Kredit limiti",
   "home.wallet": "Pulqabı",
   "home.scoreNote": "FarmScore və kredit limiti nümunə göstəricidir — real qiymətləndirmə modeli hazırlanır.",
@@ -232,12 +232,12 @@ export default {
   "ndvi.mapAlt.nemlik": "Sahənin nəmlik xəritəsi",
   "ndvi.mapNote.bitki":
     "Hər piksel 10×10 m. Açıq rənglər zəif, tünd yaşıl sıx bitki örtüyüdür.",
-  "ndvi.mapNote.nemlik":
-    "Mavi bitkidə su çoxdur, qəhvəyi quraqdır. Suvarma çatmayan zolaq burada görünür.",
-  "ndvi.moist.veryDry": "çox quru",
-  "ndvi.moist.dry": "quru",
+  "ndvi.moist.veryDry": "quru — suvarma çatmır",
+  "ndvi.moist.dry": "az su",
   "ndvi.moist.ok": "normal",
-  "ndvi.moist.wet": "nəm",
+  "ndvi.moist.wet": "artıq su",
+  "ndvi.mapNote.nemlik":
+    "Mavi bitkidə su çoxdur, qəhvəyi quraqdır. Suvarma çatmayan zolaq burada görünür. Rəng suyun miqdarını göstərir, səbəbini yox — quru zolağın altında tıxanmış damcı da ola bilər, fərqli torpaq da.",
   "ndvi.legend.bare": "çılpaq",
   "ndvi.legend.verySparse": "çox seyrək",
   "ndvi.legend.sparse": "seyrək",
@@ -286,7 +286,7 @@ export default {
 
   "siqnal.suvar.basliq": "Suvarma vaxtıdır",
   "siqnal.suvar.tecili":
-    "Peyk sahədə su çatışmazlığı görür (NDMI {nemlik}) və 3 gündə yağış gözlənmir.",
+    "Peyk sahədə su çatışmazlığı görür və 3 gündə yağış gözlənmir.",
   "siqnal.suvar.balans":
     "Bu həftə buxarlanma yağışı {mm} mm üstələyir. Suvarmanı planlaşdırın.",
 
@@ -296,7 +296,7 @@ export default {
 
   "siqnal.bitkiZeifleyir.basliq": "Bitki zəifləyir — səbəb su deyil",
   "siqnal.bitkiZeifleyir.metn":
-    "Peyk son iki həftədə bitki örtüyünün {ferq} azaldığını göstərir, torpaqda isə su kifayətdir. Səbəb xəstəlik, zərərverici və ya qida çatışmazlığı ola bilər — peyk bunları görmür, yarpağın şəkli görür.",
+    "İki həftə əvvəl bitki örtüyü {evvel}% idi, indi {indi}% — torpaqda isə su kifayətdir. Səbəb xəstəlik, zərərverici və ya qida çatışmazlığı ola bilər — peyk bunları görmür, yarpağın şəkli görür.",
 
   "siqnal.olcmeKohne.basliq": "Peyk ölçməsi köhnəlib",
   "siqnal.olcmeKohne.metn":
@@ -307,14 +307,14 @@ export default {
 
   "siqnal.qonsu.basliq": "Sahə ətrafdan geri qalır",
   "siqnal.qonsu.metn":
-    "Sahənizin NDVI göstəricisi ətrafdakı əkinlərin medianından {faiz}% aşağıdır (median {medyan}). Hava hamıya eynidir, deməli səbəb sahəyə xasdır — torpaq, suvarma və ya qidalandırma. Aqronomla danışın.",
+    "Sahənizin bitki örtüyü {sizin}%, ətrafdakı əkinlərin medianı isə {medyan}%. Hava hamıya eynidir, deməli səbəb sahəyə xasdır — torpaq, suvarma və ya qidalandırma. Aqronomla danışın.",
 
   "qonsu.pille.ust": "Sahəniz ətrafın ən yaxşı 25%-indədir",
   "qonsu.pille.yuxari": "Sahəniz ətrafın ortasından yuxarıdır",
   "qonsu.pille.asagi": "Sahəniz ətrafın ortasından aşağıdır",
   "qonsu.pille.alt": "Sahəniz ətrafın alt 25%-indədir",
-  "qonsu.you": "Sizin sahə {ndvi}",
-  "qonsu.median": "Ətrafın medianı {ndvi}",
+  "qonsu.you": "Sizin sahə {faiz}%",
+  "qonsu.median": "Ətrafın medianı {faiz}%",
   "tovsiye.title": "Bu mərhələnin işləri",
   "tovsiye.subtitle":
     "Bitkinin təqvimi, sahənizin ölçüsü və hava proqnozundan çıxarılır. Siqnallardan fərqli olaraq bunlar təcili deyil — mövsümün planıdır.",
@@ -345,10 +345,70 @@ export default {
   "zona.cenubQerb": "Cənub-qərb küncü",
   "zona.cenubSerq": "Cənub-şərq küncü",
 
-  "qonsu.illik.yaxsi": "Keçən il bu vaxt {kecen} idi — sahəniz {faiz}% yaxşıdır.",
-  "qonsu.illik.pis": "Keçən il bu vaxt {kecen} idi — sahəniz {faiz}% geri qalır.",
-  "qonsu.illik.eyni": "Keçən il bu vaxt {kecen} idi — demək olar eyni səviyyə.",
+  "qonsu.illik.yaxsi": "Keçən il bu vaxt {kecen}% idi, indi {indi}% — sahəniz irəlidədir.",
+  "qonsu.illik.pis": "Keçən il bu vaxt {kecen}% idi, indi {indi}% — sahəniz geri qalır.",
+  "qonsu.illik.eyni": "Keçən il bu vaxt {kecen}% idi, indi {indi}% — demək olar eyni səviyyə.",
 
   "qonsu.note":
     "5 km radiusda YALNIZ bitki örtüyü olan piksellər sayılır — yol, tikili və çılpaq torpaq müqayisəyə girmir. Eyni peyk keçidi, eyni gün.",
+
+  "paylas.duyme": "Hesabatı paylaş",
+  "paylas.basliq": "AgriFin — sahə hesabatı",
+  "paylas.sahe": "Sahə: {hektar} ha",
+  "paylas.saheBitki": "Sahə: {hektar} ha · {bitki}",
+  "paylas.ortuk": "Bitki örtüyü: {faiz}%",
+  "paylas.ortukQonsu": "Bitki örtüyü: {faiz}% (ətrafın medianı {medyan}%)",
+  "paylas.siqnal": "Diqqət: {basliq}",
+  "paylas.olcme": "Peyk ölçməsi: {gun} gün əvvəl · Sentinel-2",
+  "paylas.kopyalandi": "Hesabat mətn kimi kopyalandı",
+  "paylas.olmadi": "Paylaşmaq alınmadı",
+  "paylas.sual": "Sualım:",
+  "ndvi.mapExpand": "Böyüt",
+  "ndvi.mapZoomNote": "Yaxınlaşdırmaq detalı artırmır: bir rəng xanası 10×10 metrdir. Peyk şəkli daha dəqiqdir, ölçmə isə həmişə 10 metrlik xanalarla gəlir.",
+  "siqnal.suvar.azYagis":
+    "Peyk sahədə su çatışmazlığı görür. 3 gündə cəmi {mm} mm yağış gözlənilir — bu qədər yağış torpağı islatmır, suvarma yenə lazımdır.",
+  "weather.mm": "{mm} mm",
+  "weather.mmAz": "<1 mm",
+  "weather.pointField": "Proqnoz sahənizin öz nöqtəsi üçündür.",
+  "weather.pointDistrict": "Proqnoz rayon mərkəzi üçündür — sahənizdən 10–20 km uzaq ola bilər.",
+  "weather.pointDistrictCta": "Proqnoz rayon mərkəzi üçündür. Sahənizi çəkin — öz nöqtənizə keçsin.",
+  "siqnal.menbe.radar": "Sentinel-1 radar peyki · sizin sahə",
+  "siqnal.suGolu.basliq": "Sahədə su durub",
+  "siqnal.suGolu.metn":
+    "Radar sahənin təxminən {faiz}%-ni su altında görür. Kök bir neçə gün suyun altında qalsa boğulur — suyun axıdılması üçün arxı yoxlayın. Radar buludun arxasından ölçür, ona görə bu xəbər havadan asılı deyil.",
+
+  "radar.title": "Radar ölçməsi",
+  "radar.loading": "Radar ölçməsi yüklənir…",
+  "radar.measured": "Radar · {gun} gün əvvəl · buludun arxasından",
+  "radar.noReading": "Radar ölçməsi də tapılmadı",
+  "radar.error": "Radar ölçməsi alınmadı",
+  "radar.nemlenib": "Torpaq son ölçmələrə nisbətən nəmlənib.",
+  "radar.quruyub": "Torpaq son ölçmələrə nisbətən quruyub.",
+  "radar.sabit": "Torpaqda ciddi dəyişmə yoxdur.",
+  "radar.suVar": "Sahənin təxminən {faiz}%-i su altındadır.",
+  "radar.note":
+    "Radar buludu deşib keçir, ona görə optik peyk susanda da ölçür. Rəqəm deyil, sahənin öz keçmişi ilə müqayisə verir.",
+  "weather.hourNone": "Bu gün üçün saatlıq məlumat yoxdur.",
+  "weather.windNote": "Külək yalnız 12 km/s-dən güclü olanda yazılır",
+  "weather.kmS": "{kulek} km/s",
+  "weather.soilTemp": "Torpaq (6 sm): {derece}°",
+  "tovsiye.menbe.torpaq": "Torpaq temperaturu · 6 sm",
+  "tovsiye.torpaq.hazirBasliq": "Torpaq səpin üçün hazırdır",
+  "tovsiye.torpaq.hazirMetn":
+    "6 sm dərinlikdə torpaq {derece}° — bu bitki üçün lazım olan {hedd}°-dən yuxarıdır. Səpin pəncərəsi açıqdır.",
+  "tovsiye.torpaq.soyuqBasliq": "Torpaq hələ soyuqdur",
+  "tovsiye.torpaq.soyuqMetn":
+    "6 sm dərinlikdə torpaq {derece}°, bu bitki üçün isə {hedd}° lazımdır. Soyuq torpaqda toxum cücərmir, çürüyür — bir neçə gün gözləyin.",
+
+  "siqnal.menbe.rutubet": "Hava proqnozu · rütubət və temperatur",
+  "siqnal.xesteliyRiski.basliq": "Xəstəlik üçün əlverişli şərait",
+  "siqnal.xesteliyRiski.metn":
+    "Növbəti günlərdə {saat} saat ardıcıl yüksək rütubət və ilıq hava gözlənilir — göbələk xəstəlikləri məhz belə şəraitdə yayılır. Sahəni yoxlayın; şübhəli yarpaq görsəniz şəklini çəkin. Bu, xəstəlik diaqnozu deyil, yalnız şəraitin xəbərdarlığıdır.",
+  "tovsiye.menbe.istilik": "Dərəcə-gün · keçən illə müqayisə",
+  "tovsiye.istilik.qabaqBasliq": "Mövsüm keçən ildən tezdir",
+  "tovsiye.istilik.qabaqMetn":
+    "Bu il indiyə qədər toplanan istilik keçən ilin eyni tarixindən çoxdur — inkişaf təxminən {gun} gün qabaqdadır. Çiləmə, gübrələmə və biçin planını bu qədər tezləşdirmək lazım gələ bilər.",
+  "tovsiye.istilik.geriBasliq": "Mövsüm keçən ildən gecdir",
+  "tovsiye.istilik.geriMetn":
+    "Bu il indiyə qədər toplanan istilik keçən ilin eyni tarixindən azdır — inkişaf təxminən {gun} gün geridədir. Tələsməyin: mərhələ gəlməmiş çilənən dərman itir.",
 };

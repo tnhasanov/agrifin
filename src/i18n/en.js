@@ -24,7 +24,7 @@ export default {
   "home.farmLine": "{farm} · {ha} ha",
   "home.satelliteChip": "Verified today",
   "home.farmscore": "FARMSCORE",
-  "home.cropHealth": "Crop health",
+  "home.cropHealth": "Canopy cover",
   "home.creditLimit": "Credit limit",
   "home.wallet": "Wallet",
   "home.scoreNote": "FarmScore and the credit limit are illustrative — the real scoring model is still being built.",
@@ -233,12 +233,12 @@ export default {
   "ndvi.mapAlt.nemlik": "Moisture map of the field",
   "ndvi.mapNote.bitki":
     "Each pixel is 10×10 m. Light colours are sparse, dark green is dense canopy.",
-  "ndvi.mapNote.nemlik":
-    "Blue means more water in the crop, brown means dry. A strip irrigation does not reach shows up here.",
-  "ndvi.moist.veryDry": "very dry",
-  "ndvi.moist.dry": "dry",
+  "ndvi.moist.veryDry": "dry — irrigation not reaching",
+  "ndvi.moist.dry": "low water",
   "ndvi.moist.ok": "normal",
-  "ndvi.moist.wet": "moist",
+  "ndvi.moist.wet": "excess water",
+  "ndvi.mapNote.nemlik":
+    "Blue means more water in the crop, brown means dry. A strip irrigation does not reach shows up here. The colour shows how much water, not why — a dry strip can be a blocked dripper or simply different soil.",
   "ndvi.legend.bare": "bare",
   "ndvi.legend.verySparse": "very sparse",
   "ndvi.legend.sparse": "sparse",
@@ -287,7 +287,7 @@ export default {
 
   "siqnal.suvar.basliq": "Time to irrigate",
   "siqnal.suvar.tecili":
-    "The satellite sees a moisture deficit in the field (NDMI {nemlik}) and no rain is expected within 3 days.",
+    "The satellite sees a moisture deficit in the field and no rain is expected within 3 days.",
   "siqnal.suvar.balans":
     "This week evaporation exceeds rainfall by {mm} mm. Plan an irrigation.",
 
@@ -297,7 +297,7 @@ export default {
 
   "siqnal.bitkiZeifleyir.basliq": "Crop is weakening — water is not the cause",
   "siqnal.bitkiZeifleyir.metn":
-    "The satellite shows canopy down {ferq} over the last two weeks, while soil moisture is sufficient. The cause may be disease, pests or a nutrient shortage — the satellite cannot see those, a photo of the leaf can.",
+    "Two weeks ago canopy cover was {evvel}%, now it is {indi}% — and soil moisture is sufficient. The cause may be disease, pests or a nutrient shortage — the satellite cannot see those, a photo of the leaf can.",
 
   "siqnal.olcmeKohne.basliq": "Satellite reading is stale",
   "siqnal.olcmeKohne.metn":
@@ -308,14 +308,14 @@ export default {
 
   "siqnal.qonsu.basliq": "Field is behind the area",
   "siqnal.qonsu.metn":
-    "Your field's NDVI is {faiz}% below the median of surrounding crops (median {medyan}). The weather is the same for everyone, so the cause is specific to this field — soil, irrigation or nutrition. Talk it through with an agronomist.",
+    "Your field's canopy cover is {sizin}%, the median of surrounding crops is {medyan}%. The weather is the same for everyone, so the cause is specific to this field — soil, irrigation or nutrition. Talk it through with an agronomist.",
 
   "qonsu.pille.ust": "Your field is in the area's top 25%",
   "qonsu.pille.yuxari": "Your field is above the area's median",
   "qonsu.pille.asagi": "Your field is below the area's median",
   "qonsu.pille.alt": "Your field is in the area's bottom 25%",
-  "qonsu.you": "Your field {ndvi}",
-  "qonsu.median": "Area median {ndvi}",
+  "qonsu.you": "Your field {faiz}%",
+  "qonsu.median": "Area median {faiz}%",
   "tovsiye.title": "Work for this stage",
   "tovsiye.subtitle":
     "Derived from the crop calendar, your field size and the forecast. Unlike signals, these are not urgent — they are the season's plan.",
@@ -346,10 +346,70 @@ export default {
   "zona.cenubQerb": "south-west corner",
   "zona.cenubSerq": "south-east corner",
 
-  "qonsu.illik.yaxsi": "Last year at this date it was {kecen} — your field is {faiz}% better.",
-  "qonsu.illik.pis": "Last year at this date it was {kecen} — your field is {faiz}% behind.",
-  "qonsu.illik.eyni": "Last year at this date it was {kecen} — practically the same level.",
+  "qonsu.illik.yaxsi": "Last year at this date it was {kecen}%, now {indi}% — your field is ahead.",
+  "qonsu.illik.pis": "Last year at this date it was {kecen}%, now {indi}% — your field is behind.",
+  "qonsu.illik.eyni": "Last year at this date it was {kecen}%, now {indi}% — practically the same level.",
 
   "qonsu.note":
     "Only vegetated pixels within a 5 km radius are counted — roads, buildings and bare soil are excluded. Same satellite pass, same day.",
+
+  "paylas.duyme": "Share the report",
+  "paylas.basliq": "AgriFin — field report",
+  "paylas.sahe": "Field: {hektar} ha",
+  "paylas.saheBitki": "Field: {hektar} ha · {bitki}",
+  "paylas.ortuk": "Canopy cover: {faiz}%",
+  "paylas.ortukQonsu": "Canopy cover: {faiz}% (area median {medyan}%)",
+  "paylas.siqnal": "Attention: {basliq}",
+  "paylas.olcme": "Satellite reading: {gun} days ago · Sentinel-2",
+  "paylas.kopyalandi": "Report copied as text",
+  "paylas.olmadi": "Sharing did not work",
+  "paylas.sual": "My question:",
+  "ndvi.mapExpand": "Expand",
+  "ndvi.mapZoomNote": "Zooming adds no detail: one colour cell is 10×10 metres. The satellite photo is sharper, but the measurement always arrives in 10 m cells.",
+  "siqnal.suvar.azYagis":
+    "The satellite sees a moisture deficit in the field. Only {mm} mm of rain is expected over 3 days — that will not wet the soil, so irrigation is still needed.",
+  "weather.mm": "{mm} mm",
+  "weather.mmAz": "<1 mm",
+  "weather.pointField": "The forecast is for your field's own point.",
+  "weather.pointDistrict": "The forecast is for the district centre — that can be 10-20 km from your field.",
+  "weather.pointDistrictCta": "The forecast is for the district centre. Draw your field to move it to your own point.",
+  "siqnal.menbe.radar": "Sentinel-1 radar satellite · your field",
+  "siqnal.suGolu.basliq": "Water is standing in the field",
+  "siqnal.suGolu.metn":
+    "Radar sees roughly {faiz}% of the field under water. Roots suffocate after a few days submerged — check the drainage channel. Radar measures through cloud, so this reading does not depend on the weather.",
+
+  "radar.title": "Radar reading",
+  "radar.loading": "Loading the radar reading…",
+  "radar.measured": "Radar · {gun} days ago · through the cloud",
+  "radar.noReading": "No radar reading found either",
+  "radar.error": "The radar reading could not be fetched",
+  "radar.nemlenib": "The soil is wetter than in recent readings.",
+  "radar.quruyub": "The soil is drier than in recent readings.",
+  "radar.sabit": "No significant change in the soil.",
+  "radar.suVar": "About {faiz}% of the field is under water.",
+  "radar.note":
+    "Radar passes through cloud, so it measures when the optical satellite cannot. It gives a comparison against the field's own history, not an absolute figure.",
+  "weather.hourNone": "No hourly data for this day.",
+  "weather.windNote": "Wind shown only above 12 km/h",
+  "weather.kmS": "{kulek} km/h",
+  "weather.soilTemp": "Soil (6 cm): {derece}°",
+  "tovsiye.menbe.torpaq": "Soil temperature · 6 cm",
+  "tovsiye.torpaq.hazirBasliq": "The soil is ready for sowing",
+  "tovsiye.torpaq.hazirMetn":
+    "Soil at 6 cm is {derece}° — above the {hedd}° this crop needs. The sowing window is open.",
+  "tovsiye.torpaq.soyuqBasliq": "The soil is still cold",
+  "tovsiye.torpaq.soyuqMetn":
+    "Soil at 6 cm is {derece}°, and this crop needs {hedd}°. Seed does not germinate in cold soil, it rots — wait a few days.",
+
+  "siqnal.menbe.rutubet": "Forecast · humidity and temperature",
+  "siqnal.xesteliyRiski.basliq": "Conditions favour disease",
+  "siqnal.xesteliyRiski.metn":
+    "{saat} consecutive hours of high humidity and mild temperatures are expected — exactly the conditions fungal diseases spread in. Walk the field; photograph any suspect leaf. This is a warning about conditions, not a diagnosis.",
+  "tovsiye.menbe.istilik": "Degree-days · compared with last year",
+  "tovsiye.istilik.qabaqBasliq": "The season is ahead of last year",
+  "tovsiye.istilik.qabaqMetn":
+    "Heat accumulated so far this year is above the same date last year — development is roughly {gun} days ahead. Spraying, fertilising and harvest plans may need to move earlier by about that much.",
+  "tovsiye.istilik.geriBasliq": "The season is behind last year",
+  "tovsiye.istilik.geriMetn":
+    "Heat accumulated so far this year is below the same date last year — development is roughly {gun} days behind. Do not rush: a treatment applied before the stage arrives is wasted.",
 };

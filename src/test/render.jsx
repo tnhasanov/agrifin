@@ -48,9 +48,18 @@ export const WEATHER_FIXTURE = {
     et0_fao_evapotranspiration: [5, 5, 5, 3, 3],
   },
   hourly: {
-    time: Array.from({ length: 36 }, (_, i) => `2026-07-29T${String(i % 24).padStart(2, "0")}:00`),
+    // İlk 24 saat 29-u, qalanı 30-u — saatlıq panel gün seçimini yoxlayır
+    time: Array.from({ length: 36 }, (_, i) =>
+      i < 24 ? `2026-07-29T${String(i).padStart(2, "0")}:00` : `2026-07-30T${String(i - 24).padStart(2, "0")}:00`,
+    ),
+    temperature_2m: Array.from({ length: 36 }, (_, i) => 22 + (i % 12)),
+    precipitation: Array.from({ length: 36 }, () => 0),
     wind_speed_10m: Array.from({ length: 36 }, () => 8),
+    wind_gusts_10m: Array.from({ length: 36 }, () => 14),
     precipitation_probability: Array.from({ length: 36 }, () => 5),
+    relative_humidity_2m: Array.from({ length: 36 }, () => 55),
+    dew_point_2m: Array.from({ length: 36 }, () => 12),
+    soil_temperature_6cm: Array.from({ length: 36 }, () => 19),
     soil_moisture_0_to_7cm: Array.from({ length: 36 }, () => 0.24),
   },
 };

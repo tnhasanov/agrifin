@@ -1,4 +1,4 @@
-import { necheGunEvvel } from "./ndvi.js";
+import { necheGunEvvel, ortukFaizi } from "./ndvi.js";
 
 /**
  * Sahə siqnalları — proqnozla peyk ölçməsini birləşdirib fermerə RƏQƏM yox,
@@ -29,12 +29,31 @@ export const HEDDLER = {
   yagisMm: 15,
   // Yağış bundan çoxdursa suvarmağa ehtiyac yoxdur — pul və su qənaəti
   suvarmaSaxlaMm: 8,
+  // "Yağış gözlənmir" YALNIZ bundan az yağışda deyilə bilər. Proqnozda 2 mm
+  // varsa zolaqda yağış buludu görünür; "yağış gözlənmir" cümləsi isə onu
+  // təkzib edir və fermer tətbiqə inamını itirir. Az yağış suvarmanı əvəz
+  // etmir, amma bunu susmaqla yox, rəqəmlə demək lazımdır.
+  yagisYoxMm: 1,
   // Dərmanlama üçün: külək zəif, yağış ehtimalı aşağı
   kulekMaxKmS: 12,
+  // Dərmanı sahədən aparan ORTA külək deyil, QƏFİL GÜLƏKdir. Orta 8 km/s,
+  // gülək 25 km/s olan gün əvvəl "əlverişli" sayılırdı — dərman qonşunun
+  // sahəsinə düşür, pul havaya gedir. Gülək həddi ortadan yüksəkdir, çünki
+  // qısamüddətli olur; hər gülək çiləməni dayandırmır.
+  gulekMaxKmS: 20,
   yagisEhtimaliMax: 20,
   dermanlamaSaat: 3,
   // NDVI bu qədər düşübsə səbəb axtarmaq lazımdır
   ndviDusme: -0.05,
+  // Xəstəlik pəncərəsi: uzun sürən yaş yarpaq + ilıq hava. Göbələk sporu
+  // cücərmək üçün suya ehtiyac duyur, ona görə əsas şərt rütubətdir.
+  // KALİBRLƏMƏ LAZIMDIR: bunlar ÜMUMİ hədlərdir. Həqiqi modellər xəstəliyə
+  // görə ayrılır (septorioz sarı pasla eyni şəraiti sevmir) və sortdan da
+  // asılıdır. Bu siqnal diaqnoz qoymur, yalnız "baxmağa dəyər" deyir.
+  rutubetFaiz: 85,
+  xestelikMinTemp: 10,
+  xestelikMaxTemp: 25,
+  xestelikSaat: 8,
   suBalansiMm: 25,
   kohneOlcmeGun: 14,
   baxisGunu: 5,
@@ -49,12 +68,14 @@ const CIDDILIK_SIRASI = { tecili: 3, diqqet: 2, melumat: 1 };
  */
 const NOV_SIRASI = [
   "saxta",
+  "suGolu",
   "suvar",
   "isti",
   "bitkiZeifleyir",
   "qonsu",
   "suvarmaDayan",
   "yagis",
+  "xesteliyRiski",
   "dermanlama",
   "olcmeKohne",
 ];
@@ -167,14 +188,19 @@ function suvarmaSiqnali(xulase, yagis3, balans, daily) {
         menbeKey: "siqnal.menbe.hamisi",
       };
     }
+    // Yağış var, amma azdır: cümlə bunu rəqəmlə deməlidir. Əks halda zolaqda
+    // sabaha yağış buludu, altında isə "3 gündə yağış gözlənmir" yazılırdı.
+    const azYagis = yagis3 >= HEDDLER.yagisYoxMm;
     return {
       id: `suvar:${tarix}`,
       nov: "suvar",
       ciddilik: "tecili",
       icon: "Droplets",
       basliqKey: "siqnal.suvar.basliq",
-      metnKey: "siqnal.suvar.tecili",
-      vars: { nemlik: { number: xulase.nemlik, options: { maximumFractionDigits: 2 } } },
+      metnKey: azYagis ? "siqnal.suvar.azYagis" : "siqnal.suvar.tecili",
+      // Xam NDMI mətndən çıxarıldı: "-0,05" fermerə heç nə demir, cümlə isə
+      // qərarı onsuz da deyir (bax: services/ndvi.js — faizə çevirmə qeydi)
+      vars: azYagis ? { mm: Math.round(yagis3) } : {},
       menbeKey: "siqnal.menbe.hamisi",
     };
   }
@@ -195,6 +221,29 @@ function suvarmaSiqnali(xulase, yagis3, balans, daily) {
 }
 
 /**
+ * Sahədə su durub — radar ölçməsindən.
+ *
+ * Bu, peykin ən etibarlı gördüyü haldır: hamar su səthi radar dalğasını geri
+ * qaytarmır, ona görə su altındakı piksel qara görünür. Bulud maneə deyil.
+ *
+ * Fermer üçün təcilidir: kök 2–3 gün suyun altında qalsa boğulur, texnika
+ * sahəyə girə bilmir, gübrə yuyulur.
+ */
+function suGoluSiqnali(radar) {
+  if (!radar?.suVar || !Number.isFinite(radar.suPayi)) return null;
+  return {
+    id: `suGolu:${radar.tarix ?? "?"}`,
+    nov: "suGolu",
+    ciddilik: "tecili",
+    icon: "Droplets",
+    basliqKey: "siqnal.suGolu.basliq",
+    metnKey: "siqnal.suGolu.metn",
+    vars: { faiz: Math.round(radar.suPayi * 100) },
+    menbeKey: "siqnal.menbe.radar",
+  };
+}
+
+/**
  * NDVI düşür, amma su kifayətdir. Su səbəb deyilsə səbəb xəstəlik, zərərverici
  * və ya qida çatışmazlığıdır — bunları peyk görmür, yarpağın şəkli görür.
  */
@@ -209,7 +258,9 @@ function zeifləməSiqnali(xulase) {
     icon: "Camera",
     basliqKey: "siqnal.bitkiZeifleyir.basliq",
     metnKey: "siqnal.bitkiZeifleyir.metn",
-    vars: { ferq: { number: xulase.ferq, options: { maximumFractionDigits: 2 } } },
+    // İki səviyyə göstərilir, fərq yox: "0,07 azalıb" da, "7 vahid azalıb" da
+    // fermerə heç nə demir; "68%-dən 61%-ə düşüb" isə dərhal oxunur
+    vars: { evvel: ortukFaizi(xulase.ndvi - xulase.ferq), indi: ortukFaizi(xulase.ndvi) },
     menbeKey: "siqnal.menbe.peyk",
     // Bu siqnalın işi çatda görülür — düymə birbaşa ora aparır
     hereket: "chat",
@@ -224,7 +275,9 @@ function zeifləməSiqnali(xulase) {
  * bildiriş deyil — zəngi təbrik mesajı ilə doldurmaq onu dəyərsizləşdirir.
  */
 function qonsuSiqnali(muqayise, xulase) {
+  // Sahənin öz ölçməsi olmasa müqayisə cümləsi yarımçıq qalır
   if (muqayise?.pille !== "alt" || !Number.isFinite(muqayise.ferq)) return null;
+  if (!Number.isFinite(xulase?.ndvi) || !Number.isFinite(muqayise.medyan)) return null;
   return {
     id: `qonsu:${muqayise.tarix ?? xulase?.tarix ?? "?"}`,
     nov: "qonsu",
@@ -233,8 +286,8 @@ function qonsuSiqnali(muqayise, xulase) {
     basliqKey: "siqnal.qonsu.basliq",
     metnKey: "siqnal.qonsu.metn",
     vars: {
-      faiz: Math.abs(muqayise.ferq),
-      medyan: { number: muqayise.medyan, options: { maximumFractionDigits: 2 } },
+      sizin: ortukFaizi(xulase?.ndvi),
+      medyan: ortukFaizi(muqayise.medyan),
     },
     menbeKey: "siqnal.menbe.peyk",
     hereket: "chat",
@@ -262,10 +315,14 @@ function dermanlamaSiqnali(hourly) {
   let ardicil = 0;
   for (let i = 0; i < Math.min(48, vaxtlar.length); i += 1) {
     const kulek = hourly?.wind_speed_10m?.[i];
+    const gulek = hourly?.wind_gusts_10m?.[i];
     const ehtimal = hourly?.precipitation_probability?.[i];
     const uygun =
       Number.isFinite(kulek) &&
       kulek < HEDDLER.kulekMaxKmS &&
+      // Gülək məlumatı yoxdursa köhnə davranış qalır — pəncərəni tamamilə
+      // itirməkdənsə ortalama ilə qərar vermək yaxşıdır
+      (!Number.isFinite(gulek) || gulek < HEDDLER.gulekMaxKmS) &&
       (ehtimal == null || ehtimal < HEDDLER.yagisEhtimaliMax);
 
     if (!uygun) {
@@ -292,28 +349,85 @@ function dermanlamaSiqnali(hourly) {
 }
 
 /**
+ * Göbələk xəstəlikləri üçün əlverişli şərait: yarpaq uzun müddət yaş qalır
+ * və hava ilıqdır. Sporun cücərməsi üçün lazım olan budur.
+ *
+ * Peyk bunu görmür (xəstəlik NDVI-də ancaq gecikməklə görünür), hava isə
+ * şəraiti ƏVVƏLCƏDƏN deyir — profilaktika üçün yeganə vaxt bu.
+ *
+ * DİQQƏT: bu, diaqnoz DEYİL. Mətn də bunu açıq yazır — "şərait var" ilə
+ * "xəstəlik var" arasındakı fərqi silsək, fermer boş yerə dərman çiləyər.
+ */
+function xesteliyRiskiSiqnali(hourly) {
+  const vaxtlar = hourly?.time ?? [];
+  let ardicil = 0;
+  let enUzun = 0;
+  let baslangic = null;
+
+  for (let i = 0; i < Math.min(48, vaxtlar.length); i += 1) {
+    const rutubet = hourly?.relative_humidity_2m?.[i];
+    const temp = hourly?.temperature_2m?.[i];
+    const uygun =
+      Number.isFinite(rutubet) &&
+      Number.isFinite(temp) &&
+      rutubet >= HEDDLER.rutubetFaiz &&
+      temp >= HEDDLER.xestelikMinTemp &&
+      temp <= HEDDLER.xestelikMaxTemp;
+
+    if (!uygun) {
+      ardicil = 0;
+      continue;
+    }
+    if (ardicil === 0) baslangic = vaxtlar[i];
+    ardicil += 1;
+    if (ardicil > enUzun) enUzun = ardicil;
+  }
+
+  if (enUzun < HEDDLER.xestelikSaat) return null;
+  return {
+    id: `xesteliyRiski:${String(baslangic).slice(0, 10)}`,
+    nov: "xesteliyRiski",
+    ciddilik: "diqqet",
+    icon: "AlertCircle",
+    basliqKey: "siqnal.xesteliyRiski.basliq",
+    metnKey: "siqnal.xesteliyRiski.metn",
+    vars: { saat: enUzun },
+    menbeKey: "siqnal.menbe.rutubet",
+    // Şübhəli yarpağın şəkli çatda təhlil olunur
+    hereket: "chat",
+  };
+}
+
+/**
  * @param {object}  arg
  * @param {object}  arg.daily    Open-Meteo günlük massivləri
  * @param {object}  arg.hourly   Open-Meteo saatlıq massivləri
  * @param {object}  arg.xulase   NDVI xülasəsi (bax: services/ndvi.js)
+ * @param {object}  arg.radar    Sentinel-1 xülasəsi (bax: services/radar.js)
  * @param {number}  arg.indi     Test üçün "indi" — standart Date.now()
  * @returns {Array} ciddiliyə görə sıralanmış siqnallar
  */
-export function siqnallariQur({ daily, hourly, xulase, muqayise, indi = Date.now() } = {}) {
+export function siqnallariQur({ daily, hourly, xulase, muqayise, radar, indi = Date.now() } = {}) {
   const yagis3 = topla(daily?.precipitation_sum, 3);
   const yagis7 = topla(daily?.precipitation_sum, 7);
   const buxar7 = topla(daily?.et0_fao_evapotranspiration, 7);
   const balans = buxar7 - yagis7;
 
-  const suvarma = suvarmaSiqnali(xulase, yagis3, balans, daily);
+  const suGolu = suGoluSiqnali(radar);
+  // Sahədə su durubsa suvarma məsləhəti VERİLMİR. İki ölçmə ziddiyyət
+  // göstərəndə (optik ölçmə köhnədir, radar bu günkü suyu görür) fermerə
+  // "suvar" deyib altından "sahədə su var" yazmaq etibarı birdəfəlik öldürür.
+  const suvarma = suGolu ? null : suvarmaSiqnali(xulase, yagis3, balans, daily);
   const yagisli = yagisSiqnali(daily, yagis3);
 
   const hamisi = [
     saxtaSiqnali(daily),
     istiSiqnali(daily),
+    suGolu,
     suvarma,
     zeifləməSiqnali(xulase),
     qonsuSiqnali(muqayise, xulase),
+    xesteliyRiskiSiqnali(hourly),
     yagisli,
     kohneOlcmeSiqnali(xulase, indi),
     // Yağış gələndə dərmanlama pəncərəsi məsləhət deyil — ziddiyyət olmasın

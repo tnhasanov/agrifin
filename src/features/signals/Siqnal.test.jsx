@@ -220,6 +220,8 @@ describe("sahə siqnalları — bildiriş mərkəzi", () => {
     await waitFor(() =>
       expect(screen.getByText("Bitki zəifləyir — səbəb su deyil")).toBeInTheDocument(),
     );
+    // Mətn iki səviyyəni tam faizlə deyir — "0,12 azalıb" fermerə heç nədir
+    expect(screen.getByText(/örtüyü 78% idi, indi 66%/)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Şəkil çək" }));
     expect(screen.getByRole("button", { name: "Şəkil çək və ya seç" })).toBeInTheDocument();

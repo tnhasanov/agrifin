@@ -12,7 +12,7 @@ import { siqnallariQur } from "../../services/siqnal.js";
  * Proqnoz alınmasa siqnal siyahısı boş qalmır — peykdən gələnlər (suvarma,
  * zəifləmə) havadan asılı olmayan hissəsi ilə yenə hesablanır.
  */
-export function useSiqnallar({ lat, lon, xulase, muqayise }) {
+export function useSiqnallar({ lat, lon, xulase, muqayise, radar }) {
   const acar = `${lat},${lon}`;
   const [proqnoz, setProqnoz] = useState(null);
 
@@ -35,7 +35,7 @@ export function useSiqnallar({ lat, lon, xulase, muqayise }) {
   const gecerli = proqnoz?.acar === acar ? proqnoz.data : null;
 
   return useMemo(
-    () => siqnallariQur({ daily: gecerli?.daily, hourly: gecerli?.hourly, xulase, muqayise }),
-    [gecerli, xulase, muqayise],
+    () => siqnallariQur({ daily: gecerli?.daily, hourly: gecerli?.hourly, xulase, muqayise, radar }),
+    [gecerli, xulase, muqayise, radar],
   );
 }
