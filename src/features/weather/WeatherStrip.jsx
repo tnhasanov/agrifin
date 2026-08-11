@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SaatlarPaneli } from "./SaatlarPaneli.jsx";
 import { Icon } from "../../components/Icon.jsx";
 import { SectionTitle } from "../../components/SectionTitle.jsx";
 import { C, font } from "../../theme/tokens.js";
@@ -58,6 +59,9 @@ export function WeatherStrip({
   meslehetGoster = true,
 }) {
   const { t } = useI18n();
+  // Açıq gün: fermer sütuna toxunanda o günün saatları açılır. Standart
+  // bağlıdır — zolaq ilk baxışda qısa qalmalıdır.
+  const [aciqGun, setAciqGun] = useState(null);
   const [result, setResult] = useState({ status: "loading", data: null, stale: false });
   const { status, data: forecast, stale } = result;
 
@@ -142,8 +146,16 @@ export function WeatherStrip({
               index === 0 ? t("common.today") : t(`weather.day.${new Date(iso).getDay()}`);
             // Neçə mm — buludun nə demək olduğunu ancaq bu rəqəm deyir
             const yagis = gunlukYagis(daily.precipitation_sum?.[index]);
+            const acilib = aciqGun === iso;
             return (
-              <div key={iso} className="flex flex-col items-center gap-1">
+              <button
+                key={iso}
+                type="button"
+                onClick={() => setAciqGun(acilib ? null : iso)}
+                aria-expanded={acilib}
+                className="flex flex-col items-center gap-1 rounded-lg px-1 py-1"
+                style={{ backgroundColor: acilib ? C.mist : "transparent" }}
+              >
                 <span className="text-xs font-semibold" style={{ color: C.muted }}>
                   {label}
                 </span>
@@ -162,10 +174,14 @@ export function WeatherStrip({
                 <span style={{ color: C.blue, fontSize: 10, minHeight: 12 }}>
                   {yagis ? t(yagis.az ? "weather.mmAz" : "weather.mm", { mm: yagis.mm }) : ""}
                 </span>
-              </div>
+              </button>
             );
           })}
         </div>
+
+        {/* Seçilmiş günün saatları. Yalnız tələb olunanda açılır: 24 sətir
+            hər gün üçün açıq dursa zolaq oxunmaz olur. */}
+        {aciqGun && <SaatlarPaneli hourly={forecast.hourly} gunISO={aciqGun} />}
 
         {meslehetGoster && (
           <div

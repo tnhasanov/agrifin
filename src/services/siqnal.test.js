@@ -98,6 +98,23 @@ describe("hava siqnalları", () => {
     expect(tap(siqnallariQur(arqument), "dermanlama")).toBeTruthy();
   });
 
+  // Dərmanı aparan orta külək deyil, qəfil gülәkdir
+  it("orta külək zəif, gülək güclüdürsə dərmanlama təklif etmir", () => {
+    const arqument = hava();
+    arqument.hourly.wind_speed_10m = Array.from({ length: 48 }, () => 6);
+    arqument.hourly.wind_gusts_10m = Array.from({ length: 48 }, () => 28);
+    arqument.hourly.precipitation_probability = Array.from({ length: 48 }, () => 5);
+    expect(tap(siqnallariQur(arqument), "dermanlama")).toBeUndefined();
+  });
+
+  it("külək də, gülək də zəifdirsə pəncərəni açır", () => {
+    const arqument = hava();
+    arqument.hourly.wind_speed_10m = Array.from({ length: 48 }, () => 6);
+    arqument.hourly.wind_gusts_10m = Array.from({ length: 48 }, () => 11);
+    arqument.hourly.precipitation_probability = Array.from({ length: 48 }, () => 5);
+    expect(tap(siqnallariQur(arqument), "dermanlama")).toBeTruthy();
+  });
+
   // Ziddiyyətli məsləhət etibarı öldürür: "yağış gəlir" + "dərmanla" olmaz
   it("yağış gələndə dərmanlama pəncərəsi göstərilmir", () => {
     const arqument = hava({ precipitation_sum: [6, 8, 4, 0, 0, 0, 0] });

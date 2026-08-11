@@ -388,4 +388,8 @@ export default {
   "radar.suVar": "Sahənin təxminən {faiz}%-i su altındadır.",
   "radar.note":
     "Radar buludu deşib keçir, ona görə optik peyk susanda da ölçür. Rəqəm deyil, sahənin öz keçmişi ilə müqayisə verir.",
+  "weather.hourNone": "Bu gün üçün saatlıq məlumat yoxdur.",
+  "weather.windNote": "Külək yalnız 12 km/s-dən güclü olanda yazılır",
+  "weather.kmS": "{kulek} km/s",
+  "weather.soilTemp": "Torpaq (6 sm): {derece}°",
 };

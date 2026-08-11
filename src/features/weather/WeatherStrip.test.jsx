@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import App from "../../App.jsx";
 import { renderApp, seedLocation, seedState, WEATHER_FIXTURE } from "../../test/render.jsx";
 
@@ -35,6 +36,38 @@ describe("hava zolağı", () => {
     // Fikstur: gündüz 34,2 / gecə 21
     await waitFor(() => expect(screen.getByText("34°")).toBeInTheDocument());
     expect(screen.getByText("21°")).toBeInTheDocument();
+  });
+
+  // Fermerin sualı "sabah necədir" yox, "NEÇƏDƏ"-dir: şaxta gecə 4-də vurur
+  it("günə toxunanda o günün saatları açılır", async () => {
+    const user = userEvent.setup();
+    cavabVer(WEATHER_FIXTURE);
+    renderApp(<App />);
+    await waitFor(() => expect(screen.getByRole("button", { name: /Bu gün/ })).toBeInTheDocument());
+
+    // Standart bağlıdır — zolaq ilk baxışda qısa qalmalıdır
+    expect(screen.queryByText(/Torpaq \(6 sm\)/)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Bu gün/ }));
+
+    // Fikstur saatlıq torpaq temperaturu verir
+    await waitFor(() => expect(screen.getByText(/Torpaq \(6 sm\)/)).toBeInTheDocument());
+    expect(screen.getByRole("button", { name: /Bu gün/ })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("eyni günə ikinci toxunuş paneli bağlayır", async () => {
+    const user = userEvent.setup();
+    cavabVer(WEATHER_FIXTURE);
+    renderApp(<App />);
+    await waitFor(() => screen.getByRole("button", { name: /Bu gün/ }));
+
+    await user.click(screen.getByRole("button", { name: /Bu gün/ }));
+    await waitFor(() => screen.getByText(/Torpaq \(6 sm\)/));
+    await user.click(screen.getByRole("button", { name: /Bu gün/ }));
+
+    await waitFor(() =>
+      expect(screen.queryByText(/Torpaq \(6 sm\)/)).not.toBeInTheDocument(),
+    );
   });
 
   // Bulud ikonu "sabah yağış var" deməkdir, amma NƏ QƏDƏR olduğunu demir.

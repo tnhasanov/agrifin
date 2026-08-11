@@ -389,4 +389,8 @@ export default {
   "radar.suVar": "About {faiz}% of the field is under water.",
   "radar.note":
     "Radar passes through cloud, so it measures when the optical satellite cannot. It gives a comparison against the field's own history, not an absolute figure.",
+  "weather.hourNone": "No hourly data for this day.",
+  "weather.windNote": "Wind shown only above 12 km/h",
+  "weather.kmS": "{kulek} km/h",
+  "weather.soilTemp": "Soil (6 cm): {derece}°",
 };

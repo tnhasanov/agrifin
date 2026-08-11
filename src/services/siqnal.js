@@ -36,6 +36,11 @@ export const HEDDLER = {
   yagisYoxMm: 1,
   // Dərmanlama üçün: külək zəif, yağış ehtimalı aşağı
   kulekMaxKmS: 12,
+  // Dərmanı sahədən aparan ORTA külək deyil, QƏFİL GÜLƏKdir. Orta 8 km/s,
+  // gülək 25 km/s olan gün əvvəl "əlverişli" sayılırdı — dərman qonşunun
+  // sahəsinə düşür, pul havaya gedir. Gülək həddi ortadan yüksəkdir, çünki
+  // qısamüddətli olur; hər gülək çiləməni dayandırmır.
+  gulekMaxKmS: 20,
   yagisEhtimaliMax: 20,
   dermanlamaSaat: 3,
   // NDVI bu qədər düşübsə səbəb axtarmaq lazımdır
@@ -300,10 +305,14 @@ function dermanlamaSiqnali(hourly) {
   let ardicil = 0;
   for (let i = 0; i < Math.min(48, vaxtlar.length); i += 1) {
     const kulek = hourly?.wind_speed_10m?.[i];
+    const gulek = hourly?.wind_gusts_10m?.[i];
     const ehtimal = hourly?.precipitation_probability?.[i];
     const uygun =
       Number.isFinite(kulek) &&
       kulek < HEDDLER.kulekMaxKmS &&
+      // Gülək məlumatı yoxdursa köhnə davranış qalır — pəncərəni tamamilə
+      // itirməkdənsə ortalama ilə qərar vermək yaxşıdır
+      (!Number.isFinite(gulek) || gulek < HEDDLER.gulekMaxKmS) &&
       (ehtimal == null || ehtimal < HEDDLER.yagisEhtimaliMax);
 
     if (!uygun) {
