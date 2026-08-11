@@ -392,4 +392,16 @@ export default {
   "weather.windNote": "Külək yalnız 12 km/s-dən güclü olanda yazılır",
   "weather.kmS": "{kulek} km/s",
   "weather.soilTemp": "Torpaq (6 sm): {derece}°",
+  "tovsiye.menbe.torpaq": "Torpaq temperaturu · 6 sm",
+  "tovsiye.torpaq.hazirBasliq": "Torpaq səpin üçün hazırdır",
+  "tovsiye.torpaq.hazirMetn":
+    "6 sm dərinlikdə torpaq {derece}° — bu bitki üçün lazım olan {hedd}°-dən yuxarıdır. Səpin pəncərəsi açıqdır.",
+  "tovsiye.torpaq.soyuqBasliq": "Torpaq hələ soyuqdur",
+  "tovsiye.torpaq.soyuqMetn":
+    "6 sm dərinlikdə torpaq {derece}°, bu bitki üçün isə {hedd}° lazımdır. Soyuq torpaqda toxum cücərmir, çürüyür — bir neçə gün gözləyin.",
+
+  "siqnal.menbe.rutubet": "Hava proqnozu · rütubət və temperatur",
+  "siqnal.xesteliyRiski.basliq": "Xəstəlik üçün əlverişli şərait",
+  "siqnal.xesteliyRiski.metn":
+    "Növbəti günlərdə {saat} saat ardıcıl yüksək rütubət və ilıq hava gözlənilir — göbələk xəstəlikləri məhz belə şəraitdə yayılır. Sahəni yoxlayın; şübhəli yarpaq görsəniz şəklini çəkin. Bu, xəstəlik diaqnozu deyil, yalnız şəraitin xəbərdarlığıdır.",
 };

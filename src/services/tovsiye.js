@@ -1,3 +1,5 @@
+import { gununSaatlari, torpaqOrtasi } from "./saatlar.js";
+
 /**
  * Tövsiyələr — planlaşdırılan iş, siqnal deyil.
  *
@@ -69,7 +71,26 @@ export function baxisNoqteleri(hektar) {
  * @param {number} arg.hektar  Sahənin ölçüsü
  * @param {object} arg.zona    Zəif künc (bax: services/zona.js) — ola bilməz
  */
-export function tovsiyeleriQur({ teqvim, daily, hektar, zona } = {}) {
+/**
+ * Səpin üçün torpaq hazırdırmı.
+ *
+ * Bugünkü saatlıq ölçmələrin ortası götürülür: bir saatın rəqəmi günəşin
+ * altında qalxıb-enir, orta isə səpin qərarı üçün daha sabitdir.
+ *
+ * @returns {null | {hazir: boolean, derece: number, hedd: number}}
+ */
+export function sepinHazirligi({ teqvim, hourly } = {}) {
+  const hedd = teqvim?.sepin?.torpaqMin;
+  if (!teqvim?.sepin?.aktiv || !Number.isFinite(hedd)) return null;
+
+  const gunISO = String(hourly?.time?.[0] ?? "").slice(0, 10);
+  const derece = torpaqOrtasi(gununSaatlari(hourly, gunISO));
+  if (!Number.isFinite(derece)) return null;
+
+  return { hazir: derece >= hedd, derece, hedd };
+}
+
+export function tovsiyeleriQur({ teqvim, daily, hourly, hektar, zona } = {}) {
   const tovsiyeler = [];
 
   // 1. Bu ayın işləri — bilik bazasından, bitkiyə və aya görə
@@ -84,7 +105,26 @@ export function tovsiyeleriQur({ teqvim, daily, hektar, zona } = {}) {
     });
   }
 
-  // 2. Suvarma miqdarı — "nə vaxt" deyil, "nə qədər"
+  // 2. Səpin ayıdırsa torpaq temperaturu qərarı verir — hava yox.
+  // Toxum soyuq torpaqda cücərmir, çürüyür; fermer bunu adətən əli ilə
+  // yoxlayır, proqnoz isə rəqəmi bir neçə gün əvvəl verir.
+  const torpaq = sepinHazirligi({ teqvim, hourly });
+  if (torpaq) {
+    tovsiyeler.push({
+      id: `torpaq:${torpaq.hazir ? "hazir" : "soyuq"}`,
+      nov: "torpaq",
+      icon: "Sprout",
+      basliqKey: torpaq.hazir ? "tovsiye.torpaq.hazirBasliq" : "tovsiye.torpaq.soyuqBasliq",
+      metnKey: torpaq.hazir ? "tovsiye.torpaq.hazirMetn" : "tovsiye.torpaq.soyuqMetn",
+      vars: {
+        derece: { number: torpaq.derece, options: { maximumFractionDigits: 1 } },
+        hedd: torpaq.hedd,
+      },
+      menbeKey: "tovsiye.menbe.torpaq",
+    });
+  }
+
+  // 3. Suvarma miqdarı — "nə vaxt" deyil, "nə qədər"
   const kesir = suKesiri({ daily, kc: teqvim?.kc, hektar });
   if (kesir) {
     tovsiyeler.push({

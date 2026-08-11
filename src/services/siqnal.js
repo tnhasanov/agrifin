@@ -45,6 +45,15 @@ export const HEDDLER = {
   dermanlamaSaat: 3,
   // NDVI bu qədər düşübsə səbəb axtarmaq lazımdır
   ndviDusme: -0.05,
+  // Xəstəlik pəncərəsi: uzun sürən yaş yarpaq + ilıq hava. Göbələk sporu
+  // cücərmək üçün suya ehtiyac duyur, ona görə əsas şərt rütubətdir.
+  // KALİBRLƏMƏ LAZIMDIR: bunlar ÜMUMİ hədlərdir. Həqiqi modellər xəstəliyə
+  // görə ayrılır (septorioz sarı pasla eyni şəraiti sevmir) və sortdan da
+  // asılıdır. Bu siqnal diaqnoz qoymur, yalnız "baxmağa dəyər" deyir.
+  rutubetFaiz: 85,
+  xestelikMinTemp: 10,
+  xestelikMaxTemp: 25,
+  xestelikSaat: 8,
   suBalansiMm: 25,
   kohneOlcmeGun: 14,
   baxisGunu: 5,
@@ -66,6 +75,7 @@ const NOV_SIRASI = [
   "qonsu",
   "suvarmaDayan",
   "yagis",
+  "xesteliyRiski",
   "dermanlama",
   "olcmeKohne",
 ];
@@ -339,6 +349,56 @@ function dermanlamaSiqnali(hourly) {
 }
 
 /**
+ * Göbələk xəstəlikləri üçün əlverişli şərait: yarpaq uzun müddət yaş qalır
+ * və hava ilıqdır. Sporun cücərməsi üçün lazım olan budur.
+ *
+ * Peyk bunu görmür (xəstəlik NDVI-də ancaq gecikməklə görünür), hava isə
+ * şəraiti ƏVVƏLCƏDƏN deyir — profilaktika üçün yeganə vaxt bu.
+ *
+ * DİQQƏT: bu, diaqnoz DEYİL. Mətn də bunu açıq yazır — "şərait var" ilə
+ * "xəstəlik var" arasındakı fərqi silsək, fermer boş yerə dərman çiləyər.
+ */
+function xesteliyRiskiSiqnali(hourly) {
+  const vaxtlar = hourly?.time ?? [];
+  let ardicil = 0;
+  let enUzun = 0;
+  let baslangic = null;
+
+  for (let i = 0; i < Math.min(48, vaxtlar.length); i += 1) {
+    const rutubet = hourly?.relative_humidity_2m?.[i];
+    const temp = hourly?.temperature_2m?.[i];
+    const uygun =
+      Number.isFinite(rutubet) &&
+      Number.isFinite(temp) &&
+      rutubet >= HEDDLER.rutubetFaiz &&
+      temp >= HEDDLER.xestelikMinTemp &&
+      temp <= HEDDLER.xestelikMaxTemp;
+
+    if (!uygun) {
+      ardicil = 0;
+      continue;
+    }
+    if (ardicil === 0) baslangic = vaxtlar[i];
+    ardicil += 1;
+    if (ardicil > enUzun) enUzun = ardicil;
+  }
+
+  if (enUzun < HEDDLER.xestelikSaat) return null;
+  return {
+    id: `xesteliyRiski:${String(baslangic).slice(0, 10)}`,
+    nov: "xesteliyRiski",
+    ciddilik: "diqqet",
+    icon: "AlertCircle",
+    basliqKey: "siqnal.xesteliyRiski.basliq",
+    metnKey: "siqnal.xesteliyRiski.metn",
+    vars: { saat: enUzun },
+    menbeKey: "siqnal.menbe.rutubet",
+    // Şübhəli yarpağın şəkli çatda təhlil olunur
+    hereket: "chat",
+  };
+}
+
+/**
  * @param {object}  arg
  * @param {object}  arg.daily    Open-Meteo günlük massivləri
  * @param {object}  arg.hourly   Open-Meteo saatlıq massivləri
@@ -367,6 +427,7 @@ export function siqnallariQur({ daily, hourly, xulase, muqayise, radar, indi = D
     suvarma,
     zeifləməSiqnali(xulase),
     qonsuSiqnali(muqayise, xulase),
+    xesteliyRiskiSiqnali(hourly),
     yagisli,
     kohneOlcmeSiqnali(xulase, indi),
     // Yağış gələndə dərmanlama pəncərəsi məsləhət deyil — ziddiyyət olmasın

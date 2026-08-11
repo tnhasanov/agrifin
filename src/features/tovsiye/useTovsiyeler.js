@@ -64,6 +64,8 @@ export function useTovsiyeler({ sahe, bitki, lat, lon, ay }) {
     return tovsiyeleriQur({
       teqvim: teqvimNetice,
       daily: havaNetice?.daily,
+      // Torpaq temperaturu saatlıqdır — səpin qərarı ondan asılıdır
+      hourly: havaNetice?.hourly,
       hektar: sahe?.hektar,
       zona: zonaNetice,
     });

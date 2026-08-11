@@ -394,4 +394,16 @@ export default {
   "weather.windNote": "Ветер показан только выше 12 км/ч",
   "weather.kmS": "{kulek} км/ч",
   "weather.soilTemp": "Почва (6 см): {derece}°",
+  "tovsiye.menbe.torpaq": "Температура почвы · 6 см",
+  "tovsiye.torpaq.hazirBasliq": "Почва готова к севу",
+  "tovsiye.torpaq.hazirMetn":
+    "Почва на 6 см — {derece}°, это выше нужных культуре {hedd}°. Окно для сева открыто.",
+  "tovsiye.torpaq.soyuqBasliq": "Почва ещё холодная",
+  "tovsiye.torpaq.soyuqMetn":
+    "Почва на 6 см — {derece}°, культуре нужно {hedd}°. В холодной почве семя не всходит, а загнивает — подождите несколько дней.",
+
+  "siqnal.menbe.rutubet": "Прогноз · влажность и температура",
+  "siqnal.xesteliyRiski.basliq": "Условия благоприятны для болезней",
+  "siqnal.xesteliyRiski.metn":
+    "Ожидается {saat} ч подряд высокой влажности при мягкой температуре — именно так распространяются грибковые болезни. Осмотрите поле, сфотографируйте подозрительный лист. Это предупреждение об условиях, а не диагноз.",
 };

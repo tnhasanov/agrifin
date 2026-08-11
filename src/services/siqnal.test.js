@@ -124,6 +124,46 @@ describe("hava siqnalları", () => {
   });
 });
 
+describe("xəstəlik şəraiti", () => {
+  /** Saatlıq rütubət və temperatur — göbələk üçün əlverişli pəncərə */
+  const yas = (saat, { rutubet = 92, temp = 18 } = {}) => {
+    const arqument = hava();
+    arqument.hourly.relative_humidity_2m = Array.from({ length: 48 }, (_, i) =>
+      i < saat ? rutubet : 50,
+    );
+    arqument.hourly.temperature_2m = Array.from({ length: 48 }, () => temp);
+    return arqument;
+  };
+
+  it("uzun yaş dövr xəbərdarlıq doğurur", () => {
+    const s = tap(siqnallariQur(yas(10)), "xesteliyRiski");
+    expect(s.ciddilik).toBe("diqqet");
+    expect(s.vars.saat).toBe(10);
+    // Şəkil çəkmək işi çatda görülür
+    expect(s.hereket).toBe("chat");
+  });
+
+  // Qısa dövr sporun cücərməsinə çatmır — hər səhər şehə siqnal versək
+  // fermer siqnalları oxumağı dayandırar
+  it("qısa yaş dövr siqnal doğurmur", () => {
+    expect(tap(siqnallariQur(yas(5)), "xesteliyRiski")).toBeUndefined();
+  });
+
+  it("hava soyuq olanda rütubət tək başına kifayət etmir", () => {
+    expect(tap(siqnallariQur(yas(20, { temp: 4 })), "xesteliyRiski")).toBeUndefined();
+  });
+
+  it("isti və quru havada siqnal yoxdur", () => {
+    expect(tap(siqnallariQur(yas(20, { rutubet: 40, temp: 30 })), "xesteliyRiski")).toBeUndefined();
+  });
+
+  it("rütubət ölçülməyibsə iddia etmir", () => {
+    const arqument = hava();
+    arqument.hourly.temperature_2m = Array.from({ length: 48 }, () => 18);
+    expect(tap(siqnallariQur(arqument), "xesteliyRiski")).toBeUndefined();
+  });
+});
+
 describe("peyk + hava birləşməsi", () => {
   it("sahə quraqdır və yağış gözlənmirsə suvarmağı deyir", () => {
     const s = tap(

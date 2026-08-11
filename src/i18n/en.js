@@ -393,4 +393,16 @@ export default {
   "weather.windNote": "Wind shown only above 12 km/h",
   "weather.kmS": "{kulek} km/h",
   "weather.soilTemp": "Soil (6 cm): {derece}°",
+  "tovsiye.menbe.torpaq": "Soil temperature · 6 cm",
+  "tovsiye.torpaq.hazirBasliq": "The soil is ready for sowing",
+  "tovsiye.torpaq.hazirMetn":
+    "Soil at 6 cm is {derece}° — above the {hedd}° this crop needs. The sowing window is open.",
+  "tovsiye.torpaq.soyuqBasliq": "The soil is still cold",
+  "tovsiye.torpaq.soyuqMetn":
+    "Soil at 6 cm is {derece}°, and this crop needs {hedd}°. Seed does not germinate in cold soil, it rots — wait a few days.",
+
+  "siqnal.menbe.rutubet": "Forecast · humidity and temperature",
+  "siqnal.xesteliyRiski.basliq": "Conditions favour disease",
+  "siqnal.xesteliyRiski.metn":
+    "{saat} consecutive hours of high humidity and mild temperatures are expected — exactly the conditions fungal diseases spread in. Walk the field; photograph any suspect leaf. This is a warning about conditions, not a diagnosis.",
 };
