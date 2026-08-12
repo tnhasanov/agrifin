@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+/* Bank daxili alət: sıx məlumat, sakit rəng, oxunaqlı rəqəm.
+   Rəqəm sütunları tabular şriftlə düzülür — cədvəldə rəqəmlər sürüşməsin. */
+@theme {
+  --color-ink: #0f172a;
+  --color-muted: #64748b;
+  --color-line: #e2e8f0;
+  --color-surface: #ffffff;
+  --color-canvas: #f1f5f9;
+
+  --color-brand: #12395e;
+  --color-brand-soft: #e8eef5;
+  --color-accent: #b45309;
+
+  --color-good: #15803d;
+  --color-good-soft: #dcfce7;
+  --color-fair: #a16207;
+  --color-fair-soft: #fef3c7;
+  --color-weak: #b91c1c;
+  --color-weak-soft: #fee2e2;
+
+  --font-sans: "Inter", "Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Rəqəm sahələri və cədvəl sütunları */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Fokus həmişə görünsün — klaviatura ilə işləyən analitik üçün vacibdir. */
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* Çap: memorandum kağıza düşəndə naviqasiya və düymələr getsin. */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  .print-plain {
+    box-shadow: none !important;
+    border-color: #cbd5e1 !important;
+  }
+  @page {
+    margin: 16mm;
+  }
+}
