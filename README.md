@@ -236,6 +236,28 @@ proqnoz verilmir — mərhələ hədləri sorta görə dəyişir və bizdə yerl
 hədləri yoxdur. Başlanğıc tarixi təxminidir, amma müqayisəni pozmur: hər iki
 il eyni tarixdən sayılır.
 
+**Məhsuldarlıq indeksi — ekspert bal cədvəli.** Nümunə "782" balının yerinə:
+sahənin 2017-dən bəri BÜTÜN mövsümləri (Sentinel-2 arxivi) təhlil olunur və
+0-100 bal cədvəli tətbiq edilir. Fermer sahəni bu gün çəksə də 8-9 mövsümlük
+tarixçə dərhal mövcuddur.
+
+Qərarlar:
+
+- **Bu, KREDİT BALI DEYİL** və ekranda da belə yazılır. Ödəniş tarixçəsi
+  olmadan "qaytaracaqmı" sualına çəki vermək uydurma olardı; aqronomik
+  "yaxşı becərilirmi" sualına isə ekspert çəki verə bilər. Kredit qərarı
+  bankındır — biz sübut veririk.
+- **Əsas amil ətrafla müqayisədir**: mütləq NDVI əsasən havadır (quraq ildə
+  hamı zəifdir); 5 km-də iqlim eyni olduğu üçün fərq idarəetmədən gəlir.
+- **Struktur qaydaları test edilir**: heç bir amil 25%-dən çox çəki daşımır,
+  bal göstərici yaxşılaşanda heç vaxt azalmır (monotonluq), ölçülməyən amil
+  nə mükafat, nə cəza alır — cədvəldən çıxarılıb qalanlar miqyaslanır.
+- **Hər sətir görünür**: fermer hər amilin balını və səbəbini açıb baxır.
+  Gizli düstur etibar yaratmır, düzəldilə də bilmir.
+- **Çəkilər MÜƏLLİF TƏKLİFİDİR** — aqronom və kredit mütəxəssisi təsdiqi
+  yoxdur (`TESDIQ` obyekti). Az mövsümdə "ilkin qiymətləndirmə" yazılır.
+- **FICO görünüşü (300-850) qəsdən atılıb** — o miqyas "kredit balı" deyir.
+
 **Radar (Sentinel-1) — buludun arxasından.** Optik peyk buluda baxa bilmir və
 Azərbaycanda payız-yaz aylarında sahə həftələrlə buludun altında qalır: tətbiq
 elə fermerin ən çox ehtiyacı olan vaxtda susurdu. Sentinel-1 radar dalğası

@@ -24,6 +24,7 @@ import { C, font } from "./theme/tokens.js";
 import { useNdvi } from "./features/ndvi/useNdvi.js";
 import { useQonsu } from "./features/ndvi/useQonsu.js";
 import { useRadar } from "./features/ndvi/useRadar.js";
+import { useIndeks } from "./features/score/useIndeks.js";
 import { useSiqnallar } from "./features/signals/useSiqnallar.js";
 import { useTovsiyeler } from "./features/tovsiye/useTovsiyeler.js";
 import { acigSiqnallar } from "./services/siqnal.js";
@@ -61,6 +62,8 @@ export default function App() {
   const qonsu = useQonsu(state.sahe, peyk.xulase);
   // Radar YALNIZ optik ölçmə buludun altında qalanda çağırılır (bax: useRadar)
   const radar = useRadar(state.sahe, peyk);
+  // Məhsuldarlıq indeksi: çoxillik tarixçə + cari mövsüm
+  const indeks = useIndeks(state.sahe, peyk.xulase, qonsu.muqayise);
   const noqte = havaNoqtesi({ location: state.location ?? DEFAULT_LOCATION, sahe: state.sahe });
   const butunSiqnallar = useSiqnallar({
     lat: noqte.lat,
@@ -120,6 +123,7 @@ export default function App() {
                 peyk={peyk}
                 qonsu={qonsu}
                 radar={radar}
+                indeksHali={indeks}
                 siqnallar={siqnallar}
                 tovsiyeler={tovsiyeler}
                 onOpenLoan={() => setLoanOpen(true)}

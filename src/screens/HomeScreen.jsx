@@ -17,6 +17,7 @@ import { SaheXeritesi } from "../features/ndvi/SaheXeritesi.jsx";
 import { QonsuMuqayisesi } from "../features/ndvi/QonsuMuqayisesi.jsx";
 import { HesabatPaylas } from "../features/share/HesabatPaylas.jsx";
 import { SiqnalKarti } from "../features/signals/SiqnalKarti.jsx";
+import { IndeksKarti } from "../features/score/IndeksKarti.jsx";
 
 function StatTile({ label, children }) {
   return (
@@ -33,6 +34,7 @@ export function HomeScreen({
   peyk = { hal: "yoxdur", seriya: [], xulase: null },
   qonsu = { hal: "yoxdur", muqayise: null },
   radar = { hal: "yoxdur", xulase: null },
+  indeksHali = { hal: "yoxdur", indeks: null, movsumler: [] },
   siqnallar = [],
   onOpenLoan,
   onPickLocation,
@@ -130,25 +132,28 @@ export function HomeScreen({
           <Icon name="ChevronRight" size={14} color="rgba(255,255,255,0.6)" />
         </button>
 
-        <div className="-mb-1 flex justify-center">
-          {/* Qövs ÖLÇÜLMÜŞ NDVI-dən çəkilir. Əvvəl nümunə 0.72 idi və yanındakı
-              xana həqiqi 0,33 göstərəndə qövs dolu görünürdü — eyni kartda iki
-              fərqli NDVI. Ölçmə yoxdursa qövs ümumiyyətlə çəkilmir. */}
-          <FarmScoreGauge
-            score={FARM.farmScore}
-            ndvi={olculen?.ndvi ?? 0}
-            label={t("home.farmscore")}
-          />
-        </div>
-
-        {/* FarmScore və kredit limiti hələ hesablanmır. Fermer bunları peykdən
-            çıxarılmış təklif kimi oxuya bilər — açıq deyilməlidir. */}
-        <p
-          className="mt-1 text-center"
-          style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, lineHeight: 1.4 }}
-        >
-          {t("home.scoreNote")}
-        </p>
+        {/* Sahə çəkilibsə nümunə qövs (782) YOX, həqiqi məhsuldarlıq indeksi
+            göstərilir: peyk tarixçəsindən hesablanmış, səbəbləri açılan bal.
+            Sahə yoxdursa qövs nümunə kimi qalır və altındakı yazı bunu deyir. */}
+        {state.sahe ? (
+          <IndeksKarti indeksHali={indeksHali} />
+        ) : (
+          <>
+            <div className="-mb-1 flex justify-center">
+              <FarmScoreGauge
+                score={FARM.farmScore}
+                ndvi={olculen?.ndvi ?? 0}
+                label={t("home.farmscore")}
+              />
+            </div>
+            <p
+              className="mt-1 text-center"
+              style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, lineHeight: 1.4 }}
+            >
+              {t("home.scoreNote")}
+            </p>
+          </>
+        )}
 
         <div className="mt-1 grid grid-cols-3 gap-2">
           <StatTile label={t("home.cropHealth")}>
