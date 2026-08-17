@@ -419,14 +419,14 @@ export default {
   "indeks.yuklenir": "Sahənin çoxillik tarixçəsi yüklənir…",
   "indeks.olcmeYox": "İndeks üçün kifayət qədər tarixçə yoxdur.",
   "indeks.xeta": "Tarixçə alınmadı — indeks sonra hesablanacaq.",
-  "indeks.movsum": "{say} mövsüm ölçülüb · Sentinel-2 arxivi",
+  "indeks.movsum": "{say} mövsüm ölçülüb ·\u00A0Sentinel-2 arxivi",
   "indeks.ilkin": "ilkin qiymətləndirmə",
   "indeks.bant.yuksek": "Yüksək",
   "indeks.bant.yaxsi": "Yaxşı",
   "indeks.bant.orta": "Orta",
   "indeks.bant.zeif": "Zəif",
   "indeks.izah":
-    "Aqronomik göstəricidir, kredit balı deyil. Peyk tarixçəsindən hesablanır: əkin davamlılığı, ətrafla müqayisə, sabitlik, meyl və cari mövsüm. Yaşıl xana — ətrafın medianından yuxarı mövsüm.",
+    "Aqronomik göstəricidir, kredit balı deyil. Peyk tarixçəsindən hesablanır: əkin davamlılığı, ətrafla müqayisə, sabitlik, meyl və cari mövsüm. Sütunun hündürlüyü mövsümün zirvəsidir: parlaq yaşıl ətrafın medianından yuxarı, solğun yaşıl aşağı, qırmızı boş qalmış, boz isə davam edən mövsümdür.",
 
   "indeks.sebeb.davamliliq.tam": "Sahə hər mövsüm əkilib",
   "indeks.sebeb.davamliliq.yuksek": "Sahə demək olar hər mövsüm əkilib",
@@ -451,4 +451,5 @@ export default {
   "indeks.sebeb.cari.asagi": "Bu mövsüm ətrafdan geri qalır",
   "indeks.sebeb.cari.zeif": "Bu mövsüm ətrafdan xeyli geridir",
   "indeks.olculmeyib": "Bu amil hələ ölçülməyib",
+  "indeks.qrafik": "Mövsüm qrafiki: {say} mövsümdən {ekili} əkilib, {bos} boş qalıb",
 };

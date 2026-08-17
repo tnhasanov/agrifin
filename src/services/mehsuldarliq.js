@@ -156,8 +156,14 @@ export function meylEmsali(deyerler) {
  * @param {object} cari     Bu mövsümün vəziyyəti `{ndvi, etrafMedyan}`
  * @returns {object} amil adı → göstərici (ölçülməyibsə null)
  */
-export function amillerCixar(movsumler = [], cari = null) {
-  const olculen = movsumler.filter((m) => Number.isFinite(m?.zirve));
+export function amillerCixar(movsumler = [], cari = null, sonIl = new Date().getFullYear()) {
+  // CARİ İL BİTMƏMİŞ MÖVSÜMDÜR: zirvəsi hələ qabaqdadırsa (həddin altında)
+  // tarixçə amillərinə salınmır — əks halda yanvar-may arasında HƏR sahə
+  // "bu il əkilməyib" cəzası alırdı. Bu mövsümü onsuz da `cari` amili təmsil
+  // edir; zirvə həddi keçən kimi il tarixçəyə normal daxil olur.
+  const olculen = movsumler.filter(
+    (m) => Number.isFinite(m?.zirve) && !(m.il === sonIl && m.zirve < EKIN_HEDDI),
+  );
 
   // Əkilmiş mövsümlərin payı
   const davamliliq = olculen.length
@@ -180,9 +186,12 @@ export function amillerCixar(movsumler = [], cari = null) {
     etraf,
     sabitlik: deyiskenlik(ekilmis),
     meyl: meylEmsali(ekilmis),
+    // Fərq 3 onluğa yuvarlaqlanır: 0.7 − 0.6 üzən nöqtədə 0.09999… verir və
+    // ciddi >= müqayisəsi 0.10 bantını ötürürdü — fermer düz sərhəddə 4 xal
+    // itirirdi. Giriş dəyərlər onsuz da 3 onluqla gəlir (bax: api/tarixce.js).
     cari:
       Number.isFinite(cari?.ndvi) && Number.isFinite(cari?.etrafMedyan)
-        ? cari.ndvi - cari.etrafMedyan
+        ? Math.round((cari.ndvi - cari.etrafMedyan) * 1000) / 1000
         : null,
     movsumSayi: olculen.length,
   };
@@ -203,8 +212,8 @@ function bantSec(amil, deyer) {
  *   setirler — hər amil üçün {key, xal, maxXal, sebeb}
  *   sebebler — {yaxsi: [...], pis: [...]} ən güclü iki müsbət və mənfi
  */
-export function mehsuldarliqIndeksi({ movsumler = [], cari = null } = {}) {
-  const amiller = amillerCixar(movsumler, cari);
+export function mehsuldarliqIndeksi({ movsumler = [], cari = null, sonIl } = {}) {
+  const amiller = amillerCixar(movsumler, cari, sonIl);
   if (!amiller.movsumSayi) return null;
 
   const setirler = [];

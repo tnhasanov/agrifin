@@ -161,6 +161,35 @@ describe("məhsuldarlıq indeksi", () => {
     expect(netice.sebebler.pis.length).toBeGreaterThan(0);
   });
 
+  // 0.7 − 0.6 üzən nöqtədə 0.09999… verir; yuvarlaqlanmasa fermer düz
+  // sərhəddə 4 xal itirirdi (icmalda tapılan həqiqi xəta)
+  it("0,10 fərqini üzən nöqtə xətasına görə itirmir", () => {
+    const netice = mehsuldarliqIndeksi({
+      movsumler: tarixce([0.7, 0.7, 0.7, 0.7]),
+      cari: { ndvi: 0.7, etrafMedyan: 0.6 },
+    });
+    expect(netice.setirler.find((s) => s.key === "cari").xal).toBe(15);
+  });
+
+  // Yanvar-may arasında cari ilin zirvəsi hələ qabaqdadır: onu "əkilməyib"
+  // saymaq hər fermeri qışda cəzalandırır. Cari mövsümü öz amili təmsil edir.
+  it("cari il hələ zirvəyə çatmayıbsa tarixçəyə salınmır", () => {
+    const SON_IL = 2030;
+    const kecmis = tarixce([0.7, 0.7, 0.7, 0.7]);
+    const yarimciq = [...kecmis, { il: SON_IL, zirve: 0.18, etrafMedyan: 0.6 }];
+    const a = amillerCixar(yarimciq, null, SON_IL);
+    expect(a.davamliliq).toBe(1);
+    expect(a.movsumSayi).toBe(4);
+
+    // Zirvə həddi keçən kimi il tarixçəyə normal daxil olur
+    const yetkin = [...kecmis, { il: SON_IL, zirve: 0.7, etrafMedyan: 0.6 }];
+    expect(amillerCixar(yetkin, null, SON_IL).movsumSayi).toBe(5);
+
+    // Keçmiş ildəki aşağı zirvə isə həqiqi boş mövsümdür — sayılır
+    const kohneBos = [...kecmis, { il: SON_IL - 1, zirve: 0.18, etrafMedyan: 0.6 }];
+    expect(amillerCixar(kohneBos, null, SON_IL).davamliliq).toBe(0.8);
+  });
+
   it("tarixçə yoxdursa null qaytarır", () => {
     expect(mehsuldarliqIndeksi({ movsumler: [] })).toBeNull();
     expect(mehsuldarliqIndeksi({})).toBeNull();

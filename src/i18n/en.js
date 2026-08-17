@@ -420,14 +420,14 @@ export default {
   "indeks.yuklenir": "Loading the field's multi-season history…",
   "indeks.olcmeYox": "Not enough history for the index.",
   "indeks.xeta": "History unavailable — the index will be computed later.",
-  "indeks.movsum": "{say} seasons measured · Sentinel-2 archive",
+  "indeks.movsum": "{say} seasons measured ·\u00A0Sentinel-2 archive",
   "indeks.ilkin": "preliminary",
   "indeks.bant.yuksek": "High",
   "indeks.bant.yaxsi": "Good",
   "indeks.bant.orta": "Average",
   "indeks.bant.zeif": "Weak",
   "indeks.izah":
-    "An agronomic indicator, not a credit score. Computed from the satellite archive: cultivation continuity, comparison with the surroundings, consistency, trend and the current season. Green cell — a season above the area median.",
+    "An agronomic indicator, not a credit score. Computed from the satellite archive: cultivation continuity, comparison with the surroundings, consistency, trend and the current season. Column height is the season peak: bright green is above the area median, pale green below it, red an idle season, grey a season still in progress.",
 
   "indeks.sebeb.davamliliq.tam": "Cropped every season",
   "indeks.sebeb.davamliliq.yuksek": "Cropped almost every season",
@@ -452,4 +452,5 @@ export default {
   "indeks.sebeb.cari.asagi": "Behind the area this season",
   "indeks.sebeb.cari.zeif": "Well behind the area this season",
   "indeks.olculmeyib": "This factor is not yet measured",
+  "indeks.qrafik": "Season chart: {ekili} of {say} seasons cropped, {bos} idle",
 };

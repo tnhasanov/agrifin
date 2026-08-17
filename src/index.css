@@ -252,6 +252,10 @@ button:active {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    /* Gecikmə də sıfırlanmalıdır: .giris pilləsi `backwards` ilə elementi
+       gecikmə boyu görünməz saxlayır — müddət qısalsa da sıra-sıra
+       "peyda olma" qalırdı, istifadəçi məhz ondan imtina edib */
+    animation-delay: 0s !important;
     transition-duration: 0.01ms !important;
   }
 }
