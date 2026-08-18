@@ -224,7 +224,13 @@ export default async function handler(req, res) {
     }
 
     const saheAylari = aylariCixar(await saheCavab.json());
-    // Ətraf alınmasa tarixçə yenə qaytarılır — müqayisə sətirləri boş qalır
+    // Ətraf alınmasa tarixçə yenə qaytarılır — müqayisə sətirləri boş qalır.
+    // Səbəb isə loga yazılır: "ətraf=false" tək başına niyəni demir və
+    // istehsalda medianın niyə boş qaldığını tapmaq mümkün olmurdu.
+    if (!etrafCavab.ok) {
+      const detal = acarlariGizle((await etrafCavab.text().catch(() => "")).slice(0, 300));
+      console.error("Copernicus tarixce ətraf error:", etrafCavab.status, detal);
+    }
     const etrafAylari = etrafCavab.ok ? aylariCixar(await etrafCavab.json()) : new Map();
 
     const movsumler = movsumlereBol(saheAylari, etrafAylari, sonIl);
@@ -232,7 +238,14 @@ export default async function handler(req, res) {
       `[tarixce] nöqtə=${noqteler.length} mövsüm=${movsumler.filter((m) => m.zirve != null).length}/${movsumler.length} ətraf=${etrafCavab.ok}`,
     );
 
-    return res.status(200).json({ movsumler, ilkIl: ILK_IL, menbe: "Sentinel-2 · Copernicus" });
+    return res.status(200).json({
+      movsumler,
+      ilkIl: ILK_IL,
+      // Müştəri bilməlidir ki, medianlar sorğu uğursuzluğundan boşdur —
+      // belə nəticə qısa keşlənir (bax: services/tarixce.js)
+      etrafAlinib: etrafCavab.ok,
+      menbe: "Sentinel-2 · Copernicus",
+    });
   } catch (error) {
     console.error("tarixce error:", error?.status ?? "", acarlariGizle(error?.message).slice(0, 300));
     if (error?.status === 400 || error?.status === 401) {
