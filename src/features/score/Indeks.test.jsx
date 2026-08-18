@@ -5,17 +5,19 @@ import App from "../../App.jsx";
 import { renderApp, seedState } from "../../test/render.jsx";
 
 const bugun = new Date().toISOString().slice(0, 10);
+const BASLIQ = "Aqronomik performans indeksi";
 
 /** 2017-dən bu ilə: hər il əkilmiş, ətrafdan yuxarı sahə */
-function movsumler({ bosIl = null } = {}) {
+function movsumler({ bosIl = null, etrafsiz = false, sayi = null } = {}) {
   const sonIl = new Date().getFullYear();
   const siyahi = [];
-  for (let il = 2017; il <= sonIl; il += 1) {
+  const ilkIl = sayi ? sonIl - sayi + 1 : 2017;
+  for (let il = ilkIl; il <= sonIl; il += 1) {
     siyahi.push({
       il,
       zirve: il === bosIl ? 0.12 : 0.72,
       zirveAyi: `${il}-05`,
-      etrafMedyan: 0.6,
+      etrafMedyan: etrafsiz ? null : 0.6,
       olcmeSayi: 6,
     });
   }
@@ -93,18 +95,28 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("məhsuldarlıq indeksi — əsas ekran", () => {
+describe("aqronomik performans indeksi — əsas ekran", () => {
   it("sahə çəkilibsə nümunə 782 əvəzinə həqiqi indeks görünür", async () => {
     seed();
     stubApi();
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText("Məhsuldarlıq indeksi")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(BASLIQ)).toBeInTheDocument());
     // Nümunə bal görünmür
     expect(screen.queryByText("782")).not.toBeInTheDocument();
     // Tarixçə tam, hər il ətrafdan yuxarı → yüksək bant
     expect(screen.getByText("Yüksək")).toBeInTheDocument();
     expect(screen.getByText(/mövsüm ölçülüb/)).toBeInTheDocument();
+  });
+
+  // ETİBAR BALDAN AYRIDIR: rəqəmin yanında ayrıca nişan kimi görünməlidir
+  it("etibarlılıq baldan ayrı nişanda göstərilir", async () => {
+    seed();
+    stubApi();
+    renderApp(<App />);
+
+    await waitFor(() => expect(screen.getByText(BASLIQ)).toBeInTheDocument());
+    expect(screen.getByText(/Etibarlılıq:/)).toBeInTheDocument();
   });
 
   it("sahə çəkilməyibsə dəvət göstərilir və indeks sorğusu getmir", async () => {
@@ -113,42 +125,93 @@ describe("məhsuldarlıq indeksi — əsas ekran", () => {
     renderApp(<App />);
 
     await waitFor(() =>
-      expect(screen.getByText(/Sahənizi çəkin — məhsuldarlıq indeksiniz/)).toBeInTheDocument(),
+      expect(screen.getByText(/Sahənizi çəkin — aqronomik performans indeksiniz/)).toBeInTheDocument(),
     );
     // Bahalı tarixçə sorğusu sahəsiz getməməlidir
     expect(tarixceSorgusu).toBe(0);
-    expect(screen.queryByText("Məhsuldarlıq indeksi")).not.toBeInTheDocument();
+    expect(screen.queryByText(BASLIQ)).not.toBeInTheDocument();
+  });
+
+  // MƏLUMAT KEYFİYYƏTİ QAPISI: bir-iki mövsümdən "94 / Yüksək" çıxmamalıdır
+  it("3 mövsümdən az tarixçədə nə bal, nə bant göstərilir", async () => {
+    seed();
+    stubApi({ movsumSiyahisi: movsumler({ sayi: 2 }) });
+    renderApp(<App />);
+
+    await waitFor(() => expect(screen.getByText("Tarixçə kifayət deyil")).toBeInTheDocument());
+    expect(screen.getByText(/minimum 3 ölçülə bilən mövsüm/)).toBeInTheDocument();
+    expect(screen.queryByText("Yüksək")).not.toBeInTheDocument();
   });
 
   // Fermer balın SƏBƏBİNİ görməlidir — gizli düstur etibar yaratmır
-  it("kart açılanda səbəblər və mövsüm zolağı görünür", async () => {
+  it("kart açılanda amil adları, səbəblər və mövsüm zolağı görünür", async () => {
     const user = userEvent.setup();
     seed();
     stubApi();
     renderApp(<App />);
-    await waitFor(() => screen.getByText("Məhsuldarlıq indeksi"));
+    await waitFor(() => screen.getByText(BASLIQ));
 
-    await user.click(screen.getByRole("button", { name: /Məhsuldarlıq indeksi/ }));
+    await user.click(screen.getByRole("button", { name: new RegExp(BASLIQ) }));
 
-    expect(screen.getByText("Sahə hər mövsüm əkilib")).toBeInTheDocument();
+    // Altı amilin adı da göründüyü üçün aqronom hansı sətri mübahisə
+    // etdiyini bilir
+    expect(screen.getByText("Əkin davamlılığı")).toBeInTheDocument();
+    expect(screen.getByText("Nisbi aqronomik performans")).toBeInTheDocument();
+    expect(screen.getByText("Mövsümi vegetasiya keyfiyyəti")).toBeInTheDocument();
+    expect(screen.getByText("Performans sabitliyi")).toBeInTheDocument();
+    expect(screen.getByText("Son dövrün meyli")).toBeInTheDocument();
+    expect(screen.getByText("Cari mövsümün vəziyyəti")).toBeInTheDocument();
+
+    expect(
+      screen.getByText("Müşahidə olunan mövsümlərin demək olar hamısında əkin altında olub"),
+    ).toBeInTheDocument();
     // "Kredit balı deyil" açıq yazılır
     expect(screen.getByText(/kredit balı deyil/)).toBeInTheDocument();
+  });
+
+  // Təxmini metodologiya gizlədilmir
+  it("proxy amillər 'təxmini' nişanı ilə işarələnir", async () => {
+    const user = userEvent.setup();
+    seed();
+    stubApi();
+    renderApp(<App />);
+    await waitFor(() => screen.getByText(BASLIQ));
+
+    await user.click(screen.getByRole("button", { name: new RegExp(BASLIQ) }));
+    expect(screen.getAllByText("təxmini").length).toBeGreaterThan(0);
   });
 
   it("boş illər balı endirir və səbəbdə görünür", async () => {
     const user = userEvent.setup();
     seed();
-    // 10 mövsümün 3-ü boş → davamlılıq 0.7 → "orta" bantı
+    // Mövsümlərin bir hissəsi boş → davamlılıq aşağı bant
     stubApi({
       movsumSiyahisi: movsumler().map((m) =>
         [2019, 2021, 2023].includes(m.il) ? { ...m, zirve: 0.12 } : m,
       ),
     });
     renderApp(<App />);
-    await waitFor(() => screen.getByText("Məhsuldarlıq indeksi"));
+    await waitFor(() => screen.getByText(BASLIQ));
 
-    await user.click(screen.getByRole("button", { name: /Məhsuldarlıq indeksi/ }));
-    expect(screen.getByText("Bəzi mövsümlər əkilməyib")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: new RegExp(BASLIQ) }));
+    expect(screen.getByText(/əkin xaricində qalıb/)).toBeInTheDocument();
+  });
+
+  // Kritik amil (müqayisə) yoxdursa nəticəyə ad verilmir
+  it("ətraf müqayisəsi yoxdursa bant göstərilmir, səbəbi izah olunur", async () => {
+    const user = userEvent.setup();
+    seed();
+    stubApi({ movsumSiyahisi: movsumler({ etrafsiz: true }) });
+    renderApp(<App />);
+    await waitFor(() => screen.getByText(BASLIQ));
+
+    expect(screen.getByText("Bant verilmir")).toBeInTheDocument();
+    expect(screen.queryByText("Yüksək")).not.toBeInTheDocument();
+    // Natamam nəticə açıq deyilir
+    expect(screen.getByText(/Natamam məlumat/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: new RegExp(BASLIQ) }));
+    expect(screen.getByText(/müdafiə edilə bilməz/)).toBeInTheDocument();
   });
 
   it("tarixçə alınmasa səbəbini deyir, qalan ekran işləyir", async () => {
@@ -156,9 +219,7 @@ describe("məhsuldarlıq indeksi — əsas ekran", () => {
     stubApi({ tarixceStatus: 502 });
     renderApp(<App />);
 
-    await waitFor(() =>
-      expect(screen.getByText(/Tarixçə alınmadı/)).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByText(/Tarixçə alınmadı/)).toBeInTheDocument());
     // Peyk zolağı yerindədir
     expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument();
   });

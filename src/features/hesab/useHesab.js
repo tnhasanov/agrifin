@@ -85,7 +85,11 @@ export function useHesab(indeksHali) {
   // hesablama dəyişikliklərini izləyir, hər renderi yox
   const indeks = indeksHali.indeks;
   useEffect(() => {
+    // Bal yoxdursa (məlumat keyfiyyəti qapısı) və ya bant verilməyibsə
+    // (kritik amil ölçülməyib) jurnal sətri yazılmır: kalibrləmə jurnalı
+    // yalnız TAM nəticələri saxlamalıdır
     if (!telefon || !saheServerde || !indeks) return;
+    if (indeks.bal == null || !indeks.bant) return;
     const balAcari = `${acar}|${indeks.bal}|${indeks.etibar}`;
     if (sonBalRef.current === balAcari) return;
     sonBalRef.current = balAcari;

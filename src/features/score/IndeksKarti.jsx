@@ -13,6 +13,13 @@ const BANT_RENGI = {
   zeif: "#F0A0A0",
 };
 
+/**
+ * Təxmini (proxy) və ehtiyat (fallback) metodologiyalar açıq işarələnir.
+ * Həqiqi ölçmə ilə yaxınlaşdırma arasındakı fərq gizlədilməməlidir:
+ * aqronom hansı sətrin mübahisə edilə biləcəyini görməlidir.
+ */
+const TEXMINI_METODLAR = new Set(["proxy-yerli-etraf", "zirveProxy", "xamFallback"]);
+
 /** Amil zolağının rəngi qazanılmış payın nisbətindən gəlir */
 function nisbetRengi(nisbet) {
   if (nisbet == null) return "rgba(255,255,255,0.25)";
@@ -68,30 +75,51 @@ function BalHalqasi({ bal, reng }) {
 }
 
 /**
- * Bir amilin sətri: ad + xal + dolan zolaq. Zolaq balın HARADAN gəldiyini
- * mətnsiz göstərir — 14/25 oxumaq hesab tələb edir, yarıya qədər dolu zolaq
- * isə bir baxışda görünür.
+ * Bir amilin sətri: AD + izah + xal + dolan zolaq.
+ *
+ * Amilin adı indi ayrıca göstərilir (əvvəl yalnız izah vardı): altı amil
+ * çəkisi ilə birlikdə görünməlidir ki, aqronom hansı sətri mübahisə etdiyini
+ * bilsin. Ölçülməyən amil "—" ilə qalır və zolağı boşdur — xal qazanmır,
+ * amma maksimumu da cədvəldən çıxmır (bax: lib/mehsuldarliq.js, qayda 4).
  */
 function AmilSetri({ setir, sira, t }) {
   const nisbet = setir.xal == null ? null : setir.xal / setir.maxXal;
   const reng = nisbetRengi(nisbet);
+  const texmini = TEXMINI_METODLAR.has(setir.metodologiya);
 
   return (
-    <div className="giris mb-2" style={{ "--i": sira }}>
+    <div className="giris mb-2.5" style={{ "--i": sira }}>
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-xs" style={{ color: "rgba(255,255,255,0.88)" }}>
-          {setir.sebeb ? t(`indeks.sebeb.${setir.sebeb}`) : t("indeks.olculmeyib")}
+        <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.92)" }}>
+          {t(`indeks.amil.${setir.id}`)}
         </span>
         <span
           className="text-xs font-semibold"
           style={{
-            color: setir.xal == null ? "rgba(255,255,255,0.65)" : reng,
+            color: setir.xal == null ? "rgba(255,255,255,0.5)" : reng,
             fontVariantNumeric: "tabular-nums",
           }}
         >
-          {setir.xal == null ? "—" : `${setir.xal}/${setir.maxXal}`}
+          {setir.xal == null ? "—" : `${setir.xal}`}
+          <span style={{ color: "rgba(255,255,255,0.45)" }}>/{setir.maxXal}</span>
         </span>
       </div>
+
+      <div className="mt-0.5 flex items-baseline gap-1.5">
+        <span style={{ color: "rgba(255,255,255,0.62)", fontSize: 10.5, lineHeight: 1.4 }}>
+          {setir.sebeb ? t(`indeks.sebeb.${setir.sebeb}`) : t("indeks.olculmeyib")}
+        </span>
+        {texmini && (
+          <span
+            className="shrink-0 rounded px-1"
+            style={{ color: C.gold, backgroundColor: "rgba(233,181,74,0.14)", fontSize: 9 }}
+            title={t(`indeks.metod.${setir.metodologiya}`)}
+          >
+            {t("indeks.texmini")}
+          </span>
+        )}
+      </div>
+
       <div
         className="mt-1 overflow-hidden rounded-full"
         style={{ height: 4, backgroundColor: "rgba(255,255,255,0.12)" }}
@@ -170,12 +198,15 @@ function MovsumQrafiki({ movsumler, t }) {
 }
 
 /**
- * Məhsuldarlıq indeksi — əsas ekranın qövsünün yerinə.
+ * Aqronomik performans indeksi — əsas ekranın qövsünün yerinə.
  *
- * Üç qayda (bax: services/mehsuldarliq.js):
+ * Qaydalar (bax: lib/mehsuldarliq.js):
  *   1. Bu, KREDİT BALI DEYİL və elə adlandırılmır — aqronomik indeksdir.
- *   2. Hər amilin balı görünür: gizli düstur etibar yaratmır, düzəldilə də bilmir.
- *   3. Etibar gizlədilmir: az mövsüm = "ilkin qiymətləndirmə" nişanı.
+ *   2. Hər amilin balı görünür: gizli düstur etibar yaratmır.
+ *   3. MƏLUMAT KEYFİYYƏTİ QAPISI: 3 mövsümdən az tarixçə ilə rəqəm də,
+ *      bant da göstərilmir — "94 / Yüksək" bir mövsümdən çıxmamalıdır.
+ *   4. ETİBAR BALDAN AYRI göstərilir: iki fərqli şeydir və qarışdırılsa
+ *      "aşağı bal" ilə "az bilirik" eyni görünür.
  *
  * 300-850 aralıqlı FICO görünüşü QƏSDƏN atılıb: o miqyas "kredit balı" deyir.
  */
@@ -185,6 +216,38 @@ export function IndeksKarti({ indeksHali }) {
   const { hal, indeks, movsumler } = indeksHali;
 
   if (hal === "yoxdur") return null;
+
+  // ── Məlumat keyfiyyəti qapısı: bal yoxdur, səbəb var ───────────────
+  if (hal === "hazir" && indeks?.hal === "kifayetsiz") {
+    return (
+      <div
+        className="mt-2 rounded-2xl px-3.5 py-3"
+        style={{
+          background: "linear-gradient(150deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.05) 100%)",
+          border: "1px solid rgba(255,255,255,0.13)",
+        }}
+      >
+        <div className="flex items-start gap-2.5">
+          <Icon name="Info" size={15} color={C.gold} />
+          <div className="min-w-0 flex-1">
+            <p
+              className="text-sm font-bold text-white"
+              style={{ fontFamily: font.display, letterSpacing: "0.01em" }}
+            >
+              {t("indeks.tarixceAz")}
+            </p>
+            <p className="mt-1 text-xs" style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
+              {t("indeks.tarixceAzIzah")}
+            </p>
+            <p className="mt-1.5" style={{ color: "rgba(255,255,255,0.5)", fontSize: 10 }}>
+              {t("indeks.movsum", { say: indeks.movsumSayi })}
+            </p>
+          </div>
+        </div>
+        <MovsumQrafiki movsumler={movsumler} t={t} />
+      </div>
+    );
+  }
 
   if (hal !== "hazir" || !indeks) {
     return (
@@ -208,7 +271,9 @@ export function IndeksKarti({ indeksHali }) {
     );
   }
 
-  const reng = BANT_RENGI[indeks.bant] ?? C.gold;
+  // Bant yoxdursa halqa neytral qalır: rəng özü bant kimi oxunur, ona görə
+  // "müdafiə edilə bilməyən" nəticəyə yaşıl/qırmızı vermək olmaz
+  const reng = indeks.bant ? (BANT_RENGI[indeks.bant] ?? C.gold) : "rgba(255,255,255,0.45)";
   const olculen = movsumler.filter((m) => Number.isFinite(m.zirve)).length;
 
   return (
@@ -227,8 +292,10 @@ export function IndeksKarti({ indeksHali }) {
         // "İlkin" nişanı da buradadır: görən istifadəçi şərtli bal görürsə,
         // eşidən istifadəçi şərtsiz eşitməməlidir (qayda 3 — etibar gizlədilmir)
         aria-label={[
-          `${t("indeks.basliq")}: ${indeks.bal}, ${t(`indeks.bant.${indeks.bant}`)}`,
-          indeks.etibar !== "tam" ? t("indeks.ilkin") : null,
+          `${t("indeks.basliq")}: ${indeks.bal}`,
+          indeks.bant ? t(`indeks.bant.${indeks.bant}`) : t("indeks.bantYoxdur"),
+          `${t("indeks.etibarEtiket")}: ${t(`indeks.etibar.${indeks.etibar}`)}`,
+          indeks.natamam ? t("indeks.natamam", { xal: indeks.elcatanXal }) : null,
           t("indeks.movsum", { say: olculen }),
         ]
           .filter(Boolean)
@@ -249,25 +316,35 @@ export function IndeksKarti({ indeksHali }) {
               className="rounded-full px-2 py-0.5 text-xs font-bold"
               style={{ color: reng, backgroundColor: "rgba(255,255,255,0.1)" }}
             >
-              {t(`indeks.bant.${indeks.bant}`)}
+              {indeks.bant ? t(`indeks.bant.${indeks.bant}`) : t("indeks.bantYoxdur")}
             </span>
-            {indeks.etibar !== "tam" && (
-              <span
-                className="rounded-full px-2 py-0.5"
-                style={{
-                  color: C.gold,
-                  backgroundColor: "rgba(233,181,74,0.14)",
-                  fontSize: 10,
-                  fontWeight: 600,
-                }}
-              >
-                {t("indeks.ilkin")}
-              </span>
-            )}
+            {/* ETİBAR AYRICA NİŞANDIR: bal "sahə necədir", etibar "nə qədər
+                bilirik" deməkdir. Birləşdirilsə az məlumat pis nəticə kimi
+                oxunur — halbuki bala heç bir təsiri yoxdur. */}
+            <span
+              className="rounded-full px-2 py-0.5"
+              style={{
+                color: indeks.etibar === "yuksek" ? "#A8DDBC" : C.gold,
+                backgroundColor:
+                  indeks.etibar === "yuksek" ? "rgba(127,214,164,0.14)" : "rgba(233,181,74,0.14)",
+                fontSize: 10,
+                fontWeight: 600,
+              }}
+            >
+              {t("indeks.etibarEtiket")}: {t(`indeks.etibar.${indeks.etibar}`)}
+            </span>
           </div>
           <p className="mt-1 text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
             {t("indeks.movsum", { say: olculen })}
           </p>
+          {/* Natamam nəticə: ölçülməyən amillər 100-ə miqyaslanmır, ona görə
+              əlçatan maksimum 100-dən azdır. Bunu deməsək bal haqsız aşağı
+              görünər (bax: lib/mehsuldarliq.js, qayda 4). */}
+          {indeks.natamam && (
+            <p className="mt-0.5" style={{ color: C.gold, fontSize: 10, lineHeight: 1.4 }}>
+              {t("indeks.natamam", { xal: indeks.elcatanXal })}
+            </p>
+          )}
         </div>
 
         <Icon
@@ -282,8 +359,24 @@ export function IndeksKarti({ indeksHali }) {
           className="mt-3 border-t pt-3"
           style={{ borderColor: "rgba(255,255,255,0.12)" }}
         >
+          {/* Kritik məlumat (müqayisə) yoxdursa nəticəyə ad verilmir — səbəbi
+              rəqəmin yanında deyil, açılan hissədə tam cümlə ilə izah olunur */}
+          {indeks.bantYoxdurSebebi === "muqayiseYoxdur" && (
+            <p
+              className="mb-2.5 rounded-lg px-2.5 py-2"
+              style={{
+                backgroundColor: "rgba(233,181,74,0.12)",
+                color: "rgba(255,255,255,0.82)",
+                fontSize: 10.5,
+                lineHeight: 1.45,
+              }}
+            >
+              {t("indeks.bantYoxdurIzah")}
+            </p>
+          )}
+
           {indeks.setirler.map((setir, sira) => (
-            <AmilSetri key={setir.key} setir={setir} sira={sira} t={t} />
+            <AmilSetri key={setir.id} setir={setir} sira={sira} t={t} />
           ))}
 
           <MovsumQrafiki movsumler={movsumler} t={t} />

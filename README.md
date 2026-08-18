@@ -236,26 +236,48 @@ proqnoz verilmir — mərhələ hədləri sorta görə dəyişir və bizdə yerl
 hədləri yoxdur. Başlanğıc tarixi təxminidir, amma müqayisəni pozmur: hər iki
 il eyni tarixdən sayılır.
 
-**Məhsuldarlıq indeksi — ekspert bal cədvəli.** Nümunə "782" balının yerinə:
-sahənin 2017-dən bəri BÜTÜN mövsümləri (Sentinel-2 arxivi) təhlil olunur və
-0-100 bal cədvəli tətbiq edilir. Fermer sahəni bu gün çəksə də 8-9 mövsümlük
-tarixçə dərhal mövcuddur.
+**Aqronomik performans indeksi — ekspert bal cədvəli.** Nümunə "782" balının
+yerinə: sahənin 2017-dən bəri BÜTÜN mövsümləri (Sentinel-2 arxivi) təhlil
+olunur və 0–100 bal cədvəli tətbiq edilir. Fermer sahəni bu gün çəksə də 8-9
+mövsümlük tarixçə dərhal mövcuddur. Məntiq: `lib/mehsuldarliq.js`.
+
+Altı amil (`SCORE_CONFIG`):
+
+| Amil | Çəki | Metodologiya |
+| --- | ---: | --- |
+| Əkin davamlılığı | 15 | əkilmiş mövsümlərin payı |
+| Nisbi aqronomik performans | 30 | **proxy**: 5 km ətrafın medianı |
+| Mövsümi vegetasiya keyfiyyəti | 20 | **proxy**: zirvə (AUC hazır deyil) |
+| Performans sabitliyi | 15 | nisbi mövqenin kənarlaşması |
+| Son dövrün meyli | 10 | son 5 mövsüm |
+| Cari mövsümün vəziyyəti | 10 | **proxy**: ətrafla müqayisə |
 
 Qərarlar:
 
-- **Bu, KREDİT BALI DEYİL** və ekranda da belə yazılır. Ödəniş tarixçəsi
-  olmadan "qaytaracaqmı" sualına çəki vermək uydurma olardı; aqronomik
-  "yaxşı becərilirmi" sualına isə ekspert çəki verə bilər. Kredit qərarı
-  bankındır — biz sübut veririk.
-- **Əsas amil ətrafla müqayisədir**: mütləq NDVI əsasən havadır (quraq ildə
-  hamı zəifdir); 5 km-də iqlim eyni olduğu üçün fərq idarəetmədən gəlir.
-- **Struktur qaydaları test edilir**: heç bir amil 25%-dən çox çəki daşımır,
-  bal göstərici yaxşılaşanda heç vaxt azalmır (monotonluq), ölçülməyən amil
-  nə mükafat, nə cəza alır — cədvəldən çıxarılıb qalanlar miqyaslanır.
-- **Hər sətir görünür**: fermer hər amilin balını və səbəbini açıb baxır.
-  Gizli düstur etibar yaratmır, düzəldilə də bilmir.
-- **Çəkilər MÜƏLLİF TƏKLİFİDİR** — aqronom və kredit mütəxəssisi təsdiqi
-  yoxdur (`TESDIQ` obyekti). Az mövsümdə "ilkin qiymətləndirmə" yazılır.
+- **Bu, KREDİT BALI DEYİL** və ekranda da belə yazılır. PD, gözlənilən itki,
+  limit, faiz, qərar — heç biri yoxdur və olmayacaq. Ödəniş tarixçəsi olmadan
+  "qaytaracaqmı" sualına çəki vermək uydurma olardı; aqronomik "yaxşı
+  becərilirmi" sualına isə ekspert çəki verə bilər. İndeks anderraytinq üçün
+  BİR GİRİŞDİR — kredit qərarı bankındır.
+- **MƏLUMAT KEYFİYYƏTİ QAPISI baldan əvvəl işləyir**: 3 ölçülə bilən
+  mövsümdən az tarixçədə nə bal, nə bant göstərilir ("Tarixçə kifayət deyil").
+  Bir yaxşı mövsümdən "94 / Yüksək" çıxarmaq müdafiə edilə bilməz.
+- **Etibarlılıq baldan AYRIDIR**: 3–4 mövsüm "İlkin", 5–7 "Orta", 8+ "Yüksək".
+  Etibar aşağı olduğu üçün xal əlavə edilmir və çıxılmır.
+- **Ölçülməyən amil 100-ə MİQYASLANMIR**: məxrəc həmişə 100 qalır, ölçülməyən
+  amil xal qazanmır və nəticə "natamam" işarələnir. Köhnə miqyaslama seyrək
+  məlumatlı sahəni süni yaxşı göstərirdi — mənfi məlumatın olmaması yaxşı
+  xəbər deyil. Kritik amil (müqayisə) yoxdursa BANT VERİLMİR.
+- **Proxy-lər gizlədilmir**: həmyaş qrupu (eyni bitki, oxşar suvarma) hələ
+  yoxdur; yerli 5 km müqayisəsi müvəqqəti yaxınlaşdırmadır və UI-da "təxmini"
+  nişanı ilə işarələnir. 5 km-lik zolağın torpağı və suvarması eyni deyil.
+- **Struktur qaydaları test edilir**: heç bir amil 30%-dən çox çəki daşımır,
+  bal göstərici yaxşılaşanda heç vaxt azalmır (monotonluq), boş mövsüm yalnız
+  davamlılıqda cəzalandırılır (ikiqat sayma yoxdur).
+- **Hər sətir görünür**: hər amilin adı, xalı, xam göstəricisi, səbəbi və
+  metodologiyası qaytarılır. Gizli düstur etibar yaratmır.
+- **Hədlər EKSPERT TƏKLİFİDİR** — müvəqqəti, statistik kalibrlənməyib,
+  aqronom və kredit mütəxəssisi təsdiqi yoxdur (`TESDIQ` obyekti).
 - **FICO görünüşü (300-850) qəsdən atılıb** — o miqyas "kredit balı" deyir.
 
 **Radar (Sentinel-1) — buludun arxasından.** Optik peyk buluda baxa bilmir və

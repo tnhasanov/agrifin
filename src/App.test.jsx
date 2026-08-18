@@ -24,7 +24,9 @@ describe("AgriFin tətbiqi", () => {
     renderApp(<App />);
 
     // Saxta 782 qövsü silinib: sahə çəkilməmiş nömrə YOX, dəvət göstərilir
-    expect(screen.getByText(/Sahənizi çəkin — məhsuldarlıq indeksiniz/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Sahənizi çəkin — aqronomik performans indeksiniz/),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/FARMSCORE/)).not.toBeInTheDocument();
     expect(screen.getByText("12.000 ₼")).toBeInTheDocument();
     expect(screen.getByText("7.280 ₼")).toBeInTheDocument();
