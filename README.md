@@ -46,7 +46,7 @@ src/
   routes.js           yolların vahid siyahısı
   screens/            beş ekran — yalnız göstərmə məntiqi
   features/           ilk açılış, sahə çəkmə, kredit paneli, yer, hava, çat
-  components/         Icon, Card, Chip, Sparkline, FarmScoreGauge, ...
+  components/         Icon, Card, Chip, Sparkline, Sheet, ...
   state/store.jsx     reducer + localStorage-da saxlanma
   services/           məlumat mənbələri (hava və aqronom realdır, qalanı nümunə)
   i18n/               az (əsas), en, ru + açar yoxlayan test

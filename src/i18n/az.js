@@ -23,11 +23,10 @@ export default {
   "home.greeting": "Sabahınız xeyir, {name}",
   "home.farmLine": "{farm} · {ha} ha",
   "home.satelliteChip": "Bu gün təsdiqlənib",
-  "home.farmscore": "FARMSCORE",
   "home.cropHealth": "Bitki örtüyü",
   "home.creditLimit": "Kredit limiti",
   "home.wallet": "Pulqabı",
-  "home.scoreNote": "FarmScore və kredit limiti nümunə göstəricidir — real qiymətləndirmə modeli hazırlanır.",
+  "home.scoreNote": "Kredit limiti nümunə göstəricidir — real qiymətləndirmə modeli hazırlanır.",
   "home.loanCta": "Məhsul dövrü krediti al",
   "home.loanNote": "Peyklə təsdiqlənmiş əkininiz sizin kredit tarixçənizdir.",
 
@@ -167,7 +166,7 @@ export default {
   "loan.title": "Məhsul dövrü krediti",
   "loan.doneTitle": "Vəsait köçürüldü",
   "loan.intro":
-    "{score} FarmScore balınız illik {rate}% faizlə {max}-a qədər kredit açır. Bir ödəniş — buğda biçininizə uyğunlaşdırılıb.",
+    "Peyklə təsdiqlənmiş əkin tarixçəniz illik {rate}% faizlə {max}-a qədər kredit açır. Bir ödəniş — buğda biçininizə uyğunlaşdırılıb.",
   "loan.amountLabel": "Kredit məbləği",
   "loan.closeSheet": "Kredit panelini bağla",
   "loan.reviewCta": "Şərtlərə bax",
@@ -175,7 +174,7 @@ export default {
   "loan.term.transferValue": "Bu gün, dərhal",
   "loan.term.single": "Bir ödəniş",
   "loan.term.singleValue": "{date} (biçin) {repay}",
-  "loan.term.rate": "Faiz (FarmScore {score})",
+  "loan.term.rate": "Faiz",
   "loan.term.rateValue": "İllik {rate}% — regional ortalamadan 3% aşağı",
   "loan.term.collateral": "Girov",
   "loan.term.collateralValue": "Yoxdur. Peyklə təsdiqlənmiş əkininiz kifayətdir.",
@@ -451,5 +450,6 @@ export default {
   "indeks.sebeb.cari.asagi": "Bu mövsüm ətrafdan geri qalır",
   "indeks.sebeb.cari.zeif": "Bu mövsüm ətrafdan xeyli geridir",
   "indeks.olculmeyib": "Bu amil hələ ölçülməyib",
+  "indeks.saheYox": "Sahənizi çəkin — məhsuldarlıq indeksiniz 2017-dən bəri peyk tarixçəsindən hesablanacaq.",
   "indeks.qrafik": "Mövsüm qrafiki: {say} mövsümdən {ekili} əkilib, {bos} boş qalıb",
 };

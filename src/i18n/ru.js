@@ -23,11 +23,10 @@ export default {
   "home.greeting": "Доброе утро, {name}",
   "home.farmLine": "{farm} · {ha} га",
   "home.satelliteChip": "Подтверждено сегодня",
-  "home.farmscore": "FARMSCORE",
   "home.cropHealth": "Покров растений",
   "home.creditLimit": "Кредитный лимит",
   "home.wallet": "Кошелёк",
-  "home.scoreNote": "FarmScore и кредитный лимит — демонстрационные значения, реальная модель оценки ещё разрабатывается.",
+  "home.scoreNote": "Кредитный лимит — демонстрационное значение, реальная модель оценки ещё разрабатывается.",
   "home.loanCta": "Взять кредит на сезон",
   "home.loanNote": "Ваше поле, подтверждённое со спутника, — это ваша кредитная история.",
 
@@ -169,7 +168,7 @@ export default {
   "loan.title": "Кредит на сезон",
   "loan.doneTitle": "Средства переведены",
   "loan.intro":
-    "Ваш FarmScore {score} открывает кредит до {max} под {rate}% в год. Один платёж — подобран под уборку пшеницы.",
+    "Ваша подтверждённая спутником история посевов открывает кредит до {max} под {rate}% в год. Один платёж — подобран под уборку пшеницы.",
   "loan.amountLabel": "Сумма кредита",
   "loan.closeSheet": "Закрыть панель кредита",
   "loan.reviewCta": "Посмотреть условия",
@@ -177,7 +176,7 @@ export default {
   "loan.term.transferValue": "Сегодня, мгновенно",
   "loan.term.single": "Один платёж",
   "loan.term.singleValue": "{repay} — {date} (уборка)",
-  "loan.term.rate": "Ставка (FarmScore {score})",
+  "loan.term.rate": "Ставка",
   "loan.term.rateValue": "{rate}% в год — на 3% ниже среднего по региону",
   "loan.term.collateral": "Залог",
   "loan.term.collateralValue": "Нет. Вашего поля, подтверждённого со спутника, достаточно.",
@@ -453,5 +452,6 @@ export default {
   "indeks.sebeb.cari.asagi": "Этот сезон отстаёт от округи",
   "indeks.sebeb.cari.zeif": "Этот сезон заметно ниже округи",
   "indeks.olculmeyib": "Этот фактор пока не измерен",
+  "indeks.saheYox": "Обведите поле — индекс продуктивности рассчитается по спутниковому архиву с 2017 года.",
   "indeks.qrafik": "График сезонов: из {say} сезонов {ekili} засеяно, {bos} пустовало",
 };

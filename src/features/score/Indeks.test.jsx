@@ -107,12 +107,15 @@ describe("məhsuldarlıq indeksi — əsas ekran", () => {
     expect(screen.getByText(/mövsüm ölçülüb/)).toBeInTheDocument();
   });
 
-  it("sahə çəkilməyibsə nümunə qövs qalır və indeks sorğusu getmir", async () => {
+  it("sahə çəkilməyibsə dəvət göstərilir və indeks sorğusu getmir", async () => {
     seed(false);
     stubApi();
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText(/FARMSCORE/)).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText(/Sahənizi çəkin — məhsuldarlıq indeksiniz/)).toBeInTheDocument(),
+    );
+    // Bahalı tarixçə sorğusu sahəsiz getməməlidir
     expect(tarixceSorgusu).toBe(0);
     expect(screen.queryByText("Məhsuldarlıq indeksi")).not.toBeInTheDocument();
   });

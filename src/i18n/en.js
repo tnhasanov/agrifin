@@ -23,11 +23,10 @@ export default {
   "home.greeting": "Good morning, {name}",
   "home.farmLine": "{farm} · {ha} ha",
   "home.satelliteChip": "Verified today",
-  "home.farmscore": "FARMSCORE",
   "home.cropHealth": "Canopy cover",
   "home.creditLimit": "Credit limit",
   "home.wallet": "Wallet",
-  "home.scoreNote": "FarmScore and the credit limit are illustrative — the real scoring model is still being built.",
+  "home.scoreNote": "The credit limit is illustrative — the real assessment model is still being built.",
   "home.loanCta": "Get a crop-cycle loan",
   "home.loanNote": "Your satellite-verified field is your credit history.",
 
@@ -168,7 +167,7 @@ export default {
   "loan.title": "Crop-cycle loan",
   "loan.doneTitle": "Funds transferred",
   "loan.intro":
-    "Your FarmScore of {score} unlocks up to {max} at {rate}% per year. One payment — matched to your wheat harvest.",
+    "Your satellite-verified cropping history unlocks up to {max} at {rate}% per year. One payment — matched to your wheat harvest.",
   "loan.amountLabel": "Loan amount",
   "loan.closeSheet": "Close the loan sheet",
   "loan.reviewCta": "Review terms",
@@ -176,7 +175,7 @@ export default {
   "loan.term.transferValue": "Today, instantly",
   "loan.term.single": "Single payment",
   "loan.term.singleValue": "{repay} on {date} (harvest)",
-  "loan.term.rate": "Rate (FarmScore {score})",
+  "loan.term.rate": "Rate",
   "loan.term.rateValue": "{rate}% per year — 3% below the regional average",
   "loan.term.collateral": "Collateral",
   "loan.term.collateralValue": "None. Your satellite-verified field is enough.",
@@ -452,5 +451,6 @@ export default {
   "indeks.sebeb.cari.asagi": "Behind the area this season",
   "indeks.sebeb.cari.zeif": "Well behind the area this season",
   "indeks.olculmeyib": "This factor is not yet measured",
+  "indeks.saheYox": "Draw your field — your productivity index will be computed from the satellite archive back to 2017.",
   "indeks.qrafik": "Season chart: {ekili} of {say} seasons cropped, {bos} idle",
 };

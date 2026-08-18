@@ -141,6 +141,6 @@ describe("hava zolağı", () => {
     );
     // Ən vacibi: tətbiqin qalanı sağdır
     expect(screen.getByRole("button", { name: "Əsas" })).toBeInTheDocument();
-    expect(screen.getByText(/FARMSCORE/)).toBeInTheDocument();
+    expect(screen.getByText("Məhsul dövrü krediti al")).toBeInTheDocument();
   });
 });

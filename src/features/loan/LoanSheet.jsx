@@ -29,10 +29,7 @@ export function LoanSheet({ onClose }) {
       t("loan.term.single"),
       t("loan.term.singleValue", { date: t("date.aug15.long"), repay: { money: repay } }),
     ],
-    [
-      t("loan.term.rate", { score: FARM.farmScore }),
-      t("loan.term.rateValue", { rate: LOAN_TERMS.annualRate }),
-    ],
+    [t("loan.term.rate"), t("loan.term.rateValue", { rate: LOAN_TERMS.annualRate })],
     [t("loan.term.collateral"), t("loan.term.collateralValue")],
   ];
 
@@ -77,7 +74,6 @@ export function LoanSheet({ onClose }) {
           <div>
             <p className="mb-4 text-xs" style={{ color: C.muted }}>
               {t("loan.intro", {
-                score: FARM.farmScore,
                 rate: LOAN_TERMS.annualRate,
                 max: { money: FARM.creditLimit },
               })}

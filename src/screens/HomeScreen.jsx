@@ -1,5 +1,4 @@
 import { Chip } from "../components/Chip.jsx";
-import { FarmScoreGauge } from "../components/FarmScoreGauge.jsx";
 import { Icon } from "../components/Icon.jsx";
 import { WeatherStrip } from "../features/weather/WeatherStrip.jsx";
 import { C, font } from "../theme/tokens.js";
@@ -132,30 +131,25 @@ export function HomeScreen({
           <Icon name="ChevronRight" size={14} color="rgba(255,255,255,0.6)" />
         </button>
 
-        {/* Sahə çəkilibsə nümunə qövs (782) YOX, həqiqi məhsuldarlıq indeksi
-            göstərilir: peyk tarixçəsindən hesablanmış, səbəbləri açılan bal.
-            Sahə yoxdursa qövs nümunə kimi qalır və altındakı yazı bunu deyir. */}
+        {/* Nümunə qövs (782) SİLİNİB: real indeksin yanında saxta bal ikiqat
+            yalan görünür. Sahə çəkilibsə peyk tarixçəsindən hesablanan indeks,
+            çəkilməyibsə nömrə YOX, nəyin gözlədiyini deyən bir sətir — dəvəti
+            üstdəki "Sahəmi xəritədə çək" düyməsi onsuz da verir. */}
         {state.sahe ? (
           <IndeksKarti indeksHali={indeksHali} />
         ) : (
-          <>
-            <div className="-mb-1 flex justify-center">
-              <FarmScoreGauge
-                score={FARM.farmScore}
-                ndvi={olculen?.ndvi ?? 0}
-                label={t("home.farmscore")}
-              />
-            </div>
-            <p
-              className="mt-1 text-center"
-              style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, lineHeight: 1.4 }}
-            >
-              {t("home.scoreNote")}
-            </p>
-          </>
+          <div
+            className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2"
+            style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+          >
+            <Icon name="Satellite" size={13} color="rgba(255,255,255,0.6)" />
+            <span className="text-xs" style={{ color: "rgba(255,255,255,0.72)" }}>
+              {t("indeks.saheYox")}
+            </span>
+          </div>
         )}
 
-        <div className="mt-1 grid grid-cols-3 gap-2">
+        <div className="mt-2 grid grid-cols-3 gap-2">
           <StatTile label={t("home.cropHealth")}>
             {faiz == null ? "—" : `${formatNumber(faiz, lang)}%`}{" "}
             {olculen && olculen.istiqamet !== "sabit" && (
@@ -169,6 +163,15 @@ export function HomeScreen({
           </StatTile>
           <StatTile label={t("home.wallet")}>{money(state.wallet)}</StatTile>
         </div>
+
+        {/* Kredit limiti hələ hesablanmır — bunu deməmək fermeri saxta rəqəmlə
+            plan qurmağa aparır. Qövs silinsə də bu qeyd qalır. */}
+        <p
+          className="mt-1.5 text-center"
+          style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, lineHeight: 1.4 }}
+        >
+          {t("home.scoreNote")}
+        </p>
 
         {/* Peyk ölçməsinin vəziyyəti. Hər hal ayrı cümlə deyir: peyk məlumatı
             havadan fərqli olaraq həmişə mövcud olmur və "yoxdur" ilə "xəta"
