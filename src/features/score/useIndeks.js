@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchTarixce } from "../../services/tarixce.js";
-import { mehsuldarliqIndeksi } from "../../services/mehsuldarliq.js";
+import { mehsuldarliqIndeksi } from "../../../lib/mehsuldarliq.js";
 import { saheAcari } from "../../services/ndvi.js";
 
 const BOS = { hal: "yoxdur", indeks: null, movsumler: [] };

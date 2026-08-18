@@ -16,7 +16,7 @@ import { duzgunSahe } from "../services/geo.js";
 export const PERSIST_KEY = "state";
 // Saxlanan formanı dəyişəndə bu rəqəmi artırın və MIQRASIYALAR-a keçid yazın.
 // Keçid yoxdursa köhnə məlumat səssizcə atılır.
-export const PERSIST_VERSION = 6;
+export const PERSIST_VERSION = 7;
 
 /**
  * Köhnə versiyadan yeniyə keçid. Fermerdən onsuz da bildiyimiz şeyi
@@ -37,6 +37,9 @@ const MIQRASIYALAR = {
     delete yeni.completedRecs;
     return yeni;
   },
+  // 6 → 7: telefon hesabı (Faza 1). Saxlanan telefon yalnız görüntü keşidir —
+  // həqiqi sessiya httpOnly cookie-dədir və açılışda serverlə tutuşdurulur.
+  6: (state) => ({ ...state, hesab: { telefon: null } }),
 };
 
 function miqrasiyaEt(saved) {
@@ -79,6 +82,9 @@ export const initialState = {
   location: null,
   // Fermerin peyk şəklində çəkdiyi sahə: {noqteler: [[lat,lon],...], hektar}
   sahe: null,
+  // Telefon hesabı (Faza 1). telefon burada görüntü üçündür; giriş özü
+  // httpOnly cookie-dədir və hər açılışda serverlə yoxlanılır (useHesab)
+  hesab: { telefon: null },
   // Aqronom çatı: mesajlar {role, content} və ya {role, errorKey}
   chat: { messages: [], crop: null, referral: false },
   creditsSold: false,
@@ -202,6 +208,15 @@ export function reducer(state, action) {
     case "sahe/clear":
       return { ...state, sahe: null };
 
+    // Serverdən qayıdan sahə toast-sız qəbul edilir: fermer heç nə etməyib,
+    // sadəcə köhnə cihazdakı konturu geri alır — "yadda saxlandı" demək yalandır
+    case "sahe/qebul":
+      if (!duzgunSahe(action.sahe)) return state;
+      return { ...state, sahe: action.sahe };
+
+    case "hesab/set":
+      return { ...state, hesab: { telefon: action.telefon ?? null } };
+
     case "toast/show":
       return { ...state, toast: { key: action.key, vars: action.vars ?? null } };
 
@@ -232,6 +247,7 @@ function loadPersisted() {
   // Zədələnmiş sahə konturunu (əl ilə pozulmuş localStorage) yükləmirik
   if (base.sahe && !duzgunSahe(base.sahe)) base.sahe = null;
   if (!Array.isArray(base.bagliSiqnallar)) base.bagliSiqnallar = [];
+  if (typeof base.hesab?.telefon !== "string") base.hesab = { telefon: null };
 
   // Köhnə prototipdə yer ayrı açarda saxlanılırdı — yenidən soruşmuruq
   if (!isValidLocation(base.location)) {
@@ -287,6 +303,9 @@ export function StoreProvider({ children }) {
         showToast("toast.fieldSaved", { hektar: { number: sahe.hektar } });
       },
       clearSahe: () => dispatch({ type: "sahe/clear" }),
+      saheQebulEt: (sahe) => dispatch({ type: "sahe/qebul", sahe }),
+      hesabTelefon: (telefon) => dispatch({ type: "hesab/set", telefon }),
+      hesabCixdi: () => dispatch({ type: "hesab/set", telefon: null }),
       resetDemo: () => dispatch({ type: "demo/reset" }),
     }),
     [showToast],

@@ -3,7 +3,7 @@ import { Icon } from "../../components/Icon.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { useCountUp } from "../../lib/useCountUp.js";
-import { EKIN_HEDDI } from "../../services/mehsuldarliq.js";
+import { EKIN_HEDDI } from "../../../lib/mehsuldarliq.js";
 
 /** Bant rəngləri tünd şam fonu üçün seçilib — ağ mətnlə yanaşı oxunur */
 const BANT_RENGI = {

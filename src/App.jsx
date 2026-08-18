@@ -12,6 +12,8 @@ const FieldDraw = lazy(() =>
 );
 import { AgronomChat } from "./features/agronom/AgronomChat.jsx";
 import { SiqnalPaneli } from "./features/signals/SiqnalPaneli.jsx";
+import { HesabSheet } from "./features/hesab/HesabSheet.jsx";
+import { useHesab } from "./features/hesab/useHesab.js";
 import { HomeScreen } from "./screens/HomeScreen.jsx";
 import { AdvisorScreen } from "./screens/AdvisorScreen.jsx";
 import { MoneyScreen } from "./screens/MoneyScreen.jsx";
@@ -50,6 +52,7 @@ export default function App() {
   // Yer seçimi paneli sonradan rayonu dəyişmək üçündür; ilk açılışda
   // qeydiyyat axını bu işi görür
   const [locationOpen, setLocationOpen] = useState(false);
+  const [hesabOpen, setHesabOpen] = useState(false);
   const scrollRef = useRef(null);
 
   const route = routeForPath(path);
@@ -64,6 +67,8 @@ export default function App() {
   const radar = useRadar(state.sahe, peyk);
   // Məhsuldarlıq indeksi: çoxillik tarixçə + cari mövsüm
   const indeks = useIndeks(state.sahe, peyk.xulase, qonsu.muqayise);
+  // Hesab sinxronu: sessiyanı yoxlayır, sahəni və indeksi hesaba yazır
+  useHesab(indeks);
   const noqte = havaNoqtesi({ location: state.location ?? DEFAULT_LOCATION, sahe: state.sahe });
   const butunSiqnallar = useSiqnallar({
     lat: noqte.lat,
@@ -88,6 +93,7 @@ export default function App() {
   const closeField = useCallback(() => setFieldOpen(false), []);
   const closeLoan = useCallback(() => setLoanOpen(false), []);
   const closeLocation = useCallback(() => setLocationOpen(false), []);
+  const closeHesab = useCallback(() => setHesabOpen(false), []);
 
   // Ekran dəyişəndə əvvəlki sürüşdürmə mövqeyində qalmaq çaşdırıcıdır
   useEffect(() => {
@@ -130,6 +136,7 @@ export default function App() {
                 onPickLocation={() => setLocationOpen(true)}
                 onOpenChat={() => setChatOpen(true)}
                 onDrawField={() => setFieldOpen(true)}
+                onOpenHesab={() => setHesabOpen(true)}
                 />
               </div>
             </main>
@@ -152,6 +159,8 @@ export default function App() {
             />
 
             {chatOpen && <AgronomChat peyk={peyk} qonsu={qonsu} onClose={closeChat} />}
+
+            <HesabSheet acilib={hesabOpen} onBagla={closeHesab} />
 
             {fieldOpen && (
               <Suspense fallback={null}>

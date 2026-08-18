@@ -386,3 +386,37 @@ Prioritet sırası ilə:
 Vercel: repo qoşulduqda avtomatik build olunur (`npm run build` → `dist/`).
 `vercel.json` SPA yollarını `index.html`-ə yönləndirir və statik faylları keşləyir.
 Netlify və ya digər statik hostinq üçün eyni yönləndirmə qaydası lazımdır.
+
+## Faza 1 — hesab və verilənlər bazası
+
+Tətbiq hesabsız tam işləyir (localStorage). Hesab İSTƏYƏ BAĞLI əlavədir:
+telefon nömrəsi ilə giriş sahəni, tarixçə snapshot-unu və bal jurnalını
+serverə bağlayır — cihaz dəyişəndə heç nə itmir.
+
+Hissələr:
+
+- `db/schema.sql` — 6 cədvəl (istifadəçilər, OTP, sessiyalar, sahələr,
+  peyk snapshot-ları, bal jurnalı). `lib/db.js` eyni əmrləri hər instansda
+  özü işlədir (idempotent miqrasiya) — ayrıca miqrasiya aləti yoxdur.
+- `lib/db.js` — istehsalda Neon HTTP sürücüsü, testlərdə PGlite; hər ikisi
+  `sorgu(mətn, parametrlər) → sətirlər` adapterinin arxasındadır.
+- `lib/hesab.js` — OTP (6 rəqəm, 5 dəq, 5 cəhd, birdəfəlik) və 90 günlük
+  sessiya. Kod və token bazada yalnız hash kimi yaşayır (SESSION_SECRET
+  pepper ilə); sürət hədləri bazadadır — instanslar arası paylaşılır.
+- `lib/sms.js` — SMS arxası. `SMS_URL` yoxdursa kod funksiya loguna yazılır
+  (yerli şlüz müqaviləsinə qədər); müqavilədən sonra yalnız 2 env dəyişəni.
+- `api/hesab.js`, `api/sahe.js` — HTTP qatı (Hobby limiti üçün hər biri bir
+  funksiyadır, əməl POST gövdəsindəki `emel` ilə seçilir).
+- Müştəri: `src/features/hesab/` (giriş paneli + sinxron hook-u). Daxil olmuş
+  fermerin sahəsi, tarixçəsi və hər indeks hesablanması avtomatik yazılır.
+
+Quraşdırma (Vercel):
+
+1. Storage → Create Database → **Postgres (Neon)** → layihəyə qoşun.
+   `DATABASE_URL` avtomatik gəlir (Production + Preview).
+2. Settings → Environment Variables → `SESSION_SECRET` = `openssl rand -hex 32`.
+3. Yenidən deploy edin. Yoxlama: `GET /api/hesab` →
+   `{"dbQurulub":true,"hesabQurulub":true,"smsRejimi":"log"}`.
+4. (Sonra) SMS şlüzü müqaviləsindən sonra `SMS_URL` və `SMS_ACAR` əlavə edin.
+   O vaxta qədər OTP kodları yalnız Vercel funksiya loglarında görünür —
+   UI-da heç vaxt göstərilmir.
