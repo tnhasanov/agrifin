@@ -17,6 +17,42 @@ beforeEach(() => {
 });
 
 describe("HesabSheet", () => {
+  // HƏQİQİ XƏTA: fermer nömrənin hər rəqəmindən sonra yenidən xanaya
+  // toxunmalı olurdu. Səbəb Sheet-də idi (bax: components/Sheet.jsx) — panel
+  // hər render-də fokusu özünə qaytarırdı. Yoxlama burada dayanır, çünki
+  // xəta məhz bu ekranda görünür.
+  it("nömrə yazarkən fokus xanada qalır", () => {
+    vi.stubGlobal("fetch", vi.fn(() => fetchCavabi({})));
+    renderApp(<HesabSheet acilib onBagla={() => {}} />);
+
+    const xana = screen.getByLabelText(/telefon/i);
+    xana.focus();
+    for (const deyer of ["0", "05", "050", "0501", "05012"]) {
+      fireEvent.change(xana, { target: { value: deyer } });
+      expect(document.activeElement, `"${deyer}" yazandan sonra`).toBe(xana);
+    }
+    expect(xana.value).toBe("05012");
+
+    vi.unstubAllGlobals();
+  });
+
+  it("SMS kodunu yazarkən də fokus itmir", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => fetchCavabi({ gonderildi: true, rejim: "log" })));
+    renderApp(<HesabSheet acilib onBagla={() => {}} />);
+
+    fireEvent.change(screen.getByLabelText(/telefon/i), { target: { value: "0501234567" } });
+    fireEvent.click(screen.getByRole("button", { name: /kod göndər/i }));
+
+    const kodXanasi = await screen.findByLabelText(/sms kodu/i);
+    kodXanasi.focus();
+    for (const deyer of ["1", "12", "123"]) {
+      fireEvent.change(kodXanasi, { target: { value: deyer } });
+      expect(document.activeElement, `"${deyer}" yazandan sonra`).toBe(kodXanasi);
+    }
+
+    vi.unstubAllGlobals();
+  });
+
   it("telefon → kod → giriş axını işləyir, log qeydi görünür", async () => {
     const fetchMock = vi
       .fn()

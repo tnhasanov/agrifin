@@ -55,6 +55,14 @@ export function Sheet({ acilib, onBagla, baslik, altYazi, children, etiket }) {
     setTimeout(onBagla, BAGLANMA_MS);
   }, [onBagla, sakit]);
 
+  // FOKUS VƏ SÜRÜŞDÜRMƏ KİLİDİ yalnız açılıb-bağlanmadan asılıdır.
+  //
+  // Bu, klaviatura ilə əlaqəli əsl xəta idi: effekt `bagla` ilə birlikdə
+  // yenidən işləyirdi, `bagla` isə çağıran komponentdə hər render-də yeni
+  // funksiya kimi yaranırdı. Nəticədə panelin içindəki xanaya yazılan HƏR
+  // hərfdən sonra effekt təkrar işləyib fokusu xanadan panelə qaytarırdı —
+  // fermer nömrənin hər rəqəmindən sonra yenidən xanaya toxunmalı olurdu.
+  // Ona görə fokus/kilid ilə klaviatura dinləyicisi AYRILIB.
   useEffect(() => {
     if (!acilib) return undefined;
 
@@ -65,6 +73,17 @@ export function Sheet({ acilib, onBagla, baslik, altYazi, children, etiket }) {
 
     const kohneOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = kohneOverflow;
+      acanRef.current?.focus?.();
+    };
+  }, [acilib]);
+
+  // Klaviatura: bu effektin təkrar qoşulması zərərsizdir (yalnız dinləyici
+  // dəyişir), ona görə `bagla` asılılığı burada qalır
+  useEffect(() => {
+    if (!acilib) return undefined;
 
     const basildi = (hadise) => {
       if (hadise.key === "Escape") {
@@ -92,11 +111,7 @@ export function Sheet({ acilib, onBagla, baslik, altYazi, children, etiket }) {
     };
 
     window.addEventListener("keydown", basildi);
-    return () => {
-      window.removeEventListener("keydown", basildi);
-      document.body.style.overflow = kohneOverflow;
-      acanRef.current?.focus?.();
-    };
+    return () => window.removeEventListener("keydown", basildi);
   }, [acilib, bagla]);
 
   if (!acilib) return null;
