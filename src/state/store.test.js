@@ -63,6 +63,29 @@ describe("reducer", () => {
   it("naməlum əməliyyatda vəziyyəti dəyişmir", () => {
     expect(reducer(initialState, { type: "yoxdur" })).toBe(initialState);
   });
+
+  it("hesab telefonu yazılır və çıxışda silinir", () => {
+    const girdi = reducer(initialState, { type: "hesab/set", telefon: "+994501234567" });
+    expect(girdi.hesab).toEqual({ telefon: "+994501234567" });
+    const cixdi = reducer(girdi, { type: "hesab/set", telefon: null });
+    expect(cixdi.hesab).toEqual({ telefon: null });
+  });
+
+  it("serverdən qəbul edilən sahə yoxlanılır", () => {
+    const sahe = {
+      noqteler: [
+        [40.37, 47.12],
+        [40.38, 47.13],
+        [40.37, 47.14],
+      ],
+      hektar: 4.2,
+    };
+    expect(reducer(initialState, { type: "sahe/qebul", sahe }).sahe).toEqual(sahe);
+    // Zibil kontur qəbul edilmir
+    expect(reducer(initialState, { type: "sahe/qebul", sahe: { noqteler: "yox" } })).toBe(
+      initialState,
+    );
+  });
 });
 
 describe("computeRepayment", () => {

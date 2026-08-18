@@ -20,10 +20,14 @@ afterEach(() => {
 });
 
 describe("AgriFin tətbiqi", () => {
-  it("əsas ekranda FarmScore, kredit limiti və pulqabını göstərir", async () => {
+  it("əsas ekranda kredit limiti, pulqabı və indeks dəvəti göstərilir", async () => {
     renderApp(<App />);
 
-    expect(screen.getByRole("img", { name: /FARMSCORE: 782/ })).toBeInTheDocument();
+    // Saxta 782 qövsü silinib: sahə çəkilməmiş nömrə YOX, dəvət göstərilir
+    expect(
+      screen.getByText(/Sahənizi çəkin — aqronomik performans indeksiniz/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/FARMSCORE/)).not.toBeInTheDocument();
     expect(screen.getByText("12.000 ₼")).toBeInTheDocument();
     expect(screen.getByText("7.280 ₼")).toBeInTheDocument();
   });

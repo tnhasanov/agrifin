@@ -10,6 +10,10 @@ vi.mock("../ndvi/XeriteQati.jsx", () => ({
 
 const bugun = new Date().toISOString().slice(0, 10);
 const gunEvvel = (n) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
+// necheGunEvvel tarixi günorta (12:00Z) sayır: "8 gün əvvəl"in fərqi səhər
+// saatlarında 7,96 günə düşür və floor 7 verir — test günortadan əvvəl
+// işə düşəndə uğursuz olurdu. Sabit "indi" ilə vaxtdan asılılıq kəsilir.
+const INDI = Date.parse(`${bugun}T12:00:00Z`);
 
 const SAHE = {
   hektar: 6.5,
@@ -71,11 +75,11 @@ afterEach(() => {
 
 describe("radarın çağırılma şərti", () => {
   it("optik ölçmə təzədirsə radar lazım deyil", () => {
-    expect(radarLazimdir({ hal: "hazir", xulase: { tarix: bugun } })).toBe(false);
+    expect(radarLazimdir({ hal: "hazir", xulase: { tarix: bugun } }, INDI)).toBe(false);
   });
 
   it("optik ölçmə köhnəlibsə radar lazımdır", () => {
-    expect(radarLazimdir({ hal: "hazir", xulase: { tarix: gunEvvel(KOHNE_GUN) } })).toBe(true);
+    expect(radarLazimdir({ hal: "hazir", xulase: { tarix: gunEvvel(KOHNE_GUN) } }, INDI)).toBe(true);
   });
 
   it("heç bir təmiz ölçmə yoxdursa radar lazımdır", () => {

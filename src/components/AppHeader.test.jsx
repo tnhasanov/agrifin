@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../App.jsx";
 import { renderApp, seedLocation } from "../test/render.jsx";
@@ -28,23 +28,45 @@ describe("başlıqdaki bildiriş zəngi", () => {
     expect(zeng()).toHaveTextContent("");
   });
 
-  it("toxunanda məsləhət ekranını açır", async () => {
+  // ƏSAS: zəng ekran DƏYİŞMİR. Fermer hava zolağını açıb saatlara baxırsa,
+  // bildirişə baxmaq onu o yerdən qoparmamalıdır.
+  it("toxunanda ekranı dəyişmədən panel açır", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
 
     await user.click(zeng());
 
-    expect(window.location.pathname).toBe("/advisor");
-    expect(screen.getByText("Sahənizdən siqnallar")).toBeInTheDocument();
+    const panel = await screen.findByRole("dialog", { name: "Bildirişlər" });
+    expect(panel).toBeInTheDocument();
+    // Ünvan sətri olduğu kimi qalır — geri düyməsi tətbiqdən çıxarmır
+    expect(window.location.pathname).toBe("/");
+    expect(zeng()).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("Escape və kənara toxunuş paneli bağlayır", async () => {
+    const user = userEvent.setup();
+    renderApp(<App />);
+
+    await user.click(zeng());
+    await screen.findByRole("dialog", { name: "Bildirişlər" });
+    await user.keyboard("{Escape}");
+
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Bildirişlər" })).not.toBeInTheDocument(),
+    );
+    // Fokus açan düyməyə qayıdır — klaviatura istifadəçisi itmir
+    expect(zeng()).toHaveFocus();
   });
 
   // Boş siyahı fermeri narahat etməməlidir: "heç nə yoxdur" da məlumatdır
-  it("siqnal olmayanda məsləhət ekranı səbəbi izah edir", async () => {
+  it("siqnal olmayanda panel səbəbi izah edir", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
 
     await user.click(zeng());
 
-    expect(screen.getByText("Sahənizdə diqqət tələb edən heç nə yoxdur")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Sahənizdə diqqət tələb edən heç nə yoxdur"),
+    ).toBeInTheDocument();
   });
 });

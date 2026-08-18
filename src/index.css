@@ -91,6 +91,25 @@ button:active {
   animation: ekran-gel 180ms ease backwards;
 }
 
+/* Aşağıdan qalxan panel və onun pərdəsi (bax: components/Sheet.jsx) */
+@keyframes panel-qalx {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes perde-gel {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes ekran-gel {
   from {
     opacity: 0;
@@ -233,6 +252,10 @@ button:active {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    /* Gecikmə də sıfırlanmalıdır: .giris pilləsi `backwards` ilə elementi
+       gecikmə boyu görünməz saxlayır — müddət qısalsa da sıra-sıra
+       "peyda olma" qalırdı, istifadəçi məhz ondan imtina edib */
+    animation-delay: 0s !important;
     transition-duration: 0.01ms !important;
   }
 }

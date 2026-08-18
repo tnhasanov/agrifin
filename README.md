@@ -46,7 +46,7 @@ src/
   routes.js           yolların vahid siyahısı
   screens/            beş ekran — yalnız göstərmə məntiqi
   features/           ilk açılış, sahə çəkmə, kredit paneli, yer, hava, çat
-  components/         Icon, Card, Chip, Sparkline, FarmScoreGauge, ...
+  components/         Icon, Card, Chip, Sparkline, Sheet, ...
   state/store.jsx     reducer + localStorage-da saxlanma
   services/           məlumat mənbələri (hava və aqronom realdır, qalanı nümunə)
   i18n/               az (əsas), en, ru + açar yoxlayan test
@@ -236,6 +236,50 @@ proqnoz verilmir — mərhələ hədləri sorta görə dəyişir və bizdə yerl
 hədləri yoxdur. Başlanğıc tarixi təxminidir, amma müqayisəni pozmur: hər iki
 il eyni tarixdən sayılır.
 
+**Aqronomik performans indeksi — ekspert bal cədvəli.** Nümunə "782" balının
+yerinə: sahənin 2017-dən bəri BÜTÜN mövsümləri (Sentinel-2 arxivi) təhlil
+olunur və 0–100 bal cədvəli tətbiq edilir. Fermer sahəni bu gün çəksə də 8-9
+mövsümlük tarixçə dərhal mövcuddur. Məntiq: `lib/mehsuldarliq.js`.
+
+Altı amil (`SCORE_CONFIG`):
+
+| Amil | Çəki | Metodologiya |
+| --- | ---: | --- |
+| Əkin davamlılığı | 15 | əkilmiş mövsümlərin payı |
+| Nisbi aqronomik performans | 30 | **proxy**: 5 km ətrafın medianı |
+| Mövsümi vegetasiya keyfiyyəti | 20 | **proxy**: zirvə (AUC hazır deyil) |
+| Performans sabitliyi | 15 | nisbi mövqenin kənarlaşması |
+| Son dövrün meyli | 10 | son 5 mövsüm |
+| Cari mövsümün vəziyyəti | 10 | **proxy**: ətrafla müqayisə |
+
+Qərarlar:
+
+- **Bu, KREDİT BALI DEYİL** və ekranda da belə yazılır. PD, gözlənilən itki,
+  limit, faiz, qərar — heç biri yoxdur və olmayacaq. Ödəniş tarixçəsi olmadan
+  "qaytaracaqmı" sualına çəki vermək uydurma olardı; aqronomik "yaxşı
+  becərilirmi" sualına isə ekspert çəki verə bilər. İndeks anderraytinq üçün
+  BİR GİRİŞDİR — kredit qərarı bankındır.
+- **MƏLUMAT KEYFİYYƏTİ QAPISI baldan əvvəl işləyir**: 3 ölçülə bilən
+  mövsümdən az tarixçədə nə bal, nə bant göstərilir ("Tarixçə kifayət deyil").
+  Bir yaxşı mövsümdən "94 / Yüksək" çıxarmaq müdafiə edilə bilməz.
+- **Etibarlılıq baldan AYRIDIR**: 3–4 mövsüm "İlkin", 5–7 "Orta", 8+ "Yüksək".
+  Etibar aşağı olduğu üçün xal əlavə edilmir və çıxılmır.
+- **Ölçülməyən amil 100-ə MİQYASLANMIR**: məxrəc həmişə 100 qalır, ölçülməyən
+  amil xal qazanmır və nəticə "natamam" işarələnir. Köhnə miqyaslama seyrək
+  məlumatlı sahəni süni yaxşı göstərirdi — mənfi məlumatın olmaması yaxşı
+  xəbər deyil. Kritik amil (müqayisə) yoxdursa BANT VERİLMİR.
+- **Proxy-lər gizlədilmir**: həmyaş qrupu (eyni bitki, oxşar suvarma) hələ
+  yoxdur; yerli 5 km müqayisəsi müvəqqəti yaxınlaşdırmadır və UI-da "təxmini"
+  nişanı ilə işarələnir. 5 km-lik zolağın torpağı və suvarması eyni deyil.
+- **Struktur qaydaları test edilir**: heç bir amil 30%-dən çox çəki daşımır,
+  bal göstərici yaxşılaşanda heç vaxt azalmır (monotonluq), boş mövsüm yalnız
+  davamlılıqda cəzalandırılır (ikiqat sayma yoxdur).
+- **Hər sətir görünür**: hər amilin adı, xalı, xam göstəricisi, səbəbi və
+  metodologiyası qaytarılır. Gizli düstur etibar yaratmır.
+- **Hədlər EKSPERT TƏKLİFİDİR** — müvəqqəti, statistik kalibrlənməyib,
+  aqronom və kredit mütəxəssisi təsdiqi yoxdur (`TESDIQ` obyekti).
+- **FICO görünüşü (300-850) qəsdən atılıb** — o miqyas "kredit balı" deyir.
+
 **Radar (Sentinel-1) — buludun arxasından.** Optik peyk buluda baxa bilmir və
 Azərbaycanda payız-yaz aylarında sahə həftələrlə buludun altında qalır: tətbiq
 elə fermerin ən çox ehtiyacı olan vaxtda susurdu. Sentinel-1 radar dalğası
@@ -364,3 +408,42 @@ Prioritet sırası ilə:
 Vercel: repo qoşulduqda avtomatik build olunur (`npm run build` → `dist/`).
 `vercel.json` SPA yollarını `index.html`-ə yönləndirir və statik faylları keşləyir.
 Netlify və ya digər statik hostinq üçün eyni yönləndirmə qaydası lazımdır.
+
+## Faza 1 — hesab və verilənlər bazası
+
+Tətbiq hesabsız tam işləyir (localStorage). Hesab İSTƏYƏ BAĞLI əlavədir:
+telefon nömrəsi ilə giriş sahəni, tarixçə snapshot-unu və bal jurnalını
+serverə bağlayır — cihaz dəyişəndə heç nə itmir.
+
+Hissələr:
+
+- `db/schema.sql` — 6 cədvəl (istifadəçilər, OTP, sessiyalar, sahələr,
+  peyk snapshot-ları, bal jurnalı). `lib/db.js` eyni əmrləri hər instansda
+  özü işlədir (idempotent miqrasiya) — ayrıca miqrasiya aləti yoxdur.
+- `lib/db.js` — istehsalda Neon HTTP sürücüsü, testlərdə PGlite; hər ikisi
+  `sorgu(mətn, parametrlər) → sətirlər` adapterinin arxasındadır.
+- `lib/hesab.js` — OTP (6 rəqəm, 5 dəq, 5 cəhd, birdəfəlik) və 90 günlük
+  sessiya. Kod və token bazada yalnız hash kimi yaşayır (SESSION_SECRET
+  pepper ilə); sürət hədləri bazadadır — instanslar arası paylaşılır.
+- `lib/sms.js` — SMS arxası. `SMS_URL` yoxdursa kod funksiya loguna yazılır
+  (yerli şlüz müqaviləsinə qədər); müqavilədən sonra yalnız 2 env dəyişəni.
+- `api/hesab.js`, `api/sahe.js` — HTTP qatı (Hobby limiti üçün hər biri bir
+  funksiyadır, əməl POST gövdəsindəki `emel` ilə seçilir).
+- Müştəri: `src/features/hesab/` (giriş paneli + sinxron hook-u). Daxil olmuş
+  fermerin sahəsi, tarixçəsi və hər indeks hesablanması avtomatik yazılır.
+
+Quraşdırma (Vercel):
+
+1. Storage → Create Database → **Postgres (Neon)** → layihəyə qoşun.
+   `DATABASE_URL` avtomatik gəlir (Production + Preview).
+2. Settings → Environment Variables → `SESSION_SECRET` = `openssl rand -hex 32`.
+3. Yenidən deploy edin — dəyişənlər YALNIZ yeni deploy-a düşür, mövcud
+   deploy köhnə mühitlə qalır. Yoxlama: `GET /api/hesab` →
+   `{"dbQurulub":true,"hesabQurulub":true,"acar":"DATABASE_URL", ...}`.
+   `false` gələrsə cavabdakı `acar` və `muhit` sahələrinə baxın: `acar: null`
+   = bağlantı sətri heç bir tanınan adla gəlmir (`DATABASE_URL`,
+   `POSTGRES_URL`, hovuzsuz variantlar), `muhit` isə preview/production
+   ayırır — dəyişən yalnız birinə əlavə olunubsa səbəb budur.
+4. (Sonra) SMS şlüzü müqaviləsindən sonra `SMS_URL` və `SMS_ACAR` əlavə edin.
+   O vaxta qədər OTP kodları yalnız Vercel funksiya loglarında görünür —
+   UI-da heç vaxt göstərilmir.

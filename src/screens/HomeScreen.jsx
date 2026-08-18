@@ -1,5 +1,4 @@
 import { Chip } from "../components/Chip.jsx";
-import { FarmScoreGauge } from "../components/FarmScoreGauge.jsx";
 import { Icon } from "../components/Icon.jsx";
 import { WeatherStrip } from "../features/weather/WeatherStrip.jsx";
 import { C, font } from "../theme/tokens.js";
@@ -17,6 +16,7 @@ import { SaheXeritesi } from "../features/ndvi/SaheXeritesi.jsx";
 import { QonsuMuqayisesi } from "../features/ndvi/QonsuMuqayisesi.jsx";
 import { HesabatPaylas } from "../features/share/HesabatPaylas.jsx";
 import { SiqnalKarti } from "../features/signals/SiqnalKarti.jsx";
+import { IndeksKarti } from "../features/score/IndeksKarti.jsx";
 
 function StatTile({ label, children }) {
   return (
@@ -33,11 +33,13 @@ export function HomeScreen({
   peyk = { hal: "yoxdur", seriya: [], xulase: null },
   qonsu = { hal: "yoxdur", muqayise: null },
   radar = { hal: "yoxdur", xulase: null },
+  indeksHali = { hal: "yoxdur", indeks: null, movsumler: [] },
   siqnallar = [],
   onOpenLoan,
   onPickLocation,
   onDrawField,
   onOpenChat,
+  onOpenHesab,
 }) {
   const { t, money, lang } = useI18n();
   const { state, actions } = useStore();
@@ -130,27 +132,45 @@ export function HomeScreen({
           <Icon name="ChevronRight" size={14} color="rgba(255,255,255,0.6)" />
         </button>
 
-        <div className="-mb-1 flex justify-center">
-          {/* Qövs ÖLÇÜLMÜŞ NDVI-dən çəkilir. Əvvəl nümunə 0.72 idi və yanındakı
-              xana həqiqi 0,33 göstərəndə qövs dolu görünürdü — eyni kartda iki
-              fərqli NDVI. Ölçmə yoxdursa qövs ümumiyyətlə çəkilmir. */}
-          <FarmScoreGauge
-            score={FARM.farmScore}
-            ndvi={olculen?.ndvi ?? 0}
-            label={t("home.farmscore")}
-          />
-        </div>
-
-        {/* FarmScore və kredit limiti hələ hesablanmır. Fermer bunları peykdən
-            çıxarılmış təklif kimi oxuya bilər — açıq deyilməlidir. */}
-        <p
-          className="mt-1 text-center"
-          style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, lineHeight: 1.4 }}
+        {/* Hesab: sahə cihazda yox, hesabda qalsın. Daxil olmuş fermer öz
+            nömrəsini görür (bu, "sinxron işləyir" siqnalıdır), olmayan isə
+            nə üçün lazım olduğunu bir cümlə ilə oxuyur. */}
+        <button
+          type="button"
+          onClick={onOpenHesab}
+          className="mt-2 flex w-full items-center justify-between rounded-xl px-3 py-2"
+          style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
         >
-          {t("home.scoreNote")}
-        </p>
+          <span className="flex items-center gap-2 text-xs font-semibold text-white">
+            <Icon
+              name={state.hesab.telefon ? "UserCheck" : "ShieldCheck"}
+              size={13}
+              color={state.hesab.telefon ? "#7FD6A4" : C.gold}
+            />
+            {state.hesab.telefon ?? t("hesab.cta")}
+          </span>
+          <Icon name="ChevronRight" size={14} color="rgba(255,255,255,0.6)" />
+        </button>
 
-        <div className="mt-1 grid grid-cols-3 gap-2">
+        {/* Nümunə qövs (782) SİLİNİB: real indeksin yanında saxta bal ikiqat
+            yalan görünür. Sahə çəkilibsə peyk tarixçəsindən hesablanan indeks,
+            çəkilməyibsə nömrə YOX, nəyin gözlədiyini deyən bir sətir — dəvəti
+            üstdəki "Sahəmi xəritədə çək" düyməsi onsuz da verir. */}
+        {state.sahe ? (
+          <IndeksKarti indeksHali={indeksHali} />
+        ) : (
+          <div
+            className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2"
+            style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+          >
+            <Icon name="Satellite" size={13} color="rgba(255,255,255,0.6)" />
+            <span className="text-xs" style={{ color: "rgba(255,255,255,0.72)" }}>
+              {t("indeks.saheYox")}
+            </span>
+          </div>
+        )}
+
+        <div className="mt-2 grid grid-cols-3 gap-2">
           <StatTile label={t("home.cropHealth")}>
             {faiz == null ? "—" : `${formatNumber(faiz, lang)}%`}{" "}
             {olculen && olculen.istiqamet !== "sabit" && (
@@ -164,6 +184,15 @@ export function HomeScreen({
           </StatTile>
           <StatTile label={t("home.wallet")}>{money(state.wallet)}</StatTile>
         </div>
+
+        {/* Kredit limiti hələ hesablanmır — bunu deməmək fermeri saxta rəqəmlə
+            plan qurmağa aparır. Qövs silinsə də bu qeyd qalır. */}
+        <p
+          className="mt-1.5 text-center"
+          style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, lineHeight: 1.4 }}
+        >
+          {t("home.scoreNote")}
+        </p>
 
         {/* Peyk ölçməsinin vəziyyəti. Hər hal ayrı cümlə deyir: peyk məlumatı
             havadan fərqli olaraq həmişə mövcud olmur və "yoxdur" ilə "xəta"
