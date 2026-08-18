@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
-import { musterTeyin, sorgu } from "../lib/db.js";
+import { BAGLANTI_ACARLARI, musterTeyin, sorgu } from "../lib/db.js";
 import handler from "./hesab.js";
 
 // Handler HTTP-siz sınanır: mock req/res real handler-i PGlite üstündə sürür.
@@ -90,7 +90,24 @@ describe("api/hesab GET (diaqnostika)", () => {
   it("qurulub vəziyyətini qaytarır, sirr sızdırmır", async () => {
     const res = await isle(reqYarat({ method: "GET" }));
     expect(res.statusCode).toBe(200);
-    expect(res.govde).toEqual({ dbQurulub: true, hesabQurulub: true, smsRejimi: "log" });
+    expect(res.govde).toMatchObject({ dbQurulub: true, hesabQurulub: true, smsRejimi: "log" });
+    // Cavabda heç bir dəyər olmamalıdır — yalnız ad və bayraqlar
+    expect(JSON.stringify(res.govde)).not.toContain("test-sirri");
+  });
+
+  it("bağlantı açarının ADINI verir (dəyərini yox)", async () => {
+    musterTeyin(null);
+    const kohne = process.env.POSTGRES_URL;
+    process.env.POSTGRES_URL = "postgres://saxta/baza";
+    try {
+      const res = await isle(reqYarat({ method: "GET" }));
+      expect(res.govde.acar).toBe("POSTGRES_URL");
+      expect(JSON.stringify(res.govde)).not.toContain("saxta");
+    } finally {
+      if (kohne === undefined) delete process.env.POSTGRES_URL;
+      else process.env.POSTGRES_URL = kohne;
+      musterTeyin(pg);
+    }
   });
 
   it("sessiya cookie-si varsa telefonu göstərir", async () => {
@@ -103,8 +120,9 @@ describe("api/hesab GET (diaqnostika)", () => {
 describe("api/hesab qurulmayıb", () => {
   it("db yoxdursa POST 501 qaytarır", async () => {
     musterTeyin(null);
-    const kohne = process.env.DATABASE_URL;
-    delete process.env.DATABASE_URL;
+    // Tanınan bütün açarlar getməlidir — biri qalsa "db var" sayılar
+    const kohne = Object.fromEntries(BAGLANTI_ACARLARI.map((ad) => [ad, process.env[ad]]));
+    for (const ad of BAGLANTI_ACARLARI) delete process.env[ad];
     try {
       const res = await isle(reqYarat({ body: { emel: "kod-iste", telefon: TEL } }));
       expect(res.statusCode).toBe(501);
@@ -112,8 +130,13 @@ describe("api/hesab qurulmayıb", () => {
       const diaq = await isle(reqYarat({ method: "GET" }));
       expect(diaq.statusCode).toBe(200);
       expect(diaq.govde.dbQurulub).toBe(false);
+      // Açar tapılmayanda cavab bunu açıq deyir — panelde nə axtarmalı
+      expect(diaq.govde.acar).toBeNull();
     } finally {
-      if (kohne) process.env.DATABASE_URL = kohne;
+      for (const [ad, deyer] of Object.entries(kohne)) {
+        if (deyer === undefined) delete process.env[ad];
+        else process.env[ad] = deyer;
+      }
     }
   });
 });

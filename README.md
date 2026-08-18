@@ -415,8 +415,13 @@ Quraşdırma (Vercel):
 1. Storage → Create Database → **Postgres (Neon)** → layihəyə qoşun.
    `DATABASE_URL` avtomatik gəlir (Production + Preview).
 2. Settings → Environment Variables → `SESSION_SECRET` = `openssl rand -hex 32`.
-3. Yenidən deploy edin. Yoxlama: `GET /api/hesab` →
-   `{"dbQurulub":true,"hesabQurulub":true,"smsRejimi":"log"}`.
+3. Yenidən deploy edin — dəyişənlər YALNIZ yeni deploy-a düşür, mövcud
+   deploy köhnə mühitlə qalır. Yoxlama: `GET /api/hesab` →
+   `{"dbQurulub":true,"hesabQurulub":true,"acar":"DATABASE_URL", ...}`.
+   `false` gələrsə cavabdakı `acar` və `muhit` sahələrinə baxın: `acar: null`
+   = bağlantı sətri heç bir tanınan adla gəlmir (`DATABASE_URL`,
+   `POSTGRES_URL`, hovuzsuz variantlar), `muhit` isə preview/production
+   ayırır — dəyişən yalnız birinə əlavə olunubsa səbəb budur.
 4. (Sonra) SMS şlüzü müqaviləsindən sonra `SMS_URL` və `SMS_ACAR` əlavə edin.
    O vaxta qədər OTP kodları yalnız Vercel funksiya loglarında görünür —
    UI-da heç vaxt göstərilmir.

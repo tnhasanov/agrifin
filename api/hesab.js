@@ -13,7 +13,7 @@
 //   DATABASE_URL   — Storage-da Postgres yaradanda özü gəlir
 //   SESSION_SECRET — `openssl rand -hex 32`
 //   SMS_URL / SMS_ACAR — şlüz müqaviləsindən sonra (yoxdursa: log rejimi)
-import { dbQurulub } from "../lib/db.js";
+import { baglantiAcari, dbQurulub } from "../lib/db.js";
 import { smsGonder, smsRejimi } from "../lib/sms.js";
 import {
   cookieToken,
@@ -29,8 +29,19 @@ import { ipTap } from "../lib/copernicus.js";
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
-    // Diaqnostika açar sızdırmır — yalnız qurulub/qurulmayıb
-    const cavab = { dbQurulub: dbQurulub(), hesabQurulub: hesabQurulub(), smsRejimi: smsRejimi() };
+    // Diaqnostika DƏYƏR sızdırmır — yalnız qurulub/qurulmayıb.
+    //
+    // `acar` və `muhit` bilərəkdən buradadır: "qurulmayıb" cavabının iki
+    // ayrı səbəbi var — dəyişən yoxdur, YOXSA baxdığımız deploy köhnədir.
+    // Adı və mühiti görmədən bunları ayırmaq üçün paneldə axtarış lazım gəlir.
+    // İkisi də sirr deyil: biri sabit siyahıdan gələn ad, biri prod/preview.
+    const cavab = {
+      dbQurulub: dbQurulub(),
+      hesabQurulub: hesabQurulub(),
+      smsRejimi: smsRejimi(),
+      acar: baglantiAcari(),
+      muhit: process.env.VERCEL_ENV ?? null,
+    };
     if (cavab.dbQurulub && cavab.hesabQurulub) {
       try {
         const istifadeci = await sessiyaOxu(cookieToken(req));
