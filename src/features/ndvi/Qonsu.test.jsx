@@ -145,15 +145,16 @@ describe("müqayisə kartı", () => {
     expect(screen.getByText("Ətrafın medianı 58%")).toBeInTheDocument();
   });
 
-  // Yol və tikili sayılsaydı ortalama süni düşərdi və HƏR fermer "yaxşı"
-  // görünərdi — fermerə nə ilə müqayisə olunduğu açıq deyilməlidir
+  // Müqayisənin İKİ TƏRƏFİ eyni sayılmalıdır və fermer bunu bilməlidir:
+  // əvvəl ətrafda yalnız yaşıl piksellər sayılırdı, sahədə isə hamısı —
+  // hər sahə süni aşağı düşürdü (bax: lib/copernicus.js, MUQAYISE_SERTI)
   it("nə ilə müqayisə olunduğunu açıq yazır", async () => {
     seed();
     stubApi();
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText(/YALNIZ bitki örtüyü/)).toBeInTheDocument());
-    expect(screen.getByText(/5 km radiusda/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText(/EYNİ qayda ilə ölçülür/)).toBeInTheDocument());
+    expect(screen.getByText(/5 km radiusdakı torpaq/)).toBeInTheDocument();
   });
 
   it("sahənin öz ölçmə tarixini serverə göndərir", async () => {

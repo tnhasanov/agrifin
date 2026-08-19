@@ -4,6 +4,11 @@ import * as storage from "../lib/storage.js";
 // bir neçə dəfə soruşmağın mənası yoxdur. Keş həm gecikməni, həm də
 // Copernicus-un emal kvotasını qoruyur.
 export const KES_MS = 12 * 60 * 60 * 1000;
+
+// Ölçmə qaydası dəyişəndə artırılır — saxlanan nəticələr yeni qayda ilə
+// müqayisə oluna bilməz. v2: sahə və ətraf EYNİ maska ilə ölçülür
+// (bax: lib/copernicus.js, MUQAYISE_SERTI).
+export const KES_VERSIYASI = 2;
 const KES_ACAR = "ndvi";
 const SEKIL_ACAR = "ndviSekil";
 const QONSU_ACAR = "ndviQonsu";
@@ -76,7 +81,7 @@ export async function fetchNdvi({ noqteler, gun, signal, mecburi = false } = {})
 
   const acar = saheAcari(noqteler);
   const kes = storage.read(KES_ACAR);
-  const uygun = kes && kes.acar === acar;
+  const uygun = kes && kes.acar === acar && kes.versiya === KES_VERSIYASI;
 
   if (!mecburi && uygun && Date.now() - kes.vaxt < KES_MS) {
     return { seriya: kes.seriya, kecenIl: kes.kecenIl ?? null, kohne: false, menbe: kes.menbe };
@@ -99,7 +104,7 @@ export async function fetchNdvi({ noqteler, gun, signal, mecburi = false } = {})
     }
 
     const { seriya = [], kecenIl = null, menbe } = await cavab.json();
-    storage.write(KES_ACAR, { acar, vaxt: Date.now(), seriya, kecenIl, menbe });
+    storage.write(KES_ACAR, { acar, versiya: KES_VERSIYASI, vaxt: Date.now(), seriya, kecenIl, menbe });
     return { seriya, kecenIl, kohne: false, menbe };
   } catch (error) {
     if (error?.name === "AbortError") throw error;
@@ -165,7 +170,13 @@ export async function fetchQonsu({ noqteler, son, signal, mecburi = false } = {}
 
   const acar = `${saheAcari(noqteler)}|${son ?? ""}`;
   const kes = storage.read(QONSU_ACAR);
-  if (!mecburi && kes && kes.acar === acar && Date.now() - kes.vaxt < KES_MS) {
+  if (
+    !mecburi &&
+    kes &&
+    kes.acar === acar &&
+    kes.versiya === KES_VERSIYASI &&
+    Date.now() - kes.vaxt < KES_MS
+  ) {
     return kes.qonsu;
   }
 
@@ -183,7 +194,7 @@ export async function fetchQonsu({ noqteler, son, signal, mecburi = false } = {}
   }
 
   const { qonsu = null } = await cavab.json();
-  storage.write(QONSU_ACAR, { acar, vaxt: Date.now(), qonsu });
+  storage.write(QONSU_ACAR, { acar, versiya: KES_VERSIYASI, vaxt: Date.now(), qonsu });
   return qonsu;
 }
 

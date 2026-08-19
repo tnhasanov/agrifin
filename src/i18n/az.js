@@ -349,7 +349,7 @@ export default {
   "qonsu.illik.eyni": "Keçən il bu vaxt {kecen}% idi, indi {indi}% — demək olar eyni səviyyə.",
 
   "qonsu.note":
-    "5 km radiusda YALNIZ bitki örtüyü olan piksellər sayılır — yol, tikili və çılpaq torpaq müqayisəyə girmir. Eyni peyk keçidi, eyni gün.",
+    "Sahəniz və 5 km radiusdakı torpaq EYNİ qayda ilə ölçülür: bulud, kölgə və su çıxarılır, biçilmiş və çılpaq sahələr hər iki tərəfdə sayılır. Eyni peyk keçidi, eyni gün.",
 
   "paylas.duyme": "Hesabatı paylaş",
   "paylas.basliq": "AgriFin — sahə hesabatı",

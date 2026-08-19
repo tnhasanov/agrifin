@@ -350,7 +350,7 @@ export default {
   "qonsu.illik.eyni": "Last year at this date it was {kecen}%, now {indi}% — practically the same level.",
 
   "qonsu.note":
-    "Only vegetated pixels within a 5 km radius are counted — roads, buildings and bare soil are excluded. Same satellite pass, same day.",
+    "Your field and the land within 5 km are measured the SAME way: cloud, shadow and water are excluded, while harvested and bare ground counts on both sides. Same satellite pass, same day.",
 
   "paylas.duyme": "Share the report",
   "paylas.basliq": "AgriFin — field report",
