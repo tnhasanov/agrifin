@@ -9,7 +9,14 @@
 // "ortadan yuxarı" görünər — yəni müqayisə yaltaqlıq olar, məlumat yox.
 // Buna görə SCL === 4 (bitki örtüyü) filtri qoyulur: yalnız əkin sahələri
 // müqayisəyə girir.
-import { MIN_NOQTE, QONSU_RADIUS_KM, polygonaCevir, qonsuCercevesi } from "../lib/geoJson.js";
+import {
+  MIN_NOQTE,
+  QONSU_RADIUS_KM,
+  merkeziEn,
+  olcuDereceye,
+  polygonaCevir,
+  qonsuCercevesi,
+} from "../lib/geoJson.js";
 import {
   BAZA_URL,
   acarQurulub,
@@ -122,6 +129,12 @@ export default async function handler(req, res) {
     if (!bbox) {
       return res.status(400).json({ error: "Ətraf ərazi hesablana bilmədi." });
     }
+    // resx/resy EPSG:4326-da DƏRƏCƏdir — metr yazsaq 10 km-lik kvadrat bir
+    // piksele yığılır və Copernicus 400 verir (bax: lib/geoJson.js)
+    const olcu = olcuDereceye(OLCU_METR, merkeziEn(noqteler));
+    if (!olcu) {
+      return res.status(400).json({ error: "Ətraf ərazi hesablana bilmədi." });
+    }
 
     const indi = Date.now();
     const basdan = indi - STANDART_GUN * 24 * 60 * 60 * 1000;
@@ -143,8 +156,8 @@ export default async function handler(req, res) {
           timeRange: { from: `${gunISO(basdan)}T00:00:00Z`, to: `${gunISO(indi)}T23:59:59Z` },
           aggregationInterval: { of: DOVR },
           evalscript: EVALSCRIPT,
-          resx: OLCU_METR,
-          resy: OLCU_METR,
+          resx: olcu.resx,
+          resy: olcu.resy,
         },
         calculations: {
           // Orta tək başına aldadıcıdır: bir neçə çox zəif sahə onu aşağı

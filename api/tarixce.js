@@ -12,7 +12,14 @@
 //
 // XƏRC: sorğu başına ~2 emal vahidi, sahə başına BİR DƏFƏ — tarixçə
 // dəyişmir, müştəri onu daimi keşləyir (yalnız cari mövsüm yenilənir).
-import { MIN_NOQTE, cerceve, polygonaCevir, qonsuCercevesi } from "../lib/geoJson.js";
+import {
+  MIN_NOQTE,
+  cerceve,
+  merkeziEn,
+  olcuDereceye,
+  polygonaCevir,
+  qonsuCercevesi,
+} from "../lib/geoJson.js";
 import {
   BAZA_URL,
   BULUD_SERTI,
@@ -35,6 +42,8 @@ const MAX_DERECE = 0.5;
 // maksimumundan götürülür, daha sıx dövr yalnız emal vahidi xərcləyir
 const DOVR = "P1M";
 
+// Sahənin öz ölçməsi Sentinel-2-nin doğma ayırdetməsindədir
+const SAHE_OLCU = 10;
 // Ətraf üçün qaba ölçü: medianı 60 m piksellər də verir, xərc isə 36 dəfə az
 const ETRAF_OLCU = 60;
 export const MIN_ETRAF_PIKSEL = 300;
@@ -77,6 +86,10 @@ function evaluatePixel(s) {
   return { ndvi: [ndvi], dataMask: [s.SCL === 4 ? s.dataMask : 0] };
 }`;
 
+/**
+ * @param {{resx, resy}} olcu DƏRƏCƏ ilə — bax: lib/geoJson.js, olcuDereceye.
+ *   Bura metr yazmaq sorğunu sındırır (bir piksel = bütün ərazi).
+ */
 function statSorgusu({ bounds, evalscript, from, to, olcu, token, percentiles }) {
   return fetch(STAT_URL, {
     method: "POST",
@@ -94,8 +107,8 @@ function statSorgusu({ bounds, evalscript, from, to, olcu, token, percentiles })
         timeRange: { from, to },
         aggregationInterval: { of: DOVR },
         evalscript,
-        resx: olcu,
-        resy: olcu,
+        resx: olcu.resx,
+        resy: olcu.resy,
       },
       calculations: {
         ndvi: { statistics: { default: percentiles ? { percentiles: { k: [50] } } : {} } },
@@ -193,6 +206,14 @@ export default async function handler(req, res) {
     }
     const etrafBbox = qonsuCercevesi(noqteler);
 
+    // Ölçü DƏRƏCƏyə çevrilir: sorğu EPSG:4326-dadır (bax: olcuDereceye)
+    const en = merkeziEn(noqteler);
+    const saheOlcusu = olcuDereceye(SAHE_OLCU, en);
+    const etrafOlcusu = olcuDereceye(ETRAF_OLCU, en);
+    if (!saheOlcusu || !etrafOlcusu) {
+      return res.status(400).json({ error: "Sahənin yeri hesablana bilmədi." });
+    }
+
     const indi = new Date();
     const sonIl = indi.getUTCFullYear();
     const from = `${ILK_IL}-01-01T00:00:00Z`;
@@ -206,7 +227,7 @@ export default async function handler(req, res) {
         evalscript: SAHE_EVALSCRIPT,
         from,
         to,
-        olcu: 10,
+        olcu: saheOlcusu,
         token,
       }),
       statSorgusu({
@@ -214,7 +235,7 @@ export default async function handler(req, res) {
         evalscript: ETRAF_EVALSCRIPT,
         from,
         to,
-        olcu: ETRAF_OLCU,
+        olcu: etrafOlcusu,
         token,
         percentiles: true,
       }),
