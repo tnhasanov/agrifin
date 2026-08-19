@@ -73,6 +73,35 @@ const gunISO = (ms) => new Date(ms).toISOString().slice(0, 10);
 const yuvarla = (deyer) => Math.round(deyer * 1000) / 1000;
 
 /**
+ * Copernicus sorğusunun gövdəsi — AYRICA funksiya ki, testdən yoxlana bilsin.
+ *
+ * `olcu` DƏRƏCƏ ilə gəlir (bax: lib/geoJson.js, olcuDereceye). Bura metr
+ * yazmaq 10 km-lik kvadratı bir piksele yığır və Copernicus 400 verir:
+ * "9991.58 meters per pixel exceeds the limit 1500.00". Gövdə ayrı
+ * olduğuna görə test bunu birbaşa yoxlayır — inline obyektdə mümkün deyildi.
+ */
+export function sorguGovdesi({ bbox, olcu, from, to }) {
+  return {
+    input: {
+      bounds: { bbox, properties: { crs: "http://www.opengis.net/def/crs/EPSG/0/4326" } },
+      data: [{ type: "sentinel-2-l2a", dataFilter: { mosaickingOrder: "leastCC" } }],
+    },
+    aggregation: {
+      timeRange: { from, to },
+      aggregationInterval: { of: DOVR },
+      evalscript: EVALSCRIPT,
+      resx: olcu.resx,
+      resy: olcu.resy,
+    },
+    calculations: {
+      // Orta tək başına aldadıcıdır: bir neçə çox zəif sahə onu aşağı
+      // çəkir. Median və çeyreklər paylanmanı olduğu kimi göstərir.
+      ndvi: { statistics: { default: { percentiles: { k: [25, 50, 75] } } } },
+    },
+  };
+}
+
+/**
  * Cavabdan bir dövr seçir: mümkünsə sahənin öz ölçməsi ilə EYNİ dövrü,
  * yoxsa ən sonuncunu. Fərqli tarixləri müqayisə etmək yanlış nəticə verir —
  * iki həftə əvvəlki qonşu ilə bugünkü sahə müqayisə oluna bilməz.
@@ -140,6 +169,21 @@ export default async function handler(req, res) {
     const basdan = indi - STANDART_GUN * 24 * 60 * 60 * 1000;
     const token = await tokenAl();
 
+    const govde = sorguGovdesi({
+      bbox,
+      olcu,
+      from: `${gunISO(basdan)}T00:00:00Z`,
+      to: `${gunISO(indi)}T23:59:59Z`,
+    });
+
+    // Sorğunun ölçüsü loga yazılır: "9991.58 m/piksel" xətası bir dəfə
+    // istehsalda tapıldı və göndərilən dəyəri görmədən onu ayırd etmək
+    // mümkün deyildi. Burada sirr yoxdur — CRS, çərçivə və addım.
+    console.log(
+      `[qonsu] sorğu crs=4326 bbox=${bbox.map((n) => n.toFixed(4)).join(",")} ` +
+        `resx=${govde.aggregation.resx.toFixed(6)} resy=${govde.aggregation.resy.toFixed(6)}`,
+    );
+
     const cavab = await fetch(STAT_URL, {
       method: "POST",
       headers: {
@@ -147,24 +191,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({
-        input: {
-          bounds: { bbox, properties: { crs: "http://www.opengis.net/def/crs/EPSG/0/4326" } },
-          data: [{ type: "sentinel-2-l2a", dataFilter: { mosaickingOrder: "leastCC" } }],
-        },
-        aggregation: {
-          timeRange: { from: `${gunISO(basdan)}T00:00:00Z`, to: `${gunISO(indi)}T23:59:59Z` },
-          aggregationInterval: { of: DOVR },
-          evalscript: EVALSCRIPT,
-          resx: olcu.resx,
-          resy: olcu.resy,
-        },
-        calculations: {
-          // Orta tək başına aldadıcıdır: bir neçə çox zəif sahə onu aşağı
-          // çəkir. Median və çeyreklər paylanmanı olduğu kimi göstərir.
-          ndvi: { statistics: { default: { percentiles: { k: [25, 50, 75] } } } },
-        },
-      }),
+      body: JSON.stringify(govde),
     });
 
     if (!cavab.ok) {
