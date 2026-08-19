@@ -478,6 +478,8 @@ export default {
   "indeks.sebeb.meyl.sabit": "Son mövsümlərdə səviyyə sabit qalıb",
   "indeks.sebeb.meyl.zeifleyir": "Son mövsümlərdə zəifləmə görünür",
   "indeks.sebeb.meyl.pisdir": "Son mövsümlərdə aydın pisləşmə",
+  "indeks.sebeb.cari.ekinYox":
+    "Sahə hazırda əkin altında deyil — bu mövsüm müqayisə edilə bilmir",
   "indeks.sebeb.cari.yaxsi": "Bu mövsüm ətrafdan xeyli yuxarı",
   "indeks.sebeb.cari.normal": "Bu mövsüm ətraf səviyyəsindədir",
   "indeks.sebeb.cari.asagi": "Bu mövsüm ətrafdan geri qalır",

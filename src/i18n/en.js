@@ -477,6 +477,8 @@ export default {
   "indeks.sebeb.meyl.sabit": "Level held steady over recent seasons",
   "indeks.sebeb.meyl.zeifleyir": "Some weakening over recent seasons",
   "indeks.sebeb.meyl.pisdir": "Clear deterioration over recent seasons",
+  "indeks.sebeb.cari.ekinYox":
+    "The field is not under active vegetation right now — this season cannot be compared",
   "indeks.sebeb.cari.yaxsi": "Well above the area this season",
   "indeks.sebeb.cari.normal": "At area level this season",
   "indeks.sebeb.cari.asagi": "Behind the area this season",

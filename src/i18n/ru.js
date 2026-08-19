@@ -478,6 +478,8 @@ export default {
   "indeks.sebeb.meyl.sabit": "Уровень последних сезонов стабилен",
   "indeks.sebeb.meyl.zeifleyir": "В последних сезонах заметно ослабление",
   "indeks.sebeb.meyl.pisdir": "Явное ухудшение в последних сезонах",
+  "indeks.sebeb.cari.ekinYox":
+    "Поле сейчас не под растительностью — сравнить этот сезон нельзя",
   "indeks.sebeb.cari.yaxsi": "Этот сезон заметно выше округи",
   "indeks.sebeb.cari.normal": "Этот сезон на уровне округи",
   "indeks.sebeb.cari.asagi": "Этот сезон отстаёт от округи",
