@@ -18,7 +18,7 @@
 // Orbit istiqaməti SABİT saxlanılır: eyni sahəyə fərqli bucaqdan baxanda
 // səpilmə özü dəyişir. Qarışdırsaq "nəmlik artdı" siqnalı əslində peykin
 // başqa yoldan keçməsi olardı.
-import { MIN_NOQTE, cerceve, polygonaCevir } from "../lib/geoJson.js";
+import { MIN_NOQTE, cerceve, merkeziEn, olcuDereceye, polygonaCevir } from "../lib/geoJson.js";
 import {
   BAZA_URL,
   acarQurulub,
@@ -141,6 +141,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Sahə çox böyükdür." });
     }
 
+    // resx/resy EPSG:4326-da DƏRƏCƏdir (bax: lib/geoJson.js, olcuDereceye)
+    const olcu = olcuDereceye(OLCU_METR, merkeziEn(noqteler));
+    if (!olcu) {
+      return res.status(400).json({ error: "Sahənin yeri hesablana bilmədi." });
+    }
+
     const gunSayi =
       Number.isFinite(gun) && gun >= 12 && gun <= MAX_GUN ? Math.round(gun) : STANDART_GUN;
     const indi = Date.now();
@@ -186,8 +192,8 @@ export default async function handler(req, res) {
           timeRange: { from: `${gunISO(basdan)}T00:00:00Z`, to: `${gunISO(indi)}T23:59:59Z` },
           aggregationInterval: { of: DOVR },
           evalscript: EVALSCRIPT,
-          resx: OLCU_METR,
-          resy: OLCU_METR,
+          resx: olcu.resx,
+          resy: olcu.resy,
         },
         calculations: { default: { statistics: { default: {} } } },
       }),

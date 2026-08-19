@@ -7,7 +7,7 @@
 // KALİBRLƏMƏ QEYDİ: kvadrant sərhədi əhatə çərçivəsindən çıxır, torpaq və ya
 // suvarma xəritəsindən yox. Yəni "şimal-şərq" coğrafi kvadrantdır, aqronomik
 // zona deyil. Sahə uzunsovdursa iki kvadrant boş qala bilər — onlar atılır.
-import { MIN_NOQTE, kvadrantlar } from "../lib/geoJson.js";
+import { MIN_NOQTE, kvadrantlar, merkeziEn, olcuDereceye } from "../lib/geoJson.js";
 import {
   BAZA_URL,
   BULUD_SERTI,
@@ -21,6 +21,10 @@ import {
 
 const STAT_URL = `${BAZA_URL}/statistics`;
 const STANDART_GUN = 20;
+
+// Sentinel-2-nin doğma ayırdetməsi — zonalar sahədaxili fərqi göstərməlidir,
+// ona görə burada kobud ölçü işə yaramır
+const OLCU_METR = 10;
 
 // Bundan kiçik fərq ölçmə səs-küyüdür — fermeri sahənin o başına
 // göndərməyə dəyməz
@@ -84,7 +88,7 @@ export function zeifTap(zonalar) {
   return { ad: zeif.ad, ndvi: zeif.ndvi, ferq, orta: Math.round(orta * 1000) / 1000 };
 }
 
-async function kvadrantSorgusu({ polygon, token, from, to }) {
+async function kvadrantSorgusu({ polygon, olcu, token, from, to }) {
   const cavab = await fetch(STAT_URL, {
     method: "POST",
     headers: {
@@ -104,8 +108,8 @@ async function kvadrantSorgusu({ polygon, token, from, to }) {
         timeRange: { from, to },
         aggregationInterval: { of: "P10D" },
         evalscript: EVALSCRIPT,
-        resx: 10,
-        resy: 10,
+        resx: olcu.resx,
+        resy: olcu.resy,
       },
       calculations: { ndvi: { statistics: { default: {} } } },
     }),
@@ -140,6 +144,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: `Sahə konturu yararsızdır (ən azı ${MIN_NOQTE} künc).` });
     }
 
+    // resx/resy EPSG:4326-da DƏRƏCƏdir (bax: lib/geoJson.js, olcuDereceye)
+    const olcu = olcuDereceye(OLCU_METR, merkeziEn(noqteler));
+    if (!olcu) {
+      return res.status(400).json({ error: "Sahənin yeri hesablana bilmədi." });
+    }
+
     const indi = Date.now();
     const from = `${gunISO(indi - STANDART_GUN * 86_400_000)}T00:00:00Z`;
     const to = `${gunISO(indi)}T23:59:59Z`;
@@ -148,7 +158,7 @@ export default async function handler(req, res) {
     // Kvadrantlar paralel soruşulur — ardıcıl getsə 30 saniyəyə sığmaya bilər
     const neticeler = await Promise.all(
       hisseler.map(async ({ ad, polygon }) => {
-        const olcme = await kvadrantSorgusu({ polygon, token, from, to });
+        const olcme = await kvadrantSorgusu({ polygon, olcu, token, from, to });
         return olcme ? { ad, ...olcme } : null;
       }),
     );

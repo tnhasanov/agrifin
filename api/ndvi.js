@@ -7,7 +7,7 @@
 // Axın: client_credentials ilə token → Statistical API-yə çoxbucaqlı göndər →
 // hər dövr üçün orta NDVI qaytar. Şəkil endirilmir, hesablama Copernicus-da
 // olur; biz yalnız rəqəmləri alırıq.
-import { MIN_NOQTE, cerceve, polygonaCevir } from "../lib/geoJson.js";
+import { MIN_NOQTE, cerceve, merkeziEn, olcuDereceye, polygonaCevir } from "../lib/geoJson.js";
 import {
   BAZA_URL,
   BULUD_SERTI,
@@ -30,6 +30,9 @@ const MAX_GUN = 180;
 
 // Sahə çox böyükdürsə sorğu həm bahalı, həm mənasız olur (fermer sahəsi deyil)
 const MAX_DERECE = 0.5;
+
+// Sentinel-2-nin görünən zolaqlarının doğma ayırdetməsi
+const OLCU_METR = 10;
 
 // Vercel-in standart 10 saniyəsi Statistical API üçün bəzən azdır
 export const maxDuration = 30;
@@ -109,7 +112,7 @@ export function seriyaCixar(cavab) {
  * Dar pəncərə (±10 gün) götürülür ki, müqayisə mövsümün eyni nöqtəsində
  * olsun; buludluluq üzündən dəqiq gün tapılmaya bilər.
  */
-async function kecenIlOlcmesi({ polygon, token, indi }) {
+async function kecenIlOlcmesi({ polygon, olcu, token, indi }) {
   const il = 365 * 24 * 60 * 60 * 1000;
   const merkez = indi - il;
   const gun = 10 * 24 * 60 * 60 * 1000;
@@ -133,8 +136,8 @@ async function kecenIlOlcmesi({ polygon, token, indi }) {
         timeRange: { from: `${gunISO(merkez - gun)}T00:00:00Z`, to: `${gunISO(merkez + gun)}T23:59:59Z` },
         aggregationInterval: { of: "P20D" },
         evalscript: EVALSCRIPT,
-        resx: 10,
-        resy: 10,
+        resx: olcu.resx,
+        resy: olcu.resy,
       },
       calculations: { ndvi: { statistics: { default: {} } } },
     }),
@@ -174,6 +177,11 @@ export default async function handler(req, res) {
     if (enFerq > MAX_DERECE || uzFerq > MAX_DERECE) {
       return res.status(400).json({ error: "Sahə çox böyükdür." });
     }
+    // resx/resy EPSG:4326-da DƏRƏCƏdir (bax: lib/geoJson.js, olcuDereceye)
+    const olcu = olcuDereceye(OLCU_METR, merkeziEn(noqteler));
+    if (!olcu) {
+      return res.status(400).json({ error: "Sahənin yeri hesablana bilmədi." });
+    }
 
     const gunSayi =
       Number.isFinite(gun) && gun >= 10 && gun <= MAX_GUN ? Math.round(gun) : STANDART_GUN;
@@ -201,9 +209,10 @@ export default async function handler(req, res) {
           timeRange: { from: `${gunISO(basdan)}T00:00:00Z`, to: `${gunISO(indi)}T23:59:59Z` },
           aggregationInterval: { of: DOVR },
           evalscript: EVALSCRIPT,
-          // Sentinel-2-nin görünən zolaqları 10 m-dir; daha incə istəmək mənasızdır
-          resx: 10,
-          resy: 10,
+          // Sentinel-2-nin görünən zolaqları 10 m-dir; daha incə istəmək mənasızdır.
+          // Ölçü DƏRƏCƏdədir — bax: lib/geoJson.js, olcuDereceye
+          resx: olcu.resx,
+          resy: olcu.resy,
         },
         calculations: {
           ndvi: { statistics: { default: {} } },
@@ -226,7 +235,7 @@ export default async function handler(req, res) {
     // vahidi xərcləməyin mənası yoxdur. Alınmasa müqayisə sadəcə olmur.
     let kecen = null;
     if (kecenIl === true) {
-      kecen = await kecenIlOlcmesi({ polygon, token, indi }).catch(() => null);
+      kecen = await kecenIlOlcmesi({ polygon, olcu, token, indi }).catch(() => null);
     }
 
     console.log(

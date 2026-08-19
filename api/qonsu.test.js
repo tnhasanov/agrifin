@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { QONSU_RADIUS_KM, qonsuCercevesi } from "../lib/geoJson.js";
-import { MIN_PIKSEL, dovrSec, faizAl } from "./qonsu.js";
+import { MIN_PIKSEL, dovrSec, faizAl, sorguGovdesi } from "./qonsu.js";
+import { merkeziEn, olcuDereceye } from "../lib/geoJson.js";
 
 const SAHE = [
   [40.4, 47.1],
@@ -107,5 +108,61 @@ describe("dövr seçimi", () => {
     expect(dovrSec(null, null)).toBeNull();
     expect(dovrSec({ data: [] }, null)).toBeNull();
     expect(dovrSec({ data: [{ interval: { from: "2026-07-30" } }] }, null)).toBeNull();
+  });
+});
+
+describe("Copernicus sorğusunun gövdəsi", () => {
+  // Bərdə yaxınlığında sahə — [en, uzunluq]
+  const SAHE = [
+    [40.37, 47.12],
+    [40.3823, 47.12],
+    [40.3823, 47.1329],
+    [40.37, 47.1329],
+  ];
+
+  const govdeQur = () =>
+    sorguGovdesi({
+      bbox: qonsuCercevesi(SAHE),
+      olcu: olcuDereceye(60, merkeziEn(SAHE)),
+      from: "2026-07-20T00:00:00Z",
+      to: "2026-08-19T23:59:59Z",
+    });
+
+  // ═══ İSTEHSAL XƏTASI ═════════════════════════════════════════════
+  // resx/resy metr kimi göndərilirdi, halbuki CRS EPSG:4326-dır (dərəcə).
+  // Copernicus: "Your request of 9991.58 meters per pixel exceeds the
+  // limit 1500.00 meters per pixel of the collection S2L2A" — ətraf
+  // müqayisəsi tamamilə söndürülmüşdü. Bu yoxlama onun qayıtmasına
+  // praktiki olaraq imkan vermir.
+  it("ölçü dərəcə miqyasındadır, metr deyil", () => {
+    const { aggregation } = govdeQur();
+    expect(aggregation.resx).toBeLessThan(0.01);
+    expect(aggregation.resy).toBeLessThan(0.01);
+    expect(aggregation.resx).toBeGreaterThan(0);
+    expect(aggregation.resy).toBeGreaterThan(0);
+  });
+
+  it("uzunluq addımı enlik addımından böyükdür (kosinus düzəlişi)", () => {
+    const { aggregation } = govdeQur();
+    expect(aggregation.resx).toBeGreaterThan(aggregation.resy);
+  });
+
+  it("10 km-lik kvadrat yüzlərlə piksel verir, bir piksel yox", () => {
+    const govde = govdeQur();
+    const [uzMin, enMin, uzMax, enMax] = govde.input.bounds.bbox;
+    const enPiksel = (uzMax - uzMin) / govde.aggregation.resx;
+    const boyPiksel = (enMax - enMin) / govde.aggregation.resy;
+
+    expect(enPiksel).toBeGreaterThan(100);
+    expect(boyPiksel).toBeGreaterThan(100);
+
+    // Metr/piksel S2L2A həddinin (1500) çox altındadır
+    const metrPiksel = ((enMax - enMin) * 111320) / boyPiksel;
+    expect(metrPiksel).toBeLessThan(1500);
+    expect(metrPiksel).toBeCloseTo(60, 0);
+  });
+
+  it("CRS EPSG:4326 olaraq qalır", () => {
+    expect(govdeQur().input.bounds.properties.crs).toContain("EPSG/0/4326");
   });
 });
