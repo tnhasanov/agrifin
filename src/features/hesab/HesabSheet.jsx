@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Icon } from "../../components/Icon.jsx";
 import { Sheet } from "../../components/Sheet.jsx";
 import { C, font } from "../../theme/tokens.js";
@@ -36,17 +36,19 @@ export function HesabSheet({ acilib, onBagla }) {
 
   const daxildir = state.hesab.telefon;
 
-  const sifirla = () => {
+  const sifirla = useCallback(() => {
     setAddim("telefon");
     setKod("");
     setXeta(null);
     setRejim(null);
-  };
+  }, []);
 
-  const bagla = () => {
+  // Sabit identifikator: hər render-də yeni funksiya versək Sheet-in
+  // klaviatura effekti hər hərfdə yenidən qurulur (bax: components/Sheet.jsx)
+  const bagla = useCallback(() => {
     sifirla();
     onBagla();
-  };
+  }, [sifirla, onBagla]);
 
   const kodGonder = async (hadise) => {
     hadise.preventDefault();
