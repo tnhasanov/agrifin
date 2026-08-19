@@ -9,7 +9,7 @@ import { TovsiyeKarti } from "../features/tovsiye/TovsiyeKarti.jsx";
 
 export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [] }) {
   const { t } = useI18n();
-  const { actions } = useStore();
+  const { state, actions } = useStore();
 
   return (
     <div className="px-4 pb-4">
@@ -25,7 +25,7 @@ export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [] }) {
           <div className="flex items-center gap-3">
             {/* Mücərrəd "parıltı" ikonu əvəzinə personaj: kartın nəyi
                 açdığını üzü ilə deyir */}
-            <Aqronom hal="sakit" olcu={44} className="ai-ikon shrink-0" />
+            <Aqronom hal="sakit" bitki={state.chat.crop} olcu={44} className="ai-ikon shrink-0" />
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-bold text-white" style={{ fontFamily: font.display }}>

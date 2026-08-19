@@ -222,7 +222,7 @@ export function AgronomChat({
         )}
         {/* Personaj başlıqda vəziyyəti daşıyır: fermer cavabın gəldiyini
             mətnə baxmadan, üzdən görür (bax: components/Aqronom.jsx) */}
-        <Aqronom hal={axanMetn ? "danisir" : busy ? "dusunur" : "sakit"} olcu={34} />
+        <Aqronom hal={axanMetn ? "danisir" : busy ? "dusunur" : "sakit"} bitki={crop} olcu={34} />
       </div>
 
       {/* Bitki seçimi */}
@@ -258,7 +258,7 @@ export function AgronomChat({
                 Personaj söhbətə "kimsə var" hissi verir — Leo-nun bank
                 tətbiqində gördüyü işin eynisi. */}
             <div className="giris mb-3 flex items-end gap-2" style={{ "--i": 0 }}>
-              <Aqronom hal="sakit" olcu={62} className="shrink-0" />
+              <Aqronom hal="sakit" bitki={crop} olcu={62} className="shrink-0" />
               <div
                 className="mb-1 flex-1 rounded-2xl rounded-bl-sm p-3"
                 style={{ backgroundColor: "#EAF4EC", border: "1px solid #CFE6D7" }}
@@ -335,7 +335,7 @@ export function AgronomChat({
               >
                 {/* Donmuş spinner əvəzinə düşünən personaj: gözləmə vaxtı
                     ölü deyil, kimsə sualın üzərində işləyir */}
-                <Aqronom hal="dusunur" olcu={26} />
+                <Aqronom hal="dusunur" bitki={crop} olcu={26} />
                 <span className="text-xs" style={{ color: C.muted }}>
                   {t("chat.thinking")}
                 </span>

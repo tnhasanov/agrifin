@@ -1,5 +1,5 @@
-import { Chip } from "../components/Chip.jsx";
 import { Icon } from "../components/Icon.jsx";
+import { Aqronom } from "../components/Aqronom.jsx";
 import { WeatherStrip } from "../features/weather/WeatherStrip.jsx";
 import { C, font } from "../theme/tokens.js";
 import { useI18n } from "../i18n/index.jsx";
@@ -69,6 +69,14 @@ export function HomeScreen({
   const bas = siqnallar.find((s) => s.ciddilik !== "melumat");
   const qalan = siqnallar.length - (bas ? 1 : 0);
 
+  // Aqronun üzü sahənin vəziyyətini daşıyır. Sıra vacibdir: xəbərdarlıq
+  // hər şeydən üstündür — yaxşı indeks pis xəbəri yumşaltmamalıdır.
+  const aqroHali = bas
+    ? "narahat"
+    : indeksHali.indeks?.bant === "yuksek"
+      ? "sevincli"
+      : "sakit";
+
   return (
     <div className="px-4 pb-4">
       {bas && (
@@ -96,8 +104,24 @@ export function HomeScreen({
         className="mt-3 rounded-3xl px-4 pt-4 pb-3"
         style={{ background: `linear-gradient(160deg, ${C.pine} 0%, ${C.pineDeep} 70%)` }}
       >
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex items-center gap-2.5">
+          {/* AQRO əsas ekranda: bəzək deyil, İKİ iş görür.
+              1) Aqronoma yeganə birbaşa yol — əvvəl çata yalnız siqnal
+                 kartı üzərindən düşmək olurdu, siqnal yoxdursa yol yox idi.
+              2) Üzü sahənin vəziyyətini daşıyır: xəbərdarlıq varsa narahat,
+                 indeks yüksəkdirsə sevincli. Rəqəmə baxmadan oxunur.
+              Başlığı fermerin seçdiyi bitkidir (bax: components/Aqronom.jsx). */}
+          <button
+            type="button"
+            onClick={onOpenChat}
+            aria-label={t("chat.open")}
+            className="shrink-0 rounded-full"
+            style={{ backgroundColor: "rgba(255,255,255,0.10)", padding: 3 }}
+          >
+            <Aqronom hal={aqroHali} bitki={state.chat.crop} olcu={40} />
+          </button>
+
+          <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>
               {t("home.greeting", { name: FARM.farmerName })}
             </p>
@@ -108,12 +132,13 @@ export function HomeScreen({
               })}
             </p>
           </div>
-          <Chip
-            icon="Satellite"
-            label={t("home.satelliteChip")}
-            color="#BFE8CF"
-            bg="rgba(96,190,134,0.18)"
-          />
+          {/* "Bu gün təsdiqlənib" çipi SİLİNDİ. İki səbəb:
+              1) Sabit mətn idi — sahə çəkilməsə də, ölçmə köhnə olsa da
+                 eyni şeyi deyirdi, yəni nümunə məlumat həqiqi məlumat
+                 kimi geyinmişdi;
+              2) aşağıdakı "Peyk ölçməsi · N gün əvvəl" sətri eyni şeyi
+                 DƏQİQ deyir. Yer boşalanda salamlama da sətirlərə
+                 bölünməkdən qurtardı. */}
         </div>
 
         {/* Sahə çəkilməyibsə açıq dəvət; çəkilibsə redaktə keçidi */}

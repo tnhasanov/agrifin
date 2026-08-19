@@ -258,7 +258,22 @@ button:active {
    fırlanma mərkəzi bütün rəsmin küncündən götürülür.
    ══════════════════════════════════════════════════════════════════ */
 
-.aqro * {
+/* ⚠ YALNIZ animasiya olunan qruplara. Əvvəl `.aqro *` yazılmışdı və bu,
+   HƏQİQİ XƏTAYA səbəb oldu: SVG-nin `transform="rotate(bucaq cx cy)"`
+   atributu prezentasiya atributudur, yəni CSS `transform` xassəsinə
+   çevrilir. `transform-box: fill-box` isə onun koordinat başlanğıcını
+   dəyişir və üçarqumentli rotate-in mərkəz koordinatları sürüşmə kimi
+   tətbiq olunur — buğda dənələri sünbüldən qopub künclərə dağılırdı.
+   Fırlanan bəzək elementləri (yarpaq, dənə) bu siyahıda YOXDUR, ona
+   görə onların atributu təbii şəkildə işləyir. */
+.aqro-govde,
+.aqro-baslik,
+.aqro-yarpaq,
+.aqro-goz,
+.aqro-kolge,
+.aqro-nokte,
+.aqro-yanaq,
+.aqro-parilti {
   transform-box: fill-box;
   transform-origin: center;
 }
@@ -350,6 +365,10 @@ button:active {
   50% { transform: translateY(1.5px) rotate(-1deg); }
 }
 
+/* Narahat: başlıq (yarpaq və ya bitki) sallanır. Yarpaqlar ayrıca da
+   əyilir — iki yarpaq bir-birindən ayrı hərəkət edəndə daha canlı olur;
+   bitki başlıqları isə tək parça olduğu üçün bütöv sallanır. */
+.aqro--narahat .aqro-baslik { transform: translateY(2.5px) scale(0.97); }
 .aqro--narahat .aqro-yarpaq--sol { transform: rotate(16deg) translateY(3px); }
 .aqro--narahat .aqro-yarpaq--sag { transform: rotate(-16deg) translateY(3px); }
 .aqro--narahat .aqro-yanaq { opacity: 0; }
