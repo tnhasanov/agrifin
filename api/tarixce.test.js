@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { ILK_IL, MIN_ETRAF_PIKSEL, aylariCixar, movsumlereBol } from "./tarixce.js";
 
-const dovr = (ay, orta, { medyan = null, piksel = 500 } = {}) => ({
+/**
+ * @param {string} faizAcari xidmətin qaytardığı faizlik açarı — formatı
+ *   yerləşdirmədən asılı olaraq dəyişir, ona görə testdə parametrdir
+ */
+const dovr = (ay, orta, { medyan = null, piksel = 500, faizAcari = "50.0" } = {}) => ({
   interval: { from: `${ay}-01T00:00:00Z`, to: `${ay}-28T00:00:00Z` },
   outputs: {
     ndvi: {
@@ -10,7 +14,7 @@ const dovr = (ay, orta, { medyan = null, piksel = 500 } = {}) => ({
           stats: {
             mean: orta,
             sampleCount: piksel,
-            ...(medyan != null ? { percentiles: { "50.0": medyan } } : {}),
+            ...(medyan != null ? { percentiles: { [faizAcari]: medyan } } : {}),
           },
         },
       },
@@ -25,6 +29,25 @@ describe("ayların çıxarılması", () => {
     });
     expect(aylar.get("2024-04").orta).toBe(0.61);
     expect(aylar.get("2024-05").medyan).toBe(0.58);
+  });
+
+  // HƏQİQİ NASAZLIQ: yalnız "50.0" açarı qəbul edilirdi. Xidmət faizliyi
+  // başqa formada qaytaranda BÜTÜN ayların medianı boş qalır, indeksin ən
+  // ağır amili (nisbi performans) isə "ölçülməyib" sayılırdı — hər sahə
+  // 100-dən yalnız 60 xal ala bilirdi. api/qonsu.js bunu onsuz da tolerant
+  // oxuyurdu; fərq səssiz idi, çünki test yalnız bir formatı yoxlayırdı.
+  it("faizlik açarının bütün formalarını oxuyur", () => {
+    for (const acar of ["50.0", "50", "0.5"]) {
+      const aylar = aylariCixar({
+        data: [dovr("2024-05", 0.72, { medyan: 0.58, faizAcari: acar })],
+      });
+      expect(aylar.get("2024-05").medyan, `açar: ${acar}`).toBe(0.58);
+    }
+  });
+
+  it("median yoxdursa null qalır — sıfır yox", () => {
+    const aylar = aylariCixar({ data: [dovr("2024-05", 0.72)] });
+    expect(aylar.get("2024-05").medyan).toBeNull();
   });
 
   // Tam buludlu ay ölçmə deyil — xəritəyə düşməməlidir

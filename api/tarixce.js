@@ -19,6 +19,7 @@ import {
   acarQurulub,
   acarlariGizle,
   diaqnostikaCavabi,
+  faizAl,
   ipTap,
   suretHeddiYarat,
   tokenAl,
@@ -113,8 +114,10 @@ export function aylariCixar(cavab) {
     if (!ay) continue;
     aylar.set(ay, {
       orta: stats.mean,
-      // Statistical API faizlik açarını müxtəlif formada qaytara bilir
-      medyan: stats.percentiles?.["50.0"] ?? stats.percentiles?.[50] ?? null,
+      // Faizlik açarı "50.0", "50" və ya 0.5 ola bilər — oxuma ortaq
+      // funksiyadadır (bax: lib/copernicus.js, faizAl). Burada yalnız
+      // "50.0" gözlənilirdi və bu, ətraf medianını tamamilə sıfırlayırdı.
+      medyan: faizAl(stats.percentiles, 0.5),
       piksel: stats.sampleCount ?? 0,
     });
   }
@@ -234,8 +237,17 @@ export default async function handler(req, res) {
     const etrafAylari = etrafCavab.ok ? aylariCixar(await etrafCavab.json()) : new Map();
 
     const movsumler = movsumlereBol(saheAylari, etrafAylari, sonIl);
+
+    // Üç ayrı rəqəm, çünki "ətraf medianı yoxdur"un ÜÇ fərqli səbəbi var və
+    // tək bir bayraq onları ayırd etmirdi:
+    //   ətraf=false      → sorğu özü uğursuz oldu
+    //   ətrafAy=0        → sorğu getdi, amma heç bir ay median vermədi
+    //                      (faizlik formatı və ya piksel azlığı)
+    //   müqayisə=0       → aylar var, amma zirvə aylarına düşmür
+    const etrafAyi = [...etrafAylari.values()].filter((a) => Number.isFinite(a.medyan)).length;
+    const muqayiseli = movsumler.filter((m) => m.etrafMedyan != null).length;
     console.log(
-      `[tarixce] nöqtə=${noqteler.length} mövsüm=${movsumler.filter((m) => m.zirve != null).length}/${movsumler.length} ətraf=${etrafCavab.ok}`,
+      `[tarixce] nöqtə=${noqteler.length} mövsüm=${movsumler.filter((m) => m.zirve != null).length}/${movsumler.length} ətraf=${etrafCavab.ok} ətrafAy=${etrafAyi} müqayisə=${muqayiseli}`,
     );
 
     return res.status(200).json({
@@ -244,6 +256,8 @@ export default async function handler(req, res) {
       // Müştəri bilməlidir ki, medianlar sorğu uğursuzluğundan boşdur —
       // belə nəticə qısa keşlənir (bax: services/tarixce.js)
       etrafAlinib: etrafCavab.ok,
+      etrafAyi,
+      muqayiseli,
       menbe: "Sentinel-2 · Copernicus",
     });
   } catch (error) {

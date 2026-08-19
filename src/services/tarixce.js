@@ -3,6 +3,12 @@ import { saheAcari } from "./ndvi.js";
 
 const KES_ACAR = "tarixce";
 
+// Keş versiyası: server tərəfdə hesablama qaydası dəyişəndə artırılır.
+// v2 — ətraf medianının oxunması düzəldildi (faizlik açarının formatı).
+// Bu olmasa artıq keşlənmiş "medianı boş" nəticələr TTL bitənə qədər
+// qalırdı və fermer düzəlişi saatlarla sonra görürdü.
+const KES_VERSIYASI = 2;
+
 // Tarixçə dəyişmir — keçmiş mövsümlər həmişəlik keşlənə bilər. 30 günlük
 // müddət yalnız CARİ mövsümün zirvəsi böyüyə bildiyi üçündür.
 export const KES_MS = 30 * 24 * 60 * 60 * 1000;
@@ -28,7 +34,9 @@ export async function fetchTarixce({ noqteler, signal, mecburi = false } = {}) {
 
   const acar = saheAcari(noqteler);
   const kes = storage.read(KES_ACAR);
-  if (kes && kes.acar === acar) {
+  // Versiyası köhnə keş oxunmur: hesablama qaydası dəyişibsə saxlanan
+  // nəticə artıq etibarlı deyil (versiyasız köhnə keşlər də bura düşür)
+  if (kes && kes.acar === acar && kes.versiya === KES_VERSIYASI) {
     // Köhnə keşlərdə bayraq yoxdur — məzmundan çıxarılır. Bu, ətraf
     // nasazlığı vaxtı keşlənmiş "30 günlük şikəst" nəticələri də sağaldır.
     const muddet = yarimciqdir(kes.movsumler) ? YARIMCIQ_KES_MS : KES_MS;
@@ -49,6 +57,6 @@ export async function fetchTarixce({ noqteler, signal, mecburi = false } = {}) {
   }
 
   const { movsumler = [] } = await cavab.json();
-  storage.write(KES_ACAR, { acar, vaxt: Date.now(), movsumler });
+  storage.write(KES_ACAR, { acar, versiya: KES_VERSIYASI, vaxt: Date.now(), movsumler });
   return movsumler;
 }
