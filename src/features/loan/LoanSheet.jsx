@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "../../components/Icon.jsx";
+import { Aqronom } from "../../components/Aqronom.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { useStore } from "../../state/store.jsx";
@@ -139,11 +140,11 @@ export function LoanSheet({ onClose }) {
 
         {step === 2 && (
           <div className="py-4 text-center">
-            <div
-              className="mx-auto mb-3 inline-block rounded-full p-4"
-              style={{ backgroundColor: C.fieldSoft }}
-            >
-              <Icon name="Check" size={28} color={C.field} />
+            {/* Uğur anı: statik "check" işarəsi heç nə hiss etdirmirdi.
+                Personaj iki dəfə tullanır və dayanır — Leobank-ın uğur
+                ekranındakı kimi, amma sonsuz deyil (sonsuz sevinc yorur). */}
+            <div className="mx-auto mb-2 inline-block">
+              <Aqronom hal="sevincli" olcu={76} />
             </div>
             <p className="text-sm font-bold" style={{ color: C.ink }}>
               {t("loan.successLine", { amount: { money: amount } })}

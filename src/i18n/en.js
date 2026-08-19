@@ -61,6 +61,7 @@ export default {
 
   "chat.open": "Ask the agronomist",
   "chat.openDesc": "Your field's weather and satellite readings are taken into account",
+  "aqro.ad": "Aqro",
   "chat.title": "Agronomist assistant",
   "chat.noCrop": "no crop selected",
   "chat.back": "Back",

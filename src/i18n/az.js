@@ -61,6 +61,7 @@ export default {
 
   "chat.open": "Aqronoma sual verin",
   "chat.openDesc": "Sahənizin havası və peyk göstəriciləri nəzərə alınır",
+  "aqro.ad": "Aqro",
   "chat.title": "Aqronom köməkçisi",
   "chat.noCrop": "bitki seçilməyib",
   "chat.back": "Geri",
