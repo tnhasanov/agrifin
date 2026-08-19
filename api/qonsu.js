@@ -15,10 +15,15 @@ import {
   acarQurulub,
   acarlariGizle,
   diaqnostikaCavabi,
+  faizAl,
   ipTap,
   suretHeddiYarat,
   tokenAl,
 } from "../lib/copernicus.js";
+
+// Faizlik oxuma indi lib/copernicus.js-dədir — api/tarixce.js də eyni
+// funksiyanı işlədir. Köhnə idxal yolu testlər üçün saxlanılır.
+export { faizAl };
 
 const STAT_URL = `${BAZA_URL}/statistics`;
 
@@ -59,21 +64,6 @@ function evaluatePixel(s) {
 
 const gunISO = (ms) => new Date(ms).toISOString().slice(0, 10);
 const yuvarla = (deyer) => Math.round(deyer * 1000) / 1000;
-
-/**
- * Statistical API faizləri həm 25, həm 0.25 formasında qaytara bilir
- * (versiyadan asılı). Hər ikisini qəbul edirik — səhv oxumaqdansa.
- */
-export function faizAl(percentiles, hedef) {
-  if (!percentiles || typeof percentiles !== "object") return null;
-  for (const [acar, deyer] of Object.entries(percentiles)) {
-    const say = Number(acar);
-    if (!Number.isFinite(say) || !Number.isFinite(deyer)) continue;
-    const normal = say > 1 ? say / 100 : say;
-    if (Math.abs(normal - hedef) < 0.005) return yuvarla(deyer);
-  }
-  return null;
-}
 
 /**
  * Cavabdan bir dövr seçir: mümkünsə sahənin öz ölçməsi ilə EYNİ dövrü,
