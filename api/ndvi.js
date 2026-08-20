@@ -10,7 +10,7 @@
 import { MIN_NOQTE, cerceve, merkeziEn, olcuDereceye, polygonaCevir } from "../lib/geoJson.js";
 import {
   BAZA_URL,
-  BULUD_SERTI,
+  MUQAYISE_SERTI,
   acarQurulub,
   acarlariGizle,
   diaqnostikaCavabi,
@@ -56,8 +56,9 @@ function setup() {
   };
 }
 function evaluatePixel(s) {
-  // SCL: 3 kölgə, 8/9 bulud, 10 nazik sirrus, 11 qar
-  var pis = ${BULUD_SERTI};
+  // SCL: 3 kölgə, 8/9 bulud, 10 nazik sirrus, 11 qar, 6 su.
+  // Ətrafla EYNİ maska — yoxsa müqayisə iki fərqli şeyi ölçür
+  var pis = ${MUQAYISE_SERTI};
   var ndvi = (s.B08 + s.B04) === 0 ? 0 : (s.B08 - s.B04) / (s.B08 + s.B04);
   // NDMI: yaxın infraqırmızı ilə qısadalğa fərqi — bitkidəki su miqdarı.
   // NDVI "zəifdir" deyir, NDMI isə səbəbin SU olub-olmadığını göstərir.

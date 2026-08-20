@@ -5,7 +5,7 @@
 //
 // İki paralel Statistical sorğusu:
 //   1. Sahənin özü — aylıq zirvə NDVI
-//   2. Ətraf (5 km) — eyni aylarda bitki örtüyü olan piksellərin medianı
+//   2. Ətraf (5 km) — eyni aylarda EYNİ maska ilə ölçülən torpağın medianı
 //
 // Ətraf sorğusunun məqsədi (bax: services/mehsuldarliq.js): mütləq NDVI
 // əsasən havadır; qonşularla müqayisə havanı bölür və idarəetməni ayırır.
@@ -22,7 +22,7 @@ import {
 } from "../lib/geoJson.js";
 import {
   BAZA_URL,
-  BULUD_SERTI,
+  MUQAYISE_SERTI,
   acarQurulub,
   acarlariGizle,
   diaqnostikaCavabi,
@@ -64,13 +64,13 @@ function setup() {
   };
 }
 function evaluatePixel(s) {
-  var pis = ${BULUD_SERTI};
+  var pis = ${MUQAYISE_SERTI};
   var ndvi = (s.B08 + s.B04) === 0 ? 0 : (s.B08 - s.B04) / (s.B08 + s.B04);
   return { ndvi: [ndvi], dataMask: [pis ? 0 : s.dataMask] };
 }`;
 
-// Ətraf: yalnız bitki örtüyü olan piksellər (SCL 4) — yol, tikili, çılpaq
-// torpaq medianı süni salmasın. Sahənin qonsu.js-i ilə eyni prinsip.
+// Ətraf: sahə ilə EYNİ maska (bax: lib/copernicus.js, MUQAYISE_SERTI).
+// Əvvəl burada yalnız SCL 4 sayılırdı və müqayisə asimmetrik idi.
 const ETRAF_EVALSCRIPT = `//VERSION=3
 function setup() {
   return {
@@ -82,8 +82,9 @@ function setup() {
   };
 }
 function evaluatePixel(s) {
+  var pis = ${MUQAYISE_SERTI};
   var ndvi = (s.B08 + s.B04) === 0 ? 0 : (s.B08 - s.B04) / (s.B08 + s.B04);
-  return { ndvi: [ndvi], dataMask: [s.SCL === 4 ? s.dataMask : 0] };
+  return { ndvi: [ndvi], dataMask: [pis ? 0 : s.dataMask] };
 }`;
 
 /**

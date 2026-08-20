@@ -61,6 +61,7 @@ export default {
 
   "chat.open": "Ask the agronomist",
   "chat.openDesc": "Your field's weather and satellite readings are taken into account",
+  "aqro.ad": "Aqro",
   "chat.title": "Agronomist assistant",
   "chat.noCrop": "no crop selected",
   "chat.back": "Back",
@@ -350,7 +351,7 @@ export default {
   "qonsu.illik.eyni": "Last year at this date it was {kecen}%, now {indi}% — practically the same level.",
 
   "qonsu.note":
-    "Only vegetated pixels within a 5 km radius are counted — roads, buildings and bare soil are excluded. Same satellite pass, same day.",
+    "Your field and the land within 5 km are measured the SAME way: cloud, shadow and water are excluded, while harvested and bare ground counts on both sides. Same satellite pass, same day.",
 
   "paylas.duyme": "Share the report",
   "paylas.basliq": "AgriFin — field report",
@@ -477,6 +478,8 @@ export default {
   "indeks.sebeb.meyl.sabit": "Level held steady over recent seasons",
   "indeks.sebeb.meyl.zeifleyir": "Some weakening over recent seasons",
   "indeks.sebeb.meyl.pisdir": "Clear deterioration over recent seasons",
+  "indeks.sebeb.cari.ekinYox":
+    "The field is not under active vegetation right now — this season cannot be compared",
   "indeks.sebeb.cari.yaxsi": "Well above the area this season",
   "indeks.sebeb.cari.normal": "At area level this season",
   "indeks.sebeb.cari.asagi": "Behind the area this season",

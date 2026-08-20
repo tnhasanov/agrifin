@@ -4,11 +4,11 @@
 // başa düşülən və danışılan şeydir. Ona görə ətrafdakı 5 km-lik kvadratın
 // NDVI paylanmasını alırıq və sahəni onun içində yerləşdiririk.
 //
-// ƏSAS DÜRÜSTLÜK MƏSƏLƏSİ: kvadratın içində yol, tikili, çılpaq torpaq və
-// su var. Onları saysaq ortalama süni şəkildə aşağı düşər və HƏR fermer
-// "ortadan yuxarı" görünər — yəni müqayisə yaltaqlıq olar, məlumat yox.
-// Buna görə SCL === 4 (bitki örtüyü) filtri qoyulur: yalnız əkin sahələri
-// müqayisəyə girir.
+// ƏSAS DÜRÜSTLÜK MƏSƏLƏSİ: müqayisənin İKİ TƏRƏFİ EYNİ SAYILMALIDIR.
+// Əvvəl burada yalnız bitki örtüyü (SCL 4) sayılırdı, sahənin öz ölçməsi
+// isə çılpaq torpağı da sayırdı — "bütün sahə" ilə "ətrafın yalnız yaşıl
+// hissəsi" müqayisə olunurdu və hər sahə süni aşağı düşürdü (bax:
+// lib/copernicus.js, MUQAYISE_SERTI). İndi hər iki tərəf eynidir.
 import {
   MIN_NOQTE,
   QONSU_RADIUS_KM,
@@ -19,6 +19,7 @@ import {
 } from "../lib/geoJson.js";
 import {
   BAZA_URL,
+  MUQAYISE_SERTI,
   acarQurulub,
   acarlariGizle,
   diaqnostikaCavabi,
@@ -41,8 +42,7 @@ const STANDART_GUN = 30;
 // emal kvotasını ~36 dəfə ucuzlaşdırır
 const OLCU_METR = 60;
 
-// Bundan az bitki pikseli qalıbsa ərazi əkin bölgəsi deyil (səhra, şəhər,
-// dağ) — müqayisə mənasızdır və göstərilmir
+// Bundan az təmiz piksel qalıbsa dövr buludlu olub — median təsadüfidir
 export const MIN_PIKSEL = 500;
 
 export const maxDuration = 30;
@@ -50,8 +50,8 @@ export const maxDuration = 30;
 const suretHeddiKecilib = suretHeddiYarat({ pencereMs: 10 * 60 * 1000, hedd: 20 });
 
 /**
- * SCL === 4 yalnız bitki örtüyü deməkdir. Bulud (8/9/10), kölgə (3), qar (11),
- * su (6), çılpaq torpaq (5) — hamısı avtomatik kənarda qalır.
+ * Sahənin skripti ilə EYNİ maska: bulud (8/9/10), kölgə (3), qar (11) və
+ * su (6) çıxarılır; çılpaq torpaq (5) və bitki örtüyü (4) SAYILIR.
  */
 const EVALSCRIPT = `//VERSION=3
 function setup() {
@@ -64,9 +64,9 @@ function setup() {
   };
 }
 function evaluatePixel(s) {
-  var bitki = s.SCL === 4;
+  var pis = ${MUQAYISE_SERTI};
   var ndvi = (s.B08 + s.B04) === 0 ? 0 : (s.B08 - s.B04) / (s.B08 + s.B04);
-  return { ndvi: [ndvi], dataMask: [bitki ? s.dataMask : 0] };
+  return { ndvi: [ndvi], dataMask: [pis ? 0 : s.dataMask] };
 }`;
 
 const gunISO = (ms) => new Date(ms).toISOString().slice(0, 10);

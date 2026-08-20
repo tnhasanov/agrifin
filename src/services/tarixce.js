@@ -5,9 +5,10 @@ const KES_ACAR = "tarixce";
 
 // Keş versiyası: server tərəfdə hesablama qaydası dəyişəndə artırılır.
 // v2 — ətraf medianının oxunması düzəldildi (faizlik açarının formatı).
+// v3 — sahə və ətraf EYNİ maska ilə ölçülür (MUQAYISE_SERTI).
 // Bu olmasa artıq keşlənmiş "medianı boş" nəticələr TTL bitənə qədər
 // qalırdı və fermer düzəlişi saatlarla sonra görürdü.
-const KES_VERSIYASI = 2;
+const KES_VERSIYASI = 3;
 
 // Tarixçə dəyişmir — keçmiş mövsümlər həmişəlik keşlənə bilər. 30 günlük
 // müddət yalnız CARİ mövsümün zirvəsi böyüyə bildiyi üçündür.

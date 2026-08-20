@@ -61,6 +61,7 @@ export default {
 
   "chat.open": "Aqronoma sual verin",
   "chat.openDesc": "Sahənizin havası və peyk göstəriciləri nəzərə alınır",
+  "aqro.ad": "Aqro",
   "chat.title": "Aqronom köməkçisi",
   "chat.noCrop": "bitki seçilməyib",
   "chat.back": "Geri",
@@ -349,7 +350,7 @@ export default {
   "qonsu.illik.eyni": "Keçən il bu vaxt {kecen}% idi, indi {indi}% — demək olar eyni səviyyə.",
 
   "qonsu.note":
-    "5 km radiusda YALNIZ bitki örtüyü olan piksellər sayılır — yol, tikili və çılpaq torpaq müqayisəyə girmir. Eyni peyk keçidi, eyni gün.",
+    "Sahəniz və 5 km radiusdakı torpaq EYNİ qayda ilə ölçülür: bulud, kölgə və su çıxarılır, biçilmiş və çılpaq sahələr hər iki tərəfdə sayılır. Eyni peyk keçidi, eyni gün.",
 
   "paylas.duyme": "Hesabatı paylaş",
   "paylas.basliq": "AgriFin — sahə hesabatı",
@@ -478,6 +479,8 @@ export default {
   "indeks.sebeb.meyl.sabit": "Son mövsümlərdə səviyyə sabit qalıb",
   "indeks.sebeb.meyl.zeifleyir": "Son mövsümlərdə zəifləmə görünür",
   "indeks.sebeb.meyl.pisdir": "Son mövsümlərdə aydın pisləşmə",
+  "indeks.sebeb.cari.ekinYox":
+    "Sahə hazırda əkin altında deyil — bu mövsüm müqayisə edilə bilmir",
   "indeks.sebeb.cari.yaxsi": "Bu mövsüm ətrafdan xeyli yuxarı",
   "indeks.sebeb.cari.normal": "Bu mövsüm ətraf səviyyəsindədir",
   "indeks.sebeb.cari.asagi": "Bu mövsüm ətrafdan geri qalır",

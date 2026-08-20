@@ -1,4 +1,5 @@
 import { Icon } from "../components/Icon.jsx";
+import { Aqronom } from "../components/Aqronom.jsx";
 import { SectionTitle } from "../components/SectionTitle.jsx";
 import { C, font } from "../theme/tokens.js";
 import { useI18n } from "../i18n/index.jsx";
@@ -8,7 +9,7 @@ import { TovsiyeKarti } from "../features/tovsiye/TovsiyeKarti.jsx";
 
 export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [] }) {
   const { t } = useI18n();
-  const { actions } = useStore();
+  const { state, actions } = useStore();
 
   return (
     <div className="px-4 pb-4">
@@ -22,15 +23,9 @@ export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [] }) {
           className="ai-kart w-full p-4 text-left"
         >
           <div className="flex items-center gap-3">
-            <div
-              className="ai-ikon rounded-full p-2.5"
-              style={{
-                backgroundColor: "rgba(233,181,74,0.16)",
-                border: "1px solid rgba(233,181,74,0.4)",
-              }}
-            >
-              <Icon name="Sparkles" size={18} color={C.gold} />
-            </div>
+            {/* Mücərrəd "parıltı" ikonu əvəzinə personaj: kartın nəyi
+                açdığını üzü ilə deyir */}
+            <Aqronom hal="sakit" bitki={state.chat.crop} olcu={44} className="ai-ikon shrink-0" />
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-bold text-white" style={{ fontFamily: font.display }}>
