@@ -24,8 +24,16 @@ export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [] }) {
         >
           <div className="flex items-center gap-3">
             {/* Mücərrəd "parıltı" ikonu əvəzinə personaj: kartın nəyi
-                açdığını üzü ilə deyir */}
-            <Aqronom hal="sakit" bitki={state.chat.crop} olcu={44} className="ai-ikon shrink-0" />
+                açdığını üzü ilə deyir.
+                NARAHAT İFADƏ BURADADIR, əsas ekranda yox: aşağıda siqnal
+                kartları dayanır və üzün niyə belə olduğunu izah edir.
+                İzahsız qaşqabaq fermeri yalnız narahat edir. */}
+            <Aqronom
+              hal={siqnallar.some((s) => s.ciddilik === "tecili") ? "narahat" : "sakit"}
+              bitki={state.chat.crop}
+              olcu={44}
+              className="ai-ikon shrink-0"
+            />
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-bold text-white" style={{ fontFamily: font.display }}>

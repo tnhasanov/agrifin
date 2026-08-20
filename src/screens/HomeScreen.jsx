@@ -70,13 +70,20 @@ export function HomeScreen({
   // hesabatın mətni. Yalnız kartın özü ekrandan çıxıb.
   const bas = siqnallar.find((s) => s.ciddilik !== "melumat");
 
-  // Aqronun üzü sahənin vəziyyətini daşıyır. Sıra vacibdir: xəbərdarlıq
-  // hər şeydən üstündür — yaxşı indeks pis xəbəri yumşaltmamalıdır.
-  const aqroHali = bas
-    ? "narahat"
-    : indeksHali.indeks?.bant === "yuksek"
-      ? "sevincli"
-      : "sakit";
+  // ═══ AQRO ƏSAS EKRANDA KƏDƏRLƏNMİR ═══════════════════════════════════
+  // Əvvəl açıq siqnal varsa üz "narahat" olurdu. İki səbəbdən səhv idi:
+  //
+  // 1. "Suvarma vaxtıdır" TƏCİLİ sayılır, amma pis xəbər deyil — adi,
+  //    həll edilən iş. Ona kədərlənmək hava tətbiqinin yağış gördüyü üçün
+  //    qaşqabaqlı olmasına bənzəyir. Ciddilik İŞİN TƏCİLİLİYİdir, xəbərin
+  //    pisliyi deyil; üz isə ikincisini deyirdi.
+  // 2. Siqnal kartı zəngin arxasına keçəndən sonra kədərli üzün YANINDA
+  //    onu izah edən heç nə qalmadı — fermer səbəbsiz qaşqabaq görürdü.
+  //
+  // İndi: iş varsa sakit (Aqro sadəcə yanındadır), hər şey yaxşıdırsa
+  // sevincli. Narahat ifadə məsləhət ekranındadır — orada siqnal kartları
+  // onu izah edir (bax: screens/AdvisorScreen.jsx).
+  const aqroHali = !bas && indeksHali.indeks?.bant === "yuksek" ? "sevincli" : "sakit";
 
   return (
     <div className="px-4 pb-4">

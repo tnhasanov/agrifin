@@ -197,6 +197,50 @@ describe("sahə siqnalları — əsas ekran", () => {
   });
 });
 
+// ── Aqronun üzü ─────────────────────────────────────────────────────
+// Ciddilik İŞİN TƏCİLİLİYİdir, xəbərin pisliyi deyil: "Suvarma vaxtıdır"
+// təcilidir, amma adi, həll edilən işdir. Ona kədərlənmək düzgün deyil —
+// üstəlik kart zəngin arxasına keçəndən sonra qaşqabağı izah edən heç nə
+// qalmır.
+describe("Aqronun ifadəsi", () => {
+  const uz = () => document.querySelector("svg.aqro").getAttribute("class");
+
+  it("əsas ekranda təcili siqnal olsa da kədərlənmir", async () => {
+    seed();
+    stubApi(); // quraq sahə → "Suvarma vaxtıdır", ciddilik: tecili
+    renderApp(<App />);
+
+    await siqnalHazir();
+    expect(uz()).not.toContain("aqro--narahat");
+    expect(uz()).toContain("aqro--sakit");
+  });
+
+  it("məsləhət ekranında narahatdır — orada kartlar səbəbi izah edir", async () => {
+    const user = userEvent.setup();
+    seed();
+    stubApi();
+    renderApp(<App />);
+    await siqnalHazir();
+
+    await user.click(screen.getByRole("button", { name: "Məsləhət" }));
+
+    await waitFor(() => expect(uz()).toContain("aqro--narahat"));
+    // İzah üzün yanındadır, uzaqda deyil
+    expect(screen.getByText("Suvarma vaxtıdır")).toBeInTheDocument();
+  });
+
+  it("iş yoxdursa və indeks yüksəkdirsə sevinir", async () => {
+    seed();
+    stubApi({ seriya: SAKIT });
+    renderApp(<App />);
+
+    await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());
+    // Bu quruluşda tarixçə sorğusu 501 verir, yəni indeks yoxdur → sakit,
+    // amma ƏSAS olan budur: narahat deyil
+    expect(uz()).not.toContain("aqro--narahat");
+  });
+});
+
 describe("sahə siqnalları — bildiriş mərkəzi", () => {
   it("zəngin nişanı açıq siqnalların sayını göstərir", async () => {
     seed();
