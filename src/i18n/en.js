@@ -426,7 +426,7 @@ export default {
   "indeks.bant.orta": "Average",
   "indeks.bant.zeif": "Weak",
   "indeks.izah":
-    "An agronomic indicator, not a credit score. Computed from the satellite archive: cultivation continuity, relative performance, seasonal vegetation, stability, recent momentum and the current season. Thresholds are expert judgement — not statistically calibrated. Column height is the season peak: bright green is above the area median, pale green below it, red an idle season, grey a season still in progress.",
+    "An agronomic indicator, not a credit score. Computed from the satellite archive: cultivation continuity, relative performance, seasonal vegetation, stability, recent momentum and the current season. Thresholds are expert judgement — not statistically calibrated. Five of the six factors come from PAST seasons, so a field with strong history can stay high even when the current season goes badly — the current season is shown separately. Relative performance counts how many seasons were above the surroundings, not by how much. Column height is the season peak: bright green is above the area median, pale green below it, red an idle season, grey a season still in progress.",
 
   "indeks.tarixceAz": "Not enough history",
   "indeks.tarixceAzIzah": "An agronomic assessment requires at least 3 measurable seasons.",
@@ -485,6 +485,15 @@ export default {
   "indeks.sebeb.cari.asagi": "Behind the area this season",
   "indeks.sebeb.cari.zeif": "Well behind the area this season",
   "indeks.olculmeyib": "This factor is not yet measured",
+  "indeks.cariRisk": "current-season risk",
+  "indeks.tarixiSetir": "Historical performance: {bant}",
+  "indeks.cariSetir": "Current season: {hal} — field {sizin}%, surroundings {medyan}%",
+  "indeks.cariHal.yaxsi": "Strong",
+  "indeks.cariHal.normal": "Normal",
+  "indeks.cariHal.asagi": "Behind",
+  "indeks.cariHal.zeif": "Weak",
+  "indeks.cariHal.olculmeyib": "Not measured",
+  "indeks.nisbiDetal": "{ustde}/{hamisi} seasons · median gap {ferq} pts",
   "indeks.saheYox":
     "Draw your field — your agronomic performance index will be computed from the satellite archive back to 2017.",
   "indeks.qrafik": "Season chart: {ekili} of {say} seasons cropped, {bos} idle",

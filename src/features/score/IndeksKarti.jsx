@@ -3,7 +3,7 @@ import { Icon } from "../../components/Icon.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { useCountUp } from "../../lib/useCountUp.js";
-import { EKIN_HEDDI } from "../../../lib/mehsuldarliq.js";
+import { EKIN_HEDDI, cariVeziyyetHali } from "../../../lib/mehsuldarliq.js";
 
 /** Bant rəngləri tünd şam fonu üçün seçilib — ağ mətnlə yanaşı oxunur */
 const BANT_RENGI = {
@@ -108,6 +108,21 @@ function AmilSetri({ setir, sira, t }) {
       <div className="mt-0.5 flex items-baseline gap-1.5">
         <span style={{ color: "rgba(255,255,255,0.62)", fontSize: 10.5, lineHeight: 1.4 }}>
           {setir.sebeb ? t(`indeks.sebeb.${setir.sebeb}`) : t("indeks.olculmeyib")}
+          {/* NİSBİ PERFORMANS SƏS SAYIDIR, FƏRQİN BÖYÜKLÜYÜ DEYİL.
+              "30/30" tək başına "xeyli yaxşıdır" kimi oxunur — halbuki
+              ətrafı 0.005 ilə ötmək də 0.25 ilə ötmək də eyni bal verir.
+              Sayı və median fərqi yazmaq "necə 30/30 oldu?" sualını
+              rəqəmin öz yanında cavablandırır. */}
+          {setir.detal?.hamisi > 0 && (
+            <span style={{ color: "rgba(255,255,255,0.48)" }}>
+              {" · "}
+              {t("indeks.nisbiDetal", {
+                ustde: setir.detal.ustde,
+                hamisi: setir.detal.hamisi,
+                ferq: (setir.detal.medyanFerq >= 0 ? "+" : "") + Math.round(setir.detal.medyanFerq * 100),
+              })}
+            </span>
+          )}
         </span>
         {texmini && (
           <span
@@ -276,6 +291,14 @@ export function IndeksKarti({ indeksHali }) {
   const reng = indeks.bant ? (BANT_RENGI[indeks.bant] ?? C.gold) : "rgba(255,255,255,0.45)";
   const olculen = movsumler.filter((m) => Number.isFinite(m.zirve)).length;
 
+  // ── CARİ MÖVSÜM QATI ───────────────────────────────────────────────
+  // Bal TARİXİdir (6 amilin 5-i keçmişdən gəlir), ona görə güclü tarixçəsi
+  // olan sahə bu mövsüm pis getsə də "Yüksək" qala bilər. Bal AŞAĞI
+  // SALINMIR — cari vəziyyət bantın yanında AYRICA oxunur, yoxsa fermer
+  // "Yüksək" sözünü "hər şey qaydasındadır" kimi başa düşür.
+  const cariHal = cariVeziyyetHali(indeks);
+  const faiz = (d) => Math.round(d * 100);
+
   return (
     <div
       className="mt-2 rounded-2xl px-3.5 py-3"
@@ -294,6 +317,9 @@ export function IndeksKarti({ indeksHali }) {
         aria-label={[
           `${t("indeks.basliq")}: ${indeks.bal}`,
           indeks.bant ? t(`indeks.bant.${indeks.bant}`) : t("indeks.bantYoxdur"),
+          // Risk eşidən istifadəçidən də gizlədilmir: görən istifadəçi
+          // "Yüksək"i tək oxumursa, ekran oxuyucu da tək deməməlidir
+          cariHal.risk ? t("indeks.cariRisk") : null,
           `${t("indeks.etibarEtiket")}: ${t(`indeks.etibar.${indeks.etibar}`)}`,
           indeks.natamam ? t("indeks.natamam", { xal: indeks.elcatanXal }) : null,
           t("indeks.movsum", { say: olculen }),
@@ -333,10 +359,46 @@ export function IndeksKarti({ indeksHali }) {
             >
               {t("indeks.etibarEtiket")}: {t(`indeks.etibar.${indeks.etibar}`)}
             </span>
+            {/* Bantın YANINDA, ayrı sətirdə deyil: "Yüksək" sözü heç vaxt
+                tək qalmamalıdır (bax: lib/mehsuldarliq.js, CARİ MÖVSÜM QATI) */}
+            {cariHal.risk && (
+              <span
+                className="rounded-full px-2 py-0.5"
+                style={{
+                  color: "#F0A0A0",
+                  backgroundColor: "rgba(224,128,118,0.18)",
+                  fontSize: 10,
+                  fontWeight: 600,
+                }}
+              >
+                ⚠ {t("indeks.cariRisk")}
+              </span>
+            )}
           </div>
           <p className="mt-1 text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
             {t("indeks.movsum", { say: olculen })}
           </p>
+          {/* İKİ AYRI OXU: bal keçmişi, zolaq bu mövsümü deyir. Fermer
+              hansının hansı olduğunu təxmin etməməlidir. */}
+          {cariHal.risk && (
+            <div
+              className="mt-1.5 rounded-lg px-2 py-1.5"
+              style={{ backgroundColor: "rgba(224,128,118,0.14)" }}
+            >
+              <p style={{ color: "rgba(255,255,255,0.9)", fontSize: 10.5, lineHeight: 1.5 }}>
+                {t("indeks.tarixiSetir", {
+                  bant: indeks.bant ? t(`indeks.bant.${indeks.bant}`) : t("indeks.bantYoxdur"),
+                })}
+              </p>
+              <p style={{ color: "#F0A0A0", fontSize: 10.5, lineHeight: 1.5, fontWeight: 600 }}>
+                {t("indeks.cariSetir", {
+                  hal: t(`indeks.cariHal.${cariHal.hal}`),
+                  sizin: faiz(indeksHali.cari?.ndvi ?? 0),
+                  medyan: faiz(indeksHali.cari?.etrafMedyan ?? 0),
+                })}
+              </p>
+            </div>
+          )}
           {/* Natamam nəticə: ölçülməyən amillər 100-ə miqyaslanmır, ona görə
               əlçatan maksimum 100-dən azdır. Bunu deməsək bal haqsız aşağı
               görünər (bax: lib/mehsuldarliq.js, qayda 4). */}

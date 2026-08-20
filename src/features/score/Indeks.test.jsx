@@ -26,7 +26,13 @@ function movsumler({ bosIl = null, etrafsiz = false, sayi = null } = {}) {
 
 let tarixceSorgusu = 0;
 
-function stubApi({ movsumSiyahisi = movsumler(), tarixceStatus = 200 } = {}) {
+function stubApi({
+  movsumSiyahisi = movsumler(),
+  tarixceStatus = 200,
+  // Cari mövsüm: standart dəyərlər sahəni ətrafdan yuxarı qoyur (risk yoxdur)
+  cariNdvi = 0.7,
+  qonsuMedyan = 0.6,
+} = {}) {
   tarixceSorgusu = 0;
   vi.stubGlobal(
     "fetch",
@@ -46,7 +52,7 @@ function stubApi({ movsumSiyahisi = movsumler(), tarixceStatus = 200 } = {}) {
           status: 200,
           json: () =>
             Promise.resolve({
-              seriya: [{ baslangic: "2026-07-22", son: bugun, ndvi: 0.7, nemlik: 0.3, ortulu: 0 }],
+              seriya: [{ baslangic: "2026-07-22", son: bugun, ndvi: cariNdvi, nemlik: 0.3, ortulu: 0 }],
             }),
         });
       }
@@ -55,7 +61,9 @@ function stubApi({ movsumSiyahisi = movsumler(), tarixceStatus = 200 } = {}) {
           ok: true,
           status: 200,
           json: () =>
-            Promise.resolve({ qonsu: { p25: 0.5, medyan: 0.6, p75: 0.72, son: bugun, piksel: 5000 } }),
+            Promise.resolve({
+              qonsu: { p25: 0.5, medyan: qonsuMedyan, p75: 0.72, son: bugun, piksel: 5000 },
+            }),
         });
       }
       if (yol.includes("/api/")) return Promise.resolve({ ok: false, status: 501 });
@@ -222,5 +230,70 @@ describe("aqronomik performans indeksi — əsas ekran", () => {
     await waitFor(() => expect(screen.getByText(/Tarixçə alınmadı/)).toBeInTheDocument());
     // Peyk zolağı yerindədir
     expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument();
+  });
+
+  // ── CARİ MÖVSÜM QATI ────────────────────────────────────────────────
+  // İstehsalda görülən vəziyyət: güclü tarixçə 82 bal verir, amma sahə bu
+  // mövsüm ətrafdan 16 bənd geridədir. "Yüksək" sözü tək qalsa fermer
+  // bunu "hər şey qaydasındadır" kimi oxuyur.
+  describe("cari mövsüm riski", () => {
+    it("güclü tarixçə + zəif cari mövsüm: bant qalır, yanında risk görünür", async () => {
+      seed();
+      stubApi({ cariNdvi: 0.39, qonsuMedyan: 0.55 });
+      renderApp(<App />);
+      await waitFor(() => screen.getByText(BASLIQ));
+
+      // Bal AŞAĞI SALINMIR — bant yerindədir
+      expect(screen.getByText("Yüksək")).toBeInTheDocument();
+      // Amma tək deyil
+      expect(screen.getByText(/cari mövsümdə risk/)).toBeInTheDocument();
+      // İki oxu ayrıca yazılır, hər ikisi rəqəmlə
+      expect(screen.getByText(/Tarixi performans: Yüksək/)).toBeInTheDocument();
+      expect(screen.getByText(/Cari mövsüm: Zəif — sahə 39%, ətraf 55%/)).toBeInTheDocument();
+    });
+
+    it("risk ekran oxuyucudan da gizlədilmir", async () => {
+      seed();
+      stubApi({ cariNdvi: 0.39, qonsuMedyan: 0.55 });
+      renderApp(<App />);
+      await waitFor(() => screen.getByText(BASLIQ));
+
+      expect(
+        screen.getByRole("button", { name: /cari mövsümdə risk/ }),
+      ).toBeInTheDocument();
+    });
+
+    it("sahə ətrafdan yuxarıdırsa risk yoxdur", async () => {
+      seed();
+      stubApi();
+      renderApp(<App />);
+      await waitFor(() => screen.getByText(BASLIQ));
+
+      expect(screen.getByText("Yüksək")).toBeInTheDocument();
+      expect(screen.queryByText(/cari mövsümdə risk/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Tarixi performans:/)).not.toBeInTheDocument();
+    });
+
+    // BİÇİLMİŞ SAHƏ RİSK DEYİL: amil ölçülmür, ona görə bayraq da qalxmır
+    it("biçilmiş sahədə risk bayrağı qalxmır", async () => {
+      seed();
+      stubApi({ cariNdvi: 0.2, qonsuMedyan: 0.55 });
+      renderApp(<App />);
+      await waitFor(() => screen.getByText(BASLIQ));
+
+      expect(screen.queryByText(/cari mövsümdə risk/)).not.toBeInTheDocument();
+    });
+
+    // "30/30" səs sayıdır — rəqəmin yanında neçə mövsümdən neçəsi olduğu yazılır
+    it("nisbi performansın yanında mövsüm sayı və median fərq görünür", async () => {
+      const user = userEvent.setup();
+      seed();
+      stubApi();
+      renderApp(<App />);
+      await waitFor(() => screen.getByText(BASLIQ));
+
+      await user.click(screen.getByRole("button", { name: new RegExp(BASLIQ) }));
+      expect(screen.getByText(/mövsüm · median fərq \+12 b\./)).toBeInTheDocument();
+    });
   });
 });

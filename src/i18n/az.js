@@ -425,7 +425,7 @@ export default {
   "indeks.bant.orta": "Orta",
   "indeks.bant.zeif": "Zəif",
   "indeks.izah":
-    "Aqronomik göstəricidir, kredit balı deyil. Peyk tarixçəsindən hesablanır: əkin davamlılığı, nisbi performans, mövsümi vegetasiya, sabitlik, son meyl və cari mövsüm. Hədlər ekspert təklifidir — statistik kalibrlənməyib. Sütunun hündürlüyü mövsümün zirvəsidir: parlaq yaşıl ətrafın medianından yuxarı, solğun yaşıl aşağı, qırmızı boş qalmış, boz isə davam edən mövsümdür.",
+    "Aqronomik göstəricidir, kredit balı deyil. Peyk tarixçəsindən hesablanır: əkin davamlılığı, nisbi performans, mövsümi vegetasiya, sabitlik, son meyl və cari mövsüm. Hədlər ekspert təklifidir — statistik kalibrlənməyib. Balın altı amilindən beşi KEÇMİŞ mövsümlərdən gəlir, ona görə güclü tarixçəsi olan sahə bu mövsüm pis getsə də yüksək qala bilər — cari mövsüm ayrıca göstərilir. Nisbi performans neçə mövsümdə ətrafdan yuxarı olduğunu sayır, fərqin böyüklüyünü yox. Sütunun hündürlüyü mövsümün zirvəsidir: parlaq yaşıl ətrafın medianından yuxarı, solğun yaşıl aşağı, qırmızı boş qalmış, boz isə davam edən mövsümdür.",
 
   "indeks.tarixceAz": "Tarixçə kifayət deyil",
   "indeks.tarixceAzIzah":
@@ -486,6 +486,17 @@ export default {
   "indeks.sebeb.cari.asagi": "Bu mövsüm ətrafdan geri qalır",
   "indeks.sebeb.cari.zeif": "Bu mövsüm ətrafdan xeyli geridir",
   "indeks.olculmeyib": "Bu amil hələ ölçülməyib",
+  // Cari mövsüm qatı: bal keçmişdir, bu sətirlər bu mövsümü deyir
+  "indeks.cariRisk": "cari mövsümdə risk",
+  "indeks.tarixiSetir": "Tarixi performans: {bant}",
+  "indeks.cariSetir": "Cari mövsüm: {hal} — sahə {sizin}%, ətraf {medyan}%",
+  "indeks.cariHal.yaxsi": "Güclü",
+  "indeks.cariHal.normal": "Normal",
+  "indeks.cariHal.asagi": "Geri qalır",
+  "indeks.cariHal.zeif": "Zəif",
+  "indeks.cariHal.olculmeyib": "Ölçülməyib",
+  // "30/30" səs sayıdır, fərqin böyüklüyü deyil — rəqəmin yanında açılır
+  "indeks.nisbiDetal": "{ustde}/{hamisi} mövsüm · median fərq {ferq} b.",
   "indeks.saheYox":
     "Sahənizi çəkin — aqronomik performans indeksiniz 2017-dən bəri peyk tarixçəsindən hesablanacaq.",
   "indeks.qrafik": "Mövsüm qrafiki: {say} mövsümdən {ekili} əkilib, {bos} boş qalıb",
