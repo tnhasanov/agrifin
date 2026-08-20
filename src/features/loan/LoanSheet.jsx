@@ -144,7 +144,9 @@ export function LoanSheet({ onClose }) {
                 Personaj iki dəfə tullanır və dayanır — Leobank-ın uğur
                 ekranındakı kimi, amma sonsuz deyil (sonsuz sevinc yorur). */}
             <div className="mx-auto mb-2 inline-block">
-              <Aqronom hal="sevincli" bitki={state.chat.crop} olcu={76} />
+              {/* Tam boy: personajın "baş barmağı yuxarı" pozası məhz bu
+                  an üçündür — təsdiq alınıb, fermer təbrik olunur */}
+              <Aqronom hal="sevincli" bitki={state.chat.crop} boy="tam" olcu={132} />
             </div>
             <p className="text-sm font-bold" style={{ color: C.ink }}>
               {t("loan.successLine", { amount: { money: amount } })}

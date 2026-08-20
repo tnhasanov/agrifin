@@ -258,7 +258,7 @@ export function AgronomChat({
                 Personaj söhbətə "kimsə var" hissi verir — Leo-nun bank
                 tətbiqində gördüyü işin eynisi. */}
             <div className="giris mb-3 flex items-end gap-2" style={{ "--i": 0 }}>
-              <Aqronom hal="sakit" bitki={crop} olcu={62} className="shrink-0" />
+              <Aqronom hal="sakit" bitki={crop} boy="tam" olcu={104} className="shrink-0" />
               <div
                 className="mb-1 flex-1 rounded-2xl rounded-bl-sm p-3"
                 style={{ backgroundColor: "#EAF4EC", border: "1px solid #CFE6D7" }}
