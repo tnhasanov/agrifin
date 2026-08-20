@@ -79,6 +79,18 @@ function seed(sahe = SAHE) {
 
 const zeng = () => screen.getByRole("button", { name: /Bildirişlər/ });
 
+/**
+ * Siqnallar ARTIQ ƏSAS EKRANDA DEYİL — zəngin arxasındadır. Hazır olduğunu
+ * zəngin nişanından bilirik; əvvəl bunun üçün kartın mətnini gözləyirdik.
+ */
+const siqnalHazir = () => waitFor(() => expect(zeng()).toHaveAccessibleName(/\d+ yeni/));
+
+const paneliAc = async (user) => {
+  await siqnalHazir();
+  await user.click(zeng());
+  return screen.findByRole("dialog", { name: "Bildirişlər" });
+};
+
 beforeEach(() => {
   window.history.pushState({}, "", "/");
   window.localStorage.clear();
@@ -90,38 +102,56 @@ afterEach(() => {
 });
 
 describe("sahə siqnalları — əsas ekran", () => {
-  it("ən vacib siqnalı ekranın başında göstərir", async () => {
+  // ƏSAS QAYDA: xəbərdarlıq ekranın başını tutmur. Fermer telefonu açanda
+  // əvvəlcə öz sahəsini görür; bildirişi oxumaq qərarı onundur.
+  it("siqnal əsas ekranın başına çıxmır — zəngin nişanında sayılır", async () => {
     seed();
     stubApi();
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText("Suvarma vaxtıdır")).toBeInTheDocument());
-    expect(screen.getByText(/3 gündə yağış gözlənmir/)).toBeInTheDocument();
+    await siqnalHazir();
+    expect(screen.queryByText("Suvarma vaxtıdır")).not.toBeInTheDocument();
+    expect(screen.queryByText(/3 gündə yağış gözlənmir/)).not.toBeInTheDocument();
+    // Yuxarıda fermerin öz sahəsi dayanır, xəbərdarlıq yox
+    expect(screen.getByRole("button", { name: "Məhsul dövrü krediti al" })).toBeInTheDocument();
+  });
+
+  it("zəngə basanda tam siqnal mənbəyi ilə birlikdə açılır", async () => {
+    const user = userEvent.setup();
+    seed();
+    stubApi();
+    renderApp(<App />);
+
+    const panel = await paneliAc(user);
+    expect(within(panel).getByText("Suvarma vaxtıdır")).toBeInTheDocument();
+    expect(within(panel).getByText(/3 gündə yağış gözlənmir/)).toBeInTheDocument();
     // Mənbə göstərilir: fermer rəqəmin haradan gəldiyini bilməlidir
-    expect(screen.getByText("Peyk ölçməsi + hava proqnozu")).toBeInTheDocument();
+    expect(within(panel).getByText("Peyk ölçməsi + hava proqnozu")).toBeInTheDocument();
   });
 
   // Bu siqnalın bütün mənası budur: quraq sahəyə yağış gəlirsə suvarmaq
   // suyu və yanacağı boş yerə xərcləməkdir
   it("yağış gələndə suvarmağı dayandırmağı deyir", async () => {
+    const user = userEvent.setup();
     seed();
     stubApi({ proqnoz: hava({ precipitation_sum: [0, 11, 5, 0, 0, 0, 0] }) });
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText("Suvarmanı saxlayın")).toBeInTheDocument());
-    expect(screen.getByText(/16 mm yağış gözlənilir/)).toBeInTheDocument();
-    expect(screen.queryByText("Suvarma vaxtıdır")).not.toBeInTheDocument();
+    const panel = await paneliAc(user);
+    const kart = within(panel).getByText("Suvarmanı saxlayın").closest("div.rounded-2xl");
+    expect(within(kart).getByText(/16 mm yağış gözlənilir/)).toBeInTheDocument();
+    expect(within(panel).queryByText("Suvarma vaxtıdır")).not.toBeInTheDocument();
   });
 
-  // Hava zolağının bir sətirlik məsləhəti eyni proqnozdan çıxır; siqnal
-  // varkən ikisini yan-yana göstərmək eyni sözü iki dəfə deməkdir
-  it("siqnal varkən hava zolağının məsləhəti təkrarlanmır", async () => {
+  // Siqnal kartı əsas ekrandan çıxandan sonra hava zolağının məsləhəti
+  // ARTIQ SÖNDÜRÜLMÜR: əks halda ekranda proqnoz haqqında bir söz qalmırdı
+  it("siqnal olsa da hava zolağı öz məsləhətini göstərir", async () => {
     seed();
     stubApi({ proqnoz: hava({ precipitation_sum: [0, 11, 5, 0, 0, 0, 0] }) });
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText("Suvarmanı saxlayın")).toBeInTheDocument());
-    expect(screen.getAllByText(/16 mm yağış gözlənilir/)).toHaveLength(1);
+    await siqnalHazir();
+    await waitFor(() => expect(screen.getByText(/16 mm yağış gözlənilir/)).toBeInTheDocument());
   });
 
   it("siqnal yoxdursa hava zolağı öz məsləhətini göstərir", async () => {
@@ -133,12 +163,14 @@ describe("sahə siqnalları — əsas ekran", () => {
   });
 
   it("şaxta xəbərdarlığı suvarmadan da öndə gəlir", async () => {
+    const user = userEvent.setup();
     seed();
     stubApi({ proqnoz: hava({ temperature_2m_min: [17, -3, 18, 17, 16, 17, 17] }) });
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText("Şaxta riski")).toBeInTheDocument());
-    expect(screen.getByText(/-3°-yə düşür/)).toBeInTheDocument();
+    const panel = await paneliAc(user);
+    expect(within(panel).getByText("Şaxta riski")).toBeInTheDocument();
+    expect(within(panel).getByText(/-3°-yə düşür/)).toBeInTheDocument();
   });
 
   it("sakit havada və sağlam sahədə xəbərdarlıq göstərilmir", async () => {
@@ -154,11 +186,13 @@ describe("sahə siqnalları — əsas ekran", () => {
   // Sahə çəkilməyibsə peyk siqnalları qurula bilmir, hava siqnalları isə
   // rayonun koordinatı üçün yenə işləməlidir
   it("sahə çəkilməyibsə də şaxta xəbərdarlığı gəlir", async () => {
+    const user = userEvent.setup();
     seed(null);
     stubApi({ proqnoz: hava({ temperature_2m_min: [17, -3, 18, 17, 16, 17, 17] }) });
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText("Şaxta riski")).toBeInTheDocument());
+    const panel = await paneliAc(user);
+    expect(within(panel).getByText("Şaxta riski")).toBeInTheDocument();
     expect(fetch.mock.calls.some(([url]) => String(url).includes("/api/ndvi"))).toBe(false);
   });
 });
@@ -178,11 +212,8 @@ describe("sahə siqnalları — bildiriş mərkəzi", () => {
     seed();
     stubApi({ proqnoz: hava({ temperature_2m_min: [17, -3, 18, 17, 16, 17, 17] }) });
     renderApp(<App />);
-    await waitFor(() => expect(screen.getByText("Şaxta riski")).toBeInTheDocument());
 
-    await user.click(zeng());
-
-    const panel = await screen.findByRole("dialog", { name: "Bildirişlər" });
+    const panel = await paneliAc(user);
     const basliqlar = within(panel)
       .getAllByRole("heading", { level: 3 })
       .map((h) => h.textContent);
@@ -194,12 +225,14 @@ describe("sahə siqnalları — bildiriş mərkəzi", () => {
     seed();
     stubApi();
     renderApp(<App />);
-    await waitFor(() => expect(screen.getByText("Suvarma vaxtıdır")).toBeInTheDocument());
+
+    // Bağlamaq indi yalnız panelin içindən mümkündür — kart əsas ekranda yoxdur
+    const panel = await paneliAc(user);
     expect(zeng()).toHaveTextContent("1");
 
-    await user.click(screen.getByRole("button", { name: "Siqnalı bağla" }));
+    await user.click(within(panel).getByRole("button", { name: "Siqnalı bağla" }));
 
-    expect(screen.queryByText("Suvarma vaxtıdır")).not.toBeInTheDocument();
+    expect(within(panel).queryByText("Suvarma vaxtıdır")).not.toBeInTheDocument();
     // Tək siqnal idi — nişan tamamilə yox olur
     expect(zeng()).toHaveTextContent("");
     // Səhifə yenilənəndə də qayıtmamalıdır
@@ -219,13 +252,13 @@ describe("sahə siqnalları — bildiriş mərkəzi", () => {
     });
     renderApp(<App />);
 
-    await waitFor(() =>
-      expect(screen.getByText("Bitki zəifləyir — səbəb su deyil")).toBeInTheDocument(),
-    );
+    const panel = await paneliAc(user);
+    expect(within(panel).getByText("Bitki zəifləyir — səbəb su deyil")).toBeInTheDocument();
     // Mətn iki səviyyəni tam faizlə deyir — "0,12 azalıb" fermerə heç nədir
-    expect(screen.getByText(/örtüyü 78% idi, indi 66%/)).toBeInTheDocument();
+    expect(within(panel).getByText(/örtüyü 78% idi, indi 66%/)).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Şəkil çək" }));
+    // Panelin içindəki düymə çatı açır və paneli bağlayır
+    await user.click(within(panel).getByRole("button", { name: "Şəkil çək" }));
     expect(screen.getByRole("button", { name: "Şəkil çək və ya seç" })).toBeInTheDocument();
   });
 });
@@ -238,10 +271,7 @@ describe("sahə siqnalları — sorğu sayı", () => {
     seed();
     stubApi();
     renderApp(<App />);
-    await waitFor(() => expect(screen.getByText("Suvarma vaxtıdır")).toBeInTheDocument());
-
-    await user.click(zeng());
-    await screen.findByRole("dialog", { name: "Bildirişlər" });
+    await paneliAc(user);
 
     const peykSorgusu = fetch.mock.calls.filter(([url]) => String(url).includes("/api/ndvi"));
     expect(peykSorgusu).toHaveLength(1);
@@ -251,7 +281,7 @@ describe("sahə siqnalları — sorğu sayı", () => {
     seed();
     stubApi();
     renderApp(<App />);
-    await waitFor(() => expect(screen.getByText("Suvarma vaxtıdır")).toBeInTheDocument());
+    await siqnalHazir();
 
     const havaSorgusu = fetch.mock.calls.filter(([url]) =>
       String(url).includes("api.open-meteo.com"),
@@ -262,12 +292,13 @@ describe("sahə siqnalları — sorğu sayı", () => {
 
 describe("siqnal kartı", () => {
   it("ciddiliyə görə fərqli rəng göstərir", async () => {
+    const user = userEvent.setup();
     seed();
     stubApi({ proqnoz: hava({ temperature_2m_min: [17, -3, 18, 17, 16, 17, 17] }) });
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText("Şaxta riski")).toBeInTheDocument());
-    const kart = screen.getByText("Şaxta riski").closest("div.rounded-2xl");
+    const panel = await paneliAc(user);
+    const kart = within(panel).getByText("Şaxta riski").closest("div.rounded-2xl");
     expect(within(kart).getByText(/Həssas əkinləri örtün/)).toBeInTheDocument();
     expect(kart).toHaveStyle({ backgroundColor: "rgb(251, 234, 231)" });
   });

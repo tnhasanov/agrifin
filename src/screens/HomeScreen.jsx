@@ -4,9 +4,7 @@ import { WeatherStrip } from "../features/weather/WeatherStrip.jsx";
 import { C, font } from "../theme/tokens.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
-import { useRouter } from "../lib/router.jsx";
 import { formatNumber } from "../lib/format.js";
-import { pathFor } from "../routes.js";
 import { FARM } from "../services/farm.js";
 import { DEFAULT_LOCATION } from "../services/location.js";
 import { havaNoqtesi } from "../services/saheYeri.js";
@@ -15,7 +13,6 @@ import { Sparkline } from "../components/Sparkline.jsx";
 import { SaheXeritesi } from "../features/ndvi/SaheXeritesi.jsx";
 import { QonsuMuqayisesi } from "../features/ndvi/QonsuMuqayisesi.jsx";
 import { HesabatPaylas } from "../features/share/HesabatPaylas.jsx";
-import { SiqnalKarti } from "../features/signals/SiqnalKarti.jsx";
 import { IndeksKarti } from "../features/score/IndeksKarti.jsx";
 
 function StatTile({ label, children }) {
@@ -42,8 +39,7 @@ export function HomeScreen({
   onOpenHesab,
 }) {
   const { t, money, lang } = useI18n();
-  const { state, actions } = useStore();
-  const { navigate } = useRouter();
+  const { state } = useStore();
 
   // Yer seçilməyibsə default rayonun proqnozu göstərilir
   const location = state.location ?? DEFAULT_LOCATION;
@@ -64,10 +60,15 @@ export function HomeScreen({
   const faiz = ortukFaizi(olcmeVar ? olculen.ndvi : state.sahe ? null : FARM.ndvi);
   const gunEvvel = olculen ? necheGunEvvel(olculen.tarix) : null;
 
-  // Yalnız ən vacib siqnal əsas ekrana çıxır. Fermer telefonu açanda bir iş
-  // görməlidir, siyahı oxumamalıdır — qalanı məsləhət ekranındadır.
+  // Ən vacib siqnal ARTIQ ƏSAS EKRANIN BAŞINA ÇIXMIR — başlıqdakı zəngin
+  // arxasındadır (bax: features/signals/SiqnalPaneli.jsx). Səbəb: xəbərdarlıq
+  // kartı hər açılışda salamlaşmanı və indeksi aşağı itələyirdi, yəni fermer
+  // öz sahəsinin vəziyyətini görmək üçün əvvəlcə bildirişi oxumalı olurdu.
+  // Zəngdəki qırmızı nişan onsuz da say verir; oxumaq qərarı fermerindir.
+  //
+  // `bas` yenə hesablanır: iki yerdə İŞ görür — Aqronun üzü və paylaşılan
+  // hesabatın mətni. Yalnız kartın özü ekrandan çıxıb.
   const bas = siqnallar.find((s) => s.ciddilik !== "melumat");
-  const qalan = siqnallar.length - (bas ? 1 : 0);
 
   // Aqronun üzü sahənin vəziyyətini daşıyır. Sıra vacibdir: xəbərdarlıq
   // hər şeydən üstündür — yaxşı indeks pis xəbəri yumşaltmamalıdır.
@@ -79,27 +80,6 @@ export function HomeScreen({
 
   return (
     <div className="px-4 pb-4">
-      {bas && (
-        <div className="mt-3" aria-live="polite">
-          <SiqnalKarti
-            siqnal={bas}
-            onBagla={actions.siqnaliBagla}
-            onHereket={onOpenChat}
-            style={{ "--i": 1 }}
-          />
-          {qalan > 0 && (
-            <button
-              type="button"
-              onClick={() => navigate(pathFor("advisor"))}
-              className="mt-1.5 w-full py-1 text-xs font-semibold"
-              style={{ color: C.muted }}
-            >
-              {t("siqnal.qalan", { count: qalan })}
-            </button>
-          )}
-        </div>
-      )}
-
       <div
         className="mt-3 rounded-3xl px-4 pt-4 pb-3"
         style={{ background: `linear-gradient(160deg, ${C.pine} 0%, ${C.pineDeep} 70%)` }}
@@ -355,7 +335,10 @@ export function HomeScreen({
         onPickLocation={onPickLocation}
         onDrawField={onDrawField}
         deqiq={noqte.deqiq}
-        meslehetGoster={siqnallar.length === 0}
+        // Məsləhət ARTIQ SÖNDÜRÜLMÜR. Əvvəl siqnal kartı əsas ekranda idi və
+        // eyni proqnozdan eyni cümləni deyirdi — təkrar olmasın deyə bu sətir
+        // gizlədilirdi. Kart zəngin arxasına keçəndən sonra gizlətmək ekranı
+        // tamam susdururdu: nə siqnal, nə məsləhət.
       />
     </div>
   );

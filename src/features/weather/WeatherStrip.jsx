@@ -43,9 +43,9 @@ function Skeleton({ days }) {
  */
 /**
  * @param {boolean} meslehetGoster Zolağın altındakı bir sətirlik məsləhət.
- *   Sahə siqnalları varsa söndürülür: onlar eyni proqnozdan daha dəqiq
- *   (peyk ölçməsi ilə birlikdə) nəticə çıxarır və eyni cümləni iki dəfə
- *   göstərmək fermeri çaşdırır.
+ *   Əsas ekranda həmişə açıqdır. Söndürmə imkanı o vaxtdan qalıb ki, siqnal
+ *   kartı da eyni ekranda idi və eyni proqnozdan eyni cümləni deyirdi; kart
+ *   zəngin arxasına keçəndən sonra təkrar riski qalmadı.
  */
 export function WeatherStrip({
   lat,
