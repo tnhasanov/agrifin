@@ -100,12 +100,19 @@ describe("Aqronom (raster fermer)", () => {
   });
 
   it("renderi olmayan hal sakit şəklə düşür", () => {
-    // danisir renderi hələ göndərilməyib
-    const danisir = sekil(render(<Aqronom bitki="bugda" hal="danisir" />)).getAttribute("src");
+    // üzümün danisir/sevincli renderləri hələ göndərilməyib
+    const danisir = sekil(render(<Aqronom bitki="uzum" hal="danisir" />)).getAttribute("src");
     expect(danisir).toContain("sakit");
-    // yarpaq variantının heç bir ifadəsi yoxdur
+  });
+
+  it("danışan və sevincli hallar da öz renderini yükləyir", () => {
+    const danisir = sekil(render(<Aqronom bitki="bugda" hal="danisir" />)).getAttribute("src");
+    const sevincli = sekil(render(<Aqronom bitki="bugda" hal="sevincli" />)).getAttribute("src");
+    expect(danisir).toContain("danisir");
+    expect(sevincli).toContain("sevincli");
+    // bitki seçməmiş fermer də artıq ifadəli üz görür
     const yarpaq = sekil(render(<Aqronom hal="dusunur" />)).getAttribute("src");
-    expect(yarpaq).toContain("yarpaq-sakit");
+    expect(yarpaq).toContain("yarpaq-dusunur");
   });
 
   // ── Hal göstəriciləri ─────────────────────────────────────────────
