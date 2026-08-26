@@ -165,15 +165,18 @@ export function LoanSheet({ onClose, indeksHali = null }) {
                 {money(mebleg)}
               </p>
             </div>
-            {/* "Bir ödəniş: X ₼ · Avqust" SİLİNİB — məhsul o deyil. Faiz
-                aylıqdır və yalnız qalan əsas borca hesablanır; "sonda
-                ödəyəcəyiniz məbləğ" öncədən yoxdur, çünki fermerin əsas
-                borcu nə vaxt azaltdığından asılıdır. */}
+            {/* "Bir ödəniş: X ₼ · Avqust" SİLİNİB — məhsul o deyil.
+                Rəqəm İLK ayın faizidir, sabit aylıq ödəniş DEYİL: əsas borc
+                azaldıqca faiz də azalır və məhsulun əsas üstünlüyü elə budur.
+                "Hər ay 45 ₼" yazmaq o üstünlüyü gizlədirdi. */}
             <p
               className="text-center text-xs font-semibold"
               style={{ color: C.ink, fontVariantNumeric: "tabular-nums" }}
             >
               {t("kredit.faizSetri", { faiz: { money: kredit.ayliqFaiz1(mebleg) } })}
+            </p>
+            <p className="text-center text-xs" style={{ color: C.muted }}>
+              {t("kredit.faizAzalir")}
             </p>
             <p className="mb-3 text-center text-xs" style={{ color: C.muted }}>
               {t("kredit.sonTarixSetri", { tarix: ayAdi(kredit.odemeTarixi) })}
@@ -265,39 +268,74 @@ export function LoanSheet({ onClose, indeksHali = null }) {
         {!state.muraciet && hazir && addim === 1 && (
           <div>
             {/* "Bir ödəniş" sətri yoxdur: faiz aylıqdır, əsas borc çevikdir,
-                son tarix əsas borcun TAM bağlanması üçündür */}
+                son tarix əsas borcun TAM bağlanması üçündür.
+                SIRALAMA GÖZLƏ OXUNUR: məbləğ ən iridir (fermer əvvəl onu
+                axtarır), ilk ay faizi + əsas borc + son tarix normal, illik
+                faiz/girov/sahə isə ikinci dərəcəli sətirlərdir — hamısı eyni
+                çəkidə olanda heç biri seçilmirdi. */}
             {[
-              [t("kredit.setr.mebleg"), money(mebleg)],
-              [
-                t("kredit.setr.ayliqFaiz"),
-                t("kredit.setr.ayliqFaizDeger", { faiz: { money: kredit.ayliqFaiz1(mebleg) } }),
-              ],
-              [t("kredit.setr.esasBorc"), t("kredit.setr.esasBorcDeger")],
-              [
-                t("kredit.setr.sonTarix"),
-                t("kredit.setr.sonTarixDeger", { tarix: ayAdi(kredit.odemeTarixi) }),
-              ],
-              [t("kredit.setr.muddet"), t("kredit.setr.muddetDeger", { ay: kredit.muddetAy })],
-              [t("loan.term.rate"), `${LOAN_TERMS.annualRate}%`],
-              [t("loan.term.collateral"), t("loan.term.collateralValue")],
-            ].map(([ad, deger]) => (
-              <div
-                key={ad}
-                className="flex justify-between gap-3 py-2.5"
-                style={{ borderBottom: `1px solid ${C.line}` }}
-              >
-                <span className="text-xs" style={{ color: C.muted }}>
-                  {ad}
-                </span>
-                <span className="max-w-[60%] text-right text-xs font-bold" style={{ color: C.ink }}>
-                  {deger}
-                </span>
+              { ad: t("kredit.setr.mebleg"), deger: money(mebleg), vurgu: true },
+              {
+                ad: t("kredit.setr.ilkFaiz"),
+                deger: t("kredit.setr.ilkFaizDeger", {
+                  faiz: { money: kredit.ayliqFaiz1(mebleg) },
+                }),
+                // Sabit aylıq ödəniş TƏSƏVVÜRÜ burada qırılır
+                alt: t("kredit.faizAzalir"),
+              },
+              { ad: t("kredit.setr.esasBorc"), deger: t("kredit.setr.esasBorcDeger") },
+              {
+                ad: t("kredit.setr.sonTarix"),
+                deger: t("kredit.setr.sonTarixDeger", { tarix: ayAdi(kredit.odemeTarixi) }),
+              },
+              { ad: t("kredit.setr.muddet"), deger: t("kredit.setr.muddetDeger", { ay: kredit.muddetAy }) },
+              { ad: t("loan.term.rate"), deger: `${LOAN_TERMS.annualRate}%`, ikinci: true },
+              {
+                ad: t("loan.term.collateral"),
+                deger: t("loan.term.collateralValue"),
+                ikinci: true,
+              },
+              // Peyk təsdiqi GİROVUN ƏVƏZİ DEYİL: ayrı sətirdir, çünki
+              // "əkininiz girov kimi kifayətdir" hüquqi olaraq yanlışdır.
+              // "Peyklə təsdiqlənib" yalnız ölçmə HƏQİQƏTƏN varsa yazılır —
+              // indeks yoxdursa sahə sadəcə xəritədə çəkilmiş sahədir.
+              {
+                ad: t("kredit.setr.sahe"),
+                deger: indeksHali?.indeks
+                  ? t("kredit.setr.saheDeger")
+                  : t("kredit.setr.saheDegerCizilib", { hektar: { number: state.sahe.hektar } }),
+                ikinci: true,
+              },
+            ].map(({ ad, deger, alt, vurgu, ikinci }) => (
+              <div key={ad} className="py-2.5" style={{ borderBottom: `1px solid ${C.line}` }}>
+                <div className="flex justify-between gap-3">
+                  <span className={ikinci ? "text-xs" : "text-xs"} style={{ color: C.muted }}>
+                    {ad}
+                  </span>
+                  <span
+                    className={`max-w-[60%] text-right ${
+                      vurgu ? "text-lg font-extrabold" : "text-xs font-bold"
+                    }`}
+                    style={{
+                      color: ikinci ? C.muted : C.ink,
+                      fontFamily: vurgu ? font.display : undefined,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {deger}
+                  </span>
+                </div>
+                {alt && (
+                  <p className="mt-0.5 text-right text-xs leading-snug" style={{ color: C.muted }}>
+                    {alt}
+                  </p>
+                )}
               </div>
             ))}
 
-            {/* Ödəniş biçinə bağlıdır — şərt cədvəlin altında izah olunur */}
+            {/* Son tarix biçinə bağlıdır və erkən ödəniş faizi azaldır */}
             <p className="mt-2.5 text-xs leading-relaxed" style={{ color: C.muted }}>
-              {t("kredit.bicinIzah", { tarix: ayAdi(kredit.odemeTarixi) })}
+              {t("kredit.bicinIzah")}
             </p>
 
             <button
