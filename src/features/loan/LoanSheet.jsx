@@ -25,7 +25,7 @@ import { kreditImkani } from "./useKredit.js";
  * hamısı ordan gəlir (əvvəl bunların heç biri yox idi).
  */
 export function LoanSheet({ onClose, indeksHali = null }) {
-  const { t, money, lang } = useI18n();
+  const { t, money } = useI18n();
   const { state, actions } = useStore();
   const [addim, setAddim] = useState(0);
   const [izahAcilib, setIzahAcilib] = useState(false);
@@ -42,8 +42,10 @@ export function LoanSheet({ onClose, indeksHali = null }) {
     hazir ? Math.max(kredit.minKredit, Math.round(kredit.maxKredit / 2 / 100) * 100) : 0,
   );
 
+  // Intl işlədilmir: Chromium-un bir çox quruluşunda az lokalı yoxdur və
+  // "İyun 2027" əvəzinə "M06 2027" çıxırdı — adlar i18n-dən gəlir
   const ayAdi = (tarix) =>
-    tarix ? new Intl.DateTimeFormat(lang, { month: "long", year: "numeric" }).format(tarix) : "";
+    tarix ? `${t(`ay.${tarix.getMonth() + 1}`)} ${tarix.getFullYear()}` : "";
 
   const gonder = () => {
     actions.muracietGonder({

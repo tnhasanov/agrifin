@@ -27,12 +27,12 @@ export function BottomNav() {
             <Icon
               name={route.icon}
               size={18}
-              color={active ? C.pine : "#9AA79B"}
+              color={active ? C.pine : C.muted}
               strokeWidth={active ? 2.4 : 2}
             />
             <span
               className="text-xs font-semibold"
-              style={{ color: active ? C.pine : "#9AA79B" }}
+              style={{ color: active ? C.pine : C.muted }}
             >
               {t(route.labelKey)}
             </span>

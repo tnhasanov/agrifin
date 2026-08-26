@@ -4,6 +4,7 @@ import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { useCountUp } from "../../lib/useCountUp.js";
 import { EKIN_HEDDI, cariVeziyyetHali } from "../../../lib/mehsuldarliq.js";
+import { Skeleton } from "../../components/Skeleton.jsx";
 
 /** Bant rəngləri tünd şam fonu üçün seçilib — ağ mətnlə yanaşı oxunur */
 const BANT_RENGI = {
@@ -264,19 +265,35 @@ export function IndeksKarti({ indeksHali }) {
     );
   }
 
+  // Yüklənmə: donmuş spinner deyil, GƏLƏCƏK KARTIN FORMASI. Skelet halqa +
+  // sətirlər hazır kartla eyni yeri tutur — məzmun gələndə ekran sıçramır.
+  // Mətn ekran oxuyucu üçün qalır (aria-label), göz üçün forma kifayətdir.
+  if (hal === "yuklenir") {
+    return (
+      <div
+        className="mt-2 flex items-center gap-3.5 rounded-2xl px-3.5 py-3"
+        style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+        role="status"
+        aria-label={t("indeks.yuklenir")}
+      >
+        <Skeleton en={74} hund={74} radius={37} style={{ backgroundColor: "rgba(255,255,255,0.13)" }} />
+        <div className="flex-1">
+          <Skeleton en="70%" hund={13} style={{ backgroundColor: "rgba(255,255,255,0.13)" }} />
+          <Skeleton en="45%" hund={11} className="mt-2" style={{ backgroundColor: "rgba(255,255,255,0.10)" }} />
+          <Skeleton en="55%" hund={9} className="mt-2" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
+        </div>
+      </div>
+    );
+  }
+
   if (hal !== "hazir" || !indeks) {
     return (
       <div
         className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2"
         style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
       >
-        <Icon
-          name={hal === "yuklenir" ? "LoaderCircle" : "Info"}
-          size={13}
-          color="rgba(255,255,255,0.6)"
-        />
+        <Icon name="Info" size={13} color="rgba(255,255,255,0.6)" />
         <span className="text-xs" style={{ color: "rgba(255,255,255,0.72)" }}>
-          {hal === "yuklenir" && t("indeks.yuklenir")}
           {hal === "olcmeYox" && t("indeks.olcmeYox")}
           {hal === "qurulmayib" && t("ndvi.notConfigured")}
           {hal === "xeta" && t("indeks.xeta")}

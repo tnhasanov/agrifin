@@ -42,7 +42,10 @@ export function SiqnalKarti({ siqnal, onBagla, onHereket, style, className = "gi
                 type="button"
                 onClick={() => onBagla(siqnal.id)}
                 aria-label={t("siqnal.bagla")}
-                className="-mt-1 -mr-1 rounded-full p-1"
+                // 40px hədəf: barmaq üçün minimum (əvvəl ~21px idi). Mənfi
+                // kənar böyüyən toxunma sahəsini vizual sıxlığa çevirmir.
+                className="-mt-2.5 -mr-2.5 flex items-center justify-center rounded-full"
+                style={{ minWidth: 40, minHeight: 40 }}
               >
                 <Icon name="X" size={13} color={reng.fg} />
               </button>

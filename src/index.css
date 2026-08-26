@@ -394,6 +394,18 @@ button:active {
 
 .aqro--sevincli .aqro-parilti { opacity: 0; }
 
+/* Yüklənmə skeleti (bax: components/Skeleton.jsx). Sayrışma opaklıqladır —
+   rəng dəyişmir, ona görə istənilən fonda işləyir. Aşağıdakı qlobal qayda
+   azaldılmış hərəkətdə onu da dondurur: qalan boz forma kifayətdir. */
+.skelet {
+  animation: skelet-sayris 1.4s ease-in-out infinite;
+}
+
+@keyframes skelet-sayris {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

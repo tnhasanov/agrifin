@@ -44,7 +44,9 @@ describe("mövsüm pulu — Pul ekranı", () => {
     renderApp(<App />);
 
     expect(screen.getByText("Pomidor mövsümü")).toBeInTheDocument();
-    expect(screen.getByText(/Biçinə \d+ ay/)).toBeInTheDocument();
+    // Avqust pomidorun biçin ayıdır — test hansı ayda işləsə də sağ küncdə
+    // ya "Biçinə N ay", ya "Biçin ayıdır" dayanır
+    expect(screen.getByText(/Biçinə \d+ ay|Biçin ayıdır/)).toBeInTheDocument();
     // Gəlir TƏK RƏQƏM DEYİL: kalibrlənməmiş modeldən aralıq göstərilir
     expect(screen.getByText("Gözlənilən xalis gəlir")).toBeInTheDocument();
     expect(screen.getByText(/₼ – .*₼/)).toBeInTheDocument();

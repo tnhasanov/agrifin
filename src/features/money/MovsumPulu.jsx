@@ -19,7 +19,7 @@ import { kreditImkani } from "../loan/useKredit.js";
  * uydurma mövsüm göstərilmir.
  */
 export function MovsumPulu({ indeksHali = null }) {
-  const { t, money, lang } = useI18n();
+  const { t, money } = useI18n();
   const { state } = useStore();
   const bitki = state.chat.crop;
 
@@ -36,8 +36,8 @@ export function MovsumPulu({ indeksHali = null }) {
   const qalanAy = bicineQalanAy(bitki);
   const { pessimist, optimist, baza } = kredit.gelir;
 
-  const ayAdi = (ay) =>
-    new Intl.DateTimeFormat(lang, { month: "short" }).format(new Date(2026, ay - 1, 1));
+  // Intl deyil, i18n: bəzi brauzerlərdə az lokalı yoxdur (bax: LoanSheet)
+  const ayAdi = (ay) => t(`ayQ.${ay}`);
 
   // Biçində çıxacaq borc: gözləyən müraciətin ödənişi
   const borc = state.muraciet?.odenis ?? null;
@@ -52,7 +52,9 @@ export function MovsumPulu({ indeksHali = null }) {
           {t("movsumPulu.basliq", { bitki: t(`kbcrop.${bitki}`) })}
         </h3>
         <span className="text-xs font-semibold" style={{ color: C.field }}>
-          {t("movsumPulu.qalan", { ay: qalanAy })}
+          {/* Biçin ayında "biçinə 12 ay" yazmaq olmaz — o, kredit müddətinin
+              semantikasıdır (növbəti mövsüm). Mövsüm kartı bu ayı deyir. */}
+          {gedis === 1 ? t("movsumPulu.bicinAyi") : t("movsumPulu.qalan", { ay: qalanAy })}
         </span>
       </div>
 

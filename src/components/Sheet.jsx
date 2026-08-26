@@ -206,8 +206,10 @@ export function Sheet({ acilib, onBagla, baslik, altYazi, children, etiket }) {
             type="button"
             onClick={bagla}
             aria-label={t("common.close")}
-            className="-mt-0.5 shrink-0 rounded-full p-1.5"
-            style={{ backgroundColor: C.mist }}
+            // 40px hədəf: bağlama düyməsi ən çox basılan düymədir və barmaq
+            // üçün 27px az idi (audit tapıntısı)
+            className="-mt-1 -mr-1 flex shrink-0 items-center justify-center rounded-full"
+            style={{ backgroundColor: C.mist, minWidth: 40, minHeight: 40 }}
           >
             <Icon name="X" size={15} color={C.muted} />
           </button>

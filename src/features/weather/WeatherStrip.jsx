@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { SaatlarPaneli } from "./SaatlarPaneli.jsx";
 import { Icon } from "../../components/Icon.jsx";
+import { Skeleton } from "../../components/Skeleton.jsx";
 import { SectionTitle } from "../../components/SectionTitle.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
@@ -23,14 +24,14 @@ function Box({ children }) {
   );
 }
 
-function Skeleton({ days }) {
+function GozlemeSkeleti({ days }) {
   return (
     <div className="flex justify-between">
       {Array.from({ length: days }).map((_, index) => (
         <div key={index} className="flex flex-col items-center gap-1.5">
-          <div style={{ width: 26, height: 8, borderRadius: 4, backgroundColor: C.line }} />
-          <div style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: C.line }} />
-          <div style={{ width: 22, height: 8, borderRadius: 4, backgroundColor: C.line }} />
+          <Skeleton en={26} hund={8} radius={4} />
+          <Skeleton en={18} hund={18} radius={9} />
+          <Skeleton en={22} hund={8} radius={4} />
         </div>
       ))}
     </div>
@@ -125,7 +126,7 @@ export function WeatherStrip({
       <>
         {header}
         <Box>
-          <Skeleton days={days} />
+          <GozlemeSkeleti days={days} />
         </Box>
       </>
     );
