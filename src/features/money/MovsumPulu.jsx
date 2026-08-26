@@ -1,0 +1,130 @@
+import { Icon } from "../../components/Icon.jsx";
+import { C, font } from "../../theme/tokens.js";
+import { useI18n } from "../../i18n/index.jsx";
+import { useStore } from "../../state/store.jsx";
+import { MOVSUM, bicineQalanAy, movsumGedisi } from "../../services/movsum.js";
+import { kreditImkani } from "../loan/useKredit.js";
+
+/**
+ * Mövsüm pulu — Monzo-nun "maaşa qədər" xülasəsinin buradakı qarşılığı.
+ *
+ * Fermerin "maaş günü" biçindir: gəlir ildə bir dəfə, bir yerdə gəlir,
+ * xərclər isə mövsümə səpələnib. Bank tətbiqinin aylıq dövrü burada
+ * mövsümdür — kart səpindən biçinə qövsü, gözlənilən gəlir aralığını və
+ * biçində ödənəcək borcu BİR yerdə göstərir.
+ *
+ * Rəqəmlər gəlir modelindən gəlir (lib/gelir.js) və ARALIQ kimi verilir:
+ * kalibrlənməmiş modeldən tək rəqəm göstərmək onu olduğundan dəqiq
+ * göstərərdi. Sahə/bitki yoxdursa kart ümumiyyətlə render olunmur —
+ * uydurma mövsüm göstərilmir.
+ */
+export function MovsumPulu({ indeksHali = null }) {
+  const { t, money, lang } = useI18n();
+  const { state } = useStore();
+  const bitki = state.chat.crop;
+
+  const kredit = kreditImkani({
+    sahe: state.sahe,
+    bitki,
+    indeks: indeksHali?.indeks ?? null,
+  });
+
+  // Model işləmirsə kart yoxdur: dəvəti əsas ekran onsuz da verir
+  if (!MOVSUM[bitki] || kredit.gelir?.hal !== "hazir") return null;
+
+  const gedis = movsumGedisi(bitki);
+  const qalanAy = bicineQalanAy(bitki);
+  const { pessimist, optimist, baza } = kredit.gelir;
+
+  const ayAdi = (ay) =>
+    new Intl.DateTimeFormat(lang, { month: "short" }).format(new Date(2026, ay - 1, 1));
+
+  // Biçində çıxacaq borc: gözləyən müraciətin ödənişi
+  const borc = state.muraciet?.odenis ?? null;
+
+  return (
+    <div
+      className="giris mt-3 rounded-2xl p-4"
+      style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
+          {t("movsumPulu.basliq", { bitki: t(`kbcrop.${bitki}`) })}
+        </h3>
+        <span className="text-xs font-semibold" style={{ color: C.field }}>
+          {t("movsumPulu.qalan", { ay: qalanAy })}
+        </span>
+      </div>
+
+      {/* Səpin → biçin qövsü. Mövsümdən kənardadırsa (biçindən sonra) zolaq
+          dolu göstərilmir — "mövsüm bağlıdır" yazılır */}
+      <div className="mt-3">
+        <div className="h-2 overflow-hidden rounded-full" style={{ backgroundColor: C.mist }}>
+          {gedis != null && (
+            <div
+              className="bar-dolur h-2 rounded-full"
+              style={{ width: `${Math.round(gedis * 100)}%`, backgroundColor: C.field }}
+            />
+          )}
+        </div>
+        <div className="mt-1 flex justify-between text-xs" style={{ color: C.muted }}>
+          <span>
+            {ayAdi(MOVSUM[bitki].basla)} · {t("movsumPulu.sepin")}
+          </span>
+          <span>
+            {ayAdi(MOVSUM[bitki].bicin)} · {t("movsumPulu.bicin")}
+          </span>
+        </div>
+        {gedis == null && (
+          <p className="mt-1 text-xs" style={{ color: C.muted }}>
+            {t("movsumPulu.movsumBagli")}
+          </p>
+        )}
+      </div>
+
+      {/* Pul sətirləri: gözlənilən gəlir ARALIQDIR, tək rəqəm deyil */}
+      <div className="mt-3 border-t pt-1" style={{ borderColor: C.line }}>
+        <div className="flex items-baseline justify-between gap-2 py-1.5">
+          <span className="text-xs" style={{ color: C.muted }}>
+            {t("movsumPulu.gelir")}
+          </span>
+          <span
+            className="text-xs font-bold whitespace-nowrap"
+            style={{ color: C.field, fontVariantNumeric: "tabular-nums" }}
+          >
+            {money(Math.max(0, pessimist.xalisGelir))} – {money(Math.max(0, optimist.xalisGelir))}
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between gap-2 py-1.5">
+          <span className="text-xs" style={{ color: C.muted }}>
+            {t("movsumPulu.xerc")}
+          </span>
+          <span
+            className="text-xs font-bold whitespace-nowrap"
+            style={{ color: C.ink, fontVariantNumeric: "tabular-nums" }}
+          >
+            {money(baza.xerc)}
+          </span>
+        </div>
+        {borc != null && (
+          <div className="flex items-baseline justify-between gap-2 py-1.5">
+            <span className="flex items-center gap-1.5 text-xs" style={{ color: C.muted }}>
+              <Icon name="Clock" size={12} color={C.goldDeep} />
+              {t("movsumPulu.borc")}
+            </span>
+            <span
+              className="text-xs font-bold whitespace-nowrap"
+              style={{ color: C.goldDeep, fontVariantNumeric: "tabular-nums" }}
+            >
+              −{money(borc)}
+            </span>
+          </div>
+        )}
+      </div>
+
+      <p className="mt-1.5" style={{ color: C.muted, fontSize: 10, lineHeight: 1.4 }}>
+        {t("movsumPulu.qeyd")}
+      </p>
+    </div>
+  );
+}

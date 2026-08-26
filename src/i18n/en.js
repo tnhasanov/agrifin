@@ -204,6 +204,16 @@ export default {
   "kredit.kartAltyazi": "Under review · tap for details",
   "kredit.gozleyir": "Pending",
 
+  "movsumPulu.basliq": "{bitki} season",
+  "movsumPulu.qalan": "{ay} mo to harvest",
+  "movsumPulu.sepin": "start",
+  "movsumPulu.bicin": "harvest",
+  "movsumPulu.movsumBagli": "Season closed — preparing for the next cycle.",
+  "movsumPulu.gelir": "Expected net income",
+  "movsumPulu.xerc": "Season costs",
+  "movsumPulu.borc": "Due at harvest (application)",
+  "movsumPulu.qeyd": "Range is pessimistic–optimistic. Expert assumptions, uncalibrated model.",
+
   "loan.title": "Crop-cycle loan",
   "loan.doneTitle": "Funds transferred",
   "loan.intro":

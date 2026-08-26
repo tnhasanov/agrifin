@@ -204,6 +204,18 @@ export default {
   "kredit.kartAltyazi": "Baxılmadadır · toxunub ətraflı baxın",
   "kredit.gozleyir": "Gözləyir",
 
+  // Mövsüm pulu — fermerin "maaş dövrü" biçindir
+  "movsumPulu.basliq": "{bitki} mövsümü",
+  "movsumPulu.qalan": "Biçinə {ay} ay",
+  "movsumPulu.sepin": "başlanğıc",
+  "movsumPulu.bicin": "biçin",
+  "movsumPulu.movsumBagli": "Mövsüm bağlıdır — növbəti dövrə hazırlıq gedir.",
+  "movsumPulu.gelir": "Gözlənilən xalis gəlir",
+  "movsumPulu.xerc": "Mövsümün xərci",
+  "movsumPulu.borc": "Biçində ödəniş (müraciət)",
+  "movsumPulu.qeyd":
+    "Aralıq pessimist–optimist ssenaridir. Ekspert normaları, kalibrlənməmiş model.",
+
   "loan.title": "Məhsul dövrü krediti",
   "loan.doneTitle": "Vəsait köçürüldü",
   "loan.intro":

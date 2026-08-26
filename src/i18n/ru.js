@@ -205,6 +205,17 @@ export default {
   "kredit.kartAltyazi": "На рассмотрении · подробнее по нажатию",
   "kredit.gozleyir": "Ожидает",
 
+  "movsumPulu.basliq": "Сезон: {bitki}",
+  "movsumPulu.qalan": "До уборки {ay} мес.",
+  "movsumPulu.sepin": "начало",
+  "movsumPulu.bicin": "уборка",
+  "movsumPulu.movsumBagli": "Сезон закрыт — идёт подготовка к следующему циклу.",
+  "movsumPulu.gelir": "Ожидаемый чистый доход",
+  "movsumPulu.xerc": "Затраты сезона",
+  "movsumPulu.borc": "Платёж в уборку (заявка)",
+  "movsumPulu.qeyd":
+    "Диапазон — пессимистичный–оптимистичный сценарий. Экспертные нормы, модель не откалибрована.",
+
   "loan.title": "Кредит на сезон",
   "loan.doneTitle": "Средства переведены",
   "loan.intro":

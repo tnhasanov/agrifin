@@ -7,6 +7,7 @@ import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
 import { formatSignedMoney } from "../lib/format.js";
 import { FARM } from "../services/farm.js";
+import { MovsumPulu } from "../features/money/MovsumPulu.jsx";
 
 const QUICK_ACTIONS = [
   { id: "send", labelKey: "money.send", icon: "ArrowUpRight" },
@@ -14,7 +15,7 @@ const QUICK_ACTIONS = [
   { id: "card", labelKey: "money.card", icon: "CreditCard" },
 ];
 
-export function MoneyScreen({ onOpenLoan }) {
+export function MoneyScreen({ onOpenLoan, indeksHali = null }) {
   const { t, money, lang } = useI18n();
   const { state } = useStore();
   const { loan, txns } = state;
@@ -46,6 +47,9 @@ export function MoneyScreen({ onOpenLoan }) {
           </p>
         </div>
       </div>
+
+      {/* Mövsüm pulu — fermerin "maaş dövrü" (bax: features/money/MovsumPulu) */}
+      <MovsumPulu indeksHali={indeksHali} />
 
       <div className="mt-3 grid grid-cols-3 gap-2">
         {QUICK_ACTIONS.map((action) => (
