@@ -22,17 +22,23 @@ export function BottomNav() {
             onClick={() => navigate(route.path)}
             aria-current={active ? "page" : undefined}
             className="flex flex-col items-center gap-1 rounded-xl px-3 py-1"
-            style={{ backgroundColor: active ? C.mist : "transparent" }}
+            style={{
+              backgroundColor: active ? C.mist : "transparent",
+              transition: "background-color 200ms ease",
+            }}
           >
-            <Icon
-              name={route.icon}
-              size={18}
-              color={active ? C.pine : "#9AA79B"}
-              strokeWidth={active ? 2.4 : 2}
-            />
+            {/* key=active: tab seçiləndə ikon bir dəfə sıçrayır */}
+            <span key={active ? "a" : "p"} className={active ? "nav-pop" : undefined}>
+              <Icon
+                name={route.icon}
+                size={18}
+                color={active ? C.pine : C.muted}
+                strokeWidth={active ? 2.4 : 2}
+              />
+            </span>
             <span
               className="text-xs font-semibold"
-              style={{ color: active ? C.pine : "#9AA79B" }}
+              style={{ color: active ? C.pine : C.muted }}
             >
               {t(route.labelKey)}
             </span>

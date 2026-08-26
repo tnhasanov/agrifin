@@ -3,7 +3,7 @@ import { fetchTarixce } from "../../services/tarixce.js";
 import { mehsuldarliqIndeksi } from "../../../lib/mehsuldarliq.js";
 import { saheAcari } from "../../services/ndvi.js";
 
-const BOS = { hal: "yoxdur", indeks: null, movsumler: [] };
+const BOS = { hal: "yoxdur", indeks: null, movsumler: [], cari: null };
 
 /**
  * Məhsuldarlıq indeksi — tarixçəni gətirir və bal cədvəlini tətbiq edir.
@@ -43,16 +43,17 @@ export function useIndeks(sahe, xulase, muqayise) {
 
   // İndeks render zamanı hesablanır: cari mövsüm (xulase/muqayise) sonradan
   // gələndə yenidən qurulsun deyə vəziyyətdə saxlanılmır
-  const indeks =
-    veziyyet.hal === "hazir"
-      ? mehsuldarliqIndeksi({
-          movsumler: veziyyet.movsumler,
-          cari:
-            Number.isFinite(xulase?.ndvi) && Number.isFinite(muqayise?.medyan)
-              ? { ndvi: xulase.ndvi, etrafMedyan: muqayise.medyan }
-              : null,
-        })
+  const cari =
+    Number.isFinite(xulase?.ndvi) && Number.isFinite(muqayise?.medyan)
+      ? { ndvi: xulase.ndvi, etrafMedyan: muqayise.medyan }
       : null;
 
-  return { ...veziyyet, indeks };
+  const indeks =
+    veziyyet.hal === "hazir"
+      ? mehsuldarliqIndeksi({ movsumler: veziyyet.movsumler, cari })
+      : null;
+
+  // `cari` kartda da lazımdır: risk zolağı fərqi deyil, İKİ RƏQƏMİ
+  // göstərməlidir — "39% / 55%" fermerə "−0.16" -dan qat-qat aydındır
+  return { ...veziyyet, indeks, cari };
 }

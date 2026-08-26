@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../../App.jsx";
 import { renderApp, seedState } from "../../test/render.jsx";
@@ -197,15 +197,27 @@ describe("müqayisə kartı", () => {
   });
 });
 
+/** Siqnal artıq əsas ekranda deyil — zəngin arxasındadır */
+const zeng = () => screen.getByRole("button", { name: /Bildirişlər/ });
+const paneliAc = async (user) => {
+  await waitFor(() => expect(zeng()).toHaveAccessibleName(/\d+ yeni/));
+  await user.click(zeng());
+  return screen.findByRole("dialog", { name: "Bildirişlər" });
+};
+
 describe("müqayisə siqnalı", () => {
   // Hava hamıya eynidir: sahə ətrafdan xeyli geri qalırsa səbəb sahəyə xasdır
   it("alt çeyrəkdə xəbərdarlıq verir", async () => {
+    const user = userEvent.setup();
     seed();
     stubApi({ qonsu: { p25: 0.75, medyan: 0.82, p75: 0.9, son: bugun, piksel: 5000 } });
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText("Sahə ətrafdan geri qalır")).toBeInTheDocument());
-    expect(screen.getByText(/bitki örtüyü 68%, ətrafdakı əkinlərin medianı isə 82%/)).toBeInTheDocument();
+    const panel = await paneliAc(user);
+    expect(within(panel).getByText("Sahə ətrafdan geri qalır")).toBeInTheDocument();
+    expect(
+      within(panel).getByText(/bitki örtüyü 68%, ətrafdakı əkinlərin medianı isə 82%/),
+    ).toBeInTheDocument();
   });
 
   // Təbrik bildirişi zəngi dəyərsizləşdirir
@@ -217,7 +229,8 @@ describe("müqayisə siqnalı", () => {
     await waitFor(() =>
       expect(screen.getByText("Sahəniz ətrafın ən yaxşı 25%-indədir")).toBeInTheDocument(),
     );
-    expect(screen.queryByText("Sahə ətrafdan geri qalır")).not.toBeInTheDocument();
+    // Zəngdə də görünmür: təbrik bildirişi nişanı dəyərsizləşdirir
+    expect(zeng()).toHaveAccessibleName(/yeni bildiriş yoxdur/);
   });
 });
 

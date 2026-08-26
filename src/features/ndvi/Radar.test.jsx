@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import App from "../../App.jsx";
 import { renderApp, seedState } from "../../test/render.jsx";
 import { KOHNE_GUN, radarLazimdir } from "./useRadar.js";
@@ -93,6 +94,14 @@ describe("radarın çağırılma şərti", () => {
   });
 });
 
+/** Siqnal artıq əsas ekranda deyil — zəngin arxasındadır */
+const zeng = () => screen.getByRole("button", { name: /Bildirişlər/ });
+const paneliAc = async (user) => {
+  await waitFor(() => expect(zeng()).toHaveAccessibleName(/\d+ yeni/));
+  await user.click(zeng());
+  return screen.findByRole("dialog", { name: "Bildirişlər" });
+};
+
 describe("radar ölçməsi — əsas ekran", () => {
   // KVOTA: günəşli həftədə ikinci peyk sorğusu boş xərcdir
   it("optik ölçmə təzə olanda radar sorğusu göndərilmir", async () => {
@@ -124,6 +133,7 @@ describe("radar ölçməsi — əsas ekran", () => {
   });
 
   it("durmuş suyu təcili siqnal kimi göstərir", async () => {
+    const user = userEvent.setup();
     seed();
     stubApi({
       seriya: [],
@@ -134,8 +144,9 @@ describe("radar ölçməsi — əsas ekran", () => {
     });
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText("Sahədə su durub")).toBeInTheDocument());
-    expect(screen.getByText(/təxminən 31%-ni su altında/)).toBeInTheDocument();
+    const panel = await paneliAc(user);
+    expect(within(panel).getByText("Sahədə su durub")).toBeInTheDocument();
+    expect(within(panel).getByText(/təxminən 31%-ni su altında/)).toBeInTheDocument();
   });
 
   // Ölçmə yoxdursa nümunə rəqəmi göstərmək "72% örtük" ilə "ölçmə yoxdur"

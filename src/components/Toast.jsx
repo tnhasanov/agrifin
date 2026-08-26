@@ -16,7 +16,7 @@ export function Toast() {
     >
       {state.toast && (
         <div
-          className="flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold"
+          className="toast-gel flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold"
           style={{
             backgroundColor: C.pine,
             color: "#fff",

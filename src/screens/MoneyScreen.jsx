@@ -7,6 +7,7 @@ import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
 import { formatSignedMoney } from "../lib/format.js";
 import { FARM } from "../services/farm.js";
+import { MovsumPulu } from "../features/money/MovsumPulu.jsx";
 
 const QUICK_ACTIONS = [
   { id: "send", labelKey: "money.send", icon: "ArrowUpRight" },
@@ -14,7 +15,7 @@ const QUICK_ACTIONS = [
   { id: "card", labelKey: "money.card", icon: "CreditCard" },
 ];
 
-export function MoneyScreen({ onOpenLoan }) {
+export function MoneyScreen({ onOpenLoan, indeksHali = null }) {
   const { t, money, lang } = useI18n();
   const { state } = useStore();
   const { loan, txns } = state;
@@ -47,6 +48,9 @@ export function MoneyScreen({ onOpenLoan }) {
         </div>
       </div>
 
+      {/* Mövsüm pulu — fermerin "maaş dövrü" (bax: features/money/MovsumPulu) */}
+      <MovsumPulu indeksHali={indeksHali} />
+
       <div className="mt-3 grid grid-cols-3 gap-2">
         {QUICK_ACTIONS.map((action) => (
           <button
@@ -64,6 +68,28 @@ export function MoneyScreen({ onOpenLoan }) {
       </div>
 
       <SectionTitle>{t("money.financing")}</SectionTitle>
+
+      {/* Gözləyən kredit müraciəti — dərhal pul YOXDUR, qərar ayrıca veriləcək
+          (bax: features/loan/LoanSheet.jsx). Kart müraciətin yaşadığını
+          göstərir; ləğv panelin içindədir ki, təsadüfi toxunuş silməsin. */}
+      {state.muraciet && (
+        <Card style={{ marginBottom: 8 }} onClick={onOpenLoan} ariaLabel={t("kredit.movcudBasliq")}>
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl p-2" style={{ backgroundColor: C.goldSoft }}>
+              <Icon name="Clock" size={16} color={C.goldDeep} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold" style={{ color: C.ink }}>
+                {t("kredit.kartBasliq", { mebleg: { money: state.muraciet.mebleg } })}
+              </p>
+              <p className="text-xs" style={{ color: C.muted }}>
+                {t("kredit.kartAltyazi")}
+              </p>
+            </div>
+            <Chip label={t("kredit.gozleyir")} color={C.goldDeep} bg={C.goldSoft} />
+          </div>
+        </Card>
+      )}
 
       {loan.active && (
         <Card style={{ marginBottom: 8 }}>

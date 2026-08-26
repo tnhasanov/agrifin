@@ -4,10 +4,9 @@ import { WeatherStrip } from "../features/weather/WeatherStrip.jsx";
 import { C, font } from "../theme/tokens.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
-import { useRouter } from "../lib/router.jsx";
 import { formatNumber } from "../lib/format.js";
-import { pathFor } from "../routes.js";
 import { FARM } from "../services/farm.js";
+import { kreditImkani } from "../features/loan/useKredit.js";
 import { DEFAULT_LOCATION } from "../services/location.js";
 import { havaNoqtesi } from "../services/saheYeri.js";
 import { necheGunEvvel, ortukFaizi } from "../services/ndvi.js";
@@ -15,7 +14,6 @@ import { Sparkline } from "../components/Sparkline.jsx";
 import { SaheXeritesi } from "../features/ndvi/SaheXeritesi.jsx";
 import { QonsuMuqayisesi } from "../features/ndvi/QonsuMuqayisesi.jsx";
 import { HesabatPaylas } from "../features/share/HesabatPaylas.jsx";
-import { SiqnalKarti } from "../features/signals/SiqnalKarti.jsx";
 import { IndeksKarti } from "../features/score/IndeksKarti.jsx";
 
 function StatTile({ label, children }) {
@@ -42,8 +40,7 @@ export function HomeScreen({
   onOpenHesab,
 }) {
   const { t, money, lang } = useI18n();
-  const { state, actions } = useStore();
-  const { navigate } = useRouter();
+  const { state } = useStore();
 
   // Yer seçilməyibsə default rayonun proqnozu göstərilir
   const location = state.location ?? DEFAULT_LOCATION;
@@ -64,42 +61,41 @@ export function HomeScreen({
   const faiz = ortukFaizi(olcmeVar ? olculen.ndvi : state.sahe ? null : FARM.ndvi);
   const gunEvvel = olculen ? necheGunEvvel(olculen.tarix) : null;
 
-  // Yalnız ən vacib siqnal əsas ekrana çıxır. Fermer telefonu açanda bir iş
-  // görməlidir, siyahı oxumamalıdır — qalanı məsləhət ekranındadır.
+  // Ən vacib siqnal ARTIQ ƏSAS EKRANIN BAŞINA ÇIXMIR — başlıqdakı zəngin
+  // arxasındadır (bax: features/signals/SiqnalPaneli.jsx). Səbəb: xəbərdarlıq
+  // kartı hər açılışda salamlaşmanı və indeksi aşağı itələyirdi, yəni fermer
+  // öz sahəsinin vəziyyətini görmək üçün əvvəlcə bildirişi oxumalı olurdu.
+  // Zəngdəki qırmızı nişan onsuz da say verir; oxumaq qərarı fermerindir.
+  //
+  // `bas` yenə hesablanır: iki yerdə İŞ görür — Aqronun üzü və paylaşılan
+  // hesabatın mətni. Yalnız kartın özü ekrandan çıxıb.
   const bas = siqnallar.find((s) => s.ciddilik !== "melumat");
-  const qalan = siqnallar.length - (bas ? 1 : 0);
 
-  // Aqronun üzü sahənin vəziyyətini daşıyır. Sıra vacibdir: xəbərdarlıq
-  // hər şeydən üstündür — yaxşı indeks pis xəbəri yumşaltmamalıdır.
-  const aqroHali = bas
-    ? "narahat"
-    : indeksHali.indeks?.bant === "yuksek"
-      ? "sevincli"
-      : "sakit";
+  // Kredit imkanı: aqro indeks → gəlir modeli → ödəniş qabiliyyəti zənciri.
+  // Saxta FARM.creditLimit-in yerinə (bax: features/loan/useKredit.js)
+  const kredit = kreditImkani({
+    sahe: state.sahe,
+    bitki: state.chat.crop,
+    indeks: indeksHali.indeks,
+  });
+
+  // ═══ AQRO ƏSAS EKRANDA KƏDƏRLƏNMİR ═══════════════════════════════════
+  // Əvvəl açıq siqnal varsa üz "narahat" olurdu. İki səbəbdən səhv idi:
+  //
+  // 1. "Suvarma vaxtıdır" TƏCİLİ sayılır, amma pis xəbər deyil — adi,
+  //    həll edilən iş. Ona kədərlənmək hava tətbiqinin yağış gördüyü üçün
+  //    qaşqabaqlı olmasına bənzəyir. Ciddilik İŞİN TƏCİLİLİYİdir, xəbərin
+  //    pisliyi deyil; üz isə ikincisini deyirdi.
+  // 2. Siqnal kartı zəngin arxasına keçəndən sonra kədərli üzün YANINDA
+  //    onu izah edən heç nə qalmadı — fermer səbəbsiz qaşqabaq görürdü.
+  //
+  // İndi: iş varsa sakit (Aqro sadəcə yanındadır), hər şey yaxşıdırsa
+  // sevincli. Narahat ifadə məsləhət ekranındadır — orada siqnal kartları
+  // onu izah edir (bax: screens/AdvisorScreen.jsx).
+  const aqroHali = !bas && indeksHali.indeks?.bant === "yuksek" ? "sevincli" : "sakit";
 
   return (
     <div className="px-4 pb-4">
-      {bas && (
-        <div className="mt-3" aria-live="polite">
-          <SiqnalKarti
-            siqnal={bas}
-            onBagla={actions.siqnaliBagla}
-            onHereket={onOpenChat}
-            style={{ "--i": 1 }}
-          />
-          {qalan > 0 && (
-            <button
-              type="button"
-              onClick={() => navigate(pathFor("advisor"))}
-              className="mt-1.5 w-full py-1 text-xs font-semibold"
-              style={{ color: C.muted }}
-            >
-              {t("siqnal.qalan", { count: qalan })}
-            </button>
-          )}
-        </div>
-      )}
-
       <div
         className="mt-3 rounded-3xl px-4 pt-4 pb-3"
         style={{ background: `linear-gradient(160deg, ${C.pine} 0%, ${C.pineDeep} 70%)` }}
@@ -204,19 +200,26 @@ export function HomeScreen({
               </span>
             )}
           </StatTile>
-          <StatTile label={t("home.creditLimit")}>
-            <span style={{ color: C.gold }}>{money(FARM.creditLimit)}</span>
+          {/* SAXTA 12.000 ₼ SİLİNDİ: rəqəm indi ödəniş qabiliyyətindən çıxır
+              (bax: features/loan/useKredit.js). Hesablana bilmirsə "—" —
+              uydurma rəqəm göstərməkdənsə boşluq göstərmək dürüstdür. */}
+          <StatTile label={t("home.kreditImkani")}>
+            <span style={{ color: C.gold }}>
+              {/* imkanYoxdur halında da RƏQƏM göstərilir (məs. 300 ₼):
+                  kiçik qabiliyyət "hesablana bilmədi" deyil — dürüst cavabdır */}
+              {kredit.maxKredit != null ? money(kredit.maxKredit) : "—"}
+            </span>
           </StatTile>
           <StatTile label={t("home.wallet")}>{money(state.wallet)}</StatTile>
         </div>
 
-        {/* Kredit limiti hələ hesablanmır — bunu deməmək fermeri saxta rəqəmlə
-            plan qurmağa aparır. Qövs silinsə də bu qeyd qalır. */}
+        {/* Rəqəmin mənbəyi bir sətirlə deyilir: haradan gəldiyi bilinməyən
+            limit fermeri yanlış plana aparır */}
         <p
           className="mt-1.5 text-center"
           style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, lineHeight: 1.4 }}
         >
-          {t("home.scoreNote")}
+          {t(kredit.maxKredit != null ? "home.kreditQeyd" : "home.kreditQeydYox")}
         </p>
 
         {/* Peyk ölçməsinin vəziyyəti. Hər hal ayrı cümlə deyir: peyk məlumatı
@@ -355,7 +358,10 @@ export function HomeScreen({
         onPickLocation={onPickLocation}
         onDrawField={onDrawField}
         deqiq={noqte.deqiq}
-        meslehetGoster={siqnallar.length === 0}
+        // Məsləhət ARTIQ SÖNDÜRÜLMÜR. Əvvəl siqnal kartı əsas ekranda idi və
+        // eyni proqnozdan eyni cümləni deyirdi — təkrar olmasın deyə bu sətir
+        // gizlədilirdi. Kart zəngin arxasına keçəndən sonra gizlətmək ekranı
+        // tamam susdururdu: nə siqnal, nə məsləhət.
       />
     </div>
   );

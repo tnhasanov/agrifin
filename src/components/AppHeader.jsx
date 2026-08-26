@@ -52,10 +52,14 @@ export function AppHeader({ siqnalSayi = 0, onZeng, panelAcilib = false }) {
             border: `1px solid ${panelAcilib ? C.field : C.line}`,
           }}
         >
-          <Icon name="Bell" size={15} color={C.ink} />
+          {/* key=say: yeni siqnal gələndə zəng yenidən yellənir. Yellənmə
+              birdəfəlikdir — sonsuz yellənən zəng narahatlıq yaradır. */}
+          <span key={gozleyen} className={gozleyen > 0 ? "zeng-yellen" : undefined}>
+            <Icon name="Bell" size={15} color={C.ink} />
+          </span>
           {gozleyen > 0 && (
             <span
-              className="absolute -top-1 -right-1 flex items-center justify-center rounded-full font-bold"
+              className="nisan-pop absolute -top-1 -right-1 flex items-center justify-center rounded-full font-bold"
               style={{
                 minWidth: 16,
                 height: 16,

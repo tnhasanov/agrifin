@@ -42,6 +42,13 @@ function seed() {
 }
 
 const zeng = () => screen.getByRole("button", { name: /Bildirişlər/ });
+
+/**
+ * Siqnallar ARTIQ ƏSAS EKRANDA DEYİL — hazır olduqlarını zəngin nişanından
+ * bilirik. Əvvəl bunun üçün kartın mətni gözlənilirdi; kart isə indi
+ * yalnız panelin içindədir.
+ */
+const siqnalHazir = () => waitFor(() => expect(zeng()).toHaveAccessibleName(/\d+ yeni/));
 const panel = () => screen.findByRole("dialog", { name: "Bildirişlər" });
 
 beforeEach(() => {
@@ -61,7 +68,7 @@ describe("bildiriş paneli", () => {
     seed();
     stubApi();
     renderApp(<App />);
-    await waitFor(() => expect(screen.getByText("Suvarma vaxtıdır")).toBeInTheDocument());
+    await siqnalHazir();
 
     await user.click(zeng());
 
@@ -79,7 +86,7 @@ describe("bildiriş paneli", () => {
     seed();
     stubApi();
     renderApp(<App />);
-    await waitFor(() => expect(screen.getByText("Suvarma vaxtıdır")).toBeInTheDocument());
+    await siqnalHazir();
 
     await user.click(zeng());
     const p = await panel();
@@ -98,7 +105,7 @@ describe("bildiriş paneli", () => {
     seed();
     stubApi();
     renderApp(<App />);
-    await waitFor(() => expect(screen.getByText("Suvarma vaxtıdır")).toBeInTheDocument());
+    await siqnalHazir();
 
     await user.click(zeng());
     const p = await panel();
@@ -116,7 +123,7 @@ describe("bildiriş paneli", () => {
     seed();
     stubApi();
     renderApp(<App />);
-    await waitFor(() => expect(screen.getByText("Suvarma vaxtıdır")).toBeInTheDocument());
+    await siqnalHazir();
 
     await user.click(zeng());
     const p = await panel();
@@ -132,7 +139,7 @@ describe("bildiriş paneli", () => {
     seed();
     stubApi();
     renderApp(<App />);
-    await waitFor(() => expect(screen.getByText("Suvarma vaxtıdır")).toBeInTheDocument());
+    await siqnalHazir();
 
     await user.click(zeng());
     const p = await panel();
@@ -149,7 +156,7 @@ describe("bildiriş paneli", () => {
     seed();
     stubApi();
     renderApp(<App />);
-    await waitFor(() => expect(screen.getByText("Suvarma vaxtıdır")).toBeInTheDocument());
+    await siqnalHazir();
 
     await user.click(zeng());
     await panel();

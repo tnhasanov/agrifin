@@ -164,6 +164,93 @@ export default {
     "Alıcılar və kreditorlarla təsdiqlənmiş davamlılıq hesabatı paylaşın — ESG hesabatı olan təsərrüfatlar ixrac alıcılarından daha yaxşı qiymət və maliyyələşmədə daha aşağı faiz alır.",
   "carbon.esgCta": "Hesabat yarat",
 
+  // ── Dürüst kredit axını ────────────────────────────────────────────
+  "home.kreditImkani": "Kredit imkanı",
+  "home.kreditQeyd":
+    "İmkan pessimist ssenariyə görə hesablanır — ilkin qiymətləndirmədir, kalibrlənməmiş model.",
+  "home.kreditQeydYox": "Kredit imkanı üçün sahənizi çəkin və bitkinizi seçin.",
+  "kredit.altYazi": "Tavanı bank yox, sahənizin özü qoyur",
+  "kredit.olculmurBasliq": "İmkan hələ hesablana bilmir",
+  "kredit.olculmurSahe": "Sahənizi xəritədə çəkin — imkan sahənin ölçüsündən və tarixçəsindən çıxır.",
+  "kredit.olculmurBitki": "Bitkinizi seçin — gəlir modeli bitkiyə görə qurulur.",
+  "kredit.imkanYoxBasliq": "Bu mövsüm üçün nağd kredit imkanı görünmür",
+  "kredit.imkanYoxIzah":
+    "{hektar} ha sahənin pessimist ssenaridə xalis gəliri {xalis} təşkil edir — bu, borc xidməti üçün kifayət etmir. Bu, sahənin pis olması demək deyil: kiçik sahədə aşağı marjalı bitki nağd borc daşımır.",
+  "kredit.imkanYoxMeslehet":
+    "Alternativ: toxum-gübrə üçün mal krediti və ya subsidiya təminatlı məhsullar. Aqronomla danışın.",
+  "kredit.odenisSetri": "Bir ödəniş: {odenis} · {tarix} (biçin)",
+  "kredit.niyeBuQeder": "Niyə ən çoxu {max}?",
+  "kredit.izah.xalis": "Pessimist ssenaridə xalis gəlir",
+  "kredit.izah.serbest": "Dövriyyə ehtiyatı çıxılandan sonra (75%)",
+  "kredit.izah.tavan": "Borc xidmətinə açıq pay (40%)",
+  "kredit.izah.esas": "Faizlə birlikdə əsas məbləğ",
+  "kredit.izahQeyd":
+    "Hesab pessimist ssenariyə söykənir: model kalibrlənməyib və yaxşı ehtimala borc bağlamaq riski fermerin üstünə atmaqdır.",
+  "kredit.setr.mebleg": "Məbləğ",
+  "kredit.setr.odenisDeger": "{tarix} (biçin) · {odenis}",
+  "kredit.setr.muddet": "Müddət",
+  "kredit.setr.muddetDeger": "{ay} ay — biçinə qədər",
+  "kredit.bicinIzah":
+    "Ödəniş tarixi biçinə bağlanır: pulunuz {tarix} ayında olur, cədvəl də ona görə qurulur.",
+  "kredit.gonderCta": "{mebleg} üçün müraciət göndər",
+  "kredit.gonderildiBasliq": "Müraciət qəbul edildi",
+  "kredit.gonderildiSetir": "{mebleg} üçün müraciətiniz qeydə alındı",
+  "kredit.gonderildiQeyd":
+    "Pul hələ köçürülmür — müraciətə baxılacaq. Təsdiqlənsə ödəniş {tarix} ayına təyin olunacaq.",
+  "kredit.movcudBasliq": "Gözləyən müraciətiniz var",
+  "kredit.movcudIzah": "{mebleg} üçün müraciət baxılmadadır. Ödəniş ayı: {tarix}.",
+  "kredit.legvCta": "Müraciəti geri götür",
+  "kredit.kartBasliq": "Kredit müraciəti — {mebleg}",
+  "kredit.kartAltyazi": "Baxılmadadır · toxunub ətraflı baxın",
+  "kredit.gozleyir": "Gözləyir",
+
+  // Mövsüm pulu — fermerin "maaş dövrü" biçindir
+  "movsumPulu.basliq": "{bitki} mövsümü",
+  "movsumPulu.qalan": "Biçinə {ay} ay",
+  "movsumPulu.bicinAyi": "Biçin ayıdır",
+  "movsumPulu.sepin": "başlanğıc",
+  "movsumPulu.bicin": "biçin",
+  "movsumPulu.movsumBagli": "Mövsüm bağlıdır — növbəti dövrə hazırlıq gedir.",
+  "movsumPulu.gelir": "Gözlənilən xalis gəlir",
+  "movsumPulu.xerc": "Mövsümün xərci",
+  "movsumPulu.borc": "Biçində ödəniş (müraciət)",
+  "movsumPulu.qeyd":
+    "Aralıq pessimist–optimist ssenaridir. Ekspert normaları, kalibrlənməmiş model.",
+
+  // Sahə lenti — hər peyk keçidi bir sətir
+  "lent.basliq": "Sahə lenti",
+  "lent.olcme": "Peyk ölçməsi",
+  "lent.radar": "Radar ölçməsi",
+  "lent.radarSu": "Radar: sahənin {faiz}%-i su altında",
+  "lent.buGun": "Bu gün",
+  "lent.gunEvvel": "{gun} gün əvvəl",
+
+  // Ay adları — Intl bəzi brauzerlərdə az lokalını tanımır (M08 çıxırdı)
+  "ay.1": "Yanvar",
+  "ay.2": "Fevral",
+  "ay.3": "Mart",
+  "ay.4": "Aprel",
+  "ay.5": "May",
+  "ay.6": "İyun",
+  "ay.7": "İyul",
+  "ay.8": "Avqust",
+  "ay.9": "Sentyabr",
+  "ay.10": "Oktyabr",
+  "ay.11": "Noyabr",
+  "ay.12": "Dekabr",
+  "ayQ.1": "yan",
+  "ayQ.2": "fev",
+  "ayQ.3": "mar",
+  "ayQ.4": "apr",
+  "ayQ.5": "may",
+  "ayQ.6": "iyn",
+  "ayQ.7": "iyl",
+  "ayQ.8": "avq",
+  "ayQ.9": "sen",
+  "ayQ.10": "okt",
+  "ayQ.11": "noy",
+  "ayQ.12": "dek",
+
   "loan.title": "Məhsul dövrü krediti",
   "loan.doneTitle": "Vəsait köçürüldü",
   "loan.intro":
@@ -425,7 +512,7 @@ export default {
   "indeks.bant.orta": "Orta",
   "indeks.bant.zeif": "Zəif",
   "indeks.izah":
-    "Aqronomik göstəricidir, kredit balı deyil. Peyk tarixçəsindən hesablanır: əkin davamlılığı, nisbi performans, mövsümi vegetasiya, sabitlik, son meyl və cari mövsüm. Hədlər ekspert təklifidir — statistik kalibrlənməyib. Sütunun hündürlüyü mövsümün zirvəsidir: parlaq yaşıl ətrafın medianından yuxarı, solğun yaşıl aşağı, qırmızı boş qalmış, boz isə davam edən mövsümdür.",
+    "Aqronomik göstəricidir, kredit balı deyil. Peyk tarixçəsindən hesablanır: əkin davamlılığı, nisbi performans, mövsümi vegetasiya, sabitlik, son meyl və cari mövsüm. Hədlər ekspert təklifidir — statistik kalibrlənməyib. Balın altı amilindən beşi KEÇMİŞ mövsümlərdən gəlir, ona görə güclü tarixçəsi olan sahə bu mövsüm pis getsə də yüksək qala bilər — cari mövsüm ayrıca göstərilir. Nisbi performans neçə mövsümdə ətrafdan yuxarı olduğunu sayır, fərqin böyüklüyünü yox. Sütunun hündürlüyü mövsümün zirvəsidir: parlaq yaşıl ətrafın medianından yuxarı, solğun yaşıl aşağı, qırmızı boş qalmış, boz isə davam edən mövsümdür.",
 
   "indeks.tarixceAz": "Tarixçə kifayət deyil",
   "indeks.tarixceAzIzah":
@@ -486,6 +573,17 @@ export default {
   "indeks.sebeb.cari.asagi": "Bu mövsüm ətrafdan geri qalır",
   "indeks.sebeb.cari.zeif": "Bu mövsüm ətrafdan xeyli geridir",
   "indeks.olculmeyib": "Bu amil hələ ölçülməyib",
+  // Cari mövsüm qatı: bal keçmişdir, bu sətirlər bu mövsümü deyir
+  "indeks.cariRisk": "cari mövsümdə risk",
+  "indeks.tarixiSetir": "Tarixi performans: {bant}",
+  "indeks.cariSetir": "Cari mövsüm: {hal} — sahə {sizin}%, ətraf {medyan}%",
+  "indeks.cariHal.yaxsi": "Güclü",
+  "indeks.cariHal.normal": "Normal",
+  "indeks.cariHal.asagi": "Geri qalır",
+  "indeks.cariHal.zeif": "Zəif",
+  "indeks.cariHal.olculmeyib": "Ölçülməyib",
+  // "30/30" səs sayıdır, fərqin böyüklüyü deyil — rəqəmin yanında açılır
+  "indeks.nisbiDetal": "{ustde}/{hamisi} mövsüm · median fərq {ferq} b.",
   "indeks.saheYox":
     "Sahənizi çəkin — aqronomik performans indeksiniz 2017-dən bəri peyk tarixçəsindən hesablanacaq.",
   "indeks.qrafik": "Mövsüm qrafiki: {say} mövsümdən {ekili} əkilib, {bos} boş qalıb",

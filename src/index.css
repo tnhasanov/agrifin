@@ -110,10 +110,14 @@ button:active {
   }
 }
 
+/* İstiqamətli keçid: sağdakı taba keçəndə ekran sağdan, soldakına keçəndə
+   soldan gəlir (--dir App.jsx-də tab sırasından hesablanır). Telefonun öz
+   naviqasiyası belə işləyir — istiqamətsiz keçid "səhifə yeniləndi" hissi
+   verir, istiqamətli isə "yan otağa keçdim". */
 @keyframes ekran-gel {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translate(calc(14px * var(--dir, 0)), 4px);
   }
 }
 
@@ -248,151 +252,369 @@ button:active {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   AQRO — aqronom personajı (bax: components/Aqronom.jsx)
+   FERMER — aqronom personajının riqi (bax: components/Aqronom.jsx)
 
-   Bütün hərəkət BURADADIR, komponentdə yox: fayl sonundakı
-   prefers-reduced-motion qaydası onu bir yerdən dondurur. Personaj
-   donanda da poza düzgün qalır — heç bir hal gizli element saxlamır.
-
-   SVG-də transform üçün transform-box: fill-box vacibdir, yoxsa
-   fırlanma mərkəzi bütün rəsmin küncündən götürülür.
+   Personaj istehsalçının 3D render-idir; bütün canlılıq buradadır.
+   Raster kəsilmir — bütöv fiqur hərəkət edir, tikiş yeri yoxdur.
+   Hamısı faylın sonundakı prefers-reduced-motion qaydası ilə sönür.
    ══════════════════════════════════════════════════════════════════ */
 
-/* ⚠ YALNIZ animasiya olunan qruplara. Əvvəl `.aqro *` yazılmışdı və bu,
-   HƏQİQİ XƏTAYA səbəb oldu: SVG-nin `transform="rotate(bucaq cx cy)"`
-   atributu prezentasiya atributudur, yəni CSS `transform` xassəsinə
-   çevrilir. `transform-box: fill-box` isə onun koordinat başlanğıcını
-   dəyişir və üçarqumentli rotate-in mərkəz koordinatları sürüşmə kimi
-   tətbiq olunur — buğda dənələri sünbüldən qopub künclərə dağılırdı.
-   Fırlanan bəzək elementləri (yarpaq, dənə) bu siyahıda YOXDUR, ona
-   görə onların atributu təbii şəkildə işləyir. */
-.aqro-govde,
-.aqro-baslik,
-.aqro-yarpaq,
-.aqro-goz,
-.aqro-kolge,
-.aqro-nokte,
-.aqro-yanaq,
-.aqro-parilti {
-  transform-box: fill-box;
-  transform-origin: center;
+.fermer {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-/* Gövdə: sakit halda yüngül yellənmə — "canlıdır, gözləyir" */
-.aqro-govde {
-  transform-origin: 50% 90%;
-  animation: aqro-yellen 4.5s ease-in-out infinite;
+.fermer-gov {
+  height: 100%;
+  width: auto;
+  display: block;
+  transform-origin: 50% 92%;
+  animation: fermer-nefes 4.2s ease-in-out infinite;
 }
 
-@keyframes aqro-yellen {
-  0%, 100% { transform: rotate(-1.6deg); }
-  50% { transform: rotate(1.6deg); }
+/* Baş medalyonu dairədir: kiçik yuvalarda (çat, salamlama) təmiz oturur */
+.fermer--bas {
+  border-radius: 50%;
+  overflow: hidden;
 }
 
-/* Göz qırpma: 5 saniyədə bir, cəmi 120 ms — gözə dəymir, amma
-   personajı "diri" edir. scaleY sıfıra getmir ki, göz yox olmasın. */
-.aqro-goz {
-  animation: aqro-qirp 5s ease-in-out infinite;
+.fermer--bas .fermer-gov {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-@keyframes aqro-qirp {
-  0%, 92%, 100% { transform: scaleY(1); }
-  95% { transform: scaleY(0.12); }
+/* Sakit nəfəs: çiyinlər qalxıb-enir, güclə hiss olunur — "diridir" */
+@keyframes fermer-nefes {
+  0%, 100% { transform: scaleY(1) rotate(-0.6deg); }
+  50% { transform: scaleY(1.015) rotate(0.6deg); }
 }
 
-/* Düşünmə nöqtələri yalnız "dusunur" halında görünür */
-.aqro-fikir { opacity: 0; }
-.aqro--dusunur .aqro-fikir { opacity: 1; }
-
-.aqro--dusunur .aqro-nokte {
-  animation: aqro-nokte 1.4s ease-in-out infinite;
+/* Yer kölgəsi (yalnız tam boy) — nəfəslə birgə yüngülcə nəbz edir */
+.fermer-kolge {
+  position: absolute;
+  bottom: 1px;
+  left: 50%;
+  width: 58%;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.18);
+  filter: blur(1.5px);
+  transform: translateX(-50%);
+  animation: fermer-kolge-nebz 4.2s ease-in-out infinite;
 }
-.aqro--dusunur .aqro-nokte--2 { animation-delay: 0.18s; }
-.aqro--dusunur .aqro-nokte--3 { animation-delay: 0.36s; }
 
-@keyframes aqro-nokte {
-  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+@keyframes fermer-kolge-nebz {
+  0%, 100% { transform: translateX(-50%) scaleX(1); opacity: 0.9; }
+  50% { transform: translateX(-50%) scaleX(1.05); opacity: 1; }
+}
+
+/* ── Düşünür: yana əyilir, üstündə fikir nöqtələri ─────────────────── */
+.fermer--dusunur .fermer-gov {
+  animation: fermer-dusun 2.6s ease-in-out infinite;
+}
+
+@keyframes fermer-dusun {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(-1deg) scaleY(1.008); }
+}
+
+.fermer-fikir,
+.fermer-danisiq {
+  display: none;
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  gap: 3px;
+  align-items: flex-end;
+}
+
+.fermer--dusunur .fermer-fikir { display: flex; }
+.fermer--danisir .fermer-danisiq { display: flex; }
+
+.fermer-fikir i,
+.fermer-danisiq i {
+  display: block;
+  border-radius: 50%;
+  background-color: var(--color-field);
+}
+
+/* Fikir: böyüyən üç nöqtə, komiks buludu kimi pilləli qalxır */
+.fermer-fikir i:nth-child(1) { width: 5px; height: 5px; animation: fikir-nebz 1.6s ease-in-out infinite; }
+.fermer-fikir i:nth-child(2) { width: 7px; height: 7px; margin-bottom: 5px; animation: fikir-nebz 1.6s ease-in-out 0.2s infinite; }
+.fermer-fikir i:nth-child(3) { width: 9px; height: 9px; margin-bottom: 11px; animation: fikir-nebz 1.6s ease-in-out 0.4s infinite; }
+
+@keyframes fikir-nebz {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
   50% { opacity: 1; transform: scale(1); }
 }
 
-/* Düşünəndə baş yana əyilir və yellənmə dayanır — diqqət nöqtələrdədir */
-.aqro--dusunur .aqro-govde {
-  animation: aqro-dusun 2.4s ease-in-out infinite;
+/* ── Danışır: xəfif bob + növbə ilə yanan nöqtələr ─────────────────── */
+.fermer--danisir .fermer-gov {
+  animation: fermer-danis 0.9s ease-in-out infinite;
 }
 
-@keyframes aqro-dusun {
-  0%, 100% { transform: rotate(-5deg); }
-  50% { transform: rotate(-2deg); }
+@keyframes fermer-danis {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.5px) scaleY(1.006); }
 }
 
-/* Danışarkən yüngül tullanma — cavab axarkən işləyir */
-.aqro--danisir .aqro-govde {
-  animation: aqro-danis 0.62s ease-in-out infinite;
+.fermer-danisiq i { width: 5px; height: 5px; margin-bottom: 6px; animation: danisiq-yan 1s ease-in-out infinite; }
+.fermer-danisiq i:nth-child(2) { animation-delay: 0.18s; }
+.fermer-danisiq i:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes danisiq-yan {
+  0%, 60%, 100% { opacity: 0.3; }
+  30% { opacity: 1; }
 }
 
-@keyframes aqro-danis {
+/* ── Sevinclidir: iki dəfə tullanır, sonra sakit nəfəsə qayıdır ─────
+   (sonsuz sevinc yorur — Leobank uğur anı kimi birdəfəlikdir) */
+.fermer--sevincli .fermer-gov {
+  animation:
+    fermer-tullan 1.1s cubic-bezier(0.34, 1.3, 0.5, 1) 1,
+    fermer-nefes 4.2s ease-in-out 1.1s infinite;
+}
+
+@keyframes fermer-tullan {
   0%, 100% { transform: translateY(0) scaleY(1); }
-  45% { transform: translateY(-2.5px) scaleY(1.03); }
+  12% { transform: translateY(1px) scaleY(0.95) scaleX(1.04); }
+  30% { transform: translateY(-14px) scaleY(1.03) scaleX(0.98); }
+  48% { transform: translateY(0) scaleY(0.96) scaleX(1.03); }
+  64% { transform: translateY(-7px) scaleY(1.02); }
+  80% { transform: translateY(0) scaleY(0.98) scaleX(1.01); }
 }
 
-/* Sevinc: iki dəfə tullanır, sonra sakitləşir (sonsuz sevinc yorur) */
-.aqro--sevincli .aqro-govde {
-  animation: aqro-sevin 0.75s cubic-bezier(0.28, 0.84, 0.42, 1) 2;
+.fermer--sevincli .fermer-kolge {
+  animation: fermer-kolge-tullan 1.1s ease 1, fermer-kolge-nebz 4.2s ease-in-out 1.1s infinite;
 }
 
-@keyframes aqro-sevin {
-  0%, 100% { transform: translateY(0) scale(1, 1); }
-  25% { transform: translateY(-9px) scale(0.96, 1.05); }
-  55% { transform: translateY(0) scale(1.05, 0.94); }
+@keyframes fermer-kolge-tullan {
+  0%, 100% { transform: translateX(-50%) scaleX(1); opacity: 0.9; }
+  30% { transform: translateX(-50%) scaleX(0.72); opacity: 0.5; }
+  48% { transform: translateX(-50%) scaleX(1.08); opacity: 1; }
+  64% { transform: translateX(-50%) scaleX(0.85); opacity: 0.65; }
 }
 
-.aqro--sevincli .aqro-kolge {
-  animation: aqro-kolge 0.75s cubic-bezier(0.28, 0.84, 0.42, 1) 2;
+/* ── Narahatdır: yavaş, ağır sallanma — üz gülsə də duruş danışır ─── */
+.fermer--narahat .fermer-gov {
+  animation: fermer-narahat 3.4s ease-in-out infinite;
 }
 
-@keyframes aqro-kolge {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  25% { transform: scale(0.75); opacity: 0.55; }
+@keyframes fermer-narahat {
+  0%, 100% { transform: rotate(-2.2deg) translateY(1px); }
+  50% { transform: rotate(2.2deg) translateY(0); }
 }
 
-/* Narahat: yarpaqlar sallanır, gövdə yavaş "nəfəs alır" */
-.aqro--narahat .aqro-govde {
-  animation: aqro-narahat 3s ease-in-out infinite;
+/* ══════════════════════════════════════════════════════════════════
+   HƏRƏKƏT PAKETİ 2 — hamısı faylın sonundakı prefers-reduced-motion
+   qaydası ilə sönür. Prinsip: hərəkət MƏLUMATIN GƏLİŞİNİ göstərir
+   (skan, cızılan xətt, qalxan sütun), bəzək üçün deyil.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Peyk skanı: NDVI xəritəsi açılanda üstündən BİR DƏFƏ skan xətti keçir.
+   Peyk şəkli hazır faylla gəlir, amma fermerin gözündə bu, "peyk sahəni
+   indi oxudu" anıdır — məlumatın haradan gəldiyini hərəkət deyir. */
+.peyk-skan {
+  position: absolute;
+  inset: 0;
+  z-index: 400;
+  overflow: hidden;
+  pointer-events: none;
 }
 
-@keyframes aqro-narahat {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(1.5px) rotate(-1deg); }
+.peyk-skan::after {
+  content: "";
+  position: absolute;
+  inset: -20% 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 44%,
+    rgba(233, 181, 74, 0.28) 49%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(233, 181, 74, 0.28) 51%,
+    transparent 56%
+  );
+  transform: translateY(-100%);
+  animation: peyk-skan-kec 1.1s ease-in-out 0.15s forwards;
 }
 
-/* Narahat: başlıq (yarpaq və ya bitki) sallanır. Yarpaqlar ayrıca da
-   əyilir — iki yarpaq bir-birindən ayrı hərəkət edəndə daha canlı olur;
-   bitki başlıqları isə tək parça olduğu üçün bütöv sallanır. */
-.aqro--narahat .aqro-baslik { transform: translateY(2.5px) scale(0.97); }
-.aqro--narahat .aqro-yarpaq--sol { transform: rotate(16deg) translateY(3px); }
-.aqro--narahat .aqro-yarpaq--sag { transform: rotate(-16deg) translateY(3px); }
-.aqro--narahat .aqro-yanaq { opacity: 0; }
-
-/* Ağız hər halda ayrı əyri çəkir — ifadə rəngdən yox, formadan gəlir */
-.aqro--narahat .aqro-agiz { d: path("M27 56.5 Q 32 52.5, 37 56.5"); }
-.aqro--sevincli .aqro-agiz { d: path("M25.5 53 Q 32 60.5, 38.5 53"); }
-.aqro--dusunur .aqro-agiz { d: path("M28 55.5 L 36 55.5"); }
-.aqro--danisir .aqro-agiz {
-  animation: aqro-agiz 0.62s ease-in-out infinite;
+@keyframes peyk-skan-kec {
+  to {
+    transform: translateY(100%);
+  }
 }
 
-@keyframes aqro-agiz {
-  0%, 100% { d: path("M27 54 Q 32 58.5, 37 54"); }
-  50% { d: path("M27.5 54 Q 32 61, 36.5 54"); }
+/* Cızılan xətt: sparkline soldan sağa çəkilir — "tarixçə yazıldı" hissi.
+   pathLength="1" ilə işləyir (bax: components/Sparkline.jsx). */
+.cizgi-cek {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: cizgi-cekil 700ms ease-out 150ms forwards;
 }
 
-/* Sevincdə gözlər qövsə çevrilir — klassik "gülən göz" */
-.aqro--sevincli .aqro-goz {
-  animation: none;
-  transform: scaleY(0.55);
+@keyframes cizgi-cekil {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
-.aqro--sevincli .aqro-parilti { opacity: 0; }
+/* Mövsüm sütunları yerdən qalxır — hündürlük məlumatdır, qalxma onu
+   "ölçülmüş" kimi hiss etdirir. Gecikmə soldan sağa: illər sıra ilə. */
+.sutun-qalx {
+  transform-origin: bottom;
+  animation: sutun-qalxis 420ms cubic-bezier(0.22, 0.9, 0.35, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+@keyframes sutun-qalxis {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* Zəng: açıq siqnal varsa BİR DƏFƏ yellənir (sonsuz yellənən zəng
+   narahatlıq yaradır). key={say} dəyişəndə yenidən işləyir. */
+.zeng-yellen {
+  display: inline-flex;
+  transform-origin: top center;
+  animation: zeng-seslen 900ms ease-in-out 400ms 1;
+}
+
+@keyframes zeng-seslen {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(13deg); }
+  40% { transform: rotate(-11deg); }
+  60% { transform: rotate(7deg); }
+  80% { transform: rotate(-4deg); }
+}
+
+.nisan-pop {
+  animation: nisan-gel 260ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation-delay: 350ms;
+}
+
+@keyframes nisan-gel {
+  from {
+    transform: scale(0);
+  }
+}
+
+/* Naviqasiya: seçilən tabın ikonu bir dəfə sıçrayır, fon yumşaq keçir */
+.nav-pop {
+  display: inline-flex;
+  animation: nav-secildi 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes nav-secildi {
+  50% {
+    transform: scale(1.18) translateY(-1px);
+  }
+}
+
+/* Toast aşağıdan üzərək gəlir */
+.toast-gel {
+  animation: toast-qalx 240ms cubic-bezier(0.22, 0.9, 0.35, 1);
+}
+
+@keyframes toast-qalx {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+}
+
+/* Konfeti: müraciət göndəriləndə Aqronun ətrafında BİR DƏFƏ səpələnir.
+   Leobank uğur anı kimi — qısa, təkrarsız. Rənglər brend palitrasıdır. */
+.konfeti {
+  position: absolute;
+  top: 8px;
+  width: 7px;
+  height: 11px;
+  border-radius: 2px;
+  opacity: 0;
+  pointer-events: none;
+  animation: konfeti-dus 950ms ease-in forwards;
+}
+
+@keyframes konfeti-dus {
+  0% {
+    opacity: 1;
+    transform: translateY(-6px) rotate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(74px) rotate(230deg);
+  }
+}
+
+/* Kredit slayderi: standart boz zolaq brendsiz görünürdü. Dolu hissə JS-dən
+   qradiyentlə gəlir (bax: LoanSheet) — zolaq 6px, giriş özü 26px qalır ki,
+   barmaq hədəfi böyük olsun. */
+.kredit-slayder {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 26px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 6px;
+  border-radius: 999px;
+  outline-offset: 4px;
+}
+
+.kredit-slayder::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--color-field);
+  box-shadow: 0 2px 8px rgba(16, 32, 22, 0.25);
+  cursor: pointer;
+  transition: transform 90ms ease;
+}
+
+.kredit-slayder:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+
+.kredit-slayder::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--color-field);
+  box-shadow: 0 2px 8px rgba(16, 32, 22, 0.25);
+  cursor: pointer;
+}
+
+.kredit-slayder::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-mist);
+}
+
+.kredit-slayder::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-field);
+}
+
+/* Yüklənmə skeleti (bax: components/Skeleton.jsx). Sayrışma opaklıqladır —
+   rəng dəyişmir, ona görə istənilən fonda işləyir. Aşağıdakı qlobal qayda
+   azaldılmış hərəkətdə onu da dondurur: qalan boz forma kifayətdir. */
+.skelet {
+  animation: skelet-sayris 1.4s ease-in-out infinite;
+}
+
+@keyframes skelet-sayris {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,
