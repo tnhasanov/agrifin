@@ -1,9 +1,9 @@
--- AgriFin — Faza 1 sxemi.
+-- 001 — Faza 1 təməli: hesab, sahə, peyk snapshotu, bal jurnalı.
 --
--- Bu fayl İCRA OLUNAN sənəddir: lib/db.js eyni əmrləri hər instansın ilk
--- sorğusundan əvvəl işlədir (CREATE TABLE IF NOT EXISTS — təkrar zərərsizdir).
--- Ayrıca miqrasiya aləti Faza 1 üçün artıq yükdür; cədvəl dəyişəndə bura da,
--- lib/db.js-dəki SXEM sabiti də birlikdə yenilənir.
+-- Bu fayl əvvəl db/schema.sql idi və HƏR API sorğusunda avtomatik işləyirdi.
+-- İndi miqrasiya ardıcıllığının ilk addımıdır (bax: scripts/migrate.mjs).
+-- Məzmun BİLƏRƏKDƏN dəyişdirilməyib: mövcud prodakşn bazasında bu cədvəllər
+-- artıq var, IF NOT EXISTS onları olduğu kimi qəbul edir — heç nə itmir.
 --
 -- Adlar kod bazası ilə eyni dildədir (bax: README — adlandırma qaydası).
 

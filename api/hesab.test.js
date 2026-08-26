@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
 import { BAGLANTI_ACARLARI, musterTeyin, sorgu } from "../lib/db.js";
+import { miqrasiyalariTetbiqEt } from "../lib/miqrasiya.js";
 import handler from "./hesab.js";
 
 // Handler HTTP-siz sınanır: mock req/res real handler-i PGlite üstündə sürür.
@@ -16,6 +17,10 @@ beforeAll(async () => {
   delete process.env.SMS_URL;
   pg = new PGlite();
   await pg.waitReady;
+  // Sxem artıq runtime-da avtomatik qurulmur (bax: lib/miqrasiya.js) —
+  // test bazası da miqrasiyalarla qurulur, prodakşnla eyni yolla
+  musterTeyin(pg);
+  await miqrasiyalariTetbiqEt(sorgu);
 }, 60_000);
 
 afterAll(async () => {

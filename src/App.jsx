@@ -27,6 +27,7 @@ import { useNdvi } from "./features/ndvi/useNdvi.js";
 import { useQonsu } from "./features/ndvi/useQonsu.js";
 import { useRadar } from "./features/ndvi/useRadar.js";
 import { useIndeks } from "./features/score/useIndeks.js";
+import { useKreditVeziyyeti } from "./features/loan/useKreditVeziyyeti.js";
 import { useSiqnallar } from "./features/signals/useSiqnallar.js";
 import { useTovsiyeler } from "./features/tovsiye/useTovsiyeler.js";
 import { acigSiqnallar } from "./services/siqnal.js";
@@ -81,6 +82,9 @@ export default function App() {
   const indeks = useIndeks(state.sahe, peyk.xulase, qonsu.muqayise);
   // Hesab sinxronu: sessiyanı yoxlayır, sahəni və indeksi hesaba yazır
   useHesab(indeks);
+  // SERVER kredit vəziyyəti — bir yerdə gətirilir, ekranlara prop kimi gedir
+  // (peyk/radar/indeks ilə eyni naxış). Giriş dəyişəndə yenidən yüklənir.
+  const kreditHali = useKreditVeziyyeti(state.hesab.telefon);
   const noqte = havaNoqtesi({ location: state.location ?? DEFAULT_LOCATION, sahe: state.sahe });
   const butunSiqnallar = useSiqnallar({
     lat: noqte.lat,
@@ -142,6 +146,7 @@ export default function App() {
                 qonsu={qonsu}
                 radar={radar}
                 indeksHali={indeks}
+                kreditHali={kreditHali}
                 siqnallar={siqnallar}
                 tovsiyeler={tovsiyeler}
                 onOpenLoan={() => setLoanOpen(true)}
@@ -156,7 +161,14 @@ export default function App() {
             <Toast />
             <BottomNav />
 
-            {loanOpen && <LoanSheet onClose={closeLoan} indeksHali={indeks} />}
+            {loanOpen && (
+              <LoanSheet
+                onClose={closeLoan}
+                indeksHali={indeks}
+                kreditHali={kreditHali}
+                onOpenHesab={() => setHesabOpen(true)}
+              />
+            )}
 
             <SiqnalPaneli
               acilib={siqnalOpen}

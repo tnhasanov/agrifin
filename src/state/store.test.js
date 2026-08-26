@@ -29,22 +29,8 @@ describe("reducer", () => {
     expect(twice).toBe(once);
   });
 
-  it("kredit götürüləndə məbləği köçürür və ödənişi hesablayır", () => {
-    const next = reducer(initialState, { type: "loan/take", amount: 5000 });
-    expect(next.wallet).toBe(initialState.wallet + 5000);
-    expect(next.loan).toMatchObject({
-      active: true,
-      amount: 5000,
-      repay: computeRepayment(5000, LOAN_TERMS),
-    });
-    expect(next.txns[0]).toMatchObject({ nameKey: "txn.loan.name", amount: 5000 });
-  });
-
-  it("sıfır və mənfi kredit məbləğini rədd edir", () => {
-    expect(reducer(initialState, { type: "loan/take", amount: 0 })).toBe(initialState);
-    expect(reducer(initialState, { type: "loan/take", amount: -100 })).toBe(initialState);
-  });
-
+  // `loan/take` reducer-i SİLİNDİ: kredit vəziyyəti artıq serverdədir
+  // (bax: api/kredit.js). Pulqabına dərhal pul yazan yol qalmadı.
   it("hər yeni əməliyyata unikal id verir", () => {
     const afterSell = reducer(initialState, { type: "carbon/sell" });
     const afterLoan = reducer(afterSell, { type: "loan/take", amount: 1000 });
