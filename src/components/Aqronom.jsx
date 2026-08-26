@@ -1,23 +1,3 @@
-import bugdaBas from "../assets/fermer/bugda-bas.webp";
-import bugdaTam from "../assets/fermer/bugda-tam.webp";
-import pambiqBas from "../assets/fermer/pambiq-bas.webp";
-import pambiqTam from "../assets/fermer/pambiq-tam.webp";
-import qargidaliBas from "../assets/fermer/qargidali-bas.webp";
-import qargidaliTam from "../assets/fermer/qargidali-tam.webp";
-import pomidorBas from "../assets/fermer/pomidor-bas.webp";
-import pomidorTam from "../assets/fermer/pomidor-tam.webp";
-import uzumBas from "../assets/fermer/uzum-bas.webp";
-import uzumTam from "../assets/fermer/uzum-tam.webp";
-import kartofBas from "../assets/fermer/kartof-bas.webp";
-import kartofTam from "../assets/fermer/kartof-tam.webp";
-import soganBas from "../assets/fermer/sogan-bas.webp";
-import soganTam from "../assets/fermer/sogan-tam.webp";
-import almaBas from "../assets/fermer/alma-bas.webp";
-import almaTam from "../assets/fermer/alma-tam.webp";
-import findiqBas from "../assets/fermer/findiq-bas.webp";
-import findiqTam from "../assets/fermer/findiq-tam.webp";
-import yarpaqBas from "../assets/fermer/yarpaq-bas.webp";
-import yarpaqTam from "../assets/fermer/yarpaq-tam.webp";
 import { BITKI_VARIANTI } from "./fermerVarianti.js";
 
 /**
@@ -36,11 +16,12 @@ import { BITKI_VARIANTI } from "./fermerVarianti.js";
  *   tam boy                — böyük anlarda (uğur ekranı)
  * Seçim ölçüdən avtomatikdir; `gorunus` ilə məcbur etmək olur.
  *
- * ═══ MƏHDUDİYYƏT: ÜZ DƏYİŞMİR ═════════════════════════════════════════
- * Render bir ifadə ilə gəlib (gülümsəyir). Halların tonunu ÜZ yox,
- * DURUŞ daşıyır: fikirləşəndə yana əyilib nöqtələr çıxır, sevinəndə
- * tullanır, narahatda yavaş sallanır. İfadəli üzlər üçün istehsalçıdan
- * hər hala ayrıca render lazımdır — TODO(ifadeler).
+ * ═══ İFADƏLƏR ═════════════════════════════════════════════════════════
+ * dusunur və narahat üçün istehsalçı AYRICA ÜZ renderləri göndərib
+ * (çənədə əl / boynunu qaşıyan) — hal dəyişəndə şəkil də dəyişir.
+ * Renderi olmayan hal sakit şəklə düşür, tonu duruş animasiyası daşıyır.
+ * TODO(ifadeler): danisir və sevincli renderləri, yarpaq variantının
+ * ifadələri və 4 yeni bitkinin ifadələri gözlənilir.
  *
  * Bütün hərəkət index.css-dədir (.fermer) və azaldılmış hərəkət
  * rejimində qlobal qayda ilə sönür.
@@ -48,18 +29,21 @@ import { BITKI_VARIANTI } from "./fermerVarianti.js";
 
 const HALLAR = ["sakit", "dusunur", "danisir", "sevincli", "narahat"];
 
-const FERMER = {
-  bugda: { bas: bugdaBas, tam: bugdaTam },
-  pambiq: { bas: pambiqBas, tam: pambiqTam },
-  qargidali: { bas: qargidaliBas, tam: qargidaliTam },
-  pomidor: { bas: pomidorBas, tam: pomidorTam },
-  uzum: { bas: uzumBas, tam: uzumTam },
-  kartof: { bas: kartofBas, tam: kartofTam },
-  sogan: { bas: soganBas, tam: soganTam },
-  alma: { bas: almaBas, tam: almaTam },
-  findiq: { bas: findiqBas, tam: findiqTam },
-  yarpaq: { bas: yarpaqBas, tam: yarpaqTam },
-};
+/**
+ * Assetlər ad konvensiyasından yığılır: {variant}-{hal}-{gorunus}.webp
+ * (məs. bugda-dusunur-bas.webp). Yeni ifadə şəkli qovluğa düşən kimi
+ * özü xəritəyə girir — komponentdə import siyahısı dəyişmir.
+ */
+const MODULLAR = import.meta.glob("../assets/fermer/*.webp", {
+  eager: true,
+  import: "default",
+});
+
+const FERMER = {};
+for (const [yol, sekil] of Object.entries(MODULLAR)) {
+  const [variant, hal, gorunus] = yol.split("/").pop().replace(".webp", "").split("-");
+  ((FERMER[variant] ??= {})[hal] ??= {})[gorunus] = sekil;
+}
 
 /** Bu ölçüdən yuxarıda tam boy mənalıdır — altında fiqur oxunmur */
 const TAM_HEDDI = 72;
@@ -74,6 +58,10 @@ export function Aqronom({
 }) {
   const h = HALLAR.includes(hal) ? hal : "sakit";
   const variant = FERMER[BITKI_VARIANTI[bitki] ?? "yarpaq"] ?? FERMER.yarpaq;
+  // İfadə renderi hələ gəlməyibsə sakit (gülümsəyən) şəklə düşür — duruş
+  // animasiyası tonu onsuz da daşıyır. İstehsalçı ifadələri hissə-hissə
+  // göndərir; hər yeni fayl qovluğa düşən kimi bura özü qoşulur.
+  const sekiller = variant[h] ?? variant.sakit;
   const tam = (gorunus ?? (olcu >= TAM_HEDDI ? "tam" : "bas")) === "tam";
 
   return (
@@ -90,7 +78,7 @@ export function Aqronom({
       {tam && <span className="fermer-kolge" />}
       <img
         className="fermer-gov"
-        src={tam ? variant.tam : variant.bas}
+        src={tam ? sekiller.tam : sekiller.bas}
         alt=""
         draggable={false}
       />

@@ -87,6 +87,27 @@ describe("Aqronom (raster fermer)", () => {
     expect(banan).toBe(bos);
   });
 
+  // ── İfadə renderləri ──────────────────────────────────────────────
+  // dusunur/narahat üçün ayrıca üz şəkilləri var — hal dəyişəndə şəkil
+  // də dəyişir. Renderi olmayan hal sakitə düşür (hissə-hissə gəlir).
+  it("düşünən və narahat hallar öz üz renderini yükləyir", () => {
+    const dusunur = sekil(render(<Aqronom bitki="bugda" hal="dusunur" />)).getAttribute("src");
+    const narahat = sekil(render(<Aqronom bitki="bugda" hal="narahat" />)).getAttribute("src");
+    const sakit = sekil(render(<Aqronom bitki="bugda" hal="sakit" />)).getAttribute("src");
+    expect(dusunur).toContain("dusunur");
+    expect(narahat).toContain("narahat");
+    expect(sakit).toContain("sakit");
+  });
+
+  it("renderi olmayan hal sakit şəklə düşür", () => {
+    // danisir renderi hələ göndərilməyib
+    const danisir = sekil(render(<Aqronom bitki="bugda" hal="danisir" />)).getAttribute("src");
+    expect(danisir).toContain("sakit");
+    // yarpaq variantının heç bir ifadəsi yoxdur
+    const yarpaq = sekil(render(<Aqronom hal="dusunur" />)).getAttribute("src");
+    expect(yarpaq).toContain("yarpaq-sakit");
+  });
+
   // ── Hal göstəriciləri ─────────────────────────────────────────────
   // Üz dəyişmir (bir render var) — halı nöqtələr və CSS duruşu daşıyır.
   // Nöqtə elementləri HƏMİŞƏ DOM-dadır, görünmə CSS-dədir: testlər sinif
