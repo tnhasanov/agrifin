@@ -100,9 +100,29 @@ describe("Aqronom (raster fermer)", () => {
   });
 
   it("renderi olmayan hal sakit şəklə düşür", () => {
-    // üzümün danisir/sevincli renderləri hələ göndərilməyib
-    const danisir = sekil(render(<Aqronom bitki="uzum" hal="danisir" />)).getAttribute("src");
+    // almanın ifadə renderləri hələ göndərilməyib
+    const danisir = sekil(render(<Aqronom bitki="alma" hal="danisir" />)).getAttribute("src");
     expect(danisir).toContain("sakit");
+  });
+
+  // 3-cü ifadə partiyası: üzüm, kartof və cücərti tam dəstlə örtülüb
+  it("üzüm, kartof və cücərti bütün ifadələri öz üzü ilə göstərir", () => {
+    for (const [bitki, hal] of [
+      ["uzum", "danisir"],
+      ["uzum", "sevincli"],
+      ["kartof", "dusunur"],
+      ["kartof", "narahat"],
+      ["kartof", "danisir"],
+      ["kartof", "sevincli"],
+      ["sogan", "dusunur"],
+      ["sogan", "narahat"],
+    ]) {
+      const src = sekil(render(<Aqronom bitki={bitki} hal={hal} />)).getAttribute("src");
+      expect(src, `${bitki}-${hal}`).toContain(`${BITKI_VARIANTI[bitki]}-${hal}`);
+    }
+    // cücərti (bitkisiz) sevinməyi də bacarır — kredit təsdiqi ekranı
+    const sevincli = sekil(render(<Aqronom hal="sevincli" />)).getAttribute("src");
+    expect(sevincli).toContain("yarpaq-sevincli");
   });
 
   it("danışan və sevincli hallar da öz renderini yükləyir", () => {
