@@ -205,7 +205,9 @@ export function HomeScreen({
               uydurma rəqəm göstərməkdənsə boşluq göstərmək dürüstdür. */}
           <StatTile label={t("home.kreditImkani")}>
             <span style={{ color: C.gold }}>
-              {kredit.hal === "hazir" ? money(kredit.maxKredit) : "—"}
+              {/* imkanYoxdur halında da RƏQƏM göstərilir (məs. 300 ₼):
+                  kiçik qabiliyyət "hesablana bilmədi" deyil — dürüst cavabdır */}
+              {kredit.maxKredit != null ? money(kredit.maxKredit) : "—"}
             </span>
           </StatTile>
           <StatTile label={t("home.wallet")}>{money(state.wallet)}</StatTile>
@@ -217,7 +219,7 @@ export function HomeScreen({
           className="mt-1.5 text-center"
           style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, lineHeight: 1.4 }}
         >
-          {t(kredit.hal === "hazir" ? "home.kreditQeyd" : "home.kreditQeydYox")}
+          {t(kredit.maxKredit != null ? "home.kreditQeyd" : "home.kreditQeydYox")}
         </p>
 
         {/* Peyk ölçməsinin vəziyyəti. Hər hal ayrı cümlə deyir: peyk məlumatı

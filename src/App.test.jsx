@@ -107,9 +107,9 @@ describe("AgriFin tətbiqi", () => {
     // Aqro slaydere reaksiya verir: tavana yaxınlaşanda fikirləşir.
     // Arxadakı əsas ekranda da Aqro var — yalnız dialoqun içinə baxılır.
     const dialoq = screen.getByRole("dialog");
-    expect(dialoq.querySelector("svg.aqro").getAttribute("class")).toContain("aqro--sakit");
+    expect(dialoq.querySelector(".fermer").className).toContain("fermer--sakit");
     fireEvent.change(slayder, { target: { value: slayder.max } });
-    expect(dialoq.querySelector("svg.aqro").getAttribute("class")).toContain("aqro--dusunur");
+    expect(dialoq.querySelector(".fermer").className).toContain("fermer--dusunur");
     await user.click(screen.getByRole("button", { name: /Niyə ən çoxu/ }));
     expect(screen.getByText("Pessimist ssenaridə xalis gəlir")).toBeInTheDocument();
 

@@ -310,7 +310,7 @@ export function LoanSheet({ onClose, indeksHali = null }) {
                   style={{ left: sol, animationDelay: gecikme, backgroundColor: reng }}
                 />
               ))}
-              <Aqronom hal="sevincli" bitki={state.chat.crop} olcu={76} />
+              <Aqronom hal="sevincli" bitki={state.chat.crop} olcu={150} />
             </div>
             <p className="text-sm font-bold" style={{ color: C.ink }}>
               {t("kredit.gonderildiSetir", { mebleg: { money: mebleg } })}

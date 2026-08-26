@@ -1,95 +1,95 @@
 import { describe, expect, it } from "vitest";
 import { render } from "@testing-library/react";
 import { Aqronom } from "./Aqronom.jsx";
+import { BITKI_VARIANTI } from "./fermerVarianti.js";
 import { CROP_KEYS } from "../services/crops.js";
 
-/** SVG kökünü tapır — komponent rol vermir (bilərəkdən aria-hidden) */
-const kok = (qab) => qab.container.querySelector("svg.aqro");
+/** Kökü tapır — komponent rol vermir (bilərəkdən aria-hidden) */
+const kok = (qab) => qab.container.querySelector(".fermer");
+const sekil = (qab) => kok(qab).querySelector("img.fermer-gov");
 
-describe("Aqronom", () => {
+describe("Aqronom (raster fermer)", () => {
   it("halı sinif kimi verir — animasiya CSS-dədir, komponentdə yox", () => {
     for (const hal of ["sakit", "dusunur", "danisir", "sevincli", "narahat"]) {
       const qab = render(<Aqronom hal={hal} />);
-      expect(kok(qab).getAttribute("class"), hal).toContain(`aqro--${hal}`);
+      expect(kok(qab).className, hal).toContain(`fermer--${hal}`);
       qab.unmount();
     }
   });
 
   it("naməlum hal sakitə düşür — yazı səhvi personajı sındırmır", () => {
-    const qab = render(<Aqronom hal="uydurma" />);
-    expect(kok(qab).getAttribute("class")).toContain("aqro--sakit");
+    expect(kok(render(<Aqronom hal="uydurma" />)).className).toContain("fermer--sakit");
   });
 
-  it("hal verilməsə sakitdir", () => {
-    expect(kok(render(<Aqronom />)).getAttribute("class")).toContain("aqro--sakit");
+  // Personaj bəzəkdir: yanındakı mətn onsuz da eyni şeyi deyir
+  it("ekran oxuyucudan gizlidir və şəklin alt mətni boşdur", () => {
+    const qab = render(<Aqronom />);
+    expect(kok(qab).getAttribute("aria-hidden")).toBe("true");
+    expect(sekil(qab).getAttribute("alt")).toBe("");
   });
 
-  // Personaj bəzəkdir: ekran oxuyucusu onu oxumamalıdır, çünki yanındakı
-  // mətn onsuz da eyni şeyi deyir. İki dəfə eşitmək yorucudur.
-  it("ekran oxuyucudan gizlidir", () => {
-    const svg = kok(render(<Aqronom />));
-    expect(svg.getAttribute("aria-hidden")).toBe("true");
-    expect(svg.getAttribute("focusable")).toBe("false");
+  // ── Görünüş seçimi ────────────────────────────────────────────────
+  it("kiçik ölçüdə baş medalyonu, böyükdə tam boy", () => {
+    const bas = render(<Aqronom olcu={40} />);
+    expect(kok(bas).className).toContain("fermer--bas");
+    expect(sekil(bas).getAttribute("src")).toContain("-bas");
+
+    const tam = render(<Aqronom olcu={150} />);
+    expect(kok(tam).className).toContain("fermer--tam");
+    expect(sekil(tam).getAttribute("src")).toContain("-tam");
   });
 
-  it("ölçü nisbəti qorunur", () => {
-    const svg = kok(render(<Aqronom olcu={32} />));
-    // Nisbət viewBox-dan çıxarılır: rəsm hündürlüyü dəyişəndə test də
-    // özü uyğunlaşır, amma uyğunsuzluğu tutur (əvvəl rəqəm bərkidilmişdi
-    // və viewBox dəyişəndə test yalandan qırıldı)
-    const [, , vbEn, vbHund] = svg.getAttribute("viewBox").split(/\s+/).map(Number);
-    expect(svg.getAttribute("width")).toBe("32");
-    expect(svg.getAttribute("height")).toBe(String(32 * (vbHund / vbEn)));
+  it("gorunus parametri avtomatik seçimi məcbur dəyişir", () => {
+    const qab = render(<Aqronom olcu={40} gorunus="tam" />);
+    expect(kok(qab).className).toContain("fermer--tam");
   });
 
-  // Hər ifadə AYRI forma ilə fərqlənməlidir — yalnız rənglə fərqlənsə
-  // rəng korluğu olan istifadəçi üçün beş hal eyni görünər
-  it("hər halda üz elementləri mövcuddur", () => {
-    const qab = render(<Aqronom hal="narahat" />);
-    const svg = kok(qab);
-    expect(svg.querySelectorAll(".aqro-goz")).toHaveLength(2);
-    expect(svg.querySelector(".aqro-agiz")).toBeTruthy();
-    expect(svg.querySelector(".aqro-papaq")).toBeTruthy();
-    expect(svg.querySelectorAll(".aqro-yarpaq")).toHaveLength(2);
+  // Kölgə yalnız tam boydadır: medalyonda yer xətti yoxdur
+  it("yer kölgəsi yalnız tam boyda görünür", () => {
+    expect(kok(render(<Aqronom olcu={150} />)).querySelector(".fermer-kolge")).toBeTruthy();
+    expect(kok(render(<Aqronom olcu={40} />)).querySelector(".fermer-kolge")).toBeNull();
   });
 
-  // ── Bitkiyə görə başlıq ──────────────────────────────────────────
-  it("hər bitki üçün başlıq var və hamısı fərqlidir", () => {
-    const formalar = new Map();
+  // ── Bitki → render variantı ───────────────────────────────────────
+  it("hər bitki üçün variant xəritədə var", () => {
     for (const bitki of CROP_KEYS) {
-      const qab = render(<Aqronom bitki={bitki} />);
-      const baslik = kok(qab).querySelector(".aqro-baslik");
-      expect(baslik, bitki).toBeTruthy();
-      formalar.set(bitki, baslik.innerHTML);
-      qab.unmount();
+      expect(BITKI_VARIANTI[bitki], bitki).toBeTruthy();
     }
-    // Heç iki bitki eyni görünməməlidir — fermer öz bitkisini tanımalıdır
-    expect(new Set(formalar.values()).size).toBe(CROP_KEYS.length);
   });
 
-  it("bitki seçilməyibsə yarpaqlara qayıdır", () => {
-    const svg = kok(render(<Aqronom />));
-    expect(svg.querySelectorAll(".aqro-yarpaq")).toHaveLength(2);
+  it("bitkiyə görə fərqli render yüklənir", () => {
+    const bugda = sekil(render(<Aqronom bitki="bugda" />)).getAttribute("src");
+    const pomidor = sekil(render(<Aqronom bitki="pomidor" />)).getAttribute("src");
+    expect(bugda).not.toBe(pomidor);
   });
 
-  it("naməlum bitki adı personajı sındırmır", () => {
-    const svg = kok(render(<Aqronom bitki="banan" />));
-    expect(svg.querySelectorAll(".aqro-yarpaq")).toHaveLength(2);
+  // QƏSDƏN: arpa buğdanın renderini geyinir — hər ikisi sünbüldür,
+  // istehsalçı arpa üçün ayrıca render göndərməyib
+  it("arpa buğda ilə eyni renderi bölüşür", () => {
+    const bugda = sekil(render(<Aqronom bitki="bugda" />)).getAttribute("src");
+    const arpa = sekil(render(<Aqronom bitki="arpa" />)).getAttribute("src");
+    expect(arpa).toBe(bugda);
   });
 
-  // Papaq brend qızılı OLMAMALIDIR: buğda və arpa da qızıldır və eyni
-  // rəngdə olanda sünbül papağın fonunda itir (istehsalda görüldü)
-  it("papaq buğdanın rəngindən fərqlənir", () => {
-    const svg = kok(render(<Aqronom bitki="bugda" />));
-    const papaqRengleri = [...svg.querySelectorAll(".aqro-papaq *")].map((e) => e.getAttribute("fill"));
-    const deneRengleri = [...svg.querySelectorAll(".aqro-baslik ellipse")].map((e) => e.getAttribute("fill"));
-    for (const r of deneRengleri.filter(Boolean)) {
-      expect(papaqRengleri).not.toContain(r);
-    }
+  it("renderi olmayan bitki və naməlum ad cücərti variantına düşür", () => {
+    const kartof = sekil(render(<Aqronom bitki="kartof" />)).getAttribute("src");
+    const banan = sekil(render(<Aqronom bitki="banan" />)).getAttribute("src");
+    const bos = sekil(render(<Aqronom />)).getAttribute("src");
+    expect(kartof).toContain("yarpaq");
+    expect(banan).toBe(bos);
+  });
+
+  // ── Hal göstəriciləri ─────────────────────────────────────────────
+  // Üz dəyişmir (bir render var) — halı nöqtələr və CSS duruşu daşıyır.
+  // Nöqtə elementləri HƏMİŞƏ DOM-dadır, görünmə CSS-dədir: testlər sinif
+  // səviyyəsində bağlayır, göstərmə qaydası index.css-dədir.
+  it("fikir və danışıq nöqtələri strukturda mövcuddur", () => {
+    const qab = render(<Aqronom hal="dusunur" />);
+    expect(kok(qab).querySelectorAll(".fermer-fikir i")).toHaveLength(3);
+    expect(kok(qab).querySelectorAll(".fermer-danisiq i")).toHaveLength(3);
   });
 
   it("əlavə sinifləri itirmir", () => {
-    const svg = kok(render(<Aqronom className="shrink-0" />));
-    expect(svg.getAttribute("class")).toContain("shrink-0");
+    expect(kok(render(<Aqronom className="shrink-0" />)).className).toContain("shrink-0");
   });
 });

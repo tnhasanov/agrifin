@@ -203,7 +203,7 @@ describe("sahə siqnalları — əsas ekran", () => {
 // üstəlik kart zəngin arxasına keçəndən sonra qaşqabağı izah edən heç nə
 // qalmır.
 describe("Aqronun ifadəsi", () => {
-  const uz = () => document.querySelector("svg.aqro").getAttribute("class");
+  const uz = () => document.querySelector(".fermer").className;
 
   it("əsas ekranda təcili siqnal olsa da kədərlənmir", async () => {
     seed();
@@ -211,8 +211,8 @@ describe("Aqronun ifadəsi", () => {
     renderApp(<App />);
 
     await siqnalHazir();
-    expect(uz()).not.toContain("aqro--narahat");
-    expect(uz()).toContain("aqro--sakit");
+    expect(uz()).not.toContain("fermer--narahat");
+    expect(uz()).toContain("fermer--sakit");
   });
 
   it("məsləhət ekranında narahatdır — orada kartlar səbəbi izah edir", async () => {
@@ -224,7 +224,7 @@ describe("Aqronun ifadəsi", () => {
 
     await user.click(screen.getByRole("button", { name: "Məsləhət" }));
 
-    await waitFor(() => expect(uz()).toContain("aqro--narahat"));
+    await waitFor(() => expect(uz()).toContain("fermer--narahat"));
     // İzah üzün yanındadır, uzaqda deyil
     expect(screen.getByText("Suvarma vaxtıdır")).toBeInTheDocument();
   });
@@ -237,7 +237,7 @@ describe("Aqronun ifadəsi", () => {
     await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());
     // Bu quruluşda tarixçə sorğusu 501 verir, yəni indeks yoxdur → sakit,
     // amma ƏSAS olan budur: narahat deyil
-    expect(uz()).not.toContain("aqro--narahat");
+    expect(uz()).not.toContain("fermer--narahat");
   });
 });
 
