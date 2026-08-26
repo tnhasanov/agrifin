@@ -25,15 +25,20 @@ export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [], pey
         >
           <div className="flex items-center gap-3">
             {/* Mücərrəd "parıltı" ikonu əvəzinə personaj: kartın nəyi
-                açdığını üzü ilə deyir.
-                NARAHAT İFADƏ BURADADIR, əsas ekranda yox: aşağıda siqnal
-                kartları dayanır və üzün niyə belə olduğunu izah edir.
-                İzahsız qaşqabaq fermeri yalnız narahat edir. */}
+                açdığını üzü ilə deyir. TAM BOY buradadır — bütün başqa
+                yuvalar dar olduğundan baş medalyonu göstərir, personajın
+                "evi" isə məsləhət ekranıdır: fermer onu burada bütöv görür.
+                NARAHAT İFADƏ DƏ BURADADIR, əsas ekranda yox: aşağıda siqnal
+                kartları dayanır və duruşun niyə belə olduğunu izah edir.
+                İzahsız qaşqabaq fermeri yalnız narahat edir.
+                ai-ikon sinfi QƏSDƏN yoxdur: onun nəfəs animasiyası riqin
+                öz nəfəsi ilə üst-üstə düşüb ikiqat yellənmə verirdi. */}
             <Aqronom
               hal={siqnallar.some((s) => s.ciddilik === "tecili") ? "narahat" : "sakit"}
               bitki={state.chat.crop}
-              olcu={44}
-              className="ai-ikon shrink-0"
+              olcu={104}
+              gorunus="tam"
+              className="shrink-0"
             />
             <div className="flex-1">
               <div className="flex items-center gap-2">
@@ -79,9 +84,11 @@ export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [], pey
           className="giris rounded-2xl p-4 text-center"
           style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}
         >
-          {/* Icon svg-dir: text-center onu mərkəzləmir, flex lazımdır */}
+          {/* Quru işarə əvəzinə sevinən personaj: "iş yoxdur" tətbiqin ən
+              yaxşı xəbəridir və bunu üz deyir. Tullanma birdəfəlikdir
+              (bax: index.css fermer-tullan), sonra sakit nəfəsə keçir. */}
           <div className="flex justify-center">
-            <Icon name="Check" size={18} color={C.field} />
+            <Aqronom hal="sevincli" bitki={state.chat.crop} olcu={110} gorunus="tam" />
           </div>
           <p className="mt-1.5 text-sm font-semibold" style={{ color: C.ink }}>
             {t("siqnal.bosBasliq")}

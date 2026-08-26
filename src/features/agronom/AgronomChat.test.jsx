@@ -81,6 +81,13 @@ describe("Aqronom çatı", () => {
     expect(screen.getByRole("button", { name: "Payızlıq buğda" })).toBeInTheDocument();
     // Başlıqda rayon görünür
     expect(screen.getByText(/Bərdə · bitki seçilməyib/)).toBeInTheDocument();
+
+    // Boş söhbətdə personaj TAM BOY salamlayır — salamlama qabarcığı onun
+    // sözüdür, ona görə "danışır" halındadır (başlıqdakı medalyon sakitdir)
+    const dialoq = screen.getByRole("dialog", { name: "Aqronom köməkçisi" });
+    const salamlayan = dialoq.querySelector(".fermer--tam");
+    expect(salamlayan).toBeTruthy();
+    expect(salamlayan.className).toContain("fermer--danisir");
   });
 
   it("nümunə sual göndərilir və cavab göstərilir", async () => {

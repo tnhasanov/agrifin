@@ -50,7 +50,7 @@ export function LoanSheet({ onClose, indeksHali = null }) {
   const gonder = () => {
     actions.muracietGonder({
       mebleg,
-      odenis: kredit.odenis1(mebleg),
+      ayliqFaiz: kredit.ayliqFaiz1(mebleg),
       muddetAy: kredit.muddetAy,
       odemeTarixi: kredit.odemeTarixi.toISOString(),
       bitki: state.chat.crop,
@@ -61,14 +61,16 @@ export function LoanSheet({ onClose, indeksHali = null }) {
     setAddim(2);
   };
 
-  // "Niyə bu qədər?" — tavanın hər addımı rəqəmlə (Nubank "Me explica")
+  // "Niyə bu qədər?" — tavanın hər addımı rəqəmlə (Nubank "Me explica").
+  // xalisGelir HƏQİQƏTƏN xalisdir: lib/gelir.js-də satış gəliri + subsidiya
+  // cəmindən istehsal xərcləri (toxum, gübrə, yanacaq, əmək) çıxılıb.
   const pessimist = kredit.odenis?.ssenariler?.find((s) => s.ad === "pessimist");
   const izahSetirleri = hazir
     ? [
         ["kredit.izah.xalis", kredit.gelir.pessimist.xalisGelir],
         ["kredit.izah.serbest", pessimist.serbestGelir],
         ["kredit.izah.tavan", pessimist.tavan],
-        ["kredit.izah.esas", kredit.maxKredit],
+        ["kredit.izah.limit", kredit.maxKredit],
       ]
     : [];
 
@@ -163,11 +165,21 @@ export function LoanSheet({ onClose, indeksHali = null }) {
                 {money(mebleg)}
               </p>
             </div>
+            {/* "Bir ödəniş: X ₼ · Avqust" SİLİNİB — məhsul o deyil.
+                Rəqəm İLK ayın faizidir, sabit aylıq ödəniş DEYİL: əsas borc
+                azaldıqca faiz də azalır və məhsulun əsas üstünlüyü elə budur.
+                "Hər ay 45 ₼" yazmaq o üstünlüyü gizlədirdi. */}
+            <p
+              className="text-center text-xs font-semibold"
+              style={{ color: C.ink, fontVariantNumeric: "tabular-nums" }}
+            >
+              {t("kredit.faizSetri", { faiz: { money: kredit.ayliqFaiz1(mebleg) } })}
+            </p>
+            <p className="text-center text-xs" style={{ color: C.muted }}>
+              {t("kredit.faizAzalir")}
+            </p>
             <p className="mb-3 text-center text-xs" style={{ color: C.muted }}>
-              {t("kredit.odenisSetri", {
-                odenis: { money: kredit.odenis1(mebleg) },
-                tarix: ayAdi(kredit.odemeTarixi),
-              })}
+              {t("kredit.sonTarixSetri", { tarix: ayAdi(kredit.odemeTarixi) })}
             </p>
 
             <input
@@ -231,6 +243,16 @@ export function LoanSheet({ onClose, indeksHali = null }) {
               </div>
             )}
 
+            {/* Ödəniş prinsipi bir cümlə ilə: çevik əsas borc + qalığa faiz.
+                Texniki dil yox — model-governance qeydləri müştəri ekranında
+                deyil (bax: lib/odenis.js, ODENIS_TESDIQ). */}
+            <p
+              className="mt-3 rounded-lg px-2.5 py-2 text-xs leading-relaxed"
+              style={{ backgroundColor: C.mist, color: C.pine }}
+            >
+              {t("kredit.cevikQeyd")}
+            </p>
+
             <button
               type="button"
               onClick={() => setAddim(1)}
@@ -245,36 +267,75 @@ export function LoanSheet({ onClose, indeksHali = null }) {
         {/* ── Addım 1: şərtlər ──────────────────────────────────────── */}
         {!state.muraciet && hazir && addim === 1 && (
           <div>
+            {/* "Bir ödəniş" sətri yoxdur: faiz aylıqdır, əsas borc çevikdir,
+                son tarix əsas borcun TAM bağlanması üçündür.
+                SIRALAMA GÖZLƏ OXUNUR: məbləğ ən iridir (fermer əvvəl onu
+                axtarır), ilk ay faizi + əsas borc + son tarix normal, illik
+                faiz/girov/sahə isə ikinci dərəcəli sətirlərdir — hamısı eyni
+                çəkidə olanda heç biri seçilmirdi. */}
             {[
-              [t("kredit.setr.mebleg"), money(mebleg)],
-              [
-                t("loan.term.single"),
-                t("kredit.setr.odenisDeger", {
-                  tarix: ayAdi(kredit.odemeTarixi),
-                  odenis: { money: kredit.odenis1(mebleg) },
+              { ad: t("kredit.setr.mebleg"), deger: money(mebleg), vurgu: true },
+              {
+                ad: t("kredit.setr.ilkFaiz"),
+                deger: t("kredit.setr.ilkFaizDeger", {
+                  faiz: { money: kredit.ayliqFaiz1(mebleg) },
                 }),
-              ],
-              [t("kredit.setr.muddet"), t("kredit.setr.muddetDeger", { ay: kredit.muddetAy })],
-              [t("loan.term.rate"), `${LOAN_TERMS.annualRate}%`],
-              [t("loan.term.collateral"), t("loan.term.collateralValue")],
-            ].map(([ad, deger]) => (
-              <div
-                key={ad}
-                className="flex justify-between gap-3 py-2.5"
-                style={{ borderBottom: `1px solid ${C.line}` }}
-              >
-                <span className="text-xs" style={{ color: C.muted }}>
-                  {ad}
-                </span>
-                <span className="max-w-[60%] text-right text-xs font-bold" style={{ color: C.ink }}>
-                  {deger}
-                </span>
+                // Sabit aylıq ödəniş TƏSƏVVÜRÜ burada qırılır
+                alt: t("kredit.faizAzalir"),
+              },
+              { ad: t("kredit.setr.esasBorc"), deger: t("kredit.setr.esasBorcDeger") },
+              {
+                ad: t("kredit.setr.sonTarix"),
+                deger: t("kredit.setr.sonTarixDeger", { tarix: ayAdi(kredit.odemeTarixi) }),
+              },
+              { ad: t("kredit.setr.muddet"), deger: t("kredit.setr.muddetDeger", { ay: kredit.muddetAy }) },
+              { ad: t("loan.term.rate"), deger: `${LOAN_TERMS.annualRate}%`, ikinci: true },
+              {
+                ad: t("loan.term.collateral"),
+                deger: t("loan.term.collateralValue"),
+                ikinci: true,
+              },
+              // Peyk təsdiqi GİROVUN ƏVƏZİ DEYİL: ayrı sətirdir, çünki
+              // "əkininiz girov kimi kifayətdir" hüquqi olaraq yanlışdır.
+              // "Peyklə təsdiqlənib" yalnız ölçmə HƏQİQƏTƏN varsa yazılır —
+              // indeks yoxdursa sahə sadəcə xəritədə çəkilmiş sahədir.
+              {
+                ad: t("kredit.setr.sahe"),
+                deger: indeksHali?.indeks
+                  ? t("kredit.setr.saheDeger")
+                  : t("kredit.setr.saheDegerCizilib", { hektar: { number: state.sahe.hektar } }),
+                ikinci: true,
+              },
+            ].map(({ ad, deger, alt, vurgu, ikinci }) => (
+              <div key={ad} className="py-2.5" style={{ borderBottom: `1px solid ${C.line}` }}>
+                <div className="flex justify-between gap-3">
+                  <span className={ikinci ? "text-xs" : "text-xs"} style={{ color: C.muted }}>
+                    {ad}
+                  </span>
+                  <span
+                    className={`max-w-[60%] text-right ${
+                      vurgu ? "text-lg font-extrabold" : "text-xs font-bold"
+                    }`}
+                    style={{
+                      color: ikinci ? C.muted : C.ink,
+                      fontFamily: vurgu ? font.display : undefined,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {deger}
+                  </span>
+                </div>
+                {alt && (
+                  <p className="mt-0.5 text-right text-xs leading-snug" style={{ color: C.muted }}>
+                    {alt}
+                  </p>
+                )}
               </div>
             ))}
 
-            {/* Ödəniş biçinə bağlıdır — şərt cədvəlin altında izah olunur */}
+            {/* Son tarix biçinə bağlıdır və erkən ödəniş faizi azaldır */}
             <p className="mt-2.5 text-xs leading-relaxed" style={{ color: C.muted }}>
-              {t("kredit.bicinIzah", { tarix: ayAdi(kredit.odemeTarixi) })}
+              {t("kredit.bicinIzah")}
             </p>
 
             <button

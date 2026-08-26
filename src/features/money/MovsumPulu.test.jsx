@@ -70,11 +70,11 @@ describe("mövsüm pulu — Pul ekranı", () => {
     expect(screen.queryByText("Gözlənilən xalis gəlir")).not.toBeInTheDocument();
   });
 
-  it("gözləyən müraciət biçində ödəniş sətri kimi görünür", () => {
+  it("gözləyən müraciət bağlanmalı əsas borc sətri kimi görünür", () => {
     seed({
       muraciet: {
         mebleg: 3000,
-        odenis: 3170,
+        ayliqFaiz: 29,
         muddetAy: 10,
         odemeTarixi: "2027-06-01T00:00:00.000Z",
         bitki: "pomidor",
@@ -86,15 +86,17 @@ describe("mövsüm pulu — Pul ekranı", () => {
     });
     renderApp(<App />);
 
-    expect(screen.getByText("Biçində ödəniş (müraciət)")).toBeInTheDocument();
-    expect(screen.getByText("−3.170 ₼")).toBeInTheDocument();
+    // Faiz aylıq ödənilir və qalığa hesablanır — "yekun ödəniş" rəqəmi
+    // yoxdur, kartda əsas borcun özü görünür
+    expect(screen.getByText("Bağlanmalı əsas borc (müraciət)")).toBeInTheDocument();
+    expect(screen.getByText("−3.000 ₼")).toBeInTheDocument();
   });
 
   it("müraciət yoxdursa borc sətri də yoxdur", () => {
     seed();
     renderApp(<App />);
 
-    expect(screen.queryByText("Biçində ödəniş (müraciət)")).not.toBeInTheDocument();
+    expect(screen.queryByText("Bağlanmalı əsas borc (müraciət)")).not.toBeInTheDocument();
   });
 
   // Müraciət kartı LoanSheet-i açır və ləğv oradan mümkündür
@@ -103,7 +105,7 @@ describe("mövsüm pulu — Pul ekranı", () => {
     seed({
       muraciet: {
         mebleg: 3000,
-        odenis: 3170,
+        ayliqFaiz: 29,
         muddetAy: 10,
         odemeTarixi: "2027-06-01T00:00:00.000Z",
         bitki: "pomidor",

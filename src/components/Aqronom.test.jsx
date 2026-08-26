@@ -99,10 +99,20 @@ describe("Aqronom (raster fermer)", () => {
     expect(sakit).toContain("sakit");
   });
 
-  it("renderi olmayan hal sakit şəklə düşür", () => {
-    // üzümün danisir/sevincli renderləri hələ göndərilməyib
-    const danisir = sekil(render(<Aqronom bitki="uzum" hal="danisir" />)).getAttribute("src");
-    expect(danisir).toContain("sakit");
+  // 4-cü dəstə ilə matris TAMDIR: hər variant × hər hal öz renderinə
+  // malikdir. Sakitə düşmə yalnız naməlum hal adı üçün qalıb (yuxarıda) —
+  // renderi çatışmayan kombinasiya artıq yoxdur və bu test onu qoruyur:
+  // gələcəkdə fayl silinsə və ya adı pozulsa dərhal bilinsin.
+  it("bütün bitkilər bütün halları öz üzü ilə göstərir", () => {
+    for (const bitki of CROP_KEYS) {
+      for (const hal of ["sakit", "dusunur", "danisir", "sevincli", "narahat"]) {
+        const src = sekil(render(<Aqronom bitki={bitki} hal={hal} />)).getAttribute("src");
+        expect(src, `${bitki}-${hal}`).toContain(`${BITKI_VARIANTI[bitki]}-${hal}`);
+      }
+    }
+    // cücərti (bitkisiz) də tam dəstlədir — kredit təsdiqi sevincli görür
+    const sevincli = sekil(render(<Aqronom hal="sevincli" />)).getAttribute("src");
+    expect(sevincli).toContain("yarpaq-sevincli");
   });
 
   it("danışan və sevincli hallar da öz renderini yükləyir", () => {

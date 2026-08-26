@@ -108,14 +108,54 @@ describe("AgriFin tətbiqi", () => {
     // Arxadakı əsas ekranda da Aqro var — yalnız dialoqun içinə baxılır.
     const dialoq = screen.getByRole("dialog");
     expect(dialoq.querySelector(".fermer").className).toContain("fermer--sakit");
+
+    // Aylıq faiz seçilmiş əsas borca görə hesablanır və slayderlə birlikdə
+    // YENİLƏNİR — "sonda bir məbləğ" modeli deyil
+    const faizSetri = () => screen.getByText(/İlk ayın faizi:/).textContent;
+    const evvelkiFaiz = faizSetri();
     fireEvent.change(slayder, { target: { value: slayder.max } });
+    expect(faizSetri()).not.toBe(evvelkiFaiz);
     expect(dialoq.querySelector(".fermer").className).toContain("fermer--dusunur");
+
+    // "Bir ödəniş" təqdimatı TAM çıxarılıb: faiz aylıqdır, əsas borc
+    // çevikdir, son tarix əsas borcun tam bağlanması üçündür
+    expect(screen.queryByText(/Bir ödəniş/)).not.toBeInTheDocument();
+    // Rəqəm SABİT aylıq ödəniş kimi oxunmamalıdır: əsas borc azaldıqca faiz
+    // də azalır və məhsulun əsas üstünlüyü elə budur
+    expect(screen.getByText(/Sonrakı aylarda qalan əsas borca görə azalır/)).toBeInTheDocument();
+    expect(screen.getByText(/Son tarix:/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Əsas borcu istənilən vaxt qismən və ya tam ödəyə bilərsiniz/),
+    ).toBeInTheDocument();
+
     await user.click(screen.getByRole("button", { name: /Niyə ən çoxu/ }));
-    expect(screen.getByText("Pessimist ssenaridə xalis gəlir")).toBeInTheDocument();
+    expect(screen.getByText("Ehtiyatlı ssenaridə xalis təsərrüfat gəliri")).toBeInTheDocument();
+    expect(screen.getByText("Təklif olunan kredit limiti")).toBeInTheDocument();
+    // Yanlış termin qayıtmasın
+    expect(screen.queryByText("Faizlə birlikdə əsas məbləğ")).not.toBeInTheDocument();
+    // 25% ehtiyat fermer dilində izah olunur, model-governance mətni yoxdur
+    expect(screen.getByText(/25% ehtiyat saxlanılır/)).toBeInTheDocument();
+    expect(screen.queryByText(/kalibrlənməyib/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Şərtlərə bax" }));
-    // Müddət biçinə bağlıdır — şərtlərdə ay sayı görünür
-    expect(screen.getByText(/ay — biçinə qədər/)).toBeInTheDocument();
+    // Şərtlər: ilk ay faizi (~ ilə, sabit deyil) + çevik əsas borc + son tarix
+    expect(screen.getByText("İlk ayın faizi")).toBeInTheDocument();
+    expect(screen.getByText(/^~/)).toBeInTheDocument();
+    expect(screen.getByText("Müddət")).toBeInTheDocument();
+    expect(screen.getByText("Son tarix")).toBeInTheDocument();
+    expect(
+      screen.getByText("İstənilən vaxt qismən və ya tam ödəyə bilərsiniz"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Bir ödəniş/)).not.toBeInTheDocument();
+
+    // GİROV: peyk təsdiqi girovun əvəzi deyil — iki ayrı sətirdir
+    expect(screen.getByText("İllik faiz")).toBeInTheDocument();
+    expect(screen.getByText("Tələb olunmur")).toBeInTheDocument();
+    expect(screen.queryByText(/əkininiz kifayətdir/)).not.toBeInTheDocument();
+    // Peyk ölçməsi yoxdur (api 501) → "peyklə təsdiqlənib" YAZILMIR
+    expect(screen.getByText("Sahə")).toBeInTheDocument();
+    expect(screen.getByText(/Xəritədə çəkilib/)).toBeInTheDocument();
+    expect(screen.queryByText(/Peyk məlumatları ilə təsdiqlənib/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /üçün müraciət göndər/ }));
     expect(screen.getByText(/müraciətiniz qeydə alındı/)).toBeInTheDocument();
@@ -131,6 +171,62 @@ describe("AgriFin tətbiqi", () => {
     await user.click(screen.getByRole("button", { name: "Pul" }));
     expect(screen.getByText(/Kredit müraciəti —/)).toBeInTheDocument();
     expect(screen.getByText("Gözləyir")).toBeInTheDocument();
+  });
+
+  // Peyk təsdiqi girovun əvəzi deyil, amma ölçmə VARSA bunu demək olar.
+  // Ölçmə yoxdursa yuxarıdakı test "Xəritədə çəkilib" gözləyir — sətir
+  // sahənin həqiqi vəziyyətini deyir, hər iki halda.
+  it("peyk ölçməsi olanda sahə sətri təsdiqi göstərir", async () => {
+    const user = userEvent.setup();
+    const il = new Date().getFullYear();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url) => {
+        const yol = String(url);
+        if (yol.includes("/api/tarixce")) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            json: () =>
+              Promise.resolve({
+                movsumler: Array.from({ length: 6 }, (_, i) => ({
+                  il: il - 5 + i,
+                  zirve: 0.72,
+                  zirveAyi: `${il - 5 + i}-05`,
+                  etrafMedyan: 0.6,
+                  olcmeSayi: 6,
+                })),
+              }),
+          });
+        }
+        if (yol.includes("/api/")) return Promise.resolve({ ok: false, status: 501 });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(WEATHER_FIXTURE) });
+      }),
+    );
+    seedState({
+      location: DEFAULT_LOCATION,
+      onboarded: true,
+      sahe: {
+        hektar: 10,
+        noqteler: [
+          [40.4, 47.1],
+          [40.4023, 47.1],
+          [40.4023, 47.1029],
+          [40.4, 47.1029],
+        ],
+      },
+      chat: { messages: [], crop: "pomidor", referral: false },
+    });
+    renderApp(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Məhsul dövrü krediti al" }));
+    await user.click(screen.getByRole("button", { name: "Şərtlərə bax" }));
+
+    await waitFor(() =>
+      expect(screen.getByText("Peyk məlumatları ilə təsdiqlənib")).toBeInTheDocument(),
+    );
+    // Girov sətri yenə ayrıdır və "kifayətdir" demir
+    expect(screen.getByText("Tələb olunmur")).toBeInTheDocument();
   });
 
   it("Escape düyməsi kredit panelini bağlayır", async () => {
