@@ -71,11 +71,19 @@ describe("Aqronom (raster fermer)", () => {
     expect(arpa).toBe(bugda);
   });
 
-  it("renderi olmayan bitki və naməlum ad cücərti variantına düşür", () => {
-    const kartof = sekil(render(<Aqronom bitki="kartof" />)).getAttribute("src");
+  // İkinci partiyadan sonra HƏR bitkinin öz renderi var (arpa istisna —
+  // yuxarıya bax); cücərti yalnız naməlum ad və boş seçim üçündür
+  it("bütün bitkilər öz renderini geyinir, naməlum ad cücərtiyə düşür", () => {
+    const menbeler = CROP_KEYS.map((b) =>
+      sekil(render(<Aqronom bitki={b} />)).getAttribute("src"),
+    );
+    // 10 bitki → 9 fərqli render (arpa buğdanı bölüşür)
+    expect(new Set(menbeler).size).toBe(9);
+    expect(menbeler.some((m) => m.includes("yarpaq"))).toBe(false);
+
     const banan = sekil(render(<Aqronom bitki="banan" />)).getAttribute("src");
     const bos = sekil(render(<Aqronom />)).getAttribute("src");
-    expect(kartof).toContain("yarpaq");
+    expect(banan).toContain("yarpaq");
     expect(banan).toBe(bos);
   });
 

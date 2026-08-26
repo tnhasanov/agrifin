@@ -8,6 +8,14 @@ import pomidorBas from "../assets/fermer/pomidor-bas.webp";
 import pomidorTam from "../assets/fermer/pomidor-tam.webp";
 import uzumBas from "../assets/fermer/uzum-bas.webp";
 import uzumTam from "../assets/fermer/uzum-tam.webp";
+import kartofBas from "../assets/fermer/kartof-bas.webp";
+import kartofTam from "../assets/fermer/kartof-tam.webp";
+import soganBas from "../assets/fermer/sogan-bas.webp";
+import soganTam from "../assets/fermer/sogan-tam.webp";
+import almaBas from "../assets/fermer/alma-bas.webp";
+import almaTam from "../assets/fermer/alma-tam.webp";
+import findiqBas from "../assets/fermer/findiq-bas.webp";
+import findiqTam from "../assets/fermer/findiq-tam.webp";
 import yarpaqBas from "../assets/fermer/yarpaq-bas.webp";
 import yarpaqTam from "../assets/fermer/yarpaq-tam.webp";
 import { BITKI_VARIANTI } from "./fermerVarianti.js";
@@ -46,6 +54,10 @@ const FERMER = {
   qargidali: { bas: qargidaliBas, tam: qargidaliTam },
   pomidor: { bas: pomidorBas, tam: pomidorTam },
   uzum: { bas: uzumBas, tam: uzumTam },
+  kartof: { bas: kartofBas, tam: kartofTam },
+  sogan: { bas: soganBas, tam: soganTam },
+  alma: { bas: almaBas, tam: almaTam },
+  findiq: { bas: findiqBas, tam: findiqTam },
   yarpaq: { bas: yarpaqBas, tam: yarpaqTam },
 };
 
