@@ -108,14 +108,40 @@ describe("AgriFin tətbiqi", () => {
     // Arxadakı əsas ekranda da Aqro var — yalnız dialoqun içinə baxılır.
     const dialoq = screen.getByRole("dialog");
     expect(dialoq.querySelector(".fermer").className).toContain("fermer--sakit");
+
+    // Aylıq faiz seçilmiş əsas borca görə hesablanır və slayderlə birlikdə
+    // YENİLƏNİR — "sonda bir məbləğ" modeli deyil
+    const faizSetri = () => screen.getByText(/Aylıq faiz:/).textContent;
+    const evvelkiFaiz = faizSetri();
     fireEvent.change(slayder, { target: { value: slayder.max } });
+    expect(faizSetri()).not.toBe(evvelkiFaiz);
     expect(dialoq.querySelector(".fermer").className).toContain("fermer--dusunur");
+
+    // "Bir ödəniş" təqdimatı TAM çıxarılıb: faiz aylıqdır, əsas borc
+    // çevikdir, son tarix əsas borcun tam bağlanması üçündür
+    expect(screen.queryByText(/Bir ödəniş/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Əsas borc çevik/)).toBeInTheDocument();
+    expect(screen.getByText(/Son tarix:/)).toBeInTheDocument();
+    expect(screen.getByText(/Əsas borcu istənilən vaxt azalda bilərsiniz/)).toBeInTheDocument();
+
     await user.click(screen.getByRole("button", { name: /Niyə ən çoxu/ }));
-    expect(screen.getByText("Pessimist ssenaridə xalis gəlir")).toBeInTheDocument();
+    expect(screen.getByText("Ehtiyatlı ssenaridə xalis təsərrüfat gəliri")).toBeInTheDocument();
+    expect(screen.getByText("Təklif olunan kredit limiti")).toBeInTheDocument();
+    // Yanlış termin qayıtmasın
+    expect(screen.queryByText("Faizlə birlikdə əsas məbləğ")).not.toBeInTheDocument();
+    // 25% ehtiyat fermer dilində izah olunur, model-governance mətni yoxdur
+    expect(screen.getByText(/25% ehtiyat saxlanılır/)).toBeInTheDocument();
+    expect(screen.queryByText(/kalibrlənməyib/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Şərtlərə bax" }));
     // Müddət biçinə bağlıdır — şərtlərdə ay sayı görünür
     expect(screen.getByText(/ay — biçinə qədər/)).toBeInTheDocument();
+    // Şərtlər: aylıq faiz + çevik əsas borc + son tarix; "Bir ödəniş" yoxdur
+    expect(screen.getByText("Aylıq faiz")).toBeInTheDocument();
+    expect(screen.getByText(/hər ay, qalan əsas borca görə/)).toBeInTheDocument();
+    expect(screen.getByText(/istənilən vaxt azaldıla bilər/)).toBeInTheDocument();
+    expect(screen.getByText("Son tarix")).toBeInTheDocument();
+    expect(screen.queryByText(/Bir ödəniş/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /üçün müraciət göndər/ }));
     expect(screen.getByText(/müraciətiniz qeydə alındı/)).toBeInTheDocument();

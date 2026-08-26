@@ -1,5 +1,6 @@
-import { LOAN_TERMS, computeRepayment } from "../../services/farm.js";
+import { LOAN_TERMS } from "../../services/farm.js";
 import { bicinTarixi, bicineQalanAy } from "../../services/movsum.js";
+import { ayliqFaiz } from "../../../lib/kreditOdenis.js";
 import { gelirModeli } from "../../../lib/gelir.js";
 import { odenisQabiliyyeti } from "../../../lib/odenis.js";
 import { cariVeziyyetHali } from "../../../lib/mehsuldarliq.js";
@@ -13,15 +14,23 @@ export const MIN_KREDIT = 500;
  * Kredit imkanının BÜTÜN rəqəmləri bir yerdə.
  *
  * Zəncir: aqro indeks → gəlir modeli → ödəniş qabiliyyəti → kredit tavanı.
- * Tavan PESSİMİST ssenaridən çıxır (bax: lib/odenis.js) və faizlə birlikdə
- * ödənilə bilən əsas məbləğə çevrilir:
+ * Tavan PESSİMİST ssenaridən çıxır (bax: lib/odenis.js).
+ *
+ * ═══ UNDERWRİTİNQ ≠ FAKTİKİ ÖDƏNİŞ ═══════════════════════════════════
+ * Limit KONSERVATİV hesablanır: kredit tam müddət boyu heç azaldılmasa
+ * belə əsas + faiz qabiliyyətə sığmalıdır —
  *
  *   maxKredit = qabiliyyət / (1 + illik faiz × müddət/12)
  *
- * Müddət sabit 5 ay DEYİL — biçinə qalan aydır: fermerin pulu biçində olur,
- * ödənişi o aya bağlamayan cədvəl ya vaxtından əvvəl sıxır, ya boş yerə
- * uzadır. Bu, Nubank limit slayderinin buradakı qarşılığıdır: tavanı bank
- * yox, sahənin özü qoyur və fermer onun altında istədiyini seçir.
+ * Bu, yalnız limitin ölçüsüdür. Faktiki ödəniş qaydası ayrıdır və
+ * lib/kreditOdenis.js-dədir: faiz aylıq ödənilir, yalnız QALAN əsas
+ * borca hesablanır, əsas borc mövsüm ərzində çevik azaldıla bilər.
+ * "Sonda bir ödəniş" məhsul modeli deyil və UI-də göstərilmir.
+ *
+ * Müddət sabit 5 ay DEYİL — biçinə qalan aydır: son tarix (əsas borcun
+ * tam bağlanması) fermerin pulu OLACAĞI aya bağlanır. Bu, Nubank limit
+ * slayderinin buradakı qarşılığıdır: tavanı bank yox, sahənin özü qoyur
+ * və fermer onun altında istədiyini seçir.
  *
  * Hook DEYİL, adi funksiyadır: heç bir vəziyyət saxlamır, yalnız hesab.
  * Komponentlər onu render zamanı çağırır — girişlər dəyişəndə nəticə də
@@ -71,7 +80,9 @@ export function kreditImkani({ sahe, bitki, indeks, indi = new Date() } = {}) {
     odemeTarixi,
     addim: ADDIM,
     minKredit: MIN_KREDIT,
-    odenis1: (mebleg) =>
-      computeRepayment(mebleg, { annualRate: LOAN_TERMS.annualRate, termMonths: muddetAy }),
+    // Seçilmiş əsas borc üçün İLK aylıq faiz. Sonrakı ayların faizi
+    // fermerin əsas borcu nə qədər azaltdığından asılıdır — öncədən
+    // "yekun məbləğ" yoxdur (bax: lib/kreditOdenis.js)
+    ayliqFaiz1: (mebleg) => ayliqFaiz(mebleg, LOAN_TERMS.annualRate),
   };
 }

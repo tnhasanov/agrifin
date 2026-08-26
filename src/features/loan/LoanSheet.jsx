@@ -50,7 +50,7 @@ export function LoanSheet({ onClose, indeksHali = null }) {
   const gonder = () => {
     actions.muracietGonder({
       mebleg,
-      odenis: kredit.odenis1(mebleg),
+      ayliqFaiz: kredit.ayliqFaiz1(mebleg),
       muddetAy: kredit.muddetAy,
       odemeTarixi: kredit.odemeTarixi.toISOString(),
       bitki: state.chat.crop,
@@ -61,14 +61,16 @@ export function LoanSheet({ onClose, indeksHali = null }) {
     setAddim(2);
   };
 
-  // "Niyə bu qədər?" — tavanın hər addımı rəqəmlə (Nubank "Me explica")
+  // "Niyə bu qədər?" — tavanın hər addımı rəqəmlə (Nubank "Me explica").
+  // xalisGelir HƏQİQƏTƏN xalisdir: lib/gelir.js-də satış gəliri + subsidiya
+  // cəmindən istehsal xərcləri (toxum, gübrə, yanacaq, əmək) çıxılıb.
   const pessimist = kredit.odenis?.ssenariler?.find((s) => s.ad === "pessimist");
   const izahSetirleri = hazir
     ? [
         ["kredit.izah.xalis", kredit.gelir.pessimist.xalisGelir],
         ["kredit.izah.serbest", pessimist.serbestGelir],
         ["kredit.izah.tavan", pessimist.tavan],
-        ["kredit.izah.esas", kredit.maxKredit],
+        ["kredit.izah.limit", kredit.maxKredit],
       ]
     : [];
 
@@ -163,11 +165,18 @@ export function LoanSheet({ onClose, indeksHali = null }) {
                 {money(mebleg)}
               </p>
             </div>
+            {/* "Bir ödəniş: X ₼ · Avqust" SİLİNİB — məhsul o deyil. Faiz
+                aylıqdır və yalnız qalan əsas borca hesablanır; "sonda
+                ödəyəcəyiniz məbləğ" öncədən yoxdur, çünki fermerin əsas
+                borcu nə vaxt azaltdığından asılıdır. */}
+            <p
+              className="text-center text-xs font-semibold"
+              style={{ color: C.ink, fontVariantNumeric: "tabular-nums" }}
+            >
+              {t("kredit.faizSetri", { faiz: { money: kredit.ayliqFaiz1(mebleg) } })}
+            </p>
             <p className="mb-3 text-center text-xs" style={{ color: C.muted }}>
-              {t("kredit.odenisSetri", {
-                odenis: { money: kredit.odenis1(mebleg) },
-                tarix: ayAdi(kredit.odemeTarixi),
-              })}
+              {t("kredit.sonTarixSetri", { tarix: ayAdi(kredit.odemeTarixi) })}
             </p>
 
             <input
@@ -231,6 +240,16 @@ export function LoanSheet({ onClose, indeksHali = null }) {
               </div>
             )}
 
+            {/* Ödəniş prinsipi bir cümlə ilə: çevik əsas borc + qalığa faiz.
+                Texniki dil yox — model-governance qeydləri müştəri ekranında
+                deyil (bax: lib/odenis.js, ODENIS_TESDIQ). */}
+            <p
+              className="mt-3 rounded-lg px-2.5 py-2 text-xs leading-relaxed"
+              style={{ backgroundColor: C.mist, color: C.pine }}
+            >
+              {t("kredit.cevikQeyd")}
+            </p>
+
             <button
               type="button"
               onClick={() => setAddim(1)}
@@ -245,14 +264,18 @@ export function LoanSheet({ onClose, indeksHali = null }) {
         {/* ── Addım 1: şərtlər ──────────────────────────────────────── */}
         {!state.muraciet && hazir && addim === 1 && (
           <div>
+            {/* "Bir ödəniş" sətri yoxdur: faiz aylıqdır, əsas borc çevikdir,
+                son tarix əsas borcun TAM bağlanması üçündür */}
             {[
               [t("kredit.setr.mebleg"), money(mebleg)],
               [
-                t("loan.term.single"),
-                t("kredit.setr.odenisDeger", {
-                  tarix: ayAdi(kredit.odemeTarixi),
-                  odenis: { money: kredit.odenis1(mebleg) },
-                }),
+                t("kredit.setr.ayliqFaiz"),
+                t("kredit.setr.ayliqFaizDeger", { faiz: { money: kredit.ayliqFaiz1(mebleg) } }),
+              ],
+              [t("kredit.setr.esasBorc"), t("kredit.setr.esasBorcDeger")],
+              [
+                t("kredit.setr.sonTarix"),
+                t("kredit.setr.sonTarixDeger", { tarix: ayAdi(kredit.odemeTarixi) }),
               ],
               [t("kredit.setr.muddet"), t("kredit.setr.muddetDeger", { ay: kredit.muddetAy })],
               [t("loan.term.rate"), `${LOAN_TERMS.annualRate}%`],

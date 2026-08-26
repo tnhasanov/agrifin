@@ -39,8 +39,10 @@ export function MovsumPulu({ indeksHali = null }) {
   // Intl deyil, i18n: bəzi brauzerlərdə az lokalı yoxdur (bax: LoanSheet)
   const ayAdi = (ay) => t(`ayQ.${ay}`);
 
-  // Biçində çıxacaq borc: gözləyən müraciətin ödənişi
-  const borc = state.muraciet?.odenis ?? null;
+  // Son tarixə (biçinə) qədər bağlanmalı əsas borc. Faiz aylıq ödənildiyi
+  // və qalığa hesablandığı üçün "yekun ödəniş" rəqəmi yoxdur — mövsüm
+  // kartında əsas borcun özü göstərilir.
+  const borc = state.muraciet?.mebleg ?? null;
 
   return (
     <div
