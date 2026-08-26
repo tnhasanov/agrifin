@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "../../components/Icon.jsx";
+import { Aqronom } from "../../components/Aqronom.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { useStore } from "../../state/store.jsx";
@@ -9,6 +10,33 @@ import { useGps } from "../location/useGps.js";
 import { track } from "../../lib/analytics.js";
 
 const ADDIMLAR = ["yer", "bitki"];
+
+// Bitki seçiləndən axının bağlanmasına qədər fasilə: personajın seçilən
+// bitkini "geyinib" tullanması görünsün (tullanma 1.1s-dir, yarısı bəsdir —
+// fermer nəticəni gözləyir, tamaşanı yox)
+const SEVINC_MS = 850;
+
+/** Personajın danışıq qabarcığı — sual başlığı personajın SÖZÜDÜR */
+function AqroSual({ hal, bitki, basliq, izah }) {
+  return (
+    <div className="giris mb-2 flex items-end gap-2" style={{ "--i": 0 }}>
+      <Aqronom hal={hal} bitki={bitki} olcu={116} gorunus="tam" className="shrink-0" />
+      <div
+        className="mb-2 flex-1 rounded-2xl rounded-bl-sm p-3"
+        style={{ backgroundColor: "#EAF4EC", border: "1px solid #CFE6D7" }}
+      >
+        <h2 className="text-base font-bold" style={{ color: "#1C5733", fontFamily: font.display }}>
+          {basliq}
+        </h2>
+        {izah && (
+          <p className="mt-0.5 text-xs leading-relaxed" style={{ color: "#256B41" }}>
+            {izah}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /**
  * İlk açılış axını — anonim və qısa.
@@ -23,6 +51,12 @@ export function Onboarding() {
   const { state, actions } = useStore();
   const [addim, setAddim] = useState(0);
   const [query, setQuery] = useState("");
+  // Seçilən bitki: personaj onu dərhal "geyinir" — seçimin təsdiqi
+  // mətnlə yox, üzlə verilir
+  const [secilen, setSecilen] = useState(null);
+  const sevincTimer = useRef(null);
+
+  useEffect(() => () => clearTimeout(sevincTimer.current), []);
 
   const indiki = ADDIMLAR[addim];
 
@@ -50,7 +84,11 @@ export function Onboarding() {
 
   const bitkiSec = (key) => {
     actions.chatSetCrop(key);
-    irele("bitki");
+    setSecilen(key);
+    // Dərhal bağlamırıq: personaj seçilən bitkini geyinib tullanır, sonra
+    // axın bitir. Təkrar toxunuş sayğacı sıfırlayır — son seçim qalır.
+    clearTimeout(sevincTimer.current);
+    sevincTimer.current = setTimeout(() => irele("bitki"), SEVINC_MS);
   };
 
   const districts = searchDistricts(query);
@@ -68,7 +106,12 @@ export function Onboarding() {
         {addim > 0 ? (
           <button
             type="button"
-            onClick={() => setAddim((n) => n - 1)}
+            onClick={() => {
+              // Sevinc fasiləsində geri qayıdılsa taymer axını bağlamasın
+              clearTimeout(sevincTimer.current);
+              setSecilen(null);
+              setAddim((n) => n - 1);
+            }}
             aria-label={t("onb.back")}
             className="rounded-full p-1.5"
             style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}
@@ -108,12 +151,14 @@ export function Onboarding() {
 
       {indiki === "yer" && (
         <div className="flex flex-1 flex-col overflow-hidden px-4">
-          <h2 className="text-lg font-bold" style={{ color: C.ink, fontFamily: font.display }}>
-            {t("onb.location.title")}
-          </h2>
-          <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
-            {t("onb.location.subtitle")}
-          </p>
+          {/* Sualı personaj verir: quru forma başlığı əvəzinə qapıda
+              qarşılayan aqronom. GPS axtarışı gedərkən düşünür — fikir
+              nöqtələri "işləyirəm" deyir, ayrıca spinner lazım olmur. */}
+          <AqroSual
+            hal={busy ? "dusunur" : "danisir"}
+            basliq={t("onb.location.title")}
+            izah={t("onb.location.subtitle")}
+          />
 
           <button
             type="button"
@@ -186,22 +231,30 @@ export function Onboarding() {
 
       {indiki === "bitki" && (
         <div className="flex flex-1 flex-col overflow-hidden px-4">
-          <h2 className="text-lg font-bold" style={{ color: C.ink, fontFamily: font.display }}>
-            {t("onb.crop.title")}
-          </h2>
-          <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
-            {t("onb.crop.subtitle", { district: state.location?.name ?? "" })}
-          </p>
+          {/* Seçim personajın özündə təsdiqlənir: bitkiyə toxunan kimi onu
+              "geyinir" və sevincdən tullanır — mətn təsdiqinə ehtiyac yoxdur,
+              qabarcıq da alqışa keçir. Sonra axın öz-özünə bağlanır. */}
+          <AqroSual
+            hal={secilen ? "sevincli" : "danisir"}
+            bitki={secilen}
+            basliq={
+              secilen
+                ? t("onb.crop.alqis", { bitki: t(`kbcrop.${secilen}`) })
+                : t("onb.crop.title")
+            }
+            izah={secilen ? null : t("onb.crop.subtitle", { district: state.location?.name ?? "" })}
+          />
 
-          <div className="mt-4 flex-1 overflow-y-auto">
+          <div className="mt-2 flex-1 overflow-y-auto">
             <div className="grid grid-cols-2 gap-2">
-              {CROP_KEYS.map((key) => (
+              {CROP_KEYS.map((key, index) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => bitkiSec(key)}
-                  className="rounded-xl px-3 py-3 text-sm font-semibold"
+                  className="giris rounded-xl px-3 py-3 text-sm font-semibold"
                   style={{
+                    "--i": index + 1,
                     backgroundColor: C.card,
                     border: `1px solid ${state.chat.crop === key ? C.field : C.line}`,
                     color: C.ink,
@@ -215,7 +268,10 @@ export function Onboarding() {
 
           <button
             type="button"
-            onClick={() => irele("bitki")}
+            onClick={() => {
+              clearTimeout(sevincTimer.current);
+              irele("bitki");
+            }}
             className="py-3 text-xs font-semibold"
             style={{ color: C.muted }}
           >

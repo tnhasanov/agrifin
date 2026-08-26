@@ -280,6 +280,7 @@ export default {
   "onb.crop.title": "What are you growing?",
   "onb.crop.subtitle": "We will tailor advice for {district} to it.",
   "onb.crop.skip": "I have not decided yet",
+  "onb.crop.alqis": "Great — {bitki}! Tuning myself to it.",
 
   "home.fieldCta": "Draw my field on the map",
   "home.fieldDrawn": "My field: {hektar} ha — edit",

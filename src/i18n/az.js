@@ -284,6 +284,7 @@ export default {
   "onb.crop.title": "Nə əkirsiniz?",
   "onb.crop.subtitle": "{district} üçün tövsiyələri buna uyğunlaşdıracağıq.",
   "onb.crop.skip": "Hələ qərar verməmişəm",
+  "onb.crop.alqis": "Əla — {bitki}! Özümü ona kökləyirəm.",
 
   "home.fieldCta": "Sahəmi xəritədə çək",
   "home.fieldDrawn": "Sahəm: {hektar} ha — dəyiş",

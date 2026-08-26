@@ -282,6 +282,7 @@ export default {
   "onb.crop.title": "Что вы выращиваете?",
   "onb.crop.subtitle": "Мы подстроим советы для {district} под эту культуру.",
   "onb.crop.skip": "Ещё не решил",
+  "onb.crop.alqis": "Отлично — {bitki}! Настраиваюсь на неё.",
 
   "home.fieldCta": "Обвести моё поле на карте",
   "home.fieldDrawn": "Моё поле: {hektar} га — изменить",

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../../App.jsx";
 import { renderApp, seedLocation } from "../../test/render.jsx";
@@ -32,8 +32,9 @@ describe("ilk açılış axını", () => {
     expect(screen.getByText("Nə əkirsiniz?")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Kartof" }));
 
-    // İki toxunuşdan sonra fermer tətbiqin içindədir
-    expect(dialoq()).not.toBeInTheDocument();
+    // İki toxunuşdan sonra fermer tətbiqin içindədir — bağlanma personajın
+    // sevinc fasiləsindən (SEVINC_MS) sonra gəlir
+    await waitFor(() => expect(dialoq()).not.toBeInTheDocument(), { timeout: 2500 });
   });
 
   // Əsas qərar: qeydiyyatda şəxsiyyət soruşulmur. Ölçülərə görə uzun və
@@ -60,6 +61,7 @@ describe("ilk açılış axını", () => {
 
     await user.click(screen.getByRole("button", { name: /Şəki/ }));
     await user.click(screen.getByRole("button", { name: "Üzüm" }));
+    await waitFor(() => expect(dialoq()).not.toBeInTheDocument(), { timeout: 2500 });
 
     const saxlanan = JSON.parse(window.localStorage.getItem("agrifin:state"));
     expect(saxlanan.state.location.name).toBe("Şəki");
@@ -88,6 +90,26 @@ describe("ilk açılış axını", () => {
     expect(screen.getByRole("button", { name: "Əsas" })).toBeInTheDocument();
   });
 
+  // Personaj bələdçidir: sual qabarcıqda onun sözüdür, seçim isə üzündə
+  // təsdiqlənir — bitkiyə toxunan kimi onu geyinib sevincdən tullanır
+  it("bitki seçiləndə personaj onu geyinib sevinir", async () => {
+    const user = userEvent.setup();
+    renderApp(<App />);
+
+    // Yer addımında personaj danışır — sual onun qabarcığındadır
+    expect(dialoq().querySelector(".fermer--danisir")).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: /Bərdə/ }));
+    await user.click(screen.getByRole("button", { name: "Kartof" }));
+
+    const fermer = dialoq().querySelector(".fermer");
+    expect(fermer.className).toContain("fermer--sevincli");
+    expect(fermer.querySelector("img").getAttribute("src")).toContain("kartof-sevincli");
+    expect(screen.getByText(/Əla — Kartof!/)).toBeInTheDocument();
+
+    await waitFor(() => expect(dialoq()).not.toBeInTheDocument(), { timeout: 2500 });
+  });
+
   it("geri düyməsi əvvəlki addıma qaytarır", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
@@ -113,7 +135,10 @@ describe("ilk açılış axını", () => {
     await user.click(screen.getByRole("button", { name: /Bərdə/ }));
     await user.click(screen.getByRole("button", { name: "Kartof" }));
 
-    expect(hadiseleriOxu().map((h) => h.addim)).toEqual(["yer", "bitki"]);
+    await waitFor(() =>
+      expect(hadiseleriOxu().map((h) => h.addim)).toEqual(["yer", "bitki"]),
+      { timeout: 2500 },
+    );
   });
 });
 
