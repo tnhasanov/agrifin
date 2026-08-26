@@ -165,6 +165,45 @@ export default {
     "Share a verified sustainability report with buyers and lenders — farms with an ESG report get better prices from export buyers and lower rates on financing.",
   "carbon.esgCta": "Generate report",
 
+  "home.kreditImkani": "Loan capacity",
+  "home.kreditQeyd":
+    "Capacity is computed on the pessimistic scenario — a preliminary estimate from an uncalibrated model.",
+  "home.kreditQeydYox": "Draw your field and pick your crop to see loan capacity.",
+  "kredit.altYazi": "The ceiling is set by your field, not by the bank",
+  "kredit.olculmurBasliq": "Capacity can't be computed yet",
+  "kredit.olculmurSahe": "Draw your field on the map — capacity comes from its size and history.",
+  "kredit.olculmurBitki": "Pick your crop — the income model is crop-specific.",
+  "kredit.imkanYoxBasliq": "No cash-loan capacity this season",
+  "kredit.imkanYoxIzah":
+    "In the pessimistic scenario, {hektar} ha nets {xalis} — not enough to carry debt service. This doesn't mean the field is bad: a low-margin crop on a small plot can't carry cash debt.",
+  "kredit.imkanYoxMeslehet":
+    "Alternatives: in-kind seed and fertiliser credit, or subsidy-backed products. Talk to the agronomist.",
+  "kredit.odenisSetri": "One payment: {odenis} · {tarix} (harvest)",
+  "kredit.niyeBuQeder": "Why at most {max}?",
+  "kredit.izah.xalis": "Net income, pessimistic scenario",
+  "kredit.izah.serbest": "After the working-capital reserve (75%)",
+  "kredit.izah.tavan": "Share open to debt service (40%)",
+  "kredit.izah.esas": "Principal including interest",
+  "kredit.izahQeyd":
+    "The math rests on the pessimistic scenario: the model is uncalibrated, and pinning debt to the optimistic case shifts the risk onto the farmer.",
+  "kredit.setr.mebleg": "Amount",
+  "kredit.setr.odenisDeger": "{tarix} (harvest) · {odenis}",
+  "kredit.setr.muddet": "Term",
+  "kredit.setr.muddetDeger": "{ay} months — until harvest",
+  "kredit.bicinIzah":
+    "The due date follows the harvest: your money arrives in {tarix}, so the schedule does too.",
+  "kredit.gonderCta": "Apply for {mebleg}",
+  "kredit.gonderildiBasliq": "Application received",
+  "kredit.gonderildiSetir": "Your application for {mebleg} is registered",
+  "kredit.gonderildiQeyd":
+    "No money moves yet — the application will be reviewed. If approved, repayment lands in {tarix}.",
+  "kredit.movcudBasliq": "You have a pending application",
+  "kredit.movcudIzah": "The application for {mebleg} is under review. Repayment month: {tarix}.",
+  "kredit.legvCta": "Withdraw the application",
+  "kredit.kartBasliq": "Loan application — {mebleg}",
+  "kredit.kartAltyazi": "Under review · tap for details",
+  "kredit.gozleyir": "Pending",
+
   "loan.title": "Crop-cycle loan",
   "loan.doneTitle": "Funds transferred",
   "loan.intro":

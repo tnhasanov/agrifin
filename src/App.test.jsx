@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App.jsx";
-import { renderApp, seedLocation, WEATHER_FIXTURE } from "./test/render.jsx";
+import { renderApp, seedLocation, seedState, WEATHER_FIXTURE } from "./test/render.jsx";
+import { DEFAULT_LOCATION } from "./services/location.js";
 
 beforeEach(() => {
   window.history.pushState({}, "", "/");
@@ -28,7 +29,11 @@ describe("AgriFin tətbiqi", () => {
       screen.getByText(/Sahənizi çəkin — aqronomik performans indeksiniz/),
     ).toBeInTheDocument();
     expect(screen.queryByText(/FARMSCORE/)).not.toBeInTheDocument();
-    expect(screen.getByText("12.000 ₼")).toBeInTheDocument();
+    // Saxta 12.000 ₼ limiti SİLİNİB: sahə/bitki yoxdursa rəqəm də yoxdur —
+    // uydurma rəqəm göstərməkdənsə boşluq göstərilir
+    expect(screen.queryByText("12.000 ₼")).not.toBeInTheDocument();
+    expect(screen.getByText("Kredit imkanı")).toBeInTheDocument();
+    expect(screen.getByText(/sahənizi çəkin və bitkinizi seçin/i)).toBeInTheDocument();
     expect(screen.getByText("7.280 ₼")).toBeInTheDocument();
   });
 
@@ -59,21 +64,63 @@ describe("AgriFin tətbiqi", () => {
     expect(screen.getByText("BU MÖVSÜM KARBON")).toBeInTheDocument();
   });
 
-  it("kredit axını pulqabını artırır", async () => {
+  // ── Dürüst kredit axını ────────────────────────────────────────────
+  // Köhnə axın "Qəbul et" ilə pulqabına DƏRHAL pul yazırdı — qərar
+  // mühərriki olmayan yerdə bu, yalan idi. Yeni axın müraciətlə bitir.
+  it("sahə çəkilməmiş kredit paneli imkanın niyə olmadığını deyir", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
 
     await user.click(screen.getByRole("button", { name: "Məhsul dövrü krediti al" }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText("İmkan hələ hesablana bilmir")).toBeInTheDocument();
+    expect(screen.getByText(/Sahənizi xəritədə çəkin/)).toBeInTheDocument();
+    // Slayder yoxdur — uydurma tavanla məbləğ seçdirilmir
+    expect(screen.queryByRole("slider")).not.toBeInTheDocument();
+  });
+
+  it("kredit axını pul köçürmür — müraciətlə bitir", async () => {
+    const user = userEvent.setup();
+    seedState({
+      location: DEFAULT_LOCATION,
+      onboarded: true,
+      // Geniş marjalı bitki + böyük sahə: tavan slayder üçün kifayətdir
+      sahe: {
+        hektar: 10,
+        noqteler: [
+          [40.4, 47.1],
+          [40.4023, 47.1],
+          [40.4023, 47.1029],
+          [40.4, 47.1029],
+        ],
+      },
+      chat: { messages: [], crop: "pomidor", referral: false },
+    });
+    renderApp(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Məhsul dövrü krediti al" }));
+
+    // Tavan izah olunur (Nubank "Me explica") və slayder tavana bağlıdır
+    expect(screen.getByRole("slider")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Niyə ən çoxu/ }));
+    expect(screen.getByText("Pessimist ssenaridə xalis gəlir")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Şərtlərə bax" }));
-    await user.click(screen.getByRole("button", { name: "Qəbul et və 5.000 ₼ al" }));
+    // Müddət biçinə bağlıdır — şərtlərdə ay sayı görünür
+    expect(screen.getByText(/ay — biçinə qədər/)).toBeInTheDocument();
 
-    expect(screen.getByText("5.000 ₼ pulqabınızdadır")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /üçün müraciət göndər/ }));
+    expect(screen.getByText(/müraciətiniz qeydə alındı/)).toBeInTheDocument();
+    // PUL KÖÇÜRÜLMÜR: pulqabı dəyişməz qalır.
+    // İki "Bağla" var: Sheet-in başlıqdakı düyməsi və məzmundakı CTA
+    await user.click(screen.getAllByRole("button", { name: "Bağla" }).at(-1));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByText("7.280 ₼")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Bağla" }));
-    // 7.280 + 5.000
-    expect(screen.getByText("12.280 ₼")).toBeInTheDocument();
+    // Müraciət Pul ekranında gözləyir
+    await user.click(screen.getByRole("button", { name: "Pul" }));
+    expect(screen.getByText(/Kredit müraciəti —/)).toBeInTheDocument();
+    expect(screen.getByText("Gözləyir")).toBeInTheDocument();
   });
 
   it("Escape düyməsi kredit panelini bağlayır", async () => {
@@ -83,7 +130,8 @@ describe("AgriFin tətbiqi", () => {
     await user.click(screen.getByRole("button", { name: "Məhsul dövrü krediti al" }));
     await user.keyboard("{Escape}");
 
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    // Sheet bağlanma animasiyası bitənədək DOM-da qalır (bax: Sheet.jsx)
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
   it("karbon kreditlərini satır və pulqabına 360 ₼ əlavə edir", async () => {

@@ -6,6 +6,7 @@ import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
 import { formatNumber } from "../lib/format.js";
 import { FARM } from "../services/farm.js";
+import { kreditImkani } from "../features/loan/useKredit.js";
 import { DEFAULT_LOCATION } from "../services/location.js";
 import { havaNoqtesi } from "../services/saheYeri.js";
 import { necheGunEvvel, ortukFaizi } from "../services/ndvi.js";
@@ -69,6 +70,14 @@ export function HomeScreen({
   // `bas` yenə hesablanır: iki yerdə İŞ görür — Aqronun üzü və paylaşılan
   // hesabatın mətni. Yalnız kartın özü ekrandan çıxıb.
   const bas = siqnallar.find((s) => s.ciddilik !== "melumat");
+
+  // Kredit imkanı: aqro indeks → gəlir modeli → ödəniş qabiliyyəti zənciri.
+  // Saxta FARM.creditLimit-in yerinə (bax: features/loan/useKredit.js)
+  const kredit = kreditImkani({
+    sahe: state.sahe,
+    bitki: state.chat.crop,
+    indeks: indeksHali.indeks,
+  });
 
   // ═══ AQRO ƏSAS EKRANDA KƏDƏRLƏNMİR ═══════════════════════════════════
   // Əvvəl açıq siqnal varsa üz "narahat" olurdu. İki səbəbdən səhv idi:
@@ -191,19 +200,24 @@ export function HomeScreen({
               </span>
             )}
           </StatTile>
-          <StatTile label={t("home.creditLimit")}>
-            <span style={{ color: C.gold }}>{money(FARM.creditLimit)}</span>
+          {/* SAXTA 12.000 ₼ SİLİNDİ: rəqəm indi ödəniş qabiliyyətindən çıxır
+              (bax: features/loan/useKredit.js). Hesablana bilmirsə "—" —
+              uydurma rəqəm göstərməkdənsə boşluq göstərmək dürüstdür. */}
+          <StatTile label={t("home.kreditImkani")}>
+            <span style={{ color: C.gold }}>
+              {kredit.hal === "hazir" ? money(kredit.maxKredit) : "—"}
+            </span>
           </StatTile>
           <StatTile label={t("home.wallet")}>{money(state.wallet)}</StatTile>
         </div>
 
-        {/* Kredit limiti hələ hesablanmır — bunu deməmək fermeri saxta rəqəmlə
-            plan qurmağa aparır. Qövs silinsə də bu qeyd qalır. */}
+        {/* Rəqəmin mənbəyi bir sətirlə deyilir: haradan gəldiyi bilinməyən
+            limit fermeri yanlış plana aparır */}
         <p
           className="mt-1.5 text-center"
           style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, lineHeight: 1.4 }}
         >
-          {t("home.scoreNote")}
+          {t(kredit.hal === "hazir" ? "home.kreditQeyd" : "home.kreditQeydYox")}
         </p>
 
         {/* Peyk ölçməsinin vəziyyəti. Hər hal ayrı cümlə deyir: peyk məlumatı

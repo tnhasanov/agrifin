@@ -144,7 +144,7 @@ export default function App() {
             <Toast />
             <BottomNav />
 
-            {loanOpen && <LoanSheet onClose={closeLoan} />}
+            {loanOpen && <LoanSheet onClose={closeLoan} indeksHali={indeks} />}
 
             <SiqnalPaneli
               acilib={siqnalOpen}

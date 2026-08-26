@@ -65,6 +65,28 @@ export function MoneyScreen({ onOpenLoan }) {
 
       <SectionTitle>{t("money.financing")}</SectionTitle>
 
+      {/* Gözləyən kredit müraciəti — dərhal pul YOXDUR, qərar ayrıca veriləcək
+          (bax: features/loan/LoanSheet.jsx). Kart müraciətin yaşadığını
+          göstərir; ləğv panelin içindədir ki, təsadüfi toxunuş silməsin. */}
+      {state.muraciet && (
+        <Card style={{ marginBottom: 8 }} onClick={onOpenLoan} ariaLabel={t("kredit.movcudBasliq")}>
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl p-2" style={{ backgroundColor: C.goldSoft }}>
+              <Icon name="Clock" size={16} color={C.goldDeep} />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold" style={{ color: C.ink }}>
+                {t("kredit.kartBasliq", { mebleg: { money: state.muraciet.mebleg } })}
+              </p>
+              <p className="text-xs" style={{ color: C.muted }}>
+                {t("kredit.kartAltyazi")}
+              </p>
+            </div>
+            <Chip label={t("kredit.gozleyir")} color={C.goldDeep} bg={C.goldSoft} />
+          </div>
+        </Card>
+      )}
+
       {loan.active && (
         <Card style={{ marginBottom: 8 }}>
           <div className="flex items-center justify-between">

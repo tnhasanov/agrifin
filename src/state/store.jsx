@@ -16,7 +16,7 @@ import { duzgunSahe } from "../services/geo.js";
 export const PERSIST_KEY = "state";
 // Saxlanan formanı dəyişəndə bu rəqəmi artırın və MIQRASIYALAR-a keçid yazın.
 // Keçid yoxdursa köhnə məlumat səssizcə atılır.
-export const PERSIST_VERSION = 7;
+export const PERSIST_VERSION = 8;
 
 /**
  * Köhnə versiyadan yeniyə keçid. Fermerdən onsuz da bildiyimiz şeyi
@@ -40,6 +40,9 @@ const MIQRASIYALAR = {
   // 6 → 7: telefon hesabı (Faza 1). Saxlanan telefon yalnız görüntü keşidir —
   // həqiqi sessiya httpOnly cookie-dədir və açılışda serverlə tutuşdurulur.
   6: (state) => ({ ...state, hesab: { telefon: null } }),
+  // 7 → 8: dürüst kredit axını. Nümunə "aktiv kredit" söndürülür — real
+  // müraciət axınının yanında uydurma 8000 ₼ borc göstərmək olmaz.
+  7: (state) => ({ ...state, muraciet: null, loan: { ...state.loan, active: false } }),
 };
 
 function miqrasiyaEt(saved) {
@@ -93,7 +96,12 @@ export const initialState = {
   bagliSiqnallar: [],
   txns: INITIAL_TXNS,
   nextTxnId: 5,
-  loan: { active: true, amount: 8000, repay: 8380, seasonProgress: 62 },
+  // active:false — kredit artıq müraciətlə başlayır (aşağıya bax). Struktur
+  // saxlanılır: qərar mühərriki gələndə təsdiqlənən müraciət bura yazılacaq.
+  loan: { active: false, amount: 8000, repay: 8380, seasonProgress: 62 },
+  // Kredit müraciəti: {mebleg, odenis, muddetAy, odemeTarixi(ISO), bitki,
+  // hektar, tavan, tarix(ISO), hal:"gozleyir"}. Dərhal pul köçürülməsi YOXDUR.
+  muraciet: null,
   toast: null,
 };
 
@@ -126,6 +134,19 @@ export function reducer(state, action) {
         ],
       };
     }
+
+    // Müraciət pul köçürmür: məbləğ, müddət və tarix yazılır, qərar isə
+    // ayrıca veriləcək (bax: lib/odenis.js — zəncirin qalan halqaları).
+    // Köhnə "loan/take" (dərhal pul) yalnız köhnə testlər üçün qalıb və
+    // heç bir ekrandan çağırılmır.
+    case "muraciet/gonder": {
+      const mebleg = Number(action.muraciet?.mebleg) || 0;
+      if (mebleg <= 0 || state.muraciet) return state;
+      return { ...state, muraciet: { ...action.muraciet, hal: "gozleyir" } };
+    }
+
+    case "muraciet/legv":
+      return { ...state, muraciet: null };
 
     case "loan/take": {
       const amount = Number(action.amount) || 0;
@@ -287,6 +308,8 @@ export function StoreProvider({ children }) {
       },
       siqnaliBagla: (id) => dispatch({ type: "siqnal/bagla", id }),
       takeLoan: (amount) => dispatch({ type: "loan/take", amount }),
+      muracietGonder: (muraciet) => dispatch({ type: "muraciet/gonder", muraciet }),
+      muracietLegv: () => dispatch({ type: "muraciet/legv" }),
       setLocation: (location) => {
         dispatch({ type: "location/set", location });
         showToast("toast.locationSelected", { name: location.name });

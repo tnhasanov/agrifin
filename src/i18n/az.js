@@ -164,6 +164,46 @@ export default {
     "Alıcılar və kreditorlarla təsdiqlənmiş davamlılıq hesabatı paylaşın — ESG hesabatı olan təsərrüfatlar ixrac alıcılarından daha yaxşı qiymət və maliyyələşmədə daha aşağı faiz alır.",
   "carbon.esgCta": "Hesabat yarat",
 
+  // ── Dürüst kredit axını ────────────────────────────────────────────
+  "home.kreditImkani": "Kredit imkanı",
+  "home.kreditQeyd":
+    "İmkan pessimist ssenariyə görə hesablanır — ilkin qiymətləndirmədir, kalibrlənməmiş model.",
+  "home.kreditQeydYox": "Kredit imkanı üçün sahənizi çəkin və bitkinizi seçin.",
+  "kredit.altYazi": "Tavanı bank yox, sahənizin özü qoyur",
+  "kredit.olculmurBasliq": "İmkan hələ hesablana bilmir",
+  "kredit.olculmurSahe": "Sahənizi xəritədə çəkin — imkan sahənin ölçüsündən və tarixçəsindən çıxır.",
+  "kredit.olculmurBitki": "Bitkinizi seçin — gəlir modeli bitkiyə görə qurulur.",
+  "kredit.imkanYoxBasliq": "Bu mövsüm üçün nağd kredit imkanı görünmür",
+  "kredit.imkanYoxIzah":
+    "{hektar} ha sahənin pessimist ssenaridə xalis gəliri {xalis} təşkil edir — bu, borc xidməti üçün kifayət etmir. Bu, sahənin pis olması demək deyil: kiçik sahədə aşağı marjalı bitki nağd borc daşımır.",
+  "kredit.imkanYoxMeslehet":
+    "Alternativ: toxum-gübrə üçün mal krediti və ya subsidiya təminatlı məhsullar. Aqronomla danışın.",
+  "kredit.odenisSetri": "Bir ödəniş: {odenis} · {tarix} (biçin)",
+  "kredit.niyeBuQeder": "Niyə ən çoxu {max}?",
+  "kredit.izah.xalis": "Pessimist ssenaridə xalis gəlir",
+  "kredit.izah.serbest": "Dövriyyə ehtiyatı çıxılandan sonra (75%)",
+  "kredit.izah.tavan": "Borc xidmətinə açıq pay (40%)",
+  "kredit.izah.esas": "Faizlə birlikdə əsas məbləğ",
+  "kredit.izahQeyd":
+    "Hesab pessimist ssenariyə söykənir: model kalibrlənməyib və yaxşı ehtimala borc bağlamaq riski fermerin üstünə atmaqdır.",
+  "kredit.setr.mebleg": "Məbləğ",
+  "kredit.setr.odenisDeger": "{tarix} (biçin) · {odenis}",
+  "kredit.setr.muddet": "Müddət",
+  "kredit.setr.muddetDeger": "{ay} ay — biçinə qədər",
+  "kredit.bicinIzah":
+    "Ödəniş tarixi biçinə bağlanır: pulunuz {tarix} ayında olur, cədvəl də ona görə qurulur.",
+  "kredit.gonderCta": "{mebleg} üçün müraciət göndər",
+  "kredit.gonderildiBasliq": "Müraciət qəbul edildi",
+  "kredit.gonderildiSetir": "{mebleg} üçün müraciətiniz qeydə alındı",
+  "kredit.gonderildiQeyd":
+    "Pul hələ köçürülmür — müraciətə baxılacaq. Təsdiqlənsə ödəniş {tarix} ayına təyin olunacaq.",
+  "kredit.movcudBasliq": "Gözləyən müraciətiniz var",
+  "kredit.movcudIzah": "{mebleg} üçün müraciət baxılmadadır. Ödəniş ayı: {tarix}.",
+  "kredit.legvCta": "Müraciəti geri götür",
+  "kredit.kartBasliq": "Kredit müraciəti — {mebleg}",
+  "kredit.kartAltyazi": "Baxılmadadır · toxunub ətraflı baxın",
+  "kredit.gozleyir": "Gözləyir",
+
   "loan.title": "Məhsul dövrü krediti",
   "loan.doneTitle": "Vəsait köçürüldü",
   "loan.intro":
