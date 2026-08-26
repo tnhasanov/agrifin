@@ -227,6 +227,9 @@ describe("Aqronun ifadəsi", () => {
     await waitFor(() => expect(uz()).toContain("fermer--narahat"));
     // İzah üzün yanındadır, uzaqda deyil
     expect(screen.getByText("Suvarma vaxtıdır")).toBeInTheDocument();
+    // Məsləhət ekranı personajın "evidir": tam boy görünür — narahat
+    // sallanma duruşu yalnız bütöv fiqurda oxunur
+    expect(uz()).toContain("fermer--tam");
   });
 
   it("iş yoxdursa və indeks yüksəkdirsə sevinir", async () => {

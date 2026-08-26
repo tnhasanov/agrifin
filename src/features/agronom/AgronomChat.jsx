@@ -256,9 +256,11 @@ export function AgronomChat({
           <>
             {/* İlk təəssürat: boş ekran əvvəl yalnız mətn qutusu idi.
                 Personaj söhbətə "kimsə var" hissi verir — Leo-nun bank
-                tətbiqində gördüyü işin eynisi. */}
+                tətbiqində gördüyü işin eynisi. TAM BOY və "danışır" halında:
+                salamlama qabarcığı onun sözüdür, açıq ovuc renderi də elə
+                qapıda qarşılayan adamın jestidir. */}
             <div className="giris mb-3 flex items-end gap-2" style={{ "--i": 0 }}>
-              <Aqronom hal="sakit" bitki={crop} olcu={62} className="shrink-0" />
+              <Aqronom hal="danisir" bitki={crop} olcu={148} className="shrink-0" />
               <div
                 className="mb-1 flex-1 rounded-2xl rounded-bl-sm p-3"
                 style={{ backgroundColor: "#EAF4EC", border: "1px solid #CFE6D7" }}
