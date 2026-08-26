@@ -214,6 +214,13 @@ export default {
   "movsumPulu.borc": "Due at harvest (application)",
   "movsumPulu.qeyd": "Range is pessimistic–optimistic. Expert assumptions, uncalibrated model.",
 
+  "lent.basliq": "Field feed",
+  "lent.olcme": "Satellite reading",
+  "lent.radar": "Radar reading",
+  "lent.radarSu": "Radar: {faiz}% of the field under water",
+  "lent.buGun": "Today",
+  "lent.gunEvvel": "{gun} days ago",
+
   "loan.title": "Crop-cycle loan",
   "loan.doneTitle": "Funds transferred",
   "loan.intro":

@@ -216,6 +216,13 @@ export default {
   "movsumPulu.qeyd":
     "Диапазон — пессимистичный–оптимистичный сценарий. Экспертные нормы, модель не откалибрована.",
 
+  "lent.basliq": "Лента поля",
+  "lent.olcme": "Спутниковый замер",
+  "lent.radar": "Радарный замер",
+  "lent.radarSu": "Радар: {faiz}% поля под водой",
+  "lent.buGun": "Сегодня",
+  "lent.gunEvvel": "{gun} дн. назад",
+
   "loan.title": "Кредит на сезон",
   "loan.doneTitle": "Средства переведены",
   "loan.intro":

@@ -6,8 +6,9 @@ import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
 import { SiqnalKarti } from "../features/signals/SiqnalKarti.jsx";
 import { TovsiyeKarti } from "../features/tovsiye/TovsiyeKarti.jsx";
+import { SaheLenti } from "../features/lent/SaheLenti.jsx";
 
-export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [] }) {
+export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [], peyk, radar }) {
   const { t } = useI18n();
   const { state, actions } = useStore();
 
@@ -100,6 +101,10 @@ export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [] }) {
           />
         ))
       )}
+
+      {/* Lent siqnallardan sonra: siqnal bu gün görüləcək işdir, lent isə
+          tarixçədir — iş həmişə xronologiyadan öndə gəlir. */}
+      <SaheLenti peyk={peyk} radar={radar} />
 
       {/* Tövsiyələr siqnallardan SONRA gəlir: siqnal bu gün görülməli işdir,
           tövsiyə isə mövsümün bu mərhələsinin planıdır. */}

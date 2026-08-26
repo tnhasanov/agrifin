@@ -216,6 +216,14 @@ export default {
   "movsumPulu.qeyd":
     "Aralıq pessimist–optimist ssenaridir. Ekspert normaları, kalibrlənməmiş model.",
 
+  // Sahə lenti — hər peyk keçidi bir sətir
+  "lent.basliq": "Sahə lenti",
+  "lent.olcme": "Peyk ölçməsi",
+  "lent.radar": "Radar ölçməsi",
+  "lent.radarSu": "Radar: sahənin {faiz}%-i su altında",
+  "lent.buGun": "Bu gün",
+  "lent.gunEvvel": "{gun} gün əvvəl",
+
   "loan.title": "Məhsul dövrü krediti",
   "loan.doneTitle": "Vəsait köçürüldü",
   "loan.intro":
