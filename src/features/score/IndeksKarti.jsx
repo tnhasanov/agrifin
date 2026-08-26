@@ -175,7 +175,7 @@ function MovsumQrafiki({ movsumler, t }) {
         bos: bosSayi,
       })}
     >
-      {movsumler.map((m) => {
+      {movsumler.map((m, sira) => {
         // Cari il hələ bitməyib: zirvə həddin altındadırsa bu, "boş qalıb"
         // deyil, "mövsüm davam edir"dir — qırmızı yox, neytral göstərilir
         const davamEdir = m.il === cariIl && m.zirve != null && m.zirve < EKIN_HEDDI;
@@ -189,8 +189,9 @@ function MovsumQrafiki({ movsumler, t }) {
         return (
           <div key={m.il} className="flex flex-1 flex-col items-center justify-end gap-1" title={`${m.il}`}>
             <div
-              className="w-full rounded-t"
+              className="sutun-qalx w-full rounded-t"
               style={{
+                "--i": sira,
                 height: h,
                 maxWidth: 22,
                 backgroundColor:

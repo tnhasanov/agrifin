@@ -16,6 +16,10 @@ export function Sparkline({ points, up, width = 72, height = 26 }) {
     <svg width={width} height={height} aria-hidden="true">
       <polyline
         points={coords.join(" ")}
+        // pathLength=1: cızılma animasiyası uzunluğu bilmədən işləyir
+        // (bax: index.css, .cizgi-cek)
+        pathLength="1"
+        className="cizgi-cek"
         fill="none"
         stroke={up ? C.field : C.danger}
         strokeWidth="2"

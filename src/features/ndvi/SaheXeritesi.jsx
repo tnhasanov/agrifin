@@ -114,6 +114,10 @@ export function SaheXeritesi({ sahe }) {
               sinirler={netice.sinirler}
               etiket={t(`ndvi.mapAlt.${aktiv}`)}
             />
+            {/* Peyk skanı: yeni şəkil gələndə üstündən bir dəfə skan xətti
+                keçir — "peyk sahəni indi oxudu" anı (bax: index.css).
+                key=şəkil: qat dəyişəndə (NDVI→nəmlik) yenidən keçir. */}
+            <div key={netice.sekil} className="peyk-skan" aria-hidden="true" />
             {/* Kartdakı xəritə hərəkətsizdir (səhifə sürüşməsi üçün) —
                 yaxınlaşdırmaq bu düymə ilə tam ekranda olur */}
             <button

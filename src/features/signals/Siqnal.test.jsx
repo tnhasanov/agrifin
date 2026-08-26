@@ -249,6 +249,8 @@ describe("sahə siqnalları — bildiriş mərkəzi", () => {
 
     // Şaxta + suvarma. Nümunə tövsiyələr sayılmır — hamısı ölçmədən çıxır.
     await waitFor(() => expect(zeng()).toHaveTextContent("2"));
+    // Açıq siqnal zəngi bir dəfə yellədir (bax: index.css, .zeng-yellen)
+    expect(zeng().querySelector(".zeng-yellen")).toBeTruthy();
   });
 
   it("bildiriş paneli bütün siqnalları ciddiliyə görə sıralayır", async () => {

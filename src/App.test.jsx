@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App.jsx";
 import { renderApp, seedLocation, seedState, WEATHER_FIXTURE } from "./test/render.jsx";
@@ -101,7 +101,15 @@ describe("AgriFin tətbiqi", () => {
     await user.click(screen.getByRole("button", { name: "Məhsul dövrü krediti al" }));
 
     // Tavan izah olunur (Nubank "Me explica") və slayder tavana bağlıdır
-    expect(screen.getByRole("slider")).toBeInTheDocument();
+    const slayder = screen.getByRole("slider");
+    expect(slayder).toBeInTheDocument();
+
+    // Aqro slaydere reaksiya verir: tavana yaxınlaşanda fikirləşir.
+    // Arxadakı əsas ekranda da Aqro var — yalnız dialoqun içinə baxılır.
+    const dialoq = screen.getByRole("dialog");
+    expect(dialoq.querySelector("svg.aqro").getAttribute("class")).toContain("aqro--sakit");
+    fireEvent.change(slayder, { target: { value: slayder.max } });
+    expect(dialoq.querySelector("svg.aqro").getAttribute("class")).toContain("aqro--dusunur");
     await user.click(screen.getByRole("button", { name: /Niyə ən çoxu/ }));
     expect(screen.getByText("Pessimist ssenaridə xalis gəlir")).toBeInTheDocument();
 
@@ -111,6 +119,8 @@ describe("AgriFin tətbiqi", () => {
 
     await user.click(screen.getByRole("button", { name: /üçün müraciət göndər/ }));
     expect(screen.getByText(/müraciətiniz qeydə alındı/)).toBeInTheDocument();
+    // Uğur anı: konfeti bir dəfə səpələnir (bax: index.css, .konfeti)
+    expect(document.querySelectorAll(".konfeti")).toHaveLength(8);
     // PUL KÖÇÜRÜLMÜR: pulqabı dəyişməz qalır.
     // İki "Bağla" var: Sheet-in başlıqdakı düyməsi və məzmundakı CTA
     await user.click(screen.getAllByRole("button", { name: "Bağla" }).at(-1));

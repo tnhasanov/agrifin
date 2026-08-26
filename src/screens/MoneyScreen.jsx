@@ -78,8 +78,8 @@ export function MoneyScreen({ onOpenLoan, indeksHali = null }) {
             <div className="rounded-xl p-2" style={{ backgroundColor: C.goldSoft }}>
               <Icon name="Clock" size={16} color={C.goldDeep} />
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold" style={{ color: C.ink }}>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold" style={{ color: C.ink }}>
                 {t("kredit.kartBasliq", { mebleg: { money: state.muraciet.mebleg } })}
               </p>
               <p className="text-xs" style={{ color: C.muted }}>

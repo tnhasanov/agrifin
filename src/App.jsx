@@ -21,7 +21,7 @@ import { MarketScreen } from "./screens/MarketScreen.jsx";
 import { CarbonScreen } from "./screens/CarbonScreen.jsx";
 import { useRouter } from "./lib/router.jsx";
 import { useStore } from "./state/store.jsx";
-import { pathFor, routeForPath } from "./routes.js";
+import { ROUTES, pathFor, routeForPath } from "./routes.js";
 import { C, font } from "./theme/tokens.js";
 import { useNdvi } from "./features/ndvi/useNdvi.js";
 import { useQonsu } from "./features/ndvi/useQonsu.js";
@@ -57,6 +57,18 @@ export default function App() {
 
   const route = routeForPath(path);
   const Screen = SCREENS[route.id];
+
+  // Keçid istiqaməti tab sırasından: sağdakı taba keçəndə ekran sağdan
+  // gəlir (bax: index.css, ekran-gel). İlk açılışda istiqamət yoxdur.
+  // Ref YOX, render-zamanı vəziyyət uyğunlaşdırması (React-ın öz nümunəsi):
+  // istiqamət animasiya boyu SABİT qalmalıdır — effektlə yazsaq CSS
+  // dəyişəni animasiyanın ortasında sıfırlanardı.
+  const tabSirasi = ROUTES.findIndex((r) => r.id === route.id);
+  const [kecid, setKecid] = useState({ idx: tabSirasi, dir: 0 });
+  if (kecid.idx !== tabSirasi) {
+    setKecid({ idx: tabSirasi, dir: Math.sign(tabSirasi - kecid.idx) });
+  }
+  const istiqamet = kecid.idx === tabSirasi ? kecid.dir : Math.sign(tabSirasi - kecid.idx);
 
   // Peyk ölçməsi və siqnallar BURADA qurulur, ekranlarda yox: başlıqdakı zəng,
   // əsas ekran və məsləhət ekranı eyni siyahını göstərməlidir və hər biri
@@ -124,7 +136,7 @@ export default function App() {
 
             <main ref={scrollRef} className="flex-1 overflow-y-auto">
               {/* key ekran dəyişəndə remount edir — giriş animasiyası hər dəfə oynayır */}
-              <div key={route.id} className="ekran-giris">
+              <div key={route.id} className="ekran-giris" style={{ "--dir": istiqamet }}>
                 <Screen
                 peyk={peyk}
                 qonsu={qonsu}

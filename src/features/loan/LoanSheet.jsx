@@ -147,12 +147,22 @@ export function LoanSheet({ onClose, indeksHali = null }) {
         {/* ── Addım 0: məbləği seç ──────────────────────────────────── */}
         {!state.muraciet && hazir && addim === 0 && (
           <div>
-            <p
-              className="mb-1 text-center text-3xl font-extrabold"
-              style={{ color: C.ink, fontFamily: font.display, fontVariantNumeric: "tabular-nums" }}
-            >
-              {money(mebleg)}
-            </p>
+            {/* Aqro slaydere REAKSİYA VERİR (Leo kimi): tavana yaxınlaşanda
+                fikirləşir — "çox götürürsən, ödəyə biləcəksən?" sözsüz deyilir.
+                Qadağa deyil, üz ifadəsidir: seçim fermerindir. */}
+            <div className="mb-1 flex items-end justify-center gap-3">
+              <Aqronom
+                hal={mebleg >= kredit.maxKredit * 0.85 ? "dusunur" : "sakit"}
+                bitki={state.chat.crop}
+                olcu={44}
+              />
+              <p
+                className="text-center text-3xl font-extrabold"
+                style={{ color: C.ink, fontFamily: font.display, fontVariantNumeric: "tabular-nums" }}
+              >
+                {money(mebleg)}
+              </p>
+            </div>
             <p className="mb-3 text-center text-xs" style={{ color: C.muted }}>
               {t("kredit.odenisSetri", {
                 odenis: { money: kredit.odenis1(mebleg) },
@@ -168,8 +178,13 @@ export function LoanSheet({ onClose, indeksHali = null }) {
               value={mebleg}
               onChange={(e) => setMebleg(Number(e.target.value))}
               aria-label={t("loan.amountLabel")}
-              className="w-full"
-              style={{ accentColor: C.field }}
+              className="kredit-slayder w-full"
+              // Dolu hissə qradiyentlə: standart boz zolaq brendsiz idi
+              style={{
+                backgroundImage: `linear-gradient(to right, ${C.field} ${
+                  ((mebleg - kredit.minKredit) / (kredit.maxKredit - kredit.minKredit)) * 100
+                }%, ${C.mist} 0)`,
+              }}
             />
             <div className="mt-1 flex justify-between text-xs" style={{ color: C.muted }}>
               <span>{money(kredit.minKredit)}</span>
@@ -276,7 +291,25 @@ export function LoanSheet({ onClose, indeksHali = null }) {
         {/* ── Addım 2: müraciət göndərildi (pul köçürülmür!) ────────── */}
         {addim === 2 && (
           <div className="py-2 text-center">
-            <div className="mx-auto mb-2 inline-block">
+            <div className="relative mx-auto mb-2 inline-block">
+              {/* Konfeti brend rəngləridir və BİR DƏFƏ düşür — sonsuz bayram
+                  yorucudur (bax: index.css, .konfeti) */}
+              {[
+                ["8%", "0ms", C.gold],
+                ["24%", "120ms", C.field],
+                ["40%", "40ms", "#B79BE0"],
+                ["56%", "180ms", C.gold],
+                ["72%", "80ms", "#D9483B"],
+                ["88%", "150ms", C.field],
+                ["16%", "220ms", "#4A90E2"],
+                ["64%", "260ms", C.goldDeep],
+              ].map(([sol, gecikme, reng]) => (
+                <span
+                  key={`${sol}-${gecikme}`}
+                  className="konfeti"
+                  style={{ left: sol, animationDelay: gecikme, backgroundColor: reng }}
+                />
+              ))}
               <Aqronom hal="sevincli" bitki={state.chat.crop} olcu={76} />
             </div>
             <p className="text-sm font-bold" style={{ color: C.ink }}>
