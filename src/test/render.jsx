@@ -63,3 +63,62 @@ export const WEATHER_FIXTURE = {
     soil_moisture_0_to_7cm: Array.from({ length: 36 }, () => 0.24),
   },
 };
+
+/**
+ * Kredit API-sinin sınaq cavabları.
+ *
+ * Kredit vəziyyəti ARTIQ localStorage-da deyil (bax: api/kredit.js) — ona görə
+ * ekran testləri serveri təqlid etməlidir. `kreditServeri()` sadə vəziyyət
+ * maşınıdır: müraciət → təklif → kredit, real API ilə eyni formada.
+ */
+export function kreditServeri({ mebleg = 2000, muddetAy = 12, illikFaiz = 11.5 } = {}) {
+  let veziyyet = { muraciet: null, qerar: null, teklif: null, kredit: null };
+
+  const cavab = (govde) =>
+    Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(govde) });
+
+  return {
+    /** Cari vəziyyət — testlər yoxlaya bilsin */
+    oxu: () => veziyyet,
+    /** fetch marşrutlayıcısı: /api/kredit sorğularını tutur, qalanı null */
+    isle(url, secim) {
+      if (!String(url).includes("/api/kredit")) return null;
+      const govde = secim?.body ? JSON.parse(secim.body) : null;
+
+      if (govde?.emel === "muraciet") {
+        const verilen = Math.min(govde.mebleg, mebleg);
+        veziyyet = {
+          muraciet: { id: 1, hal: "offer_issued", mebleg: govde.mebleg, muddetAy, bitki: "pomidor" },
+          qerar: { qerar: "approved", mebleg: verilen, sebebler: [], versiya: "v1-test" },
+          teklif: {
+            id: 7,
+            hal: "issued",
+            mebleg: verilen,
+            illikFaiz,
+            muddetAy,
+            qurulus: "aylik_faiz_cevik_esas",
+          },
+          kredit: null,
+        };
+      } else if (govde?.emel === "teklif-qebul") {
+        veziyyet = {
+          ...veziyyet,
+          muraciet: { ...veziyyet.muraciet, hal: "accepted" },
+          teklif: { ...veziyyet.teklif, hal: "accepted" },
+          kredit: {
+            id: 3,
+            hal: "active",
+            esasBorc: veziyyet.teklif.mebleg,
+            qaliqBorc: veziyyet.teklif.mebleg,
+            illikFaiz,
+            muddetAy,
+          },
+        };
+      } else if (govde?.emel === "legv") {
+        veziyyet = { muraciet: { ...veziyyet.muraciet, hal: "rejected" }, qerar: veziyyet.qerar, teklif: null, kredit: null };
+      }
+
+      return cavab(veziyyet);
+    },
+  };
+}

@@ -417,9 +417,14 @@ serverə bağlayır — cihaz dəyişəndə heç nə itmir.
 
 Hissələr:
 
-- `db/schema.sql` — 6 cədvəl (istifadəçilər, OTP, sessiyalar, sahələr,
-  peyk snapshot-ları, bal jurnalı). `lib/db.js` eyni əmrləri hər instansda
-  özü işlədir (idempotent miqrasiya) — ayrıca miqrasiya aləti yoxdur.
+- `db/migrations/` — nömrələnmiş SQL miqrasiyaları: `001_baseline.sql`
+  (istifadəçilər, OTP, sessiyalar, sahələr, peyk snapshot-ları, bal jurnalı),
+  `002_kredit.sql` (kredit sistemi — aşağıya bax). Tətbiq olunanlar
+  `sxem_miqrasiyalari` cədvəlində izlənir.
+  **Runtime sxemi DƏYİŞMİR**: əvvəl `lib/db.js` hər instansın ilk sorğusunda
+  sxemi işlədirdi, yəni adi istifadəçi sorğusu prodakşn sxemini dəyişə
+  bilirdi. Maliyyə qeydləri gələndən sonra bu yolverilməzdir — indi yalnız
+  `npm run db:migrate` (bax: `scripts/migrate.mjs`).
 - `lib/db.js` — istehsalda Neon HTTP sürücüsü, testlərdə PGlite; hər ikisi
   `sorgu(mətn, parametrlər) → sətirlər` adapterinin arxasındadır.
 - `lib/hesab.js` — OTP (6 rəqəm, 5 dəq, 5 cəhd, birdəfəlik) və 90 günlük
@@ -447,3 +452,71 @@ Quraşdırma (Vercel):
 4. (Sonra) SMS şlüzü müqaviləsindən sonra `SMS_URL` və `SMS_ACAR` əlavə edin.
    O vaxta qədər OTP kodları yalnız Vercel funksiya loglarında görünür —
    UI-da heç vaxt göstərilmir.
+5. **Miqrasiyaları işlədin — DEPLOY-DAN ƏVVƏL.** Kredit miqrasiyaları
+   additivdir (köhnə kod yeni cədvəllərlə işləməyə davam edir), amma yeni
+   kod (`/api/kredit`) cədvəlsiz işləmir. Ona görə sıfır-fasilə sırası:
+
+   **miqrasiya → deploy → smoke test** (`GET /api/kredit` daxil olmuş
+   istifadəçi ilə 200 qaytarmalıdır), tərsi yox.
+
+   ```bash
+   DATABASE_URL="postgres://..." npm run db:migrate         # tətbiq et
+   DATABASE_URL="postgres://..." npm run db:migrate -- --list  # vəziyyət
+   ```
+
+   Ünvanın özü heç yerdə çap olunmur — yalnız istifadə olunan açarın adı.
+   Uğursuzluqda çıxış kodu 1-dir və hansı faylın hansı əmrində dayandığı
+   yazılır; səssiz davam yoxdur.
+
+## Faza 2 — kredit sistemi serverdə
+
+Kredit vəziyyəti (müraciət, qərar, təklif, kredit, ödəniş jurnalı) ARTIQ
+brauzerdə deyil. Səbəb sadədir: brauzer maliyyə vəziyyətinin həqiqət mənbəyi
+ola bilməz — fermer onu əl ilə dəyişə, cihaz dəyişəndə itirə bilər, sahibi
+isə heç yerdə qeyd olunmur.
+
+- `db/migrations/002_kredit.sql` — `credit_applications`,
+  `credit_application_events`, `credit_decisions`, `credit_offers`, `loans`,
+  `loan_events`. Qərarın BÜTÜN girişləri `decision_inputs` JSONB sütununda
+  surət kimi saxlanılır: konfiqurasiya dəyişsə də köhnə qərar izah oluna bilər.
+  Maliyyə tarixçəsi `loan_events`-dən çıxır (yalnız artır) — tam ikitərəfli
+  mühasibat qəsdən qurulmayıb, amma sonradan əlavə etməyə açıqdır.
+- `lib/kredit.js` — SAF domen: vəziyyət maşını (icazəli keçidlər) və
+  anderraytinq. `lib/kreditSertler.js` — dərəcə, limit düsturu (server və
+  klient EYNİ funksiyanı işlədir). `lib/kreditOdenis.js` — aylıq faiz yalnız
+  QALAN əsas borca.
+- `api/kredit.js` — autentifikasiyalı HTTP (bir funksiya, `emel` ilə):
+  müraciət, təklifin qəbulu, imtina, ödəniş. Kimlik yalnız sessiyadan çıxır;
+  gövdədəki `user_id` NƏZƏRƏ ALINMIR. Bal, gəlir, qabiliyyət və qərar
+  serverdə hesablanır — klient yalnız istədiyi məbləği göndərir.
+- Müştəri: `src/services/kredit.js` + `src/features/loan/useKreditVeziyyeti.js`.
+  localStorage-da yalnız UI vəziyyəti qalır (yüklənir, forma, dil).
+
+**Yarış testləri (real Postgres):** vitest-dəki yarış testləri PGlite
+üzərindədir — tək bağlantılıdır, sorğular faktiki ardıcıllaşır. Əsl paralel
+icra `scripts/yaris-testi.mjs` ilə REAL Neon üzərində yoxlanılır: birdəfəlik
+Neon branch-ı yaradın (maliyyə cədvəlləri RESTRICT-dir, test qalığı ana
+bazaya yazılmamalı və silinməli də deyil), sonra:
+
+```bash
+DATABASE_URL="postgres://...yaris-branch..." SESSION_SECRET="test-sirri" \
+  node scripts/yaris-testi.mjs
+```
+
+Ssenarilər: qalıq 100-ə eyni anda 60+60 → 60 və 40, qalıq 0; eyni
+idempotentlik açarı (paralel + təkrar) → düz bir maliyyə hadisəsi; eyni
+təklifə paralel iki qəbul → düz bir kredit. Uğursuzluqda çıxış kodu 1.
+Bitirəndə branch-ı silin. Bu yoxlama hər sxem/SQL dəyişikliyindən sonra,
+merge-dən əvvəl işlədilməlidir.
+
+⚠ **Demo pul:** `wallet`, əməliyyat siyahısı və karbon satışı hələ
+prototip nümunələridir — server hesabına bağlı deyil və kredit axını
+onları oxumur/yazmır (bax: store.jsx-dəki işarələnmiş blok). Server
+avtoritativ olan yalnız kredit zənciridir: müraciət → qərar → təklif →
+kredit → ödəniş jurnalı.
+
+⚠ **Miqrasiya siyasəti:** köhnə prototipin localStorage-dakı `muraciet`
+obyektləri bazaya KÖÇÜRÜLMÜR (store v8→v9 onları silir). Onlar sahibsizdir,
+heç bir anderraytinqdən keçməyib və brauzerdə dəyişilə bilən dəyərlərdir —
+belə rəqəmləri maliyyə qeydi kimi yazmaq uydurma borc yaratmaq olardı.
+Fermer müraciəti server axını ilə yenidən göndərir; sahə, rayon, söhbət qalır.

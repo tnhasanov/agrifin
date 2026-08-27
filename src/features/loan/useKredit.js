@@ -1,14 +1,16 @@
-import { LOAN_TERMS } from "../../services/farm.js";
-import { bicinTarixi, bicineQalanAy } from "../../services/movsum.js";
+import { bicinTarixi, bicineQalanAy } from "../../../lib/movsum.js";
 import { ayliqFaiz } from "../../../lib/kreditOdenis.js";
+import { KREDIT_SERTLERI, kreditTavani } from "../../../lib/kreditSertler.js";
 import { gelirModeli } from "../../../lib/gelir.js";
 import { odenisQabiliyyeti } from "../../../lib/odenis.js";
 import { cariVeziyyetHali } from "../../../lib/mehsuldarliq.js";
 
-/** Slayder addımı — 100 ₼-dən xırda məbləğ kredit söhbətində səs-küydür */
-const ADDIM = 100;
-/** Bundan kiçik tavan "imkan var" adlandırılmır */
-export const MIN_KREDIT = 500;
+// Şərtlər və limit düsturu SERVERLƏ PAYLAŞILIR (bax: lib/kreditSertler.js).
+// Əvvəl ADDIM/MIN_KREDIT və faiz düsturu bu faylın içində idi — server eyni
+// rəqəmi hesablaya bilmirdi. İndi klientin göstərdiyi tavan serverin
+// hesabladığı tavanla eyni funksiyadan çıxır.
+const ADDIM = KREDIT_SERTLERI.addim;
+export const MIN_KREDIT = KREDIT_SERTLERI.minKredit;
 
 /**
  * Kredit imkanının BÜTÜN rəqəmləri bir yerdə.
@@ -62,8 +64,7 @@ export function kreditImkani({ sahe, bitki, indeks, indi = new Date() } = {}) {
 
   const muddetAy = bicineQalanAy(bitki, indi);
   const odemeTarixi = bicinTarixi(bitki, indi);
-  const faizEmsali = 1 + (LOAN_TERMS.annualRate / 100) * (muddetAy / 12);
-  const maxKredit = Math.floor(odenis.qabiliyyet / faizEmsali / ADDIM) * ADDIM;
+  const maxKredit = kreditTavani(odenis.qabiliyyet, muddetAy);
 
   // Tavan çox kiçikdirsə bunu GİZLƏTMİRİK: "sahəniz bu mövsüm nağd kredit
   // daşımır" da bir cavabdır və saxta limitdən qat-qat dürüstdür
@@ -83,6 +84,6 @@ export function kreditImkani({ sahe, bitki, indeks, indi = new Date() } = {}) {
     // Seçilmiş əsas borc üçün İLK aylıq faiz. Sonrakı ayların faizi
     // fermerin əsas borcu nə qədər azaltdığından asılıdır — öncədən
     // "yekun məbləğ" yoxdur (bax: lib/kreditOdenis.js)
-    ayliqFaiz1: (mebleg) => ayliqFaiz(mebleg, LOAN_TERMS.annualRate),
+    ayliqFaiz1: (mebleg) => ayliqFaiz(mebleg, KREDIT_SERTLERI.illikFaiz),
   };
 }

@@ -2,7 +2,7 @@ import { Icon } from "../../components/Icon.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { useStore } from "../../state/store.jsx";
-import { MOVSUM, bicineQalanAy, movsumGedisi } from "../../services/movsum.js";
+import { MOVSUM, bicineQalanAy, movsumGedisi } from "../../../lib/movsum.js";
 import { kreditImkani } from "../loan/useKredit.js";
 
 /**
@@ -18,7 +18,7 @@ import { kreditImkani } from "../loan/useKredit.js";
  * göstərərdi. Sahə/bitki yoxdursa kart ümumiyyətlə render olunmur —
  * uydurma mövsüm göstərilmir.
  */
-export function MovsumPulu({ indeksHali = null }) {
+export function MovsumPulu({ indeksHali = null, kreditHali = null }) {
   const { t, money } = useI18n();
   const { state } = useStore();
   const bitki = state.chat.crop;
@@ -39,10 +39,18 @@ export function MovsumPulu({ indeksHali = null }) {
   // Intl deyil, i18n: bəzi brauzerlərdə az lokalı yoxdur (bax: LoanSheet)
   const ayAdi = (ay) => t(`ayQ.${ay}`);
 
-  // Son tarixə (biçinə) qədər bağlanmalı əsas borc. Faiz aylıq ödənildiyi
-  // və qalığa hesablandığı üçün "yekun ödəniş" rəqəmi yoxdur — mövsüm
-  // kartında əsas borcun özü göstərilir.
-  const borc = state.muraciet?.mebleg ?? null;
+  // Son tarixə (biçinə) qədər bağlanmalı əsas borc — SERVERDƏN.
+  // Aktiv kredit varsa qalıq borc, yoxsa baxılan müraciətin məbləği.
+  // Faiz aylıq ödənildiyi və qalığa hesablandığı üçün "yekun ödəniş"
+  // rəqəmi yoxdur — kartda əsas borcun özü göstərilir.
+  const aktivKredit = kreditHali?.kredit;
+  const gozleyen = kreditHali?.muraciet;
+  const kreditVar = aktivKredit?.hal === "active";
+  const borc = kreditVar
+    ? aktivKredit.qaliqBorc
+    : gozleyen && ["submitted", "reviewing", "approved", "offer_issued"].includes(gozleyen.hal)
+      ? gozleyen.mebleg
+      : null;
 
   return (
     <div
@@ -114,7 +122,7 @@ export function MovsumPulu({ indeksHali = null }) {
           <div className="flex items-baseline justify-between gap-2 py-1.5">
             <span className="flex items-center gap-1.5 text-xs" style={{ color: C.muted }}>
               <Icon name="Clock" size={12} color={C.goldDeep} />
-              {t("movsumPulu.borc")}
+              {t(kreditVar ? "movsumPulu.borcKredit" : "movsumPulu.borc")}
             </span>
             <span
               className="text-xs font-bold whitespace-nowrap"

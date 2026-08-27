@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
 import { musterTeyin, sorgu } from "../lib/db.js";
+import { miqrasiyalariTetbiqEt } from "../lib/miqrasiya.js";
 import { otpTesdiqle, otpYarat } from "../lib/hesab.js";
 import handler from "./sahe.js";
 
@@ -12,6 +13,10 @@ beforeAll(async () => {
   process.env.SESSION_SECRET = "test-sirri";
   pg = new PGlite();
   await pg.waitReady;
+  // Sxem artıq runtime-da avtomatik qurulmur (bax: lib/miqrasiya.js) —
+  // test bazası da miqrasiyalarla qurulur, prodakşnla eyni yolla
+  musterTeyin(pg);
+  await miqrasiyalariTetbiqEt(sorgu);
 }, 60_000);
 
 afterAll(async () => {

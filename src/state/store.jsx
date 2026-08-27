@@ -8,7 +8,7 @@ import {
   useRef,
 } from "react";
 import * as storage from "../lib/storage.js";
-import { FARM, LOAN_TERMS, computeRepayment } from "../services/farm.js";
+import { FARM } from "../services/farm.js";
 import { CARBON, carbonPayout } from "../services/carbon.js";
 import { isValidLocation, readLegacyLocation } from "../services/location.js";
 import { duzgunSahe } from "../services/geo.js";
@@ -16,7 +16,7 @@ import { duzgunSahe } from "../services/geo.js";
 export const PERSIST_KEY = "state";
 // Saxlanan formanı dəyişəndə bu rəqəmi artırın və MIQRASIYALAR-a keçid yazın.
 // Keçid yoxdursa köhnə məlumat səssizcə atılır.
-export const PERSIST_VERSION = 8;
+export const PERSIST_VERSION = 9;
 
 /**
  * Köhnə versiyadan yeniyə keçid. Fermerdən onsuz da bildiyimiz şeyi
@@ -43,6 +43,19 @@ const MIQRASIYALAR = {
   // 7 → 8: dürüst kredit axını. Nümunə "aktiv kredit" söndürülür — real
   // müraciət axınının yanında uydurma 8000 ₼ borc göstərmək olmaz.
   7: (state) => ({ ...state, muraciet: null, loan: { ...state.loan, active: false } }),
+  // 8 → 9: KREDİT VƏZİYYƏTİ SERVERƏ KEÇDİ (bax: api/kredit.js).
+  //
+  // Yerli `muraciet` obyektləri KÖÇÜRÜLMÜR, silinir. Səbəb: onlar sahibsizdir
+  // (hesaba bağlı deyil), heç bir server anderraytinqindən keçməyib və
+  // brauzerdə əl ilə dəyişilə bilən dəyərlərdir. Belə rəqəmləri maliyyə
+  // qeydi kimi bazaya yazmaq uydurma borc yaratmaq olardı. Fermer müraciəti
+  // server axını ilə yenidən göndərir — sahə, rayon, söhbət, dil qalır.
+  8: (state) => {
+    const yeni = { ...state };
+    delete yeni.muraciet;
+    delete yeni.loan;
+    return yeni;
+  },
 };
 
 function miqrasiyaEt(saved) {
@@ -79,6 +92,12 @@ const INITIAL_TXNS = [
 const CHAT_LIMIT = 40;
 
 export const initialState = {
+  // ═══ DEMO PUL — REAL DEYİL ══════════════════════════════════════════
+  // wallet, txns və karbon satışı PROTOTİP NÜMUNƏLƏRİDİR: heç bir server
+  // hesabına bağlı deyil, heç bir kredit axını onları oxumur və ya yazmır
+  // (yoxlanılıb: api/kredit.js bu sahələrə toxunmur). Real pul hərəkəti
+  // gələndə bunlar da server hesabına köçəcək — o vaxta qədər bu blok
+  // yalnız vitrin məlumatıdır və real balansla QARIŞDIRILMAMALIDIR.
   wallet: 7280,
   // false olduqda ilk açılışda qeydiyyat axını göstərilir
   onboarded: false,
@@ -96,12 +115,9 @@ export const initialState = {
   bagliSiqnallar: [],
   txns: INITIAL_TXNS,
   nextTxnId: 5,
-  // active:false — kredit artıq müraciətlə başlayır (aşağıya bax). Struktur
-  // saxlanılır: qərar mühərriki gələndə təsdiqlənən müraciət bura yazılacaq.
-  loan: { active: false, amount: 8000, repay: 8380, seasonProgress: 62 },
-  // Kredit müraciəti: {mebleg, odenis, muddetAy, odemeTarixi(ISO), bitki,
-  // hektar, tavan, tarix(ISO), hal:"gozleyir"}. Dərhal pul köçürülməsi YOXDUR.
-  muraciet: null,
+  // KREDİT VƏZİYYƏTİ BURADA DEYİL. Müraciət, qərar, təklif və kredit
+  // serverdədir (bax: api/kredit.js, features/loan/useKreditVeziyyeti.js):
+  // brauzer maliyyə vəziyyətinin həqiqət mənbəyi ola bilməz.
   toast: null,
 };
 
@@ -128,39 +144,6 @@ export function reducer(state, action) {
             nameKey: "txn.carbon.name",
             metaKey: "txn.carbon.meta",
             metaVars: { count: CARBON.creditsReady },
-            amount,
-          },
-          ...state.txns,
-        ],
-      };
-    }
-
-    // Müraciət pul köçürmür: məbləğ, müddət və tarix yazılır, qərar isə
-    // ayrıca veriləcək (bax: lib/odenis.js — zəncirin qalan halqaları).
-    // Köhnə "loan/take" (dərhal pul) yalnız köhnə testlər üçün qalıb və
-    // heç bir ekrandan çağırılmır.
-    case "muraciet/gonder": {
-      const mebleg = Number(action.muraciet?.mebleg) || 0;
-      if (mebleg <= 0 || state.muraciet) return state;
-      return { ...state, muraciet: { ...action.muraciet, hal: "gozleyir" } };
-    }
-
-    case "muraciet/legv":
-      return { ...state, muraciet: null };
-
-    case "loan/take": {
-      const amount = Number(action.amount) || 0;
-      if (amount <= 0) return state;
-      return {
-        ...state,
-        wallet: state.wallet + amount,
-        nextTxnId: state.nextTxnId + 1,
-        loan: { ...state.loan, active: true, amount, repay: computeRepayment(amount, LOAN_TERMS) },
-        txns: [
-          {
-            id: `t${state.nextTxnId}`,
-            nameKey: "txn.loan.name",
-            metaKey: "txn.loan.meta",
             amount,
           },
           ...state.txns,
@@ -307,9 +290,6 @@ export function StoreProvider({ children }) {
         showToast("toast.creditsSold", { amount: { money: carbonPayout() } });
       },
       siqnaliBagla: (id) => dispatch({ type: "siqnal/bagla", id }),
-      takeLoan: (amount) => dispatch({ type: "loan/take", amount }),
-      muracietGonder: (muraciet) => dispatch({ type: "muraciet/gonder", muraciet }),
-      muracietLegv: () => dispatch({ type: "muraciet/legv" }),
       setLocation: (location) => {
         dispatch({ type: "location/set", location });
         showToast("toast.locationSelected", { name: location.name });

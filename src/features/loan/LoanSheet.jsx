@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Icon } from "../../components/Icon.jsx";
 import { Aqronom } from "../../components/Aqronom.jsx";
 import { Sheet } from "../../components/Sheet.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { useStore } from "../../state/store.jsx";
-import { LOAN_TERMS } from "../../services/farm.js";
+import { KREDIT_SERTLERI } from "../../../lib/kreditSertler.js";
+import { ayliqFaiz } from "../../../lib/kreditOdenis.js";
 import { kreditImkani } from "./useKredit.js";
 
 /**
@@ -24,11 +25,30 @@ import { kreditImkani } from "./useKredit.js";
  * Sheet primitivində qurulub: sürüşdürüb bağlama, fokus tələsi, Escape —
  * hamısı ordan gəlir (əvvəl bunların heç biri yox idi).
  */
-export function LoanSheet({ onClose, indeksHali = null }) {
+export function LoanSheet({ onClose, indeksHali = null, kreditHali, onOpenHesab }) {
   const { t, money } = useI18n();
-  const { state, actions } = useStore();
+  const { state } = useStore();
   const [addim, setAddim] = useState(0);
   const [izahAcilib, setIzahAcilib] = useState(false);
+  // İdempotentlik açarı: panel bir dəfə açılanda bir açar. Şəbəkə itsə və
+  // fermer təkrar toxunsa server İKİNCİ müraciət yaratmır.
+  // (Açar render zamanı YOX, ilk göndərişdə yaradılır: Date.now/Math.random
+  // render içində qadağandır — react-hooks/purity.)
+  const acarRef = useRef(null);
+
+  // SERVER vəziyyəti — müraciət, qərar, təklif, kredit (bax: useKreditVeziyyeti)
+  const serverHal = kreditHali?.hal ?? "yuklenir";
+  const muraciet = kreditHali?.muraciet ?? null;
+  const teklif = kreditHali?.teklif ?? null;
+  const aktivKredit = kreditHali?.kredit ?? null;
+  const qerar = kreditHali?.qerar ?? null;
+  const acıqMuraciet =
+    muraciet && ["submitted", "reviewing", "approved"].includes(muraciet.hal) ? muraciet : null;
+  const teklifVar = muraciet?.hal === "offer_issued" && teklif?.hal === "issued";
+  const reddedilib = muraciet?.hal === "rejected" && addim === 2;
+  // Slayder axını yalnız açıq iş yoxdursa görünür
+  const axinAcıq =
+    serverHal === "hazir" && !acıqMuraciet && !teklifVar && !aktivKredit && !reddedilib;
 
   const kredit = kreditImkani({
     sahe: state.sahe,
@@ -47,18 +67,13 @@ export function LoanSheet({ onClose, indeksHali = null }) {
   const ayAdi = (tarix) =>
     tarix ? `${t(`ay.${tarix.getMonth() + 1}`)} ${tarix.getFullYear()}` : "";
 
-  const gonder = () => {
-    actions.muracietGonder({
-      mebleg,
-      ayliqFaiz: kredit.ayliqFaiz1(mebleg),
-      muddetAy: kredit.muddetAy,
-      odemeTarixi: kredit.odemeTarixi.toISOString(),
-      bitki: state.chat.crop,
-      hektar: state.sahe?.hektar,
-      tavan: kredit.maxKredit,
-      tarix: new Date().toISOString(),
-    });
-    setAddim(2);
+  // Serverə YALNIZ MƏBLƏĞ gedir. Müddət, dərəcə, limit, bal və qərar
+  // serverdə hesablanır — klientin hesabladığı rəqəm bağlayıcı deyil
+  // (bax: api/kredit.js, lib/kredit.js).
+  const gonder = async () => {
+    acarRef.current ??= `m-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const netice = await kreditHali.muracietEt(mebleg, acarRef.current);
+    if (netice.ok) setAddim(2);
   };
 
   // "Niyə bu qədər?" — tavanın hər addımı rəqəmlə (Nubank "Me explica").
@@ -78,12 +93,176 @@ export function LoanSheet({ onClose, indeksHali = null }) {
     <Sheet
       acilib
       onBagla={onClose}
-      baslik={addim === 2 ? t("kredit.gonderildiBasliq") : t("loan.title")}
-      altYazi={addim === 2 ? null : t("kredit.altYazi")}
+      baslik={t("loan.title")}
+      altYazi={t("kredit.altYazi")}
     >
       <div className="px-4 pb-4">
-        {/* ── Artıq gözləyən müraciət var: ikincisi göndərilmir ─────── */}
-        {state.muraciet && addim !== 2 && (
+        {/* ── Server vəziyyəti: yüklənir / giriş yoxdur / xəta ───────── */}
+        {serverHal === "yuklenir" && (
+          <div className="py-4">
+            <div className="skelet mx-auto h-8 w-40 rounded-xl" />
+            <div className="skelet mt-3 h-3 w-full rounded" />
+            <div className="skelet mt-2 h-3 w-2/3 rounded" />
+          </div>
+        )}
+
+        {/* Kredit hesaba bağlıdır: sahibsiz maliyyə qeydi ola bilməz.
+            Qalan ekranlar əvvəlki kimi qeydiyyatsız işləyir. */}
+        {serverHal === "girisYox" && (
+          <div className="py-2 text-center">
+            <Icon name="ShieldCheck" size={22} color={C.goldDeep} />
+            <p className="mt-2 text-sm font-bold" style={{ color: C.ink }}>
+              {t("kredit.girisBasliq")}
+            </p>
+            <p className="mx-auto mt-1 max-w-[32ch] text-xs leading-relaxed" style={{ color: C.muted }}>
+              {t("kredit.girisIzah")}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onOpenHesab?.();
+              }}
+              className="mt-4 w-full rounded-xl py-3 text-sm font-bold"
+              style={{ backgroundColor: C.pine, color: "#fff" }}
+            >
+              {t("hesab.cta")}
+            </button>
+          </div>
+        )}
+
+        {(serverHal === "xeta" || serverHal === "qurulmayib") && (
+          <div className="py-2 text-center">
+            <Icon name="AlertCircle" size={22} color={C.muted} />
+            <p className="mt-2 text-sm font-bold" style={{ color: C.ink }}>
+              {t(serverHal === "qurulmayib" ? "kredit.serverYoxdur" : "kredit.xetaBasliq")}
+            </p>
+            <p className="mx-auto mt-1 max-w-[32ch] text-xs leading-relaxed" style={{ color: C.muted }}>
+              {t("kredit.xetaIzah")}
+            </p>
+            {serverHal === "xeta" && (
+              <button
+                type="button"
+                onClick={() => kreditHali.yenile()}
+                className="mt-4 w-full rounded-xl py-3 text-sm font-bold"
+                style={{ backgroundColor: C.pine, color: "#fff" }}
+              >
+                {t("kredit.tekrarCehd")}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ── Aktiv kredit: qalıq borc və faiz bazası ─────────────────── */}
+        {serverHal === "hazir" && aktivKredit && (
+          <div className="py-2">
+            <p className="text-sm font-bold" style={{ color: C.ink }}>
+              {t("kredit.aktivBasliq")}
+            </p>
+            <div className="mt-2 flex items-baseline justify-between gap-3">
+              <span className="text-xs" style={{ color: C.muted }}>
+                {t("kredit.qaliqBorc")}
+              </span>
+              <span
+                className="text-lg font-extrabold"
+                style={{ color: C.ink, fontFamily: font.display, fontVariantNumeric: "tabular-nums" }}
+              >
+                {money(aktivKredit.qaliqBorc)}
+              </span>
+            </div>
+            <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
+              {t("kredit.aktivIzah", {
+                faiz: { money: ayliqFaiz(aktivKredit.qaliqBorc, aktivKredit.illikFaiz) },
+              })}
+            </p>
+          </div>
+        )}
+
+        {/* ── Təklif hazırdır: qəbul et / imtina ──────────────────────── */}
+        {serverHal === "hazir" && teklifVar && !aktivKredit && (
+          <div className="py-2 text-center">
+            <div className="relative mx-auto mb-2 inline-block">
+              {/* Konfeti yalnız TƏZƏ göndərilmiş müraciətdə düşür — paneli
+                  yenidən açanda bayram təkrarlanmır (bax: index.css, .konfeti) */}
+              {addim === 2 &&
+                [
+                  ["8%", "0ms", C.gold],
+                  ["24%", "120ms", C.field],
+                  ["40%", "40ms", "#B79BE0"],
+                  ["56%", "180ms", C.gold],
+                  ["72%", "80ms", "#D9483B"],
+                  ["88%", "150ms", C.field],
+                  ["16%", "220ms", "#4A90E2"],
+                  ["64%", "260ms", C.goldDeep],
+                ].map(([sol, gecikme, reng]) => (
+                  <span
+                    key={`${sol}-${gecikme}`}
+                    className="konfeti"
+                    style={{ left: sol, animationDelay: gecikme, backgroundColor: reng }}
+                  />
+                ))}
+              <Aqronom hal="sevincli" bitki={state.chat.crop} olcu={150} />
+            </div>
+            <p className="text-sm font-bold" style={{ color: C.ink }}>
+              {t("kredit.teklifBasliq")}
+            </p>
+            <p
+              className="mt-1 text-3xl font-extrabold"
+              style={{ color: C.ink, fontFamily: font.display, fontVariantNumeric: "tabular-nums" }}
+            >
+              {money(teklif.mebleg)}
+            </p>
+            {qerar?.sebebler?.includes("limitAsagiSalinib") && (
+              <p className="mx-auto mt-1 max-w-[32ch] text-xs leading-relaxed" style={{ color: C.muted }}>
+                {t("kredit.teklifAzaldilib", { istenilen: { money: muraciet.mebleg } })}
+              </p>
+            )}
+            <p className="mx-auto mt-2 max-w-[34ch] text-xs leading-relaxed" style={{ color: C.muted }}>
+              {t("kredit.teklifIzah", {
+                faiz: { money: ayliqFaiz(teklif.mebleg, teklif.illikFaiz) },
+                ay: teklif.muddetAy,
+              })}
+            </p>
+            <button
+              type="button"
+              disabled={kreditHali.gedir}
+              onClick={() => kreditHali.teklifiQebulEt(teklif.id)}
+              className="mt-4 w-full rounded-xl py-3 text-sm font-bold"
+              style={{ backgroundColor: C.gold, color: C.pine, opacity: kreditHali.gedir ? 0.6 : 1 }}
+            >
+              {kreditHali.gedir ? t("kredit.gedir") : t("kredit.teklifQebulCta")}
+            </button>
+            <button
+              type="button"
+              disabled={kreditHali.gedir}
+              onClick={() => kreditHali.legvEt()}
+              className="mt-2 w-full rounded-xl py-2.5 text-xs font-bold"
+              style={{ backgroundColor: C.mist, color: C.danger }}
+            >
+              {t("kredit.teklifImtinaCta")}
+            </button>
+          </div>
+        )}
+
+        {/* ── Rədd edildi: səbəb açıq deyilir ─────────────────────────── */}
+        {serverHal === "hazir" && reddedilib && (
+          <div className="py-2 text-center">
+            <Aqronom hal="narahat" bitki={state.chat.crop} olcu={110} gorunus="tam" />
+            <p className="mt-2 text-sm font-bold" style={{ color: C.ink }}>
+              {t("kredit.reddBasliq")}
+            </p>
+            <p className="mx-auto mt-1 max-w-[34ch] text-xs leading-relaxed" style={{ color: C.muted }}>
+              {t(
+                qerar?.sebebler?.includes("qabiliyyetAzdir")
+                  ? "kredit.reddQabiliyyet"
+                  : "kredit.reddUmumi",
+              )}
+            </p>
+          </div>
+        )}
+
+        {/* ── Baxılan müraciət var: ikincisi göndərilmir ──────────────── */}
+        {serverHal === "hazir" && acıqMuraciet && (
           <div className="py-2">
             <div className="flex items-center gap-2">
               <Icon name="Clock" size={15} color={C.goldDeep} />
@@ -92,14 +271,12 @@ export function LoanSheet({ onClose, indeksHali = null }) {
               </p>
             </div>
             <p className="mt-1.5 text-xs leading-relaxed" style={{ color: C.muted }}>
-              {t("kredit.movcudIzah", {
-                mebleg: { money: state.muraciet.mebleg },
-                tarix: ayAdi(new Date(state.muraciet.odemeTarixi)),
-              })}
+              {t("kredit.movcudIzahServer", { mebleg: { money: acıqMuraciet.mebleg } })}
             </p>
             <button
               type="button"
-              onClick={() => actions.muracietLegv()}
+              disabled={kreditHali.gedir}
+              onClick={() => kreditHali.legvEt()}
               className="mt-3 w-full rounded-xl py-2.5 text-xs font-bold"
               style={{ backgroundColor: C.mist, color: C.danger }}
             >
@@ -108,8 +285,19 @@ export function LoanSheet({ onClose, indeksHali = null }) {
           </div>
         )}
 
+        {/* Yazma əməlinin xətası — fermerə görünür, sükutla udulmur */}
+        {kreditHali?.xetaAcari && (
+          <p
+            role="alert"
+            className="mt-2 rounded-lg px-2.5 py-2 text-xs leading-relaxed"
+            style={{ backgroundColor: "#FBEAE7", color: C.danger }}
+          >
+            {t(`kredit.xeta.${kreditHali.xetaAcari}`)}
+          </p>
+        )}
+
         {/* ── Sahə/bitki yoxdur: imkan hesablana bilmir ─────────────── */}
-        {!state.muraciet && kredit.hal === "olculmur" && (
+        {axinAcıq && kredit.hal === "olculmur" && (
           <div className="py-2 text-center">
             <Icon name="Satellite" size={22} color={C.muted} />
             <p className="mt-2 text-sm font-bold" style={{ color: C.ink }}>
@@ -126,7 +314,7 @@ export function LoanSheet({ onClose, indeksHali = null }) {
         )}
 
         {/* ── Tavan çox kiçikdir: bunu demək də dürüstlükdür ────────── */}
-        {!state.muraciet && kredit.hal === "imkanYoxdur" && (
+        {axinAcıq && kredit.hal === "imkanYoxdur" && (
           <div className="py-2">
             <p className="text-sm font-bold" style={{ color: C.ink }}>
               {t("kredit.imkanYoxBasliq")}
@@ -147,7 +335,7 @@ export function LoanSheet({ onClose, indeksHali = null }) {
         )}
 
         {/* ── Addım 0: məbləği seç ──────────────────────────────────── */}
-        {!state.muraciet && hazir && addim === 0 && (
+        {axinAcıq && hazir && addim === 0 && (
           <div>
             {/* Aqro slaydere REAKSİYA VERİR (Leo kimi): tavana yaxınlaşanda
                 fikirləşir — "çox götürürsən, ödəyə biləcəksən?" sözsüz deyilir.
@@ -265,7 +453,7 @@ export function LoanSheet({ onClose, indeksHali = null }) {
         )}
 
         {/* ── Addım 1: şərtlər ──────────────────────────────────────── */}
-        {!state.muraciet && hazir && addim === 1 && (
+        {axinAcıq && hazir && addim === 1 && (
           <div>
             {/* "Bir ödəniş" sətri yoxdur: faiz aylıqdır, əsas borc çevikdir,
                 son tarix əsas borcun TAM bağlanması üçündür.
@@ -289,7 +477,7 @@ export function LoanSheet({ onClose, indeksHali = null }) {
                 deger: t("kredit.setr.sonTarixDeger", { tarix: ayAdi(kredit.odemeTarixi) }),
               },
               { ad: t("kredit.setr.muddet"), deger: t("kredit.setr.muddetDeger", { ay: kredit.muddetAy }) },
-              { ad: t("loan.term.rate"), deger: `${LOAN_TERMS.annualRate}%`, ikinci: true },
+              { ad: t("loan.term.rate"), deger: `${KREDIT_SERTLERI.illikFaiz}%`, ikinci: true },
               {
                 ad: t("loan.term.collateral"),
                 deger: t("loan.term.collateralValue"),
@@ -340,55 +528,18 @@ export function LoanSheet({ onClose, indeksHali = null }) {
 
             <button
               type="button"
+              disabled={kreditHali.gedir}
               onClick={gonder}
               className="mt-4 w-full rounded-xl py-3 text-sm font-bold"
-              style={{ backgroundColor: C.gold, color: C.pine }}
+              style={{ backgroundColor: C.gold, color: C.pine, opacity: kreditHali.gedir ? 0.6 : 1 }}
             >
-              {t("kredit.gonderCta", { mebleg: { money: mebleg } })}
+              {kreditHali.gedir
+                ? t("kredit.gedir")
+                : t("kredit.gonderCta", { mebleg: { money: mebleg } })}
             </button>
           </div>
         )}
 
-        {/* ── Addım 2: müraciət göndərildi (pul köçürülmür!) ────────── */}
-        {addim === 2 && (
-          <div className="py-2 text-center">
-            <div className="relative mx-auto mb-2 inline-block">
-              {/* Konfeti brend rəngləridir və BİR DƏFƏ düşür — sonsuz bayram
-                  yorucudur (bax: index.css, .konfeti) */}
-              {[
-                ["8%", "0ms", C.gold],
-                ["24%", "120ms", C.field],
-                ["40%", "40ms", "#B79BE0"],
-                ["56%", "180ms", C.gold],
-                ["72%", "80ms", "#D9483B"],
-                ["88%", "150ms", C.field],
-                ["16%", "220ms", "#4A90E2"],
-                ["64%", "260ms", C.goldDeep],
-              ].map(([sol, gecikme, reng]) => (
-                <span
-                  key={`${sol}-${gecikme}`}
-                  className="konfeti"
-                  style={{ left: sol, animationDelay: gecikme, backgroundColor: reng }}
-                />
-              ))}
-              <Aqronom hal="sevincli" bitki={state.chat.crop} olcu={150} />
-            </div>
-            <p className="text-sm font-bold" style={{ color: C.ink }}>
-              {t("kredit.gonderildiSetir", { mebleg: { money: mebleg } })}
-            </p>
-            <p className="mx-auto mt-1 mb-4 max-w-[32ch] text-xs leading-relaxed" style={{ color: C.muted }}>
-              {t("kredit.gonderildiQeyd", { tarix: ayAdi(kredit.odemeTarixi) })}
-            </p>
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full rounded-xl py-3 text-sm font-bold"
-              style={{ backgroundColor: C.pine, color: "#fff" }}
-            >
-              {t("common.close")}
-            </button>
-          </div>
-        )}
       </div>
     </Sheet>
   );

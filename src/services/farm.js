@@ -1,3 +1,5 @@
+import { KREDIT_SERTLERI } from "../../lib/kreditSertler.js";
+
 // Prototip məlumatları. 3-cü mərhələdə bu modul real API-ni çağıracaq,
 // qalan kod isə dəyişməyəcək — ekranlar yalnız bu formaya baxır.
 export const FARM = {
@@ -13,14 +15,21 @@ export const FARM = {
 };
 
 
+// LEGACY: yalnız köhnə `loan/take` reducer-i və onun testləri üçün qalır —
+// heç bir ekran bunu çağırmır. Faiz dərəcəsi PAYLAŞILAN mənbədən gəlir
+// (lib/kreditSertler.js): iki yerdə yazılsa sürüşərdi.
 export const LOAN_TERMS = {
-  annualRate: 11.5,
+  annualRate: KREDIT_SERTLERI.illikFaiz,
   termMonths: 5,
   min: 1000,
   step: 500,
 };
 
-/** Bir ödənişli sadə faiz: məbləğ + illik faizin müddətə düşən hissəsi */
+/**
+ * LEGACY bullet ödəniş. Məhsul qaydası ARTIQ BU DEYİL: faiz aylıq ödənilir
+ * və qalan əsas borca hesablanır (bax: lib/kreditOdenis.js). Funksiya yalnız
+ * köhnə reducer yolunu və onun testlərini yaşatmaq üçün qalıb.
+ */
 export function computeRepayment(amount, terms = LOAN_TERMS) {
   const { annualRate, termMonths } = terms;
   return Math.round(amount * (1 + (annualRate / 100) * (termMonths / 12)));

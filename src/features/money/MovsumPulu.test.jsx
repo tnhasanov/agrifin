@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../../App.jsx";
 import { renderApp, seedState, WEATHER_FIXTURE } from "../../test/render.jsx";
@@ -15,14 +15,36 @@ const SAHE = {
   ],
 };
 
-function seed({ sahe = SAHE, crop = "pomidor", muraciet = null } = {}) {
+function seed({ sahe = SAHE, crop = "pomidor" } = {}) {
   seedState({
     location: DEFAULT_LOCATION,
     onboarded: true,
     sahe,
     chat: { messages: [], crop, referral: false },
-    ...(muraciet ? { muraciet } : {}),
   });
+}
+
+/**
+ * Kredit vəziyyəti SERVERDƏN gəlir — localStorage-a müraciət "əkmək" artıq
+ * mümkün deyil (bax: api/kredit.js). Testlər serveri təqlid edir.
+ */
+function serverVeziyyeti(veziyyet) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((url, secim) => {
+      if (String(url).includes("/api/kredit")) {
+        const govde = secim?.body ? JSON.parse(secim.body) : null;
+        if (govde?.emel === "legv") {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ muraciet: null, qerar: null, teklif: null, kredit: null }),
+          });
+        }
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(veziyyet) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(WEATHER_FIXTURE) });
+    }),
+  );
 }
 
 beforeEach(() => {
@@ -70,21 +92,16 @@ describe("mövsüm pulu — Pul ekranı", () => {
     expect(screen.queryByText("Gözlənilən xalis gəlir")).not.toBeInTheDocument();
   });
 
-  it("gözləyən müraciət bağlanmalı əsas borc sətri kimi görünür", () => {
-    seed({
-      muraciet: {
-        mebleg: 3000,
-        ayliqFaiz: 29,
-        muddetAy: 10,
-        odemeTarixi: "2027-06-01T00:00:00.000Z",
-        bitki: "pomidor",
-        hektar: 10,
-        tavan: 6000,
-        tarix: "2026-08-26T00:00:00.000Z",
-        hal: "gozleyir",
-      },
+  it("gözləyən müraciət bağlanmalı əsas borc sətri kimi görünür", async () => {
+    seed();
+    serverVeziyyeti({
+      muraciet: { id: 1, hal: "reviewing", mebleg: 3000, muddetAy: 10, bitki: "pomidor" },
+      qerar: null,
+      teklif: null,
+      kredit: null,
     });
     renderApp(<App />);
+    await screen.findByText("Bağlanmalı əsas borc (müraciət)");
 
     // Faiz aylıq ödənilir və qalığa hesablanır — "yekun ödəniş" rəqəmi
     // yoxdur, kartda əsas borcun özü görünür
@@ -102,26 +119,22 @@ describe("mövsüm pulu — Pul ekranı", () => {
   // Müraciət kartı LoanSheet-i açır və ləğv oradan mümkündür
   it("müraciəti panelin içindən geri götürmək olur", async () => {
     const user = userEvent.setup();
-    seed({
-      muraciet: {
-        mebleg: 3000,
-        ayliqFaiz: 29,
-        muddetAy: 10,
-        odemeTarixi: "2027-06-01T00:00:00.000Z",
-        bitki: "pomidor",
-        hektar: 10,
-        tavan: 6000,
-        tarix: "2026-08-26T00:00:00.000Z",
-        hal: "gozleyir",
-      },
+    seed();
+    serverVeziyyeti({
+      muraciet: { id: 1, hal: "reviewing", mebleg: 3000, muddetAy: 10, bitki: "pomidor" },
+      qerar: null,
+      teklif: null,
+      kredit: null,
     });
     renderApp(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Gözləyən müraciətiniz var" }));
-    expect(screen.getByText(/müraciət baxılmadadır/i)).toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: "Gözləyən müraciətiniz var" }));
+    expect(await screen.findByText(/müraciətiniz baxılır/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Müraciəti geri götür" }));
-    // Panel slayder addımına qayıdır, kart isə silinir
-    expect(screen.queryByText(/Kredit müraciəti —/)).not.toBeInTheDocument();
+    // Serverin qaytardığı yeni vəziyyət: müraciət yoxdur → kart itir
+    await waitFor(() =>
+      expect(screen.queryByText(/Kredit müraciəti —/)).not.toBeInTheDocument(),
+    );
   });
 });

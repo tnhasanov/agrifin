@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App.jsx";
-import { renderApp, seedLocation, seedState, WEATHER_FIXTURE } from "./test/render.jsx";
+import { kreditServeri, renderApp, seedLocation, seedState, WEATHER_FIXTURE } from "./test/render.jsx";
 import { DEFAULT_LOCATION } from "./services/location.js";
 
 beforeEach(() => {
@@ -96,12 +96,21 @@ describe("AgriFin tətbiqi", () => {
       },
       chat: { messages: [], crop: "pomidor", referral: false },
     });
+    // Kredit vəziyyəti SERVERDƏDİR — localStorage-da deyil (bax: api/kredit.js)
+    const server = kreditServeri();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url, secim) =>
+        server.isle(url, secim) ??
+        Promise.resolve({ ok: true, json: () => Promise.resolve(WEATHER_FIXTURE) }),
+      ),
+    );
     renderApp(<App />);
 
     await user.click(screen.getByRole("button", { name: "Məhsul dövrü krediti al" }));
 
     // Tavan izah olunur (Nubank "Me explica") və slayder tavana bağlıdır
-    const slayder = screen.getByRole("slider");
+    const slayder = await screen.findByRole("slider");
     expect(slayder).toBeInTheDocument();
 
     // Aqro slaydere reaksiya verir: tavana yaxınlaşanda fikirləşir.
@@ -158,19 +167,32 @@ describe("AgriFin tətbiqi", () => {
     expect(screen.queryByText(/Peyk məlumatları ilə təsdiqlənib/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /üçün müraciət göndər/ }));
-    expect(screen.getByText(/müraciətiniz qeydə alındı/)).toBeInTheDocument();
+
+    // Qərarı SERVER verir: nəticə təklifdir, yerli "gözləyir" yazısı deyil
+    await waitFor(() => expect(screen.getByText("Təklifiniz hazırdır")).toBeInTheDocument());
     // Uğur anı: konfeti bir dəfə səpələnir (bax: index.css, .konfeti)
     expect(document.querySelectorAll(".konfeti")).toHaveLength(8);
+
+    // Göndərilən yükdə YALNIZ məbləğ var — qərar/limit/dərəcə klientdən getmir
+    const cagiris = fetch.mock.calls.find(
+      ([, secim]) => secim?.body && JSON.parse(secim.body).emel === "muraciet",
+    );
+    const yuk = JSON.parse(cagiris[1].body);
+    expect(Object.keys(yuk).sort()).toEqual(["acar", "emel", "mebleg"]);
+
+    // Təklifi qəbul → aktiv kredit
+    await user.click(screen.getByRole("button", { name: "Təklifi qəbul et" }));
+    await waitFor(() => expect(screen.getByText("Aktiv krediti\u00adniz")).toBeInTheDocument());
+    expect(server.oxu().kredit.hal).toBe("active");
     // PUL KÖÇÜRÜLMÜR: pulqabı dəyişməz qalır.
     // İki "Bağla" var: Sheet-in başlıqdakı düyməsi və məzmundakı CTA
     await user.click(screen.getAllByRole("button", { name: "Bağla" }).at(-1));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(screen.getByText("7.280 ₼")).toBeInTheDocument();
 
-    // Müraciət Pul ekranında gözləyir
+    // Aktiv kredit Pul ekranında görünür — nümunə rəqəm deyil, serverdən
     await user.click(screen.getByRole("button", { name: "Pul" }));
-    expect(screen.getByText(/Kredit müraciəti —/)).toBeInTheDocument();
-    expect(screen.getByText("Gözləyir")).toBeInTheDocument();
+    expect(screen.getByText("Qalan əsas borc")).toBeInTheDocument();
   });
 
   // Peyk təsdiqi girovun əvəzi deyil, amma ölçmə VARSA bunu demək olar.
@@ -197,6 +219,13 @@ describe("AgriFin tətbiqi", () => {
                   olcmeSayi: 6,
                 })),
               }),
+          });
+        }
+        if (yol.includes("/api/kredit")) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            json: () => Promise.resolve({ muraciet: null, qerar: null, teklif: null, kredit: null }),
           });
         }
         if (yol.includes("/api/")) return Promise.resolve({ ok: false, status: 501 });

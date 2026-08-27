@@ -8,6 +8,7 @@ import { useStore } from "../state/store.jsx";
 import { formatSignedMoney } from "../lib/format.js";
 import { FARM } from "../services/farm.js";
 import { MovsumPulu } from "../features/money/MovsumPulu.jsx";
+import { ayliqFaiz } from "../../lib/kreditOdenis.js";
 
 const QUICK_ACTIONS = [
   { id: "send", labelKey: "money.send", icon: "ArrowUpRight" },
@@ -15,10 +16,20 @@ const QUICK_ACTIONS = [
   { id: "card", labelKey: "money.card", icon: "CreditCard" },
 ];
 
-export function MoneyScreen({ onOpenLoan, indeksHali = null }) {
+export function MoneyScreen({ onOpenLoan, indeksHali = null, kreditHali = null }) {
   const { t, money, lang } = useI18n();
   const { state } = useStore();
-  const { loan, txns } = state;
+  const { txns } = state;
+
+  // Kredit vəziyyəti SERVERDƏN gəlir (bax: features/loan/useKreditVeziyyeti).
+  // Əvvəl burada localStorage-dakı `muraciet` və nümunə `loan` obyekti vardı —
+  // biri fermerin əl ilə dəyişə biləcəyi maliyyə vəziyyəti, digəri uydurma
+  // 8.000 ₼ borc idi. İkisi də getdi.
+  const muraciet = kreditHali?.muraciet ?? null;
+  const teklif = kreditHali?.teklif ?? null;
+  const kredit = kreditHali?.kredit ?? null;
+  const baxilir = muraciet && ["submitted", "reviewing", "approved"].includes(muraciet.hal);
+  const teklifVar = muraciet?.hal === "offer_issued" && teklif?.hal === "issued";
 
   return (
     <div className="px-4 pb-4">
@@ -49,7 +60,7 @@ export function MoneyScreen({ onOpenLoan, indeksHali = null }) {
       </div>
 
       {/* Mövsüm pulu — fermerin "maaş dövrü" (bax: features/money/MovsumPulu) */}
-      <MovsumPulu indeksHali={indeksHali} />
+      <MovsumPulu indeksHali={indeksHali} kreditHali={kreditHali} />
 
       <div className="mt-3 grid grid-cols-3 gap-2">
         {QUICK_ACTIONS.map((action) => (
@@ -72,52 +83,84 @@ export function MoneyScreen({ onOpenLoan, indeksHali = null }) {
       {/* Gözləyən kredit müraciəti — dərhal pul YOXDUR, qərar ayrıca veriləcək
           (bax: features/loan/LoanSheet.jsx). Kart müraciətin yaşadığını
           göstərir; ləğv panelin içindədir ki, təsadüfi toxunuş silməsin. */}
-      {state.muraciet && (
-        <Card style={{ marginBottom: 8 }} onClick={onOpenLoan} ariaLabel={t("kredit.movcudBasliq")}>
+      {(baxilir || teklifVar) && (
+        <Card
+          style={{ marginBottom: 8 }}
+          onClick={onOpenLoan}
+          ariaLabel={t(teklifVar ? "kredit.teklifBasliq" : "kredit.movcudBasliq")}
+        >
           <div className="flex items-center gap-3">
-            <div className="rounded-xl p-2" style={{ backgroundColor: C.goldSoft }}>
-              <Icon name="Clock" size={16} color={C.goldDeep} />
+            <div
+              className="rounded-xl p-2"
+              style={{ backgroundColor: teklifVar ? C.fieldSoft : C.goldSoft }}
+            >
+              <Icon
+                name={teklifVar ? "Check" : "Clock"}
+                size={16}
+                color={teklifVar ? C.field : C.goldDeep}
+              />
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold" style={{ color: C.ink }}>
-                {t("kredit.kartBasliq", { mebleg: { money: state.muraciet.mebleg } })}
+                {t("kredit.kartBasliq", {
+                  mebleg: { money: teklifVar ? teklif.mebleg : muraciet.mebleg },
+                })}
               </p>
               <p className="text-xs" style={{ color: C.muted }}>
-                {t("kredit.kartAltyazi")}
+                {t(teklifVar ? "kredit.kartTeklifAltyazi" : "kredit.kartAltyazi")}
               </p>
             </div>
-            <Chip label={t("kredit.gozleyir")} color={C.goldDeep} bg={C.goldSoft} />
+            <Chip
+              label={t(teklifVar ? "kredit.teklifHazir" : "kredit.gozleyir")}
+              color={teklifVar ? C.field : C.goldDeep}
+              bg={teklifVar ? C.fieldSoft : C.goldSoft}
+            />
           </div>
         </Card>
       )}
 
-      {loan.active && (
-        <Card style={{ marginBottom: 8 }}>
+      {/* AKTİV KREDİT — həqiqi qalıq borc, nümunə rəqəm deyil. Faiz aylıq
+          ödənilir və QALAN əsas borca hesablanır, ona görə "yekun ödəniş"
+          sətri yoxdur (bax: lib/kreditOdenis.js). */}
+      {kredit && kredit.hal === "active" && (
+        <Card style={{ marginBottom: 8 }} onClick={onOpenLoan} ariaLabel={t("kredit.aktivBasliq")}>
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
               {t("money.cropLoan")}
             </h3>
             <Chip
               icon="Calendar"
-              label={t("money.due", { date: t("date.aug15.short") })}
+              label={t("kredit.qaliqCipi", { faiz: { money: ayliqFaiz(kredit.qaliqBorc, kredit.illikFaiz) } })}
               color={C.goldDeep}
               bg={C.goldSoft}
             />
           </div>
-          <p className="mt-1 text-xs" style={{ color: C.muted }}>
-            {t("money.loanSummary", {
-              amount: { money: loan.amount },
-              repay: { money: loan.repay },
-            })}
-          </p>
-          <div className="mt-3 h-2 rounded-full" style={{ backgroundColor: C.mist }}>
+          <div className="mt-2 flex items-baseline justify-between gap-3">
+            <span className="text-xs" style={{ color: C.muted }}>
+              {t("kredit.qaliqBorc")}
+            </span>
+            <span
+              className="text-lg font-extrabold"
+              style={{ color: C.ink, fontFamily: font.display, fontVariantNumeric: "tabular-nums" }}
+            >
+              {money(kredit.qaliqBorc)}
+            </span>
+          </div>
+          {/* Ödənilmiş pay: ilkin əsas borcdan nə qədəri bağlanıb */}
+          <div className="mt-2 h-2 overflow-hidden rounded-full" style={{ backgroundColor: C.mist }}>
             <div
               className="bar-dolur h-2 rounded-full"
-              style={{ width: `${loan.seasonProgress}%`, backgroundColor: C.field }}
+              style={{
+                width: `${Math.round((1 - kredit.qaliqBorc / kredit.esasBorc) * 100)}%`,
+                backgroundColor: C.field,
+              }}
             />
           </div>
           <p className="mt-1 text-xs" style={{ color: C.muted }}>
-            {t("money.seasonProgress", { pct: loan.seasonProgress })}
+            {t("kredit.odenilib", {
+              odenilen: { money: kredit.esasBorc - kredit.qaliqBorc },
+              hamisi: { money: kredit.esasBorc },
+            })}
           </p>
         </Card>
       )}

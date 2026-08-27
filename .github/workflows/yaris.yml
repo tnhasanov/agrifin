@@ -1,0 +1,44 @@
+# Yarış testi — REAL Neon üzərində (bax: scripts/yaris-testi.mjs).
+#
+# Nə vaxt işləyir:
+#   • `yaris-test-run` adlı ref-ə push olunanda. Bu yol default branch
+#     tələb etmir: push tetikleyicisi workflow faylını PUSH OLUNAN ref-dən
+#     oxuyur. İstifadə: PR branch-ının head-ini bu ref-ə itələ —
+#       git push origin <branch>:yaris-test-run
+#   • workflow_dispatch (main-ə merge olunandan sonra Actions UI-dan).
+#
+# Tələb: repo sirri YARIS_DATABASE_URL — BİRDƏFƏLİK Neon branch-ının
+# connection string-i (Settings → Secrets and variables → Actions).
+# ANA BAZANIN URL-ını QOYMA: maliyyə cədvəlləri RESTRICT-dir, test
+# qalıqları silinə bilmir — test bitəndə Neon branch-ı bütöv silinir.
+# SESSION_SECRET burada test dəyəridir — birdəfəlik bazada sirr deyil.
+name: Yarış testi (real Neon)
+
+on:
+  push:
+    branches: [yaris-test-run]
+  workflow_dispatch:
+
+jobs:
+  yaris:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Yarış ssenariləri (60+60, idempotentlik, paralel qəbul)
+        env:
+          DATABASE_URL: ${{ secrets.YARIS_DATABASE_URL }}
+          SESSION_SECRET: test-sirri
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::YARIS_DATABASE_URL sirri qurulmayıb — Settings → Secrets and variables → Actions → New repository secret. Dəyər: BİRDƏFƏLİK Neon branch-ının connection string-i."
+            exit 1
+          fi
+          node scripts/yaris-testi.mjs

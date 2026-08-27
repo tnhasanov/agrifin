@@ -1,0 +1,37 @@
+# CI — hər PR və main-ə push.
+#
+# DEPLOY ETMİR: Vercel Git inteqrasiyası onsuz da deploy edir. Buranın işi
+# yalnız yoxlamaqdır — lint, test, build. Miqrasiyalar da qapıdan keçir:
+# testlər PGlite üzərində db/migrations/ fayllarını real işlədir
+# (bax: lib/miqrasiya.test.js), ona görə pozulmuş SQL burada tutulur.
+#
+# Node versiyası .nvmrc-dən oxunur — yerli, CI və package.json "engines"
+# eyni yerə baxsın deyə.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  yoxla:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Testlər (miqrasiya + domen + API + UI)
+        run: npm test
+
+      - name: Build
+        run: npm run build
