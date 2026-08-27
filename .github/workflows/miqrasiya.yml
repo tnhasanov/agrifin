@@ -1,0 +1,50 @@
+# Prod miqrasiya — YALNIZ MANUAL (workflow_dispatch).
+#
+# Push/commit bu workflow-nu HEÇ VAXT işə salmır: adi kod dəyişikliyi prod
+# sxeminə avtomatik toxunmamalıdır. İcra qərarı həmişə insanın əlindədir.
+#
+# Bağlantı GitHub Environment "production"-dakı PROD_DATABASE_URL sirrindən
+# gəlir (Settings → Environments → production → Add environment secret).
+# Connection string/parol heç vaxt loglanmır — icradan əvvəl yalnız
+# qeyri-sirr identifikator (host + baza adı) göstərilir; migrate skripti də
+# yalnız env açarının ADINI çap edir.
+#
+# Ardıcıllıq: npm ci → hədəfi göstər → db:migrate (uğursuzluqda exit 1) →
+# read-only yoxlama (jurnalda 001/002/003 + kredit cədvəllərinin varlığı).
+# Bu workflow DEPLOY ETMİR və MERGE ETMİR — yalnız db/migrations tətbiq edir.
+name: Prod miqrasiya (manual)
+
+on:
+  workflow_dispatch:
+
+concurrency: prod-miqrasiya
+
+jobs:
+  miqrasiya:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Hədəfi göstər (yalnız host və baza adı — sirr çap olunmur)
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::PROD_DATABASE_URL sirri qurulmayıb — Settings → Environments → production → Add environment secret."
+            exit 1
+          fi
+          node -e "const u = new URL(process.env.DATABASE_URL); console.log('Hədəf: ' + u.hostname + u.pathname)"
+
+      - name: Miqrasiyaları tətbiq et
+        run: npm run db:migrate
+
+      - name: Read-only yoxlama (jurnal + cədvəllər)
+        run: node scripts/miqrasiya-yoxla.mjs
