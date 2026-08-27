@@ -92,6 +92,12 @@ const INITIAL_TXNS = [
 const CHAT_LIMIT = 40;
 
 export const initialState = {
+  // ═══ DEMO PUL — REAL DEYİL ══════════════════════════════════════════
+  // wallet, txns və karbon satışı PROTOTİP NÜMUNƏLƏRİDİR: heç bir server
+  // hesabına bağlı deyil, heç bir kredit axını onları oxumur və ya yazmır
+  // (yoxlanılıb: api/kredit.js bu sahələrə toxunmur). Real pul hərəkəti
+  // gələndə bunlar da server hesabına köçəcək — o vaxta qədər bu blok
+  // yalnız vitrin məlumatıdır və real balansla QARIŞDIRILMAMALIDIR.
   wallet: 7280,
   // false olduqda ilk açılışda qeydiyyat axını göstərilir
   onboarded: false,

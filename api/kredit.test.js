@@ -229,7 +229,7 @@ describe("müraciət → qərar → təklif", () => {
     const [muraciet] = await sorgu("SELECT decision_inputs, calc_version FROM credit_applications");
     const g = muraciet.decision_inputs;
 
-    expect(muraciet.calc_version).toMatch(/^v1-/);
+    expect(muraciet.calc_version).toMatch(/^v2-[0-9a-f]{12}$/);
     expect(g.sahe).toMatchObject({ hektar: 10, bitki: "pomidor" });
     // Ümumi və xalis gəlir AYRI saxlanılır
     const pessimist = g.gelir.ssenariler.find((s) => s.ad === "pessimist");
@@ -242,6 +242,11 @@ describe("müraciət → qərar → təklif", () => {
     // Bal surəti
     expect(g.indeks.bal).toBeGreaterThan(0);
     expect(g.peyk.movsumSayi).toBe(6);
+    // Peyk girişlərinin ÖZÜ dondurulub: snapshot sonradan yenilənsə də
+    // qərarın nəyə baxdığı dəyişmir
+    expect(g.peyk.movsumler).toHaveLength(6);
+    expect(g.peyk.movsumler[0]).toMatchObject({ zirve: 0.72, etrafMedyan: 0.6 });
+    expect(g.peyk.hash).toMatch(/^[0-9a-f]{64}$/);
   });
 
   it("peyk tarixçəsi olmayan müraciət səbəbdə qeyd olunur", async () => {
@@ -350,10 +355,14 @@ describe("təklifin qəbulu və kredit", () => {
     expect(m.status).toBe("accepted");
     expect(t.status).toBe("accepted");
     expect(t.accepted_at).toBeTruthy();
-    // Yaranma hadisəsi jurnalda
-    const hadiseler = await sorgu("SELECT event_type, principal_after FROM loan_events");
+    // Qəbul = dərhal (simulyasiya olunmuş) ödəmə: hadisə 'disbursement',
+    // disbursed_at dolu — balans semantikası jurnalda tam görünür
+    const hadiseler = await sorgu("SELECT event_type, amount, principal_after FROM loan_events");
     expect(hadiseler).toHaveLength(1);
-    expect(hadiseler[0].event_type).toBe("created");
+    expect(hadiseler[0].event_type).toBe("disbursement");
+    expect(Number(hadiseler[0].principal_after)).toBe(Number(hadiseler[0].amount));
+    const [kreditSetri] = await sorgu("SELECT disbursed_at FROM loans");
+    expect(kreditSetri.disbursed_at).toBeTruthy();
   });
 
   it("təkrar sorğu İKİNCİ krediti yaratmır", async () => {
@@ -398,6 +407,58 @@ describe("təklifin qəbulu və kredit", () => {
     expect(await sorgu("SELECT id FROM loans")).toHaveLength(0);
     const [teklif] = await sorgu("SELECT status FROM credit_offers WHERE id=$1", [teklifId]);
     expect(teklif.status).toBe("expired");
+  });
+
+  // ═══ ATOMİKLİK: beş yazının beşi də bir ifadədədir ═══════════════
+  // Əvvəl müraciətin keçidi ifadədən sonra ayrıca gedirdi — o addım
+  // uğursuz olanda "təklif qəbul edilib + kredit var + müraciət hələ
+  // offer_issued" qalırdı. İndi ifadə bütöv uğursuz olur: heç bir cədvəl
+  // dəyişmir və təkrar cəhd təmiz vəziyyətdən işləyir.
+  it("qəbul yarıda qırılanda HEÇ BİR yarımçıq vəziyyət qalmır", async () => {
+    const { cookie, teklifId } = await teklifeQeder();
+
+    // Şəbəkə qırılmasını təqlid edirik: qəbul ifadəsi atılır
+    const esl = pg;
+    musterTeyin({
+      query(metn, params) {
+        if (metn.includes("yeni_kredit")) return Promise.reject(new Error("şəbəkə qırıldı"));
+        return esl.query(metn, params);
+      },
+    });
+    const cavab = await isle({ method: "POST", cookie, body: { emel: "teklif-qebul", teklifId } });
+    musterTeyin(pg);
+
+    expect(cavab.statusCode).toBe(500);
+    // Heç nə dəyişməyib: təklif açıq, müraciət offer_issued, kredit yoxdur
+    const [teklif] = await sorgu("SELECT status FROM credit_offers WHERE id=$1", [teklifId]);
+    const [muraciet] = await sorgu("SELECT status FROM credit_applications");
+    expect(teklif.status).toBe("issued");
+    expect(muraciet.status).toBe("offer_issued");
+    expect(await sorgu("SELECT id FROM loans")).toHaveLength(0);
+    expect(
+      await sorgu("SELECT id FROM credit_application_events WHERE event_type='offer_accepted'"),
+    ).toHaveLength(0);
+
+    // Təkrar cəhd təmiz vəziyyətdən uğurla keçir
+    const tekrar = await isle({ method: "POST", cookie, body: { emel: "teklif-qebul", teklifId } });
+    expect(tekrar.statusCode).toBe(200);
+    expect(tekrar.govde.kredit.hal).toBe("active");
+    const [son] = await sorgu("SELECT status FROM credit_applications");
+    expect(son.status).toBe("accepted");
+  });
+
+  it("qəbul müraciəti və hadisə jurnalını da EYNİ ifadədə bağlayır", async () => {
+    const { cookie, teklifId } = await teklifeQeder();
+    await isle({ method: "POST", cookie, body: { emel: "teklif-qebul", teklifId } });
+
+    const [muraciet] = await sorgu("SELECT status FROM credit_applications");
+    expect(muraciet.status).toBe("accepted");
+    const [hadise] = await sorgu(
+      "SELECT from_status, to_status, detay FROM credit_application_events WHERE event_type='offer_accepted'",
+    );
+    expect(hadise.from_status).toBe("offer_issued");
+    expect(hadise.to_status).toBe("accepted");
+    expect(hadise.detay.loan_id).toBeTruthy();
   });
 
   it("olmayan təklif 404 verir", async () => {
@@ -484,7 +545,7 @@ describe("ödəniş qalığı azaldır, faiz qalığa hesablanır", () => {
       "SELECT event_type, amount, principal_after FROM loan_events ORDER BY id",
     );
     expect(hadiseler.map((h) => h.event_type)).toEqual([
-      "created",
+      "disbursement",
       "principal_repayment",
       "principal_repayment",
     ]);
@@ -503,9 +564,124 @@ describe("ödəniş qalığı azaldır, faiz qalığa hesablanır", () => {
     }
   });
 
+  // ═══ YARIŞ ŞƏRAİTİ: tətbiq olunan məbləğ kilidli cari qalıqdandır ═══
+  it("100 qalığa eyni anda 60+60: cəmi 100 tətbiq olunur, mənfi borc yoxdur", async () => {
+    const { cookie } = await kreditAl(2000);
+    // Qalığı 100-ə salırıq
+    await isle({ method: "POST", cookie, body: { emel: "odenis", mebleg: 1900 } });
+
+    const [birinci, ikinci] = await Promise.all([
+      isle({ method: "POST", cookie, body: { emel: "odenis", mebleg: 60, acar: "yaris-a" } }),
+      isle({ method: "POST", cookie, body: { emel: "odenis", mebleg: 60, acar: "yaris-b" } }),
+    ]);
+
+    // İkisi də idarə olunan cavab alır — çılpaq 500 yoxdur
+    expect([birinci.statusCode, ikinci.statusCode].every((k) => [200, 404, 409].includes(k))).toBe(
+      true,
+    );
+
+    const [kredit] = await sorgu("SELECT principal_outstanding, status FROM loans");
+    // Mənfi borc QEYRİ-MÜMKÜNDÜR və cəmi 100-dən çox tətbiq olunmur
+    expect(Number(kredit.principal_outstanding)).toBeGreaterThanOrEqual(0);
+
+    const hadiseler = await sorgu(
+      "SELECT amount, principal_after FROM loan_events WHERE event_type='principal_repayment' ORDER BY id",
+    );
+    const cem = hadiseler.reduce((c, h) => c + Number(h.amount), 0);
+    expect(cem).toBeLessThanOrEqual(2000);
+    expect(cem + Number(kredit.principal_outstanding)).toBe(2000);
+    // Hər hadisənin amount-u HƏQİQƏTƏN tətbiq olunan məbləğdir, principal_after
+    // isə həmin andakı qalıqdır — ardıcıllıq öz-özünü təsdiqləyir
+    let qaliq = 2000;
+    for (const h of hadiseler) {
+      qaliq -= Number(h.amount);
+      expect(Number(h.principal_after)).toBe(qaliq);
+      expect(Number(h.amount)).toBeGreaterThan(0);
+      expect(Number(h.amount)).toBeLessThanOrEqual(1900);
+    }
+    // 60+60 → 60 və 40: ikinci sorğu yenilənmiş qalığı görür
+    if (hadiseler.length === 3) {
+      expect(Number(kredit.principal_outstanding)).toBe(0);
+      expect(kredit.status).toBe("repaid");
+      expect(hadiseler.slice(1).map((h) => Number(h.amount)).sort((a, b) => b - a)).toEqual([60, 40]);
+    }
+  });
+
+  it("eyni idempotentlik açarı İKİNCİ DƏFƏ tətbiq olunmur", async () => {
+    const { cookie } = await kreditAl(2000);
+
+    const birinci = await isle({
+      method: "POST",
+      cookie,
+      body: { emel: "odenis", mebleg: 300, acar: "tekrar-1" },
+    });
+    const ikinci = await isle({
+      method: "POST",
+      cookie,
+      body: { emel: "odenis", mebleg: 300, acar: "tekrar-1" },
+    });
+
+    // Təkrar sorğu uğurla cavablanır (idempotent), amma tətbiq OLUNMUR
+    expect(birinci.statusCode).toBe(200);
+    expect(ikinci.statusCode).toBe(200);
+    expect(ikinci.govde.kredit.qaliqBorc).toBe(1700);
+
+    const hadiseler = await sorgu(
+      "SELECT id FROM loan_events WHERE idempotency_key='tekrar-1'",
+    );
+    expect(hadiseler).toHaveLength(1);
+    const [kredit] = await sorgu("SELECT principal_outstanding FROM loans");
+    expect(Number(kredit.principal_outstanding)).toBe(1700);
+  });
+
   it("krediti olmayan fermer ödəniş yaza bilmir", async () => {
     const f = await fermer();
     const cavab = await isle({ method: "POST", cookie: f.cookie, body: { emel: "odenis", mebleg: 100 } });
     expect(cavab.statusCode).toBe(404);
+  });
+});
+
+// ═══ MALİYYƏ QEYDLƏRİNİN SAXLANMASI (003) ═══════════════════════════
+// Adi DELETE maliyyə tarixçəsini silə bilməz: bütün FK-lar RESTRICT-dir.
+// İstifadəçi silinməsi lazım olsa yol soft-delete/anonimləşdirmədir.
+
+describe("maliyyə qeydləri adi silinmə ilə itmir", () => {
+  async function kreditliFermer() {
+    const f = await fermer();
+    await tarixceYaz(f.id);
+    const cavab = await muracietEt(f.cookie, 2000);
+    await isle({
+      method: "POST",
+      cookie: f.cookie,
+      body: { emel: "teklif-qebul", teklifId: cavab.govde.teklif.id },
+    });
+    return f;
+  }
+
+  it("krediti olan istifadəçi silinə bilmir", async () => {
+    const f = await kreditliFermer();
+    await expect(sorgu("DELETE FROM istifadeciler WHERE id=$1", [f.id])).rejects.toThrow();
+    expect(await sorgu("SELECT id FROM loans")).toHaveLength(1);
+  });
+
+  it("qərarlı müraciət silinə bilmir", async () => {
+    await kreditliFermer();
+    await expect(sorgu("DELETE FROM credit_applications")).rejects.toThrow();
+    expect(await sorgu("SELECT id FROM credit_decisions")).toHaveLength(1);
+  });
+
+  it("hadisəli kredit silinə bilmir — jurnal toxunulmazdır", async () => {
+    await kreditliFermer();
+    await expect(sorgu("DELETE FROM loans")).rejects.toThrow();
+    expect(await sorgu("SELECT id FROM loan_events")).toHaveLength(1);
+  });
+
+  // Sahə maliyyə qeydi DEYİL: silinəndə müraciət qalır (girişlər snapshot-dadır)
+  it("sahənin silinməsi müraciəti silmir", async () => {
+    const f = await kreditliFermer();
+    await sorgu("DELETE FROM saheler WHERE istifadeci_id=$1", [f.id]);
+    const [muraciet] = await sorgu("SELECT sahe_id, decision_inputs FROM credit_applications");
+    expect(muraciet.sahe_id).toBeNull();
+    expect(muraciet.decision_inputs.sahe.hektar).toBe(10);
   });
 });

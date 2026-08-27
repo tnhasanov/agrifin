@@ -356,25 +356,55 @@ export default async function handler(req, res) {
       // ATOMİKLİK: bir SQL ifadəsi = bir tranzaksiya. Neon HTTP sürücüsündə
       // BEGIN/COMMIT ayrı sorğulardır və eyni tranzaksiyada qalmır; məlumat
       // dəyişən CTE isə tam bir ifadədir — ya hamısı yazılır, ya heç biri.
-      // loans-dakı UNIQUE(application_id, offer_id) təkrar sorğuda ikinci
-      // krediti onsuz da rədd edir.
+      //
+      // BEŞ YAZININ BEŞİ DƏ BURADADIR: təklifin qəbulu, müraciətin keçidi,
+      // müraciət hadisəsi, kreditin yaranması, kredit hadisəsi. Əvvəl
+      // müraciətin keçidi ifadədən SONRA ayrıca gedirdi — o addım uğursuz
+      // olsa "təklif qəbul edilib, kredit var, müraciət hələ offer_issued"
+      // qalırdı. İndi belə yarımçıq vəziyyət mümkün deyil (testi var).
+      //
+      // Təklif yalnız müraciət offer_issued halında ikən qəbul olunur —
+      // hər iki UPDATE eyni snapshot-u görür, loans-dakı UNIQUE açarlar
+      // təkrar sorğuda ikinci krediti onsuz da rədd edir.
+      //
+      // MƏHSUL SEMANTİKASI: qəbul = dərhal (simulyasiya olunmuş) ödəmə.
+      // Real ödəniş relsləri hələ yoxdur; pul axını qoşulanda "qəbul olundu,
+      // köçürülməyi gözləyir" aralıq halı ayrıca əlavə olunacaq. Ona görə
+      // disbursed_at burada yazılır və ilk hadisə 'disbursement'-dir.
       const [kredit] = await sorgu(
         `WITH teklif AS (
-           UPDATE credit_offers SET status='accepted', accepted_at=now()
-           WHERE id=$1 AND status='issued' AND (expires_at IS NULL OR expires_at > now())
-           RETURNING id, application_id, amount, annual_rate, term_months, matures_on
+           UPDATE credit_offers o SET status='accepted', accepted_at=now()
+           FROM credit_applications a
+           WHERE o.id=$1 AND o.status='issued'
+             AND (o.expires_at IS NULL OR o.expires_at > now())
+             AND a.id = o.application_id AND a.status='offer_issued'
+             AND a.istifadeci_id=$2
+           RETURNING o.id, o.application_id, o.amount, o.annual_rate, o.term_months, o.matures_on
+         ), muraciet AS (
+           UPDATE credit_applications a SET status='accepted', updated_at=now()
+           FROM teklif t
+           WHERE a.id = t.application_id AND a.status='offer_issued'
+           RETURNING a.id
          ), yeni_kredit AS (
            INSERT INTO loans
              (istifadeci_id, application_id, offer_id, principal_original, principal_outstanding,
-              annual_rate, term_months, status, matures_on)
+              annual_rate, term_months, status, matures_on, disbursed_at)
            SELECT $2, t.application_id, t.id, t.amount, t.amount, t.annual_rate, t.term_months,
-                  'active', t.matures_on
+                  'active', t.matures_on, now()
            FROM teklif t
+           JOIN muraciet m ON m.id = t.application_id
            RETURNING id, application_id, status, principal_original, principal_outstanding,
-                     annual_rate, term_months, matures_on, created_at
-         ), hadise AS (
+                     annual_rate, term_months, matures_on, disbursed_at, created_at
+         ), muraciet_hadisesi AS (
+           INSERT INTO credit_application_events
+             (application_id, event_type, from_status, to_status, detay)
+           SELECT k.application_id, 'offer_accepted', 'offer_issued', 'accepted',
+                  jsonb_build_object('offer_id', $1, 'loan_id', k.id)
+           FROM yeni_kredit k
+           RETURNING id
+         ), kredit_hadisesi AS (
            INSERT INTO loan_events (loan_id, event_type, amount, principal_after, detay)
-           SELECT k.id, 'created', k.principal_original, k.principal_original,
+           SELECT k.id, 'disbursement', k.principal_original, k.principal_original,
                   jsonb_build_object('offer_id', $1)
            FROM yeni_kredit k
            RETURNING loan_id
@@ -384,9 +414,6 @@ export default async function handler(req, res) {
       );
       if (!kredit) return res.status(409).json({ error: "teklifBaglidir" });
 
-      await halDeyis(kredit.application_id, "offer_issued", "accepted", "offer_accepted", {
-        loan_id: kredit.id,
-      });
       jurnal("offer_accepted", {
         istifadeci_id: istifadeci.id,
         application_id: kredit.application_id,
@@ -414,13 +441,18 @@ export default async function handler(req, res) {
       // Təklif "rejected" olur (fermer ondan imtina etdi), müraciət isə
       // "cancelled" — bunlar FƏRQLİ hadisələrdir: `rejected` müraciət
       // anderraytinqin rəddi deməkdir və hesabatda qarışmamalıdır.
+      //
+      // SIRA QƏSDƏNDİR: əvvəl müraciət bağlanır, sonra təklif. İkinci addım
+      // uğursuz qalsa "bağlanmış müraciət + açıq görünən təklif" qalır —
+      // zərərsizdir (açıq-müraciət indeksi artıq tutmur, təkrar ləğv və ya
+      // yeni müraciət yolu açıqdır). Əks sıra fermeri kilidləyirdi.
+      await halDeyis(muraciet.id, muraciet.status, "cancelled", "cancelled_by_user");
       if (muraciet.status === "offer_issued") {
         await sorgu(
           "UPDATE credit_offers SET status='rejected' WHERE application_id=$1 AND status='issued'",
           [muraciet.id],
         );
       }
-      await halDeyis(muraciet.id, muraciet.status, "cancelled", "cancelled_by_user");
       jurnal("application_closed", {
         istifadeci_id: istifadeci.id,
         application_id: muraciet.id,
@@ -441,36 +473,78 @@ export default async function handler(req, res) {
       const acar = typeof req.body?.acar === "string" ? req.body.acar.slice(0, 64) : null;
 
       const [kredit] = await sorgu(
-        "SELECT id, principal_outstanding, status FROM loans WHERE istifadeci_id=$1 AND status='active' ORDER BY id DESC LIMIT 1",
+        "SELECT id FROM loans WHERE istifadeci_id=$1 AND status='active' ORDER BY id DESC LIMIT 1",
         [istifadeci.id],
       );
       if (!kredit) return res.status(404).json({ error: "kreditYoxdur" });
 
-      // Qalıqdan çox ödəniş qəbul edilmir: artıq pul "mənfi borc" yaratmır
-      const odenilen = Math.min(mebleg, Number(kredit.principal_outstanding));
+      // TƏTBİQ OLUNAN MƏBLƏĞ KİLİDLİ CARİ QALIQDAN HESABLANIR. Əvvəl qalıq
+      // əvvəlcədən oxunub JS-də kəsilirdi: eyni anda iki ödəniş köhnə qalığa
+      // baxıb CHECK pozuntusu (çılpaq 500) verə bilirdi. İndi:
+      //   • FOR UPDATE sıranı müəyyən edir — ikinci sorğu birincini gözləyir
+      //     və YENİLƏNMİŞ qalığı görür (100-ə eyni anda 60+60 → 60, sonra 40);
+      //   • LEAST(...) qalıqdan çoxunu heç vaxt çıxmır — mənfi borc qeyri-mümkün;
+      //   • hadisənin amount-u HƏQİQƏTƏN tətbiq olunan məbləğdir
+      //     (əvvəlki − yeni), principal_after isə yeni qalıqdır;
+      //   • idempotentlik açarı artıq jurnaldadırsa "evvel" boş qayıdır —
+      //     təkrar sorğu İKİNCİ DƏFƏ TƏTBİQ OLUNMUR.
+      let netice;
+      try {
+        [netice] = await sorgu(
+          `WITH evvel AS (
+             SELECT id, principal_outstanding FROM loans
+             WHERE id=$1 AND status='active'
+               AND ($3::text IS NULL OR NOT EXISTS (
+                 SELECT 1 FROM loan_events WHERE loan_id=$1 AND idempotency_key=$3::text))
+             FOR UPDATE
+           ), yenilenen AS (
+             UPDATE loans l
+               SET principal_outstanding =
+                     e.principal_outstanding - LEAST($2::numeric, e.principal_outstanding),
+                   status = CASE
+                     WHEN e.principal_outstanding - LEAST($2::numeric, e.principal_outstanding) <= 0
+                     THEN 'repaid' ELSE l.status END,
+                   closed_at = CASE
+                     WHEN e.principal_outstanding - LEAST($2::numeric, e.principal_outstanding) <= 0
+                     THEN now() ELSE l.closed_at END,
+                   updated_at = now()
+             FROM evvel e WHERE l.id = e.id
+             RETURNING l.id, l.principal_outstanding AS yeni_qaliq,
+                       e.principal_outstanding AS evvelki_qaliq
+           )
+           INSERT INTO loan_events (loan_id, event_type, amount, principal_after, idempotency_key)
+           SELECT y.id, 'principal_repayment', y.evvelki_qaliq - y.yeni_qaliq, y.yeni_qaliq, $3::text
+           FROM yenilenen y
+           RETURNING loan_id, amount, principal_after`,
+          [kredit.id, mebleg, acar],
+        );
+      } catch (xeta) {
+        // Yarış şəraitində eyni açarla iki sorğu: "evvel" qapısı köhnə
+        // snapshot-la keçə bilər, unikal indeks isə ikinci yazını dayandırır —
+        // bütöv ifadə geri sarınır (heç nə tətbiq olunmur) və aşağıdakı
+        // təkrar-sorğu cavabına düşür
+        if (!String(xeta?.message ?? "").includes("loan_event_idempotent")) throw xeta;
+        netice = null;
+      }
 
-      const [yeni] = await sorgu(
-        `WITH k AS (
-           UPDATE loans
-             SET principal_outstanding = principal_outstanding - $2,
-                 status = CASE WHEN principal_outstanding - $2 <= 0 THEN 'repaid' ELSE status END,
-                 closed_at = CASE WHEN principal_outstanding - $2 <= 0 THEN now() ELSE closed_at END,
-                 updated_at = now()
-           WHERE id=$1 AND status='active'
-           RETURNING id, principal_outstanding, status
-         )
-         INSERT INTO loan_events (loan_id, event_type, amount, principal_after, idempotency_key)
-         SELECT k.id, 'principal_repayment', $2, k.principal_outstanding, $3 FROM k
-         RETURNING loan_id, principal_after`,
-        [kredit.id, odenilen, acar],
-      );
-      if (!yeni) return res.status(409).json({ error: "kreditBaglidir" });
+      if (!netice) {
+        if (acar) {
+          const [movcud] = await sorgu(
+            "SELECT id FROM loan_events WHERE loan_id=$1 AND idempotency_key=$2",
+            [kredit.id, acar],
+          );
+          // İdempotent təkrar: eyni sorğunun təkrarı uğurdur, əməl deyil —
+          // cari vəziyyət qaytarılır, ikinci hadisə YAZILMIR
+          if (movcud) return res.status(200).json(await veziyyetOxu(istifadeci.id));
+        }
+        return res.status(409).json({ error: "kreditBaglidir" });
+      }
 
       jurnal("repayment_recorded", {
         istifadeci_id: istifadeci.id,
         loan_id: kredit.id,
-        mebleg: odenilen,
-        qaliq: reqem(yeni.principal_after),
+        mebleg: reqem(netice.amount),
+        qaliq: reqem(netice.principal_after),
       });
       return res.status(200).json(await veziyyetOxu(istifadeci.id));
     }

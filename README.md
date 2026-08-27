@@ -452,7 +452,12 @@ Quraşdırma (Vercel):
 4. (Sonra) SMS şlüzü müqaviləsindən sonra `SMS_URL` və `SMS_ACAR` əlavə edin.
    O vaxta qədər OTP kodları yalnız Vercel funksiya loglarında görünür —
    UI-da heç vaxt göstərilmir.
-5. **Miqrasiyaları işlədin** (hər deploy-dan sonra, sxem dəyişibsə):
+5. **Miqrasiyaları işlədin — DEPLOY-DAN ƏVVƏL.** Kredit miqrasiyaları
+   additivdir (köhnə kod yeni cədvəllərlə işləməyə davam edir), amma yeni
+   kod (`/api/kredit`) cədvəlsiz işləmir. Ona görə sıfır-fasilə sırası:
+
+   **miqrasiya → deploy → smoke test** (`GET /api/kredit` daxil olmuş
+   istifadəçi ilə 200 qaytarmalıdır), tərsi yox.
 
    ```bash
    DATABASE_URL="postgres://..." npm run db:migrate         # tətbiq et
@@ -486,6 +491,12 @@ isə heç yerdə qeyd olunmur.
   serverdə hesablanır — klient yalnız istədiyi məbləği göndərir.
 - Müştəri: `src/services/kredit.js` + `src/features/loan/useKreditVeziyyeti.js`.
   localStorage-da yalnız UI vəziyyəti qalır (yüklənir, forma, dil).
+
+⚠ **Demo pul:** `wallet`, əməliyyat siyahısı və karbon satışı hələ
+prototip nümunələridir — server hesabına bağlı deyil və kredit axını
+onları oxumur/yazmır (bax: store.jsx-dəki işarələnmiş blok). Server
+avtoritativ olan yalnız kredit zənciridir: müraciət → qərar → təklif →
+kredit → ödəniş jurnalı.
 
 ⚠ **Miqrasiya siyasəti:** köhnə prototipin localStorage-dakı `muraciet`
 obyektləri bazaya KÖÇÜRÜLMÜR (store v8→v9 onları silir). Onlar sahibsizdir,

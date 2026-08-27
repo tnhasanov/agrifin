@@ -31,7 +31,7 @@ const sorgu = async (metn, params = []) => {
 };
 
 try {
-  const olanlar = await tetbiqOlunanlar(sorgu);
+  const olanlar = (await tetbiqOlunanlar(sorgu)).map((s) => s.ad);
   const hamisi = miqrasiyaFayllari();
 
   if (process.argv.includes("--list")) {
