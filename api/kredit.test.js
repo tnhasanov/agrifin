@@ -304,6 +304,71 @@ describe("müraciət → qərar → təklif", () => {
     expect(hadiseler.at(-1).to_status).toBe("offer_issued");
   });
 
+  // ═══ ATOMİKLİK: yaradılış boru xətti bütöv ya yazılır, ya yox ═══════
+  // Əvvəl 8 ayrı sorğu idi — arada qırılma "reviewing-də qalmış, təklifsiz
+  // müraciət" qoyub açıq-müraciət indeksi ilə fermeri kilidləyirdi.
+  it("təsdiq yolunda yazılış qırılanda HEÇ BİR yarımçıq sətir qalmır", async () => {
+    const f = await fermer();
+    await tarixceYaz(f.id);
+
+    const esl = pg;
+    musterTeyin({
+      query(metn, params) {
+        if (metn.includes("INSERT INTO credit_applications")) {
+          return Promise.reject(new Error("şəbəkə qırıldı"));
+        }
+        return esl.query(metn, params);
+      },
+    });
+    const cavab = await muracietEt(f.cookie, 2000);
+    musterTeyin(pg);
+
+    expect(cavab.statusCode).toBe(500);
+    // Dörd cədvəlin dördü də boşdur — yarımçıq müraciət yoxdur
+    expect(await sorgu("SELECT id FROM credit_applications")).toHaveLength(0);
+    expect(await sorgu("SELECT id FROM credit_application_events")).toHaveLength(0);
+    expect(await sorgu("SELECT id FROM credit_decisions")).toHaveLength(0);
+    expect(await sorgu("SELECT id FROM credit_offers")).toHaveLength(0);
+
+    // Kilid qalmayıb: təkrar cəhd təmiz vəziyyətdən tam nəticə ilə keçir
+    const tekrar = await muracietEt(f.cookie, 2000);
+    expect(tekrar.statusCode).toBe(200);
+    expect(tekrar.govde.muraciet.hal).toBe("offer_issued");
+    expect(await sorgu("SELECT id FROM credit_application_events")).toHaveLength(4);
+  });
+
+  it("rədd yolunda da yazılış bütövdür — qırılma heç nə qoymur", async () => {
+    // Kiçik sahə + aşağı marja → anderraytinq rədd edəcək
+    const f = await fermer({ hektar: 0.5, bitki: "bugda" });
+
+    const esl = pg;
+    musterTeyin({
+      query(metn, params) {
+        if (metn.includes("INSERT INTO credit_applications")) {
+          return Promise.reject(new Error("şəbəkə qırıldı"));
+        }
+        return esl.query(metn, params);
+      },
+    });
+    const cavab = await muracietEt(f.cookie, 2000);
+    musterTeyin(pg);
+
+    expect(cavab.statusCode).toBe(500);
+    expect(await sorgu("SELECT id FROM credit_applications")).toHaveLength(0);
+    expect(await sorgu("SELECT id FROM credit_decisions")).toHaveLength(0);
+
+    const tekrar = await muracietEt(f.cookie, 2000);
+    expect(tekrar.statusCode).toBe(200);
+    expect(tekrar.govde.muraciet.hal).toBe("rejected");
+    // Rədd izi də tamdır: yaradılış + anderraytinq + rədd
+    const hadiseler = await sorgu("SELECT event_type FROM credit_application_events ORDER BY id");
+    expect(hadiseler.map((h) => h.event_type)).toEqual([
+      "application_created",
+      "underwriting_started",
+      "decision_rejected",
+    ]);
+  });
+
   it("ləğv olunmuş müraciət tarixçədə qalır və yenisinə yol açır", async () => {
     const f = await fermer();
     await tarixceYaz(f.id);

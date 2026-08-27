@@ -7,7 +7,9 @@
 //
 //   GET                    → {muraciet, qerar, teklif, kredit, hadiseler}
 //   GET ?tarixce=1         → bütün müraciətlərin qısa tarixçəsi
-//   POST muraciet          → {mebleg, muddetAy?} — SERVER anderraytinq edir
+//   POST muraciet          → {mebleg, acar?} — SERVER anderraytinq edir və
+//                          nəticənin tamamını (müraciət + hadisə izi + qərar
+//                          + təklif + son status) BİR ifadədə yazır
 //   POST teklif-qebul      → {teklifId} — ATOMİK: təklif qəbul + kredit yaranır
 //   POST teklif-imtina     → {teklifId} — təklifdən imtina, müraciət bağlanır
 //   POST legv              → açıq müraciəti geri götürür
@@ -224,105 +226,147 @@ export default async function handler(req, res) {
 
       const acar = typeof req.body?.acar === "string" ? req.body.acar.slice(0, 64) : null;
 
-      let muracietId;
+      // ═══ NƏTİCƏNİN TAMAMI BİR İFADƏDƏ YAZILIR ═══════════════════════
+      // Əvvəl müraciət, hadisələr, qərar və təklif 8 ayrı sorğu idi —
+      // aralarda qırılma "reviewing/approved-də qalmış, qərarı yarımçıq
+      // müraciət" qoyurdu və açıq-müraciət indeksi fermeri kilidləyirdi.
+      // İndi anderraytinq nəticəsi JS-də hazırdır, sonra HƏR ŞEY bir
+      // data-dəyişən CTE ifadəsində gedir: ya tam vəziyyət (offer_issued /
+      // rejected + bütün hadisə izi + qərar + təklif), ya HEÇ NƏ.
+      //
+      // Aralıq submitted→reviewing→approved keçidləri məntiqidir və hadisə
+      // izində TAM saxlanılır — sadəcə hamısı eyni anda yazılır, çünki
+      // maşın anderraytinqi onsuz da ani gedir.
+      const sebeblerJson = JSON.stringify({ sebebler: netice.sebebler });
+
+      let setir;
       try {
-        const [yeni] = await sorgu(
-          `INSERT INTO credit_applications
-             (istifadeci_id, sahe_id, requested_amount, requested_term_months, crop, hectares,
-              status, decision_inputs, calc_version, idempotency_key)
-           VALUES ($1,$2,$3,$4,$5,$6,'submitted',$7,$8,$9) RETURNING id`,
-          [
-            istifadeci.id,
-            sahe.id,
-            giris.mebleg,
-            muddetAy,
-            sahe.bitki,
-            sahe.hektar,
-            JSON.stringify(netice.girisler),
-            netice.versiya,
-            acar,
-          ],
-        );
-        muracietId = yeni.id;
+        if (netice.qerar === "approved") {
+          const sonTarix = bicinTarixi(sahe.bitki);
+          [setir] = await sorgu(
+            `WITH muraciet AS (
+               INSERT INTO credit_applications
+                 (istifadeci_id, sahe_id, requested_amount, requested_term_months, crop, hectares,
+                  status, decision_inputs, calc_version, idempotency_key)
+               VALUES ($1,$2,$3,$4,$5,$6,'offer_issued',$7,$8,$9)
+               RETURNING id
+             ), qerar AS (
+               INSERT INTO credit_decisions
+                 (application_id, decision, approved_amount, approved_term_months, reasons,
+                  score_snapshot, model_version)
+               SELECT m.id, 'approved', $10, $4, $11::jsonb, $12::jsonb, $8 FROM muraciet m
+               RETURNING id, application_id
+             ), teklif AS (
+               INSERT INTO credit_offers
+                 (application_id, decision_id, amount, annual_rate, term_months,
+                  repayment_structure, matures_on, expires_at)
+               SELECT q.application_id, q.id, $10, $13, $4, $14, $15, now() + interval '30 days'
+               FROM qerar q
+               RETURNING id
+             ), hadiseler AS (
+               INSERT INTO credit_application_events
+                 (application_id, event_type, from_status, to_status, detay)
+               SELECT m.id, h.event_type, h.from_status, h.to_status, h.detay::jsonb
+               FROM muraciet m
+               CROSS JOIN (VALUES
+                 (1, 'application_created', NULL, 'submitted', NULL),
+                 (2, 'underwriting_started', 'submitted', 'reviewing', NULL),
+                 (3, 'decision_approved', 'reviewing', 'approved', $16),
+                 (4, 'offer_issued', 'approved', 'offer_issued', $16)
+               ) AS h(sira, event_type, from_status, to_status, detay)
+               ORDER BY h.sira
+               RETURNING id
+             )
+             SELECT m.id AS muraciet_id FROM muraciet m`,
+            [
+              istifadeci.id,
+              sahe.id,
+              giris.mebleg,
+              muddetAy,
+              sahe.bitki,
+              sahe.hektar,
+              JSON.stringify(netice.girisler),
+              netice.versiya,
+              acar,
+              netice.mebleg,
+              sebeblerJson,
+              JSON.stringify(netice.girisler.indeks),
+              KREDIT_SERTLERI.illikFaiz,
+              KREDIT_SERTLERI.odenisQurulusu,
+              sonTarix ? sonTarix.toISOString().slice(0, 10) : null,
+              JSON.stringify({ mebleg: netice.mebleg }),
+            ],
+          );
+        } else {
+          [setir] = await sorgu(
+            `WITH muraciet AS (
+               INSERT INTO credit_applications
+                 (istifadeci_id, sahe_id, requested_amount, requested_term_months, crop, hectares,
+                  status, decision_inputs, calc_version, idempotency_key)
+               VALUES ($1,$2,$3,$4,$5,$6,'rejected',$7,$8,$9)
+               RETURNING id
+             ), qerar AS (
+               INSERT INTO credit_decisions
+                 (application_id, decision, approved_amount, approved_term_months, reasons,
+                  score_snapshot, model_version)
+               SELECT m.id, 'rejected', NULL, $4, $10::jsonb, $11::jsonb, $8 FROM muraciet m
+               RETURNING id
+             ), hadiseler AS (
+               INSERT INTO credit_application_events
+                 (application_id, event_type, from_status, to_status, detay)
+               SELECT m.id, h.event_type, h.from_status, h.to_status, h.detay::jsonb
+               FROM muraciet m
+               CROSS JOIN (VALUES
+                 (1, 'application_created', NULL, 'submitted', NULL),
+                 (2, 'underwriting_started', 'submitted', 'reviewing', NULL),
+                 (3, 'decision_rejected', 'reviewing', 'rejected', $10)
+               ) AS h(sira, event_type, from_status, to_status, detay)
+               ORDER BY h.sira
+               RETURNING id
+             )
+             SELECT m.id AS muraciet_id FROM muraciet m`,
+            [
+              istifadeci.id,
+              sahe.id,
+              giris.mebleg,
+              muddetAy,
+              sahe.bitki,
+              sahe.hektar,
+              JSON.stringify(netice.girisler),
+              netice.versiya,
+              acar,
+              sebeblerJson,
+              JSON.stringify(netice.girisler.indeks),
+            ],
+          );
+        }
       } catch (xeta) {
-        // Unikal indeks: təkrar sorğu ikinci müraciət yaratmır
+        // Unikal indekslər (açıq müraciət / idempotentlik açarı): təkrar
+        // sorğu ikinci müraciət yaratmır — bütöv ifadə geri sarınır
         if (String(xeta?.message ?? "").includes("credit_app")) {
           return res.status(409).json({ error: "artiqMuracietVar" });
         }
         throw xeta;
       }
 
-      await sorgu(
-        `INSERT INTO credit_application_events (application_id, event_type, to_status)
-         VALUES ($1, 'application_created', 'submitted')`,
-        [muracietId],
-      );
       jurnal("application_created", {
         istifadeci_id: istifadeci.id,
-        application_id: muracietId,
+        application_id: setir.muraciet_id,
         mebleg: giris.mebleg,
       });
-
-      // Anderraytinq dərhal işləyir — nəticə QƏRAR sətridir
-      await halDeyis(muracietId, "submitted", "reviewing", "underwriting_started");
-
-      const [qerarSetri] = await sorgu(
-        `INSERT INTO credit_decisions
-           (application_id, decision, approved_amount, approved_term_months, reasons,
-            score_snapshot, model_version)
-         VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
-        [
-          muracietId,
-          netice.qerar,
-          netice.qerar === "approved" ? netice.mebleg : null,
-          netice.muddetAy,
-          JSON.stringify({ sebebler: netice.sebebler }),
-          JSON.stringify(netice.girisler.indeks),
-          netice.versiya,
-        ],
-      );
       jurnal("decision_created", {
         istifadeci_id: istifadeci.id,
-        application_id: muracietId,
+        application_id: setir.muraciet_id,
         qerar: netice.qerar,
         sebebler: netice.sebebler,
       });
-
-      if (netice.qerar === "rejected") {
-        await halDeyis(muracietId, "reviewing", "rejected", "decision_rejected", {
-          sebebler: netice.sebebler,
+      if (netice.qerar === "approved") {
+        jurnal("offer_issued", {
+          istifadeci_id: istifadeci.id,
+          application_id: setir.muraciet_id,
+          mebleg: netice.mebleg,
         });
-        return res.status(200).json(await veziyyetOxu(istifadeci.id));
       }
-
-      await halDeyis(muracietId, "reviewing", "approved", "decision_approved", {
-        mebleg: netice.mebleg,
-      });
-
-      const sonTarix = bicinTarixi(sahe.bitki);
-      await sorgu(
-        `INSERT INTO credit_offers
-           (application_id, decision_id, amount, annual_rate, term_months,
-            repayment_structure, matures_on, expires_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7, now() + interval '30 days')`,
-        [
-          muracietId,
-          qerarSetri.id,
-          netice.mebleg,
-          KREDIT_SERTLERI.illikFaiz,
-          netice.muddetAy,
-          KREDIT_SERTLERI.odenisQurulusu,
-          sonTarix ? sonTarix.toISOString().slice(0, 10) : null,
-        ],
-      );
-      await halDeyis(muracietId, "approved", "offer_issued", "offer_issued", {
-        mebleg: netice.mebleg,
-      });
-      jurnal("offer_issued", {
-        istifadeci_id: istifadeci.id,
-        application_id: muracietId,
-        mebleg: netice.mebleg,
-      });
 
       return res.status(200).json(await veziyyetOxu(istifadeci.id));
     }

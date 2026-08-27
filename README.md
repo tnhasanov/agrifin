@@ -492,6 +492,23 @@ isə heç yerdə qeyd olunmur.
 - Müştəri: `src/services/kredit.js` + `src/features/loan/useKreditVeziyyeti.js`.
   localStorage-da yalnız UI vəziyyəti qalır (yüklənir, forma, dil).
 
+**Yarış testləri (real Postgres):** vitest-dəki yarış testləri PGlite
+üzərindədir — tək bağlantılıdır, sorğular faktiki ardıcıllaşır. Əsl paralel
+icra `scripts/yaris-testi.mjs` ilə REAL Neon üzərində yoxlanılır: birdəfəlik
+Neon branch-ı yaradın (maliyyə cədvəlləri RESTRICT-dir, test qalığı ana
+bazaya yazılmamalı və silinməli də deyil), sonra:
+
+```bash
+DATABASE_URL="postgres://...yaris-branch..." SESSION_SECRET="test-sirri" \
+  node scripts/yaris-testi.mjs
+```
+
+Ssenarilər: qalıq 100-ə eyni anda 60+60 → 60 və 40, qalıq 0; eyni
+idempotentlik açarı (paralel + təkrar) → düz bir maliyyə hadisəsi; eyni
+təklifə paralel iki qəbul → düz bir kredit. Uğursuzluqda çıxış kodu 1.
+Bitirəndə branch-ı silin. Bu yoxlama hər sxem/SQL dəyişikliyindən sonra,
+merge-dən əvvəl işlədilməlidir.
+
 ⚠ **Demo pul:** `wallet`, əməliyyat siyahısı və karbon satışı hələ
 prototip nümunələridir — server hesabına bağlı deyil və kredit axını
 onları oxumur/yazmır (bax: store.jsx-dəki işarələnmiş blok). Server
