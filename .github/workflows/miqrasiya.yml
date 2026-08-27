@@ -1,7 +1,12 @@
-# Prod miqrasiya — YALNIZ MANUAL (workflow_dispatch).
+# Prod miqrasiya — YALNIZ QƏSDƏN icra.
 #
-# Push/commit bu workflow-nu HEÇ VAXT işə salmır: adi kod dəyişikliyi prod
-# sxeminə avtomatik toxunmamalıdır. İcra qərarı həmişə insanın əlindədir.
+# Adi commit/push bu workflow-nu işə salmır: prod sxeminə toxunuş həmişə
+# ayrıca insan qərarıdır. İki qəsdən yol var:
+#   • workflow_dispatch (fayl main-də olandan sonra Actions UI/API-dən);
+#   • `miqrasiya-run` adlı XÜSUSİ ref-ə push — GitHub dispatch-i yalnız
+#     default branch-dakı workflow-lara verir, merge-dən ƏVVƏL icra üçün
+#     bu ref-dən istifadə olunur: git push origin <branch>:miqrasiya-run
+#     (bu ref-i heç bir avtomatika itələmir — yalnız əl ilə).
 #
 # Bağlantı GitHub Environment "production"-dakı PROD_DATABASE_URL sirrindən
 # gəlir (Settings → Environments → production → Add environment secret).
@@ -16,6 +21,8 @@ name: Prod miqrasiya (manual)
 
 on:
   workflow_dispatch:
+  push:
+    branches: [miqrasiya-run]
 
 concurrency: prod-miqrasiya
 
