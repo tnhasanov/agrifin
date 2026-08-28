@@ -128,12 +128,25 @@ export function MoneyScreen({ onOpenLoan, indeksHali = null, kreditHali = null }
             <h3 className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
               {t("money.cropLoan")}
             </h3>
-            <Chip
-              icon="Calendar"
-              label={t("kredit.qaliqCipi", { faiz: { money: ayliqFaiz(kredit.qaliqBorc, kredit.illikFaiz) } })}
-              color={C.goldDeep}
-              bg={C.goldSoft}
-            />
+            {/* Gecikmə varsa hər şeydən əvvəl o görünür; yoxdursa növbəti
+                ayın faizi (əsas borc azaldıqca azalan rəqəm) */}
+            {kredit.gecikmeGun > 0 ? (
+              <Chip
+                icon="AlertCircle"
+                label={t("kredit.gecikme", { gun: kredit.gecikmeGun })}
+                color={C.danger}
+                bg="#FBEAE7"
+              />
+            ) : (
+              <Chip
+                icon="Calendar"
+                label={t("kredit.qaliqCipi", {
+                  faiz: { money: ayliqFaiz(kredit.qaliqBorc, kredit.illikFaiz) },
+                })}
+                color={C.goldDeep}
+                bg={C.goldSoft}
+              />
+            )}
           </div>
           <div className="mt-2 flex items-baseline justify-between gap-3">
             <span className="text-xs" style={{ color: C.muted }}>
@@ -162,6 +175,18 @@ export function MoneyScreen({ onOpenLoan, indeksHali = null, kreditHali = null }
               hamisi: { money: kredit.esasBorc },
             })}
           </p>
+          {/* Növbəti ödəniş kartda görünür: fermer paneli açmadan bilməlidir */}
+          {kredit.novbetiTarix && (
+            <p className="mt-1 text-xs font-semibold" style={{ color: C.pine }}>
+              {t("kredit.detal.novbeti")}:{" "}
+              {t("kredit.detal.novbetiDeger", {
+                mebleg: { money: kredit.novbetiMebleg },
+                tarix: `${new Date(kredit.novbetiTarix).getUTCDate()} ${t(
+                  `ay.${new Date(kredit.novbetiTarix).getUTCMonth() + 1}`,
+                )}`,
+              })}
+            </p>
+          )}
         </Card>
       )}
 

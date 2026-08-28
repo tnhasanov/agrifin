@@ -44,6 +44,19 @@ export function muracietLegv() {
   return sorguGonder("/api/kredit", { method: "POST", govde: { emel: "legv" } });
 }
 
+/**
+ * Ödəniş. Serverdə əvvəl faiz borcu, sonra əsas borc bağlanır — klient
+ * bölgünü təyin etmir, yalnız məbləği göndərir.
+ * `acar` idempotentlik üçündür: şəbəkə itsə təkrar sorğu ikinci dəfə
+ * tətbiq olunmur.
+ */
+export function odenisEt({ mebleg, acar }) {
+  return sorguGonder("/api/kredit", {
+    method: "POST",
+    govde: { emel: "odenis", mebleg, acar },
+  });
+}
+
 export function tarixceYukle({ signal } = {}) {
   return sorguGonder("/api/kredit?tarixce=1", { signal });
 }

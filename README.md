@@ -492,6 +492,26 @@ isə heç yerdə qeyd olunmur.
 - Müştəri: `src/services/kredit.js` + `src/features/loan/useKreditVeziyyeti.js`.
   localStorage-da yalnız UI vəziyyəti qalır (yüklənir, forma, dil).
 
+### Kredit mühərriki (004)
+
+Kredit verildikdən sonrakı həyat: faizin yığılması, ödənişin bölünməsi,
+gecikmə.
+
+- `lib/kreditMuhasibat.js` — SAF mühasibat. Faiz GÜNDƏLİK yığılır (act/365)
+  və aylıq dövrün sonunda BİR hadisə kimi yazılır; ödəniş ƏVVƏL faizi, sonra
+  əsas borcu bağlayır; gecikmə (DPD) ödənilməmiş ən köhnə faiz borcunun
+  yaşıdır. **Kompaundinq və cərimə dərəcəsi YOXDUR** — faizin bazası həmişə
+  yalnız əsas borcdur.
+- `db/migrations/004_kredit_muhasibat.sql` — `loans`-a faiz balansları və
+  dövr sayğacı, `loan_events`-ə `interest_after` və `due_on`.
+- Hesablama CRON-suzdur: `api/kredit.js` → `faizleriIsle()` hər oxunuşda
+  bitmiş dövrləri yazır. İdempotentdir (`faiz-<dövr>` açarı + `accrued_periods`
+  şərti), yəni nə itən, nə təkrarlanan faiz var; nəticə vaxtdan asılıdır,
+  sorğu tarixçəsindən yox.
+- UI: aktiv kredit ekranı qalıq, ödənilməmiş faiz, növbəti ödəniş (tarix +
+  təxmini məbləğ), gecikmə və hərəkət jurnalını göstərir; ödəniş elə oradan
+  edilir. Rəqəm "təxmini"dir, çünki əsas borcu azaltmaq faizi də azaldır.
+
 **Yarış testləri (real Postgres):** vitest-dəki yarış testləri PGlite
 üzərindədir — tək bağlantılıdır, sorğular faktiki ardıcıllaşır. Əsl paralel
 icra `scripts/yaris-testi.mjs` ilə REAL Neon üzərində yoxlanılır: birdəfəlik

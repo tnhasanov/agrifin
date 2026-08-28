@@ -71,8 +71,15 @@ export const WEATHER_FIXTURE = {
  * ekran testləri serveri təqlid etməlidir. `kreditServeri()` sadə vəziyyət
  * maşınıdır: müraciət → təklif → kredit, real API ilə eyni formada.
  */
-export function kreditServeri({ mebleg = 2000, muddetAy = 12, illikFaiz = 11.5 } = {}) {
-  let veziyyet = { muraciet: null, qerar: null, teklif: null, kredit: null };
+export function kreditServeri({
+  mebleg = 2000,
+  muddetAy = 12,
+  illikFaiz = 11.5,
+  faizBorc = 0,
+  gecikmeGun = 0,
+} = {}) {
+  let veziyyet = { muraciet: null, qerar: null, teklif: null, kredit: null, hadiseler: [] };
+  let hadiseNo = 1;
 
   const cavab = (govde) =>
     Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(govde) });
@@ -110,9 +117,52 @@ export function kreditServeri({ mebleg = 2000, muddetAy = 12, illikFaiz = 11.5 }
             hal: "active",
             esasBorc: veziyyet.teklif.mebleg,
             qaliqBorc: veziyyet.teklif.mebleg,
+            faizBorc,
+            faizCemi: faizBorc,
+            faizOdenilen: 0,
             illikFaiz,
             muddetAy,
+            novbetiTarix: "2026-05-10",
+            novbetiMebleg: 19,
+            novbetiEsasDaxil: false,
+            gecikmeGun,
           },
+          hadiseler: [
+            {
+              id: hadiseNo++,
+              nov: "disbursement",
+              mebleg: veziyyet.teklif.mebleg,
+              esasSonra: veziyyet.teklif.mebleg,
+              tarix: "2026-04-10T00:00:00.000Z",
+            },
+          ],
+        };
+      } else if (govde?.emel === "odenis") {
+        // Serverin bölgüsü: əvvəl faiz, sonra əsas borc
+        const kredit = veziyyet.kredit;
+        const faiz = Math.min(govde.mebleg, kredit.faizBorc);
+        const esas = Math.min(govde.mebleg - faiz, kredit.qaliqBorc);
+        const yeniEsas = kredit.qaliqBorc - esas;
+        const yeniFaiz = kredit.faizBorc - faiz;
+        veziyyet = {
+          ...veziyyet,
+          kredit: {
+            ...kredit,
+            qaliqBorc: yeniEsas,
+            faizBorc: yeniFaiz,
+            faizOdenilen: kredit.faizOdenilen + faiz,
+            gecikmeGun: yeniFaiz > 0 ? kredit.gecikmeGun : 0,
+            hal: yeniEsas <= 0 && yeniFaiz <= 0 ? "repaid" : "active",
+          },
+          hadiseler: [
+            ...(esas > 0
+              ? [{ id: hadiseNo++, nov: "principal_repayment", mebleg: esas, esasSonra: yeniEsas, tarix: "2026-05-10T00:00:00.000Z" }]
+              : []),
+            ...(faiz > 0
+              ? [{ id: hadiseNo++, nov: "interest_payment", mebleg: faiz, faizSonra: yeniFaiz, tarix: "2026-05-10T00:00:00.000Z" }]
+              : []),
+            ...veziyyet.hadiseler,
+          ],
         };
       } else if (govde?.emel === "legv") {
         veziyyet = { muraciet: { ...veziyyet.muraciet, hal: "rejected" }, qerar: veziyyet.qerar, teklif: null, kredit: null };
