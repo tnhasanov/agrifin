@@ -195,6 +195,62 @@ describe("AgriFin tətbiqi", () => {
     expect(screen.getByText("Qalan əsas borc")).toBeInTheDocument();
   });
 
+  // Kredit mühərriki: aktiv kredit ekranı balansı, növbəti ödənişi və
+  // gecikməni göstərir; ödəniş ƏVVƏL faizi bağlayır (bax: api/kredit.js)
+  it("aktiv kredit ekranı ödənişi faizdən başlayır", async () => {
+    const user = userEvent.setup();
+    seedState({
+      location: DEFAULT_LOCATION,
+      onboarded: true,
+      sahe: {
+        hektar: 10,
+        noqteler: [
+          [40.4, 47.1],
+          [40.4023, 47.1],
+          [40.4023, 47.1029],
+          [40.4, 47.1029],
+        ],
+      },
+      chat: { messages: [], crop: "pomidor", referral: false },
+    });
+    const server = kreditServeri({ faizBorc: 117, gecikmeGun: 5 });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url, secim) =>
+        server.isle(url, secim) ??
+        Promise.resolve({ ok: true, json: () => Promise.resolve(WEATHER_FIXTURE) }),
+      ),
+    );
+    renderApp(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Məhsul dövrü krediti al" }));
+    await screen.findByRole("slider");
+    await user.click(screen.getByRole("button", { name: "Şərtlərə bax" }));
+    await user.click(screen.getByRole("button", { name: /üçün müraciət göndər/ }));
+    await waitFor(() => expect(screen.getByText("Təklifiniz hazırdır")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Təklifi qəbul et" }));
+    await waitFor(() => expect(screen.getByText("Aktiv krediti­niz")).toBeInTheDocument());
+
+    // Balans tam açılır: ödənilməmiş faiz, növbəti ödəniş, gecikmə, jurnal
+    expect(screen.getByText("Ödənilməmiş faiz")).toBeInTheDocument();
+    expect(screen.getByText("Növbəti ödəniş")).toBeInTheDocument();
+    expect(screen.getByText("5 gün gecikmə")).toBeInTheDocument();
+    expect(screen.getByText("Kredit verildi")).toBeInTheDocument();
+
+    const qaliqEvvel = server.oxu().kredit.qaliqBorc;
+    await user.type(screen.getByLabelText("Məbləğ"), "200");
+    await user.click(screen.getByRole("button", { name: /ödə$/ }));
+
+    // 200 ₼ → əvvəl 117 faizə, qalan 83 əsas borca
+    await waitFor(() => expect(server.oxu().kredit.faizBorc).toBe(0));
+    expect(server.oxu().kredit.qaliqBorc).toBe(qaliqEvvel - 83);
+    expect(server.oxu().kredit.gecikmeGun).toBe(0);
+
+    // Jurnalda ödəniş BİR sətirdir, bölgüsü ilə birlikdə
+    await waitFor(() => expect(screen.getByText("Ödəniş")).toBeInTheDocument());
+    expect(screen.getByText(/faiz .* · əsas .* · qalıq/)).toBeInTheDocument();
+  });
+
   // Peyk təsdiqi girovun əvəzi deyil, amma ölçmə VARSA bunu demək olar.
   // Ölçmə yoxdursa yuxarıdakı test "Xəritədə çəkilib" gözləyir — sətir
   // sahənin həqiqi vəziyyətini deyir, hər iki halda.

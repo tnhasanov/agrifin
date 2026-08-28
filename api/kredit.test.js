@@ -1,10 +1,11 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
 import { musterTeyin, sorgu } from "../lib/db.js";
 import { miqrasiyalariTetbiqEt } from "../lib/miqrasiya.js";
 import { otpTesdiqle, otpYarat } from "../lib/hesab.js";
 import { ayliqFaiz } from "../lib/kreditOdenis.js";
 import { KREDIT_SERTLERI } from "../lib/kreditSertler.js";
+import { dovrSonu } from "../lib/kreditMuhasibat.js";
 import handler from "./kredit.js";
 
 let pg;
@@ -691,8 +692,10 @@ describe("ödəniş qalığı azaldır, faiz qalığa hesablanır", () => {
     expect(ikinci.statusCode).toBe(200);
     expect(ikinci.govde.kredit.qaliqBorc).toBe(1700);
 
+    // Açar hissə başına suffikslənir (faiz/əsas ayrı hadisələrdir), amma
+    // hər hissə YALNIZ BİR DƏFƏ yazılır
     const hadiseler = await sorgu(
-      "SELECT id FROM loan_events WHERE idempotency_key='tekrar-1'",
+      "SELECT id FROM loan_events WHERE idempotency_key LIKE 'tekrar-1:%'",
     );
     expect(hadiseler).toHaveLength(1);
     const [kredit] = await sorgu("SELECT principal_outstanding FROM loans");
@@ -703,6 +706,345 @@ describe("ödəniş qalığı azaldır, faiz qalığa hesablanır", () => {
     const f = await fermer();
     const cavab = await isle({ method: "POST", cookie: f.cookie, body: { emel: "odenis", mebleg: 100 } });
     expect(cavab.statusCode).toBe(404);
+  });
+});
+
+// ═══ KREDİT MÜHƏRRİKİ (004): FAİZİN YIĞILMASI VƏ BÖLGÜ ══════════════
+// Vaxt saxta saatla sürüşdürülür: baza `now()` real qalır (kredit bu gün
+// verilir), server isə `new Date()` ilə "gələcəyə" baxır — yəni dövrlər
+// həqiqətən bitmiş sayılır. Faizin YAZILMASI oxunuş anında baş verir.
+
+describe("faiz mühərriki", () => {
+  const GUN = 86_400_000;
+
+  async function kreditAl(mebleg = 12_000, telefon = "+994501234567") {
+    const f = await fermer({ telefon });
+    await tarixceYaz(f.id);
+    const cavab = await muracietEt(f.cookie, mebleg);
+    await isle({
+      method: "POST",
+      cookie: f.cookie,
+      body: { emel: "teklif-qebul", teklifId: cavab.govde.teklif.id },
+    });
+    return f;
+  }
+
+  /**
+   * Serverin gördüyü "indi"-ni irəli sürüşdürür.
+   * QEYD: PGlite də JS saatından qidalanır, yəni bazadakı `now()` eyni anda
+   * sürüşür. Ona görə sıçrayış SESSİYA MÜDDƏTİNDƏN (90 gün) qısa olmalıdır —
+   * yoxsa sorğu 401 alır və test faizi yox, sessiyanı yoxlamış olur.
+   */
+  function vaxtiSurusdur(gun) {
+    // Əvvəlcə real saata qayıdırıq: sıçrayışlar HƏMİŞƏ real "indi"-dən
+    // sayılsın, üst-üstə yığılmasın (yığılsaydı 35+66 → 101 gün olub
+    // sessiya müddətini keçərdi)
+    vi.useRealTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true, toFake: ["Date"] });
+    vi.setSystemTime(new Date(Date.now() + gun * GUN));
+  }
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("dövr bitməyibsə faiz yazılmır", async () => {
+    const { cookie } = await kreditAl();
+    vaxtiSurusdur(20);
+    const kredit = (await isle({ cookie })).govde.kredit;
+    expect(kredit.faizBorc).toBe(0);
+    expect(kredit.hesablanmisDovr).toBe(0);
+  });
+
+  it("ay bitəndə faiz jurnala yazılır və borca əlavə olunur", async () => {
+    const { cookie } = await kreditAl(12_000);
+    vaxtiSurusdur(35);
+    const kredit = (await isle({ cookie })).govde.kredit;
+
+    expect(kredit.hesablanmisDovr).toBe(1);
+    // 12.000 × 11,5% × ~31/365 ≈ 117 ₼
+    expect(kredit.faizBorc).toBeGreaterThan(100);
+    expect(kredit.faizBorc).toBeLessThan(130);
+    expect(kredit.faizCemi).toBe(kredit.faizBorc);
+    // Əsas borc faizdən DƏYİŞMİR — kompaundinq yoxdur
+    expect(kredit.qaliqBorc).toBe(12_000);
+
+    const [hadise] = await sorgu(
+      "SELECT event_type, amount, due_on, idempotency_key FROM loan_events WHERE event_type='interest_charge'",
+    );
+    expect(hadise.idempotency_key).toBe("faiz-1");
+    expect(hadise.due_on).toBeTruthy();
+  });
+
+  it("təkrar oxunuş eyni dövrü İKİNCİ DƏFƏ yazmır", async () => {
+    const { cookie } = await kreditAl();
+    vaxtiSurusdur(35);
+    const birinci = (await isle({ cookie })).govde.kredit;
+    const ikinci = (await isle({ cookie })).govde.kredit;
+
+    expect(ikinci.faizBorc).toBe(birinci.faizBorc);
+    const hadiseler = await sorgu("SELECT id FROM loan_events WHERE event_type='interest_charge'");
+    expect(hadiseler).toHaveLength(1);
+  });
+
+  it("bir neçə ay keçibsə hər dövr AYRI hadisə kimi yazılır", async () => {
+    const { cookie } = await kreditAl();
+    vaxtiSurusdur(65);
+    const kredit = (await isle({ cookie })).govde.kredit;
+
+    expect(kredit.hesablanmisDovr).toBe(2);
+    const hadiseler = await sorgu(
+      "SELECT idempotency_key FROM loan_events WHERE event_type='interest_charge' ORDER BY id",
+    );
+    expect(hadiseler.map((h) => h.idempotency_key)).toEqual(["faiz-1", "faiz-2"]);
+  });
+
+  it("erkən əsas ödəniş sonrakı ayın faizini azaldır", async () => {
+    const tam = await kreditAl(12_000, "+994501111111");
+    const yarim = await kreditAl(12_000, "+994502222222");
+    // İkinci fermer dərhal yarısını ödəyir
+    await isle({ method: "POST", cookie: yarim.cookie, body: { emel: "odenis", mebleg: 6_000 } });
+
+    vaxtiSurusdur(35);
+    const tamFaiz = (await isle({ cookie: tam.cookie })).govde.kredit.faizBorc;
+    const yarimFaiz = (await isle({ cookie: yarim.cookie })).govde.kredit.faizBorc;
+
+    expect(yarimFaiz).toBeLessThan(tamFaiz);
+    // Yarı borc ≈ yarı faiz (ödəniş dövrün əvvəlindədir)
+    expect(yarimFaiz).toBeCloseTo(tamFaiz / 2, 0);
+  });
+
+  it("ödəniş ƏVVƏL faizi, sonra əsas borcu bağlayır", async () => {
+    const { cookie } = await kreditAl(12_000);
+    vaxtiSurusdur(35);
+    const evvel = (await isle({ cookie })).govde.kredit;
+    expect(evvel.faizBorc).toBeGreaterThan(0);
+
+    const cavab = await isle({
+      method: "POST",
+      cookie,
+      body: { emel: "odenis", mebleg: evvel.faizBorc + 500 },
+    });
+    const sonra = cavab.govde.kredit;
+
+    expect(sonra.faizBorc).toBe(0);
+    expect(sonra.qaliqBorc).toBe(12_000 - 500);
+    expect(sonra.faizOdenilen).toBe(evvel.faizBorc);
+
+    const novler = (
+      await sorgu("SELECT event_type FROM loan_events ORDER BY id")
+    ).map((h) => h.event_type);
+    expect(novler).toEqual([
+      "disbursement",
+      "interest_charge",
+      "interest_payment",
+      "principal_repayment",
+    ]);
+  });
+
+  it("faizdən kiçik ödəniş əsas borca toxunmur", async () => {
+    const { cookie } = await kreditAl(12_000);
+    vaxtiSurusdur(35);
+    const evvel = (await isle({ cookie })).govde.kredit;
+
+    const sonra = (
+      await isle({ method: "POST", cookie, body: { emel: "odenis", mebleg: 20 } })
+    ).govde.kredit;
+
+    expect(sonra.qaliqBorc).toBe(12_000);
+    expect(sonra.faizBorc).toBeCloseTo(evvel.faizBorc - 20, 2);
+  });
+
+  it("əsas borc bağlansa da ödənilməmiş faiz varsa kredit açıq qalır", async () => {
+    const { cookie } = await kreditAl(12_000);
+    vaxtiSurusdur(35);
+    await isle({ cookie }); // faiz yığılsın
+    const sonra = (
+      await isle({ method: "POST", cookie, body: { emel: "odenis", mebleg: 12_000 } })
+    ).govde.kredit;
+
+    // 12.000 əvvəl faizə, sonra əsasa gedir → əsasdan faiz qədəri qalır
+    expect(sonra.faizBorc).toBe(0);
+    expect(sonra.qaliqBorc).toBeGreaterThan(0);
+    expect(sonra.hal).toBe("active");
+
+    // Qalığı da ödəyəndə kredit bağlanır
+    const bagli = (
+      await isle({ method: "POST", cookie, body: { emel: "odenis", mebleg: sonra.qaliqBorc } })
+    ).govde.kredit;
+    expect(bagli.hal).toBe("repaid");
+    expect(bagli.qaliqBorc).toBe(0);
+    expect(bagli.faizBorc).toBe(0);
+  });
+
+  it("gecikmə günü ödənilməmiş faizin son tarixindən sayılır", async () => {
+    const { cookie } = await kreditAl(12_000);
+    vaxtiSurusdur(45);
+    const kredit = (await isle({ cookie })).govde.kredit;
+
+    // 1-ci dövr ~31-ci gündə bitib, indi 45-ci gündür
+    expect(kredit.gecikmeGun).toBeGreaterThanOrEqual(13);
+    expect(kredit.gecikmeGun).toBeLessThanOrEqual(16);
+
+    // Faiz ödənəndə gecikmə itir
+    const sonra = (
+      await isle({ method: "POST", cookie, body: { emel: "odenis", mebleg: kredit.faizBorc } })
+    ).govde.kredit;
+    expect(sonra.gecikmeGun).toBe(0);
+  });
+
+  it("növbəti ödəniş tarixi və məbləği verilir", async () => {
+    const { cookie } = await kreditAl(12_000);
+    const kredit = (await isle({ cookie })).govde.kredit;
+
+    expect(kredit.novbetiTarix).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    // Adi ayda yalnız faiz gözlənilir — əsas borc daxil deyil
+    expect(kredit.novbetiMebleg).toBeGreaterThan(0);
+    expect(kredit.novbetiMebleg).toBeLessThan(200);
+    expect(kredit.novbetiEsasDaxil).toBe(false);
+  });
+
+  it("ödəniş tarixçəsi cavabda gəlir — yeni hadisə başda", async () => {
+    const { cookie } = await kreditAl(12_000);
+    await isle({ method: "POST", cookie, body: { emel: "odenis", mebleg: 500 } });
+    const cavab = await isle({ cookie });
+
+    expect(cavab.govde.hadiseler[0].nov).toBe("principal_repayment");
+    expect(cavab.govde.hadiseler[0].mebleg).toBe(500);
+    expect(cavab.govde.hadiseler[0].esasSonra).toBe(11_500);
+    expect(cavab.govde.hadiseler.at(-1).nov).toBe("disbursement");
+  });
+
+  it("krediti olmayan fermerin tarixçəsi boşdur", async () => {
+    const f = await fermer();
+    await tarixceYaz(f.id);
+    await muracietEt(f.cookie, 2000);
+    const cavab = await isle({ cookie: f.cookie });
+    expect(cavab.govde.hadiseler).toEqual([]);
+    expect(cavab.govde.odenisler).toEqual([]);
+  });
+
+  // ── Məhsul ssenarisi: 10.000 @ 12% ───────────────────────────────────
+  // Faiz konvensiyası illik/12-dir (bax: lib/kreditOdenis.js → ayliqFaiz);
+  // dərəcə test üçün birbaşa bazada 12%-ə qoyulur, çünki anderraytinq
+  // dərəcəni KREDIT_SERTLERI-dən götürür və bu tapşırıqda dəyişmir.
+  it("10.000 @ 12%: faiz gündəlik act/365, ödəniş faiz→əsas bölünür, sonra yeni qalığa", async () => {
+    const { cookie } = await kreditAl(10_000);
+    await sorgu("UPDATE loans SET annual_rate=12, principal_original=10000, principal_outstanding=10000");
+    await sorgu("UPDATE loan_events SET amount=10000, principal_after=10000 WHERE event_type='disbursement'");
+
+    // Vaxt DÖVR SƏRHƏDİNƏ qoyulur: nümunədəki kimi faiz yazılan gün ödənilir.
+    // (Ödəniş dövrün ortasında olsaydı, həmin ayın faizi çəkili orta ilə
+    // hesablanardı — bu, məhsulun vədidir: erkən ödəniş faizi elə həmin
+    // gündən azaldır. O hal aşağıdakı ayrıca testdədir.)
+    const [setir] = await sorgu("SELECT disbursed_at FROM loans");
+    const sonaQoy = (dovr) =>
+      vi.setSystemTime(new Date(dovrSonu(setir.disbursed_at, dovr).getTime() + 1000));
+
+    // Gözlənilən faiz dövrün FAKTİKİ gün sayından çıxır (act/365):
+    // 31 günlük dövr 101,92 ₼, 30 günlük dövr 98,63 ₼ — aylar bərabər deyil
+    const GUN_MS = 86_400_000;
+    const gunSayi = (dovr) =>
+      (dovrSonu(setir.disbursed_at, dovr).getTime() -
+        dovrSonu(setir.disbursed_at, dovr - 1).getTime()) /
+      GUN_MS;
+    const gozlenen = (qaliq, dovr) =>
+      Math.round(qaliq * 0.12 * (gunSayi(dovr) / 365) * 100) / 100;
+
+    // 1-ci dövr: faiz 10.000 üzərindən, günbəgün
+    vaxtiSurusdur(0);
+    sonaQoy(1);
+    const birinciAy = (await isle({ cookie })).govde.kredit;
+    expect(birinciAy.faizBorc).toBe(gozlenen(10_000, 1));
+    expect(birinciAy.odenilecekIndi).toBe(birinciAy.faizBorc);
+
+    // Ödəniş: əvvəl faiz, sonra 2.000 əsas borc → qalıq 8.000
+    const odenisden = (
+      await isle({
+        method: "POST",
+        cookie,
+        body: { emel: "odenis", mebleg: birinciAy.faizBorc + 2_000 },
+      })
+    ).govde;
+    expect(odenisden.kredit.faizBorc).toBe(0);
+    expect(odenisden.kredit.qaliqBorc).toBe(8_000);
+    expect(odenisden.odenisler[0]).toMatchObject({
+      mebleg: birinciAy.faizBorc + 2_000,
+      faizHissesi: birinciAy.faizBorc,
+      esasHissesi: 2_000,
+      esasQaliq: 8_000,
+    });
+
+    // 2-ci dövr: faiz artıq 10.000-ə yox, 8.000-ə görə
+    sonaQoy(2);
+    const ikinciAy = (await isle({ cookie })).govde.kredit;
+    expect(ikinciAy.faizBorc).toBe(gozlenen(8_000, 2));
+    expect(ikinciAy.faizBorc).toBeLessThan(birinciAy.faizBorc);
+    expect(ikinciAy.hesablanmisDovr).toBe(2);
+  });
+
+  it("dövrün ortasında edilən ödəniş həmin ayın faizini də azaldır", async () => {
+    const { cookie } = await kreditAl(10_000);
+    await sorgu("UPDATE loans SET annual_rate=12, principal_original=10000, principal_outstanding=10000");
+    await sorgu("UPDATE loan_events SET amount=10000, principal_after=10000 WHERE event_type='disbursement'");
+
+    // Ödəniş 1-ci dövrün ORTASINDA (15-ci gün): yarım ay 10.000, yarım ay 8.000
+    vaxtiSurusdur(15);
+    await isle({ method: "POST", cookie, body: { emel: "odenis", mebleg: 2_000 } });
+
+    vaxtiSurusdur(35);
+    const kredit = (await isle({ cookie })).govde.kredit;
+    // Nə 100 (heç nə ödəməmiş kimi), nə də 80 (bütün ay 8.000 kimi)
+    expect(kredit.faizBorc).toBeGreaterThan(80);
+    expect(kredit.faizBorc).toBeLessThan(100);
+  });
+
+  it("gecikmə olanda vəziyyət 'overdue' və gecikmiş məbləğ qaytarılır", async () => {
+    const { cookie } = await kreditAl(12_000);
+    vaxtiSurusdur(45);
+    const kredit = (await isle({ cookie })).govde.kredit;
+
+    expect(kredit.veziyyet).toBe("overdue");
+    expect(kredit.gecikmisMebleg).toBe(kredit.faizBorc);
+    expect(kredit.odenilecekIndi).toBe(kredit.faizBorc);
+
+    // Ödəniş gecikməni bağlayır → yenidən "active"
+    const sonra = (
+      await isle({ method: "POST", cookie, body: { emel: "odenis", mebleg: kredit.faizBorc } })
+    ).govde.kredit;
+    expect(sonra.veziyyet).toBe("active");
+    expect(sonra.gecikmisMebleg).toBe(0);
+  });
+
+  it("tam bağlanan kreditin vəziyyəti 'closed' olur", async () => {
+    const { cookie } = await kreditAl(12_000);
+    const kredit = (await isle({ cookie })).govde.kredit;
+    const sonra = (
+      await isle({ method: "POST", cookie, body: { emel: "odenis", mebleg: kredit.qaliqBorc } })
+    ).govde.kredit;
+
+    expect(sonra.hal).toBe("repaid");
+    expect(sonra.veziyyet).toBe("closed");
+    expect(sonra.odenilecekIndi).toBe(0);
+  });
+
+  // Vəziyyət serverdədir: yeni sessiya (çıxış/yenidən giriş) eyni krediti görür
+  it("çıxış/yenidən girişdən sonra kredit vəziyyəti eynidir", async () => {
+    const telefon = "+994503334444";
+    const { cookie } = await kreditAl(12_000, telefon);
+    vaxtiSurusdur(35);
+    await isle({ method: "POST", cookie, body: { emel: "odenis", mebleg: 500 } });
+    const evvel = (await isle({ cookie })).govde.kredit;
+
+    // Yeni sessiya = yeni token, eyni istifadəçi
+    const { kod } = await otpYarat({ telefon, ip: null });
+    const { token } = await otpTesdiqle({ telefon, kod });
+    const sonra = (await isle({ cookie: `agrifin_sessiya=${token}` })).govde.kredit;
+
+    expect(sonra.qaliqBorc).toBe(evvel.qaliqBorc);
+    expect(sonra.faizBorc).toBe(evvel.faizBorc);
+    expect(sonra.hesablanmisDovr).toBe(evvel.hesablanmisDovr);
+    expect(sonra.id).toBe(evvel.id);
   });
 });
 

@@ -3,10 +3,11 @@ import {
   kreditVeziyyeti,
   muracietGonder as apiMuracietGonder,
   muracietLegv as apiMuracietLegv,
+  odenisEt as apiOdenisEt,
   teklifQebul as apiTeklifQebul,
 } from "../../services/kredit.js";
 
-const BOS = { muraciet: null, qerar: null, teklif: null, kredit: null };
+const BOS = { muraciet: null, qerar: null, teklif: null, kredit: null, hadiseler: [] };
 
 /** Xəta → istifadəçiyə göstərilən hal */
 function xetaHali(xeta) {
@@ -107,5 +108,7 @@ export function useKreditVeziyyeti(telefon) {
     muracietEt: (mebleg, acar) => emelEt(() => apiMuracietGonder({ mebleg, acar })),
     teklifiQebulEt: (teklifId) => emelEt(() => apiTeklifQebul(teklifId)),
     legvEt: () => emelEt(() => apiMuracietLegv()),
+    // Bölgü (əvvəl faiz, sonra əsas) SERVERDƏDİR — burada yalnız məbləğ gedir
+    odeEt: (mebleg, acar) => emelEt(() => apiOdenisEt({ mebleg, acar })),
   };
 }

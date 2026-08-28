@@ -492,6 +492,37 @@ isə heç yerdə qeyd olunmur.
 - Müştəri: `src/services/kredit.js` + `src/features/loan/useKreditVeziyyeti.js`.
   localStorage-da yalnız UI vəziyyəti qalır (yüklənir, forma, dil).
 
+### Kredit mühərriki (004)
+
+Kredit verildikdən sonrakı həyat: faizin yığılması, ödənişin bölünməsi,
+gecikmə.
+
+- `lib/kreditMuhasibat.js` — SAF mühasibat. **Faiz gündəlik hesablanır
+  (Actual/365), ayda bir dəfə ödənişə düşür**:
+
+      faiz = Σ (həmin günün qalıq əsas borcu × illikFaiz/100 / 365)
+
+  "Hər ay ödənilir" ≠ "illik/12": 10.000 @ 12% üçün 31 günlük dövr 101,92 ₼,
+  30 günlük dövr 98,63 ₼. Fermer ayın ortasında əsas borcu azaldırsa, həmin
+  gündən sonrakı günlər artıq YENİ qalığa hesablanır — bu, faizin yalnız
+  borcun mövcud olduğu günlərə və qalan məbləğə hesablanması qaydasıdır;
+  365 bölən məhsul qaydası kimi müqavilədə sabitlənir. UI-dakı "İlk ayın
+  faizi ~X" isə təxmindir (illik/12, "~" ilə). Ödəniş ƏVVƏL faizi, sonra
+  əsas borcu bağlayır; gecikmə (DPD) ödənilməmiş ən köhnə faiz borcunun
+  yaşıdır. **Kompaundinq və cərimə dərəcəsi YOXDUR** — faizin bazası həmişə
+  yalnız əsas borcdur.
+- Servis vəziyyəti (`active` / `overdue` / `closed`) və gecikmiş məbləğ
+  HESABLANIR, saxlanılmır: saxlanılan sahə cron olmadan səssizcə köhnələrdi.
+- `db/migrations/004_kredit_muhasibat.sql` — `loans`-a faiz balansları və
+  dövr sayğacı, `loan_events`-ə `interest_after` və `due_on`.
+- Hesablama CRON-suzdur: `api/kredit.js` → `faizleriIsle()` hər oxunuşda
+  bitmiş dövrləri yazır. İdempotentdir (`faiz-<dövr>` açarı + `accrued_periods`
+  şərti), yəni nə itən, nə təkrarlanan faiz var; nəticə vaxtdan asılıdır,
+  sorğu tarixçəsindən yox.
+- UI: aktiv kredit ekranı qalıq, ödənilməmiş faiz, növbəti ödəniş (tarix +
+  təxmini məbləğ), gecikmə və hərəkət jurnalını göstərir; ödəniş elə oradan
+  edilir. Rəqəm "təxmini"dir, çünki əsas borcu azaltmaq faizi də azaldır.
+
 **Yarış testləri (real Postgres):** vitest-dəki yarış testləri PGlite
 üzərindədir — tək bağlantılıdır, sorğular faktiki ardıcıllaşır. Əsl paralel
 icra `scripts/yaris-testi.mjs` ilə REAL Neon üzərində yoxlanılır: birdəfəlik

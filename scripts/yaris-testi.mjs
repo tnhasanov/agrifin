@@ -130,6 +130,8 @@ await miqrasiyalariTetbiqEt(sorgu, (mesaj) => console.log(mesaj));
   ]);
 
   const [setir] = await sorgu("SELECT principal_outstanding, status FROM loans WHERE id=$1", [kredit.id]);
+  // Açar hissə başına suffikslənir: '<açar>:faiz' və '<açar>:esas'
+  // (ödəniş əvvəl faizi, sonra əsas borcu bağlayır — bax: api/kredit.js)
   const hadiseler = await sorgu(
     `SELECT amount FROM loan_events
      WHERE loan_id=$1 AND event_type='principal_repayment' AND idempotency_key LIKE 'a-%'
@@ -158,7 +160,7 @@ await miqrasiyalariTetbiqEt(sorgu, (mesaj) => console.log(mesaj));
   });
 
   const hadiseler = await sorgu(
-    "SELECT id FROM loan_events WHERE loan_id=$1 AND idempotency_key='tekrar'",
+    "SELECT id FROM loan_events WHERE loan_id=$1 AND idempotency_key LIKE 'tekrar:%'",
     [kredit.id],
   );
   const [setir] = await sorgu("SELECT principal_outstanding FROM loans WHERE id=$1", [kredit.id]);

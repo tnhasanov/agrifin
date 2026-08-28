@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Chip } from "../../components/Chip.jsx";
 import { Icon } from "../../components/Icon.jsx";
 import { Aqronom } from "../../components/Aqronom.jsx";
 import { Sheet } from "../../components/Sheet.jsx";
@@ -35,6 +36,10 @@ export function LoanSheet({ onClose, indeksHali = null, kreditHali, onOpenHesab 
   // (Açar render zamanı YOX, ilk göndərişdə yaradılır: Date.now/Math.random
   // render içində qadağandır — react-hooks/purity.)
   const acarRef = useRef(null);
+  // Ödənişin idempotentlik açarı: uğurlu ödənişdən sonra sıfırlanır ki,
+  // növbəti ödəniş YENİ əməl kimi getsin
+  const odeAcarRef = useRef(null);
+  const [odenisMebleg, setOdenisMebleg] = useState("");
 
   // SERVER vəziyyəti — müraciət, qərar, təklif, kredit (bax: useKreditVeziyyeti)
   const serverHal = kreditHali?.hal ?? "yuklenir";
@@ -42,6 +47,8 @@ export function LoanSheet({ onClose, indeksHali = null, kreditHali, onOpenHesab 
   const teklif = kreditHali?.teklif ?? null;
   const aktivKredit = kreditHali?.kredit ?? null;
   const qerar = kreditHali?.qerar ?? null;
+  const hadiseler = kreditHali?.hadiseler ?? [];
+  const odenisler = kreditHali?.odenisler ?? [];
   const acıqMuraciet =
     muraciet && ["submitted", "reviewing", "approved"].includes(muraciet.hal) ? muraciet : null;
   const teklifVar = muraciet?.hal === "offer_issued" && teklif?.hal === "issued";
@@ -67,6 +74,14 @@ export function LoanSheet({ onClose, indeksHali = null, kreditHali, onOpenHesab 
   const ayAdi = (tarix) =>
     tarix ? `${t(`ay.${tarix.getMonth() + 1}`)} ${tarix.getFullYear()}` : "";
 
+  /** Gün dəqiqliyi ilə: "10 Aprel" — ödəniş tarixləri üçün */
+  const gunAdi = (deyer) => {
+    if (!deyer) return "";
+    const tarix = new Date(deyer);
+    if (Number.isNaN(tarix.getTime())) return "";
+    return `${tarix.getUTCDate()} ${t(`ay.${tarix.getUTCMonth() + 1}`)}`;
+  };
+
   // Serverə YALNIZ MƏBLƏĞ gedir. Müddət, dərəcə, limit, bal və qərar
   // serverdə hesablanır — klientin hesabladığı rəqəm bağlayıcı deyil
   // (bax: api/kredit.js, lib/kredit.js).
@@ -74,6 +89,49 @@ export function LoanSheet({ onClose, indeksHali = null, kreditHali, onOpenHesab 
     acarRef.current ??= `m-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     const netice = await kreditHali.muracietEt(mebleg, acarRef.current);
     if (netice.ok) setAddim(2);
+  };
+
+  // Jurnal sətirləri: ödənişlər qruplaşdırılmış (serverdən `odenisler`),
+  // qalan hadisələr olduğu kimi; hamısı yenidən köhnəyə doğru
+  const jurnalSetirleri = [
+    ...hadiseler
+      .filter((h) => h.nov !== "interest_payment" && h.nov !== "principal_repayment")
+      .map((h) => ({
+        acar: `h-${h.id}`,
+        tarix: h.tarix,
+        ad: t(`kredit.tarixce.${h.nov}`),
+        mebleg: h.mebleg,
+        alt:
+          h.esasSonra != null
+            ? t("kredit.tarixce.qaliqSonra", { mebleg: { money: h.esasSonra } })
+            : null,
+        vurgu: h.nov === "interest_charge",
+      })),
+    ...odenisler.map((odenis) => ({
+      acar: `o-${odenis.tarix}`,
+      tarix: odenis.tarix,
+      ad: t("kredit.tarixce.odenis"),
+      mebleg: odenis.mebleg,
+      alt: t("kredit.tarixce.bolgu", {
+        faiz: { money: odenis.faizHissesi },
+        esas: { money: odenis.esasHissesi },
+        qaliq: { money: odenis.esasQaliq ?? 0 },
+      }),
+      vurgu: false,
+    })),
+  ].sort((a, b) => new Date(b.tarix) - new Date(a.tarix));
+
+  // Ödəniş: məbləğ serverə gedir, bölgünü (əvvəl faiz, sonra əsas borc)
+  // server aparır — klient nə bölür, nə də balansı özü hesablayır
+  const ode = async () => {
+    const mebleg = Number(odenisMebleg);
+    if (!(mebleg > 0)) return;
+    odeAcarRef.current ??= `o-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const netice = await kreditHali.odeEt(mebleg, odeAcarRef.current);
+    if (netice.ok) {
+      odeAcarRef.current = null;
+      setOdenisMebleg("");
+    }
   };
 
   // "Niyə bu qədər?" — tavanın hər addımı rəqəmlə (Nubank "Me explica").
@@ -153,28 +211,200 @@ export function LoanSheet({ onClose, indeksHali = null, kreditHali, onOpenHesab 
           </div>
         )}
 
-        {/* ── Aktiv kredit: qalıq borc və faiz bazası ─────────────────── */}
+        {/* ── Aktiv kredit: balans, növbəti ödəniş, ödəniş, jurnal ────── */}
         {serverHal === "hazir" && aktivKredit && (
           <div className="py-2">
-            <p className="text-sm font-bold" style={{ color: C.ink }}>
-              {t("kredit.aktivBasliq")}
-            </p>
-            <div className="mt-2 flex items-baseline justify-between gap-3">
-              <span className="text-xs" style={{ color: C.muted }}>
-                {t("kredit.qaliqBorc")}
-              </span>
-              <span
-                className="text-lg font-extrabold"
-                style={{ color: C.ink, fontFamily: font.display, fontVariantNumeric: "tabular-nums" }}
-              >
-                {money(aktivKredit.qaliqBorc)}
-              </span>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-bold" style={{ color: C.ink }}>
+                {t("kredit.aktivBasliq")}
+              </p>
+              {/* Gecikmə gizlədilmir: fermer nə vaxtdan borclu olduğunu
+                  bilməlidir — xəbərdarlıq cərimədən əvvəl gəlir */}
+              {aktivKredit.gecikmeGun > 0 && (
+                <Chip
+                  icon="AlertCircle"
+                  label={t("kredit.gecikme", { gun: aktivKredit.gecikmeGun })}
+                  color={C.danger}
+                  bg="#FBEAE7"
+                />
+              )}
             </div>
-            <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
-              {t("kredit.aktivIzah", {
-                faiz: { money: ayliqFaiz(aktivKredit.qaliqBorc, aktivKredit.illikFaiz) },
-              })}
+
+            {/* Qalan əsas borc — ekranın ən iri rəqəmi */}
+            <p className="mt-1 text-xs" style={{ color: C.muted }}>
+              {t("kredit.qaliqBorc")}
             </p>
+            <p
+              className="text-3xl font-extrabold"
+              style={{ color: C.ink, fontFamily: font.display, fontVariantNumeric: "tabular-nums" }}
+            >
+              {money(aktivKredit.qaliqBorc)}
+            </p>
+            <div className="mt-2 h-2 overflow-hidden rounded-full" style={{ backgroundColor: C.mist }}>
+              <div
+                className="bar-dolur h-2 rounded-full"
+                style={{
+                  width: `${Math.round((1 - aktivKredit.qaliqBorc / aktivKredit.esasBorc) * 100)}%`,
+                  backgroundColor: C.field,
+                }}
+              />
+            </div>
+
+            {[
+              { ad: t("kredit.detal.ilkin"), deger: money(aktivKredit.esasBorc) },
+              {
+                ad: t("kredit.detal.faizBorc"),
+                deger: money(aktivKredit.faizBorc),
+                // Ödənilməmiş faiz varsa diqqət çəkir — gizli borc olmur
+                vurgu: aktivKredit.faizBorc > 0,
+              },
+              // Gecikmiş məbləğ yalnız gecikmə varsa görünür
+              aktivKredit.gecikmisMebleg > 0 && {
+                ad: t("kredit.detal.gecikmis"),
+                deger: money(aktivKredit.gecikmisMebleg),
+                vurgu: true,
+              },
+              aktivKredit.novbetiTarix && {
+                ad: t("kredit.detal.novbeti"),
+                deger: t(
+                  aktivKredit.novbetiEsasDaxil
+                    ? "kredit.detal.novbetiEsasla"
+                    : "kredit.detal.novbetiDeger",
+                  {
+                    mebleg: { money: aktivKredit.novbetiMebleg },
+                    tarix: gunAdi(aktivKredit.novbetiTarix),
+                  },
+                ),
+              },
+              { ad: t("kredit.detal.faizDerece"), deger: `${aktivKredit.illikFaiz}%` },
+              aktivKredit.sonTarix && {
+                ad: t("kredit.detal.sonTarix"),
+                deger: gunAdi(aktivKredit.sonTarix),
+              },
+            ]
+              .filter(Boolean)
+              .map(({ ad, deger, vurgu }) => (
+                <div
+                  key={ad}
+                  className="flex justify-between gap-3 py-2"
+                  style={{ borderBottom: `1px solid ${C.line}` }}
+                >
+                  <span className="text-xs" style={{ color: C.muted }}>
+                    {ad}
+                  </span>
+                  <span
+                    className="max-w-[60%] text-right text-xs font-bold"
+                    style={{
+                      color: vurgu ? C.goldDeep : C.ink,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {deger}
+                  </span>
+                </div>
+              ))}
+
+            <p className="mt-2 text-xs leading-relaxed" style={{ color: C.muted }}>
+              {t("kredit.detal.qeyd")}
+            </p>
+
+            {/* ── Ödəniş ─────────────────────────────────────────────── */}
+            <p className="mt-4 text-sm font-bold" style={{ color: C.ink }}>
+              {t("kredit.odenis.basliq")}
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {aktivKredit.novbetiMebleg > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setOdenisMebleg(String(Math.ceil(aktivKredit.novbetiMebleg)))}
+                  className="rounded-xl px-3 py-2 text-xs font-semibold"
+                  style={{ backgroundColor: C.mist, color: C.pine }}
+                >
+                  {t("kredit.odenis.novbeti", { mebleg: { money: aktivKredit.novbetiMebleg } })}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() =>
+                  setOdenisMebleg(String(Math.ceil(aktivKredit.qaliqBorc + aktivKredit.faizBorc)))
+                }
+                className="rounded-xl px-3 py-2 text-xs font-semibold"
+                style={{ backgroundColor: C.mist, color: C.pine }}
+              >
+                {t("kredit.odenis.hamisi", {
+                  mebleg: { money: aktivKredit.qaliqBorc + aktivKredit.faizBorc },
+                })}
+              </button>
+            </div>
+            <input
+              type="number"
+              inputMode="decimal"
+              min="1"
+              value={odenisMebleg}
+              onChange={(e) => setOdenisMebleg(e.target.value)}
+              aria-label={t("kredit.odenis.mebleg")}
+              placeholder={t("kredit.odenis.mebleg")}
+              className="mt-2 w-full rounded-xl px-3 py-2.5 text-sm font-bold"
+              style={{
+                backgroundColor: C.mist,
+                color: C.ink,
+                border: `1px solid ${C.line}`,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            />
+            <button
+              type="button"
+              disabled={kreditHali.gedir || !(Number(odenisMebleg) > 0)}
+              onClick={ode}
+              className="mt-2 w-full rounded-xl py-3 text-sm font-bold"
+              style={{
+                backgroundColor: C.pine,
+                color: "#fff",
+                opacity: kreditHali.gedir || !(Number(odenisMebleg) > 0) ? 0.5 : 1,
+              }}
+            >
+              {kreditHali.gedir
+                ? t("kredit.gedir")
+                : t("kredit.odenis.cta", { mebleg: { money: Number(odenisMebleg) || 0 } })}
+            </button>
+
+            {/* ── Hərəkət jurnalı ─────────────────────────────────────
+                Ödəniş BİR sətirdir (faiz payı + əsas payı + sonrakı qalıq),
+                çünki fermer "2.100 ödədim" görmək istəyir, iki hadisə yox.
+                Faizin yığılması və verilmə isə öz sətirlərində qalır. */}
+            {jurnalSetirleri.length > 0 && (
+              <>
+                <p className="mt-4 text-sm font-bold" style={{ color: C.ink }}>
+                  {t("kredit.tarixce.basliq")}
+                </p>
+                {jurnalSetirleri.map((setir) => (
+                  <div
+                    key={setir.acar}
+                    className="flex items-baseline justify-between gap-3 py-2"
+                    style={{ borderBottom: `1px solid ${C.line}` }}
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold" style={{ color: C.ink }}>
+                        {setir.ad}
+                      </p>
+                      <p className="text-xs" style={{ color: C.muted }}>
+                        {gunAdi(setir.tarix)}
+                        {setir.alt ? ` · ${setir.alt}` : ""}
+                      </p>
+                    </div>
+                    <span
+                      className="text-xs font-bold whitespace-nowrap"
+                      style={{
+                        color: setir.vurgu ? C.goldDeep : C.ink,
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      {money(setir.mebleg)}
+                    </span>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
         )}
 
