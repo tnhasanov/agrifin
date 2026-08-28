@@ -928,7 +928,7 @@ describe("faiz mühərriki", () => {
   // Faiz konvensiyası illik/12-dir (bax: lib/kreditOdenis.js → ayliqFaiz);
   // dərəcə test üçün birbaşa bazada 12%-ə qoyulur, çünki anderraytinq
   // dərəcəni KREDIT_SERTLERI-dən götürür və bu tapşırıqda dəyişmir.
-  it("10.000 @ 12%: ilk ay 100 ₼ faiz, 2.100 ödəniş 100+2.000 bölünür, sonra 80 ₼", async () => {
+  it("10.000 @ 12%: faiz gündəlik act/365, ödəniş faiz→əsas bölünür, sonra yeni qalığa", async () => {
     const { cookie } = await kreditAl(10_000);
     await sorgu("UPDATE loans SET annual_rate=12, principal_original=10000, principal_outstanding=10000");
     await sorgu("UPDATE loan_events SET amount=10000, principal_after=10000 WHERE event_type='disbursement'");
@@ -941,30 +941,45 @@ describe("faiz mühərriki", () => {
     const sonaQoy = (dovr) =>
       vi.setSystemTime(new Date(dovrSonu(setir.disbursed_at, dovr).getTime() + 1000));
 
-    // 1-ci ay: faiz məhz 100 ₼
+    // Gözlənilən faiz dövrün FAKTİKİ gün sayından çıxır (act/365):
+    // 31 günlük dövr 101,92 ₼, 30 günlük dövr 98,63 ₼ — aylar bərabər deyil
+    const GUN_MS = 86_400_000;
+    const gunSayi = (dovr) =>
+      (dovrSonu(setir.disbursed_at, dovr).getTime() -
+        dovrSonu(setir.disbursed_at, dovr - 1).getTime()) /
+      GUN_MS;
+    const gozlenen = (qaliq, dovr) =>
+      Math.round(qaliq * 0.12 * (gunSayi(dovr) / 365) * 100) / 100;
+
+    // 1-ci dövr: faiz 10.000 üzərindən, günbəgün
     vaxtiSurusdur(0);
     sonaQoy(1);
     const birinciAy = (await isle({ cookie })).govde.kredit;
-    expect(birinciAy.faizBorc).toBe(100);
-    expect(birinciAy.odenilecekIndi).toBe(100);
+    expect(birinciAy.faizBorc).toBe(gozlenen(10_000, 1));
+    expect(birinciAy.odenilecekIndi).toBe(birinciAy.faizBorc);
 
-    // 2.100 ödəniş → 100 faizə, 2.000 əsas borca
+    // Ödəniş: əvvəl faiz, sonra 2.000 əsas borc → qalıq 8.000
     const odenisden = (
-      await isle({ method: "POST", cookie, body: { emel: "odenis", mebleg: 2_100 } })
+      await isle({
+        method: "POST",
+        cookie,
+        body: { emel: "odenis", mebleg: birinciAy.faizBorc + 2_000 },
+      })
     ).govde;
     expect(odenisden.kredit.faizBorc).toBe(0);
     expect(odenisden.kredit.qaliqBorc).toBe(8_000);
     expect(odenisden.odenisler[0]).toMatchObject({
-      mebleg: 2_100,
-      faizHissesi: 100,
+      mebleg: birinciAy.faizBorc + 2_000,
+      faizHissesi: birinciAy.faizBorc,
       esasHissesi: 2_000,
       esasQaliq: 8_000,
     });
 
-    // 2-ci ay: faiz artıq 10.000-ə yox, 8.000-ə görə → 80 ₼
+    // 2-ci dövr: faiz artıq 10.000-ə yox, 8.000-ə görə
     sonaQoy(2);
     const ikinciAy = (await isle({ cookie })).govde.kredit;
-    expect(ikinciAy.faizBorc).toBe(80);
+    expect(ikinciAy.faizBorc).toBe(gozlenen(8_000, 2));
+    expect(ikinciAy.faizBorc).toBeLessThan(birinciAy.faizBorc);
     expect(ikinciAy.hesablanmisDovr).toBe(2);
   });
 
