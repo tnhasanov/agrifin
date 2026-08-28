@@ -48,6 +48,7 @@ export function LoanSheet({ onClose, indeksHali = null, kreditHali, onOpenHesab 
   const aktivKredit = kreditHali?.kredit ?? null;
   const qerar = kreditHali?.qerar ?? null;
   const hadiseler = kreditHali?.hadiseler ?? [];
+  const odenisler = kreditHali?.odenisler ?? [];
   const acıqMuraciet =
     muraciet && ["submitted", "reviewing", "approved"].includes(muraciet.hal) ? muraciet : null;
   const teklifVar = muraciet?.hal === "offer_issued" && teklif?.hal === "issued";
@@ -89,6 +90,36 @@ export function LoanSheet({ onClose, indeksHali = null, kreditHali, onOpenHesab 
     const netice = await kreditHali.muracietEt(mebleg, acarRef.current);
     if (netice.ok) setAddim(2);
   };
+
+  // Jurnal sətirləri: ödənişlər qruplaşdırılmış (serverdən `odenisler`),
+  // qalan hadisələr olduğu kimi; hamısı yenidən köhnəyə doğru
+  const jurnalSetirleri = [
+    ...hadiseler
+      .filter((h) => h.nov !== "interest_payment" && h.nov !== "principal_repayment")
+      .map((h) => ({
+        acar: `h-${h.id}`,
+        tarix: h.tarix,
+        ad: t(`kredit.tarixce.${h.nov}`),
+        mebleg: h.mebleg,
+        alt:
+          h.esasSonra != null
+            ? t("kredit.tarixce.qaliqSonra", { mebleg: { money: h.esasSonra } })
+            : null,
+        vurgu: h.nov === "interest_charge",
+      })),
+    ...odenisler.map((odenis) => ({
+      acar: `o-${odenis.tarix}`,
+      tarix: odenis.tarix,
+      ad: t("kredit.tarixce.odenis"),
+      mebleg: odenis.mebleg,
+      alt: t("kredit.tarixce.bolgu", {
+        faiz: { money: odenis.faizHissesi },
+        esas: { money: odenis.esasHissesi },
+        qaliq: { money: odenis.esasQaliq ?? 0 },
+      }),
+      vurgu: false,
+    })),
+  ].sort((a, b) => new Date(b.tarix) - new Date(a.tarix));
 
   // Ödəniş: məbləğ serverə gedir, bölgünü (əvvəl faiz, sonra əsas borc)
   // server aparır — klient nə bölür, nə də balansı özü hesablayır
@@ -227,6 +258,12 @@ export function LoanSheet({ onClose, indeksHali = null, kreditHali, onOpenHesab 
                 // Ödənilməmiş faiz varsa diqqət çəkir — gizli borc olmur
                 vurgu: aktivKredit.faizBorc > 0,
               },
+              // Gecikmiş məbləğ yalnız gecikmə varsa görünür
+              aktivKredit.gecikmisMebleg > 0 && {
+                ad: t("kredit.detal.gecikmis"),
+                deger: money(aktivKredit.gecikmisMebleg),
+                vurgu: true,
+              },
               aktivKredit.novbetiTarix && {
                 ad: t("kredit.detal.novbeti"),
                 deger: t(
@@ -331,36 +368,38 @@ export function LoanSheet({ onClose, indeksHali = null, kreditHali, onOpenHesab 
                 : t("kredit.odenis.cta", { mebleg: { money: Number(odenisMebleg) || 0 } })}
             </button>
 
-            {/* ── Hərəkət jurnalı: hər sətir bir maliyyə hadisəsidir ─── */}
-            {hadiseler.length > 0 && (
+            {/* ── Hərəkət jurnalı ─────────────────────────────────────
+                Ödəniş BİR sətirdir (faiz payı + əsas payı + sonrakı qalıq),
+                çünki fermer "2.100 ödədim" görmək istəyir, iki hadisə yox.
+                Faizin yığılması və verilmə isə öz sətirlərində qalır. */}
+            {jurnalSetirleri.length > 0 && (
               <>
                 <p className="mt-4 text-sm font-bold" style={{ color: C.ink }}>
                   {t("kredit.tarixce.basliq")}
                 </p>
-                {hadiseler.map((hadise) => (
+                {jurnalSetirleri.map((setir) => (
                   <div
-                    key={hadise.id}
+                    key={setir.acar}
                     className="flex items-baseline justify-between gap-3 py-2"
                     style={{ borderBottom: `1px solid ${C.line}` }}
                   >
                     <div className="min-w-0">
                       <p className="truncate text-xs font-semibold" style={{ color: C.ink }}>
-                        {t(`kredit.tarixce.${hadise.nov}`)}
+                        {setir.ad}
                       </p>
                       <p className="text-xs" style={{ color: C.muted }}>
-                        {gunAdi(hadise.tarix)}
-                        {hadise.esasSonra != null &&
-                          ` · ${t("kredit.tarixce.qaliqSonra", { mebleg: { money: hadise.esasSonra } })}`}
+                        {gunAdi(setir.tarix)}
+                        {setir.alt ? ` · ${setir.alt}` : ""}
                       </p>
                     </div>
                     <span
                       className="text-xs font-bold whitespace-nowrap"
                       style={{
-                        color: hadise.nov === "interest_charge" ? C.goldDeep : C.ink,
+                        color: setir.vurgu ? C.goldDeep : C.ink,
                         fontVariantNumeric: "tabular-nums",
                       }}
                     >
-                      {money(hadise.mebleg)}
+                      {money(setir.mebleg)}
                     </span>
                   </div>
                 ))}

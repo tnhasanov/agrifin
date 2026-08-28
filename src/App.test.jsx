@@ -246,9 +246,9 @@ describe("AgriFin tətbiqi", () => {
     expect(server.oxu().kredit.qaliqBorc).toBe(qaliqEvvel - 83);
     expect(server.oxu().kredit.gecikmeGun).toBe(0);
 
-    // Jurnal hər iki hadisəni ayrıca göstərir
-    await waitFor(() => expect(screen.getByText("Faiz ödənişi")).toBeInTheDocument());
-    expect(screen.getByText("Əsas borc ödənişi")).toBeInTheDocument();
+    // Jurnalda ödəniş BİR sətirdir, bölgüsü ilə birlikdə
+    await waitFor(() => expect(screen.getByText("Ödəniş")).toBeInTheDocument());
+    expect(screen.getByText(/faiz .* · əsas .* · qalıq/)).toBeInTheDocument();
   });
 
   // Peyk təsdiqi girovun əvəzi deyil, amma ölçmə VARSA bunu demək olar.

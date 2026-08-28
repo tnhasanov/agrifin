@@ -78,7 +78,7 @@ export function kreditServeri({
   faizBorc = 0,
   gecikmeGun = 0,
 } = {}) {
-  let veziyyet = { muraciet: null, qerar: null, teklif: null, kredit: null, hadiseler: [] };
+  let veziyyet = { muraciet: null, qerar: null, teklif: null, kredit: null, hadiseler: [], odenisler: [] };
   let hadiseNo = 1;
 
   const cavab = (govde) =>
@@ -106,6 +106,8 @@ export function kreditServeri({
             qurulus: "aylik_faiz_cevik_esas",
           },
           kredit: null,
+          hadiseler: [],
+          odenisler: [],
         };
       } else if (govde?.emel === "teklif-qebul") {
         veziyyet = {
@@ -163,9 +165,20 @@ export function kreditServeri({
               : []),
             ...veziyyet.hadiseler,
           ],
+          // Serverdəki kimi: ödənişin faiz və əsas payı bir sətirdə
+          odenisler: [
+            {
+              tarix: "2026-05-10T00:00:00.000Z",
+              mebleg: faiz + esas,
+              faizHissesi: faiz,
+              esasHissesi: esas,
+              esasQaliq: yeniEsas,
+            },
+            ...veziyyet.odenisler,
+          ],
         };
       } else if (govde?.emel === "legv") {
-        veziyyet = { muraciet: { ...veziyyet.muraciet, hal: "rejected" }, qerar: veziyyet.qerar, teklif: null, kredit: null };
+        veziyyet = { muraciet: { ...veziyyet.muraciet, hal: "rejected" }, qerar: veziyyet.qerar, teklif: null, kredit: null, hadiseler: [], odenisler: [] };
       }
 
       return cavab(veziyyet);

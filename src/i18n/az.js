@@ -241,6 +241,7 @@ export default {
   // Kredit mühərriki: balans, növbəti ödəniş, gecikmə, jurnal
   "kredit.detal.ilkin": "İlkin məbləğ",
   "kredit.detal.faizBorc": "Ödənilməmiş faiz",
+  "kredit.detal.gecikmis": "Gecikmiş məbləğ",
   "kredit.detal.novbeti": "Növbəti ödəniş",
   "kredit.detal.novbetiDeger": "~{mebleg} · {tarix}",
   "kredit.detal.novbetiEsasla": "~{mebleg} · {tarix} · əsas borc daxil",
@@ -259,6 +260,8 @@ export default {
   "kredit.tarixce.interest_charge": "Faiz hesablandı",
   "kredit.tarixce.interest_payment": "Faiz ödənişi",
   "kredit.tarixce.principal_repayment": "Əsas borc ödənişi",
+  "kredit.tarixce.odenis": "Ödəniş",
+  "kredit.tarixce.bolgu": "faiz {faiz} · əsas {esas} · qalıq {qaliq}",
   "kredit.tarixce.adjustment": "Düzəliş",
   "kredit.tarixce.closure": "Kredit bağlandı",
   "kredit.tarixce.qaliqSonra": "qalıq {mebleg}",

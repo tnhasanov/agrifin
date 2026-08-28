@@ -47,6 +47,8 @@ import {
   gecikme,
   hesablanacaqDovrler,
   novbetiOdenis,
+  odenisTarixcesi,
+  qepik,
 } from "../lib/kreditMuhasibat.js";
 import { bicinTarixi } from "../lib/movsum.js";
 
@@ -112,10 +114,15 @@ function kreditCavabi(setir, hadiseler = [], indi = new Date()) {
         })
       : null;
   const gecikmeHali = gecikme({ hadiseler, indi });
+  // Son tarix keçibsə əsas borc da ödənilməli və gecikmiş sayılır
+  const yetkinlikKecib = Boolean(setir.matures_on && new Date(setir.matures_on) <= indi);
 
   return {
     id: setir.id,
     hal: setir.status,
+    // Servis vəziyyəti HESABLANIR, saxlanılmır: "overdue" vaxtdan asılıdır və
+    // saxlanılan sahə cron olmadan səssizcə köhnələrdi (bax: faizleriIsle)
+    veziyyet: setir.status === "active" ? (gecikmeHali.gunler > 0 ? "overdue" : "active") : "closed",
     esasBorc: reqem(setir.principal_original),
     qaliqBorc: esasBorc,
     faizBorc,
@@ -129,7 +136,10 @@ function kreditCavabi(setir, hadiseler = [], indi = new Date()) {
     novbetiTarix: novbeti ? gun(novbeti.tarix) : null,
     novbetiMebleg: novbeti ? novbeti.mebleg : null,
     novbetiEsasDaxil: novbeti ? novbeti.esasDaxil : false,
+    // İndi ödənilməli olan: yığılmış faiz + (son tarix keçibsə) əsas borc
+    odenilecekIndi: qepik(faizBorc + (yetkinlikKecib ? esasBorc : 0)),
     gecikmeGun: gecikmeHali.gunler,
+    gecikmisMebleg: qepik(gecikmeHali.mebleg + (yetkinlikKecib ? esasBorc : 0)),
     tarix: setir.created_at,
   };
 }
@@ -234,7 +244,14 @@ async function veziyyetOxu(istifadeciId, indi = new Date()) {
     [istifadeciId],
   );
   if (!muraciet) {
-    return { muraciet: null, qerar: null, teklif: null, kredit: null, hadiseler: [] };
+    return {
+      muraciet: null,
+      qerar: null,
+      teklif: null,
+      kredit: null,
+      hadiseler: [],
+      odenisler: [],
+    };
   }
 
   const [qerar] = await sorgu(
@@ -278,9 +295,12 @@ async function veziyyetOxu(istifadeciId, indi = new Date()) {
       : null,
     teklif: teklifCavabi(teklif),
     kredit: kreditCavabi(kredit, hadiseler, indi),
-    // Ödəniş tarixçəsi: fermer öz jurnalını görməlidir — hansı gün nə
+    // Hadisə jurnalı: fermer öz jurnalını görməlidir — hansı gün nə
     // yığıldı, nə ödənildi. Balans sətri "haradan gəldi?" sualsız qalmır.
     hadiseler: hadiseler.map(hadiseCavabi),
+    // Ödəniş tarixçəsi: hər ödəniş BİR sətir — məbləğ, faiz payı, əsas payı,
+    // ödənişdən sonrakı qalıq (jurnaldakı iki hadisə burada birləşir)
+    odenisler: odenisTarixcesi(hadiseler),
   };
 }
 

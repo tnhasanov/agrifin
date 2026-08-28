@@ -497,11 +497,19 @@ isə heç yerdə qeyd olunmur.
 Kredit verildikdən sonrakı həyat: faizin yığılması, ödənişin bölünməsi,
 gecikmə.
 
-- `lib/kreditMuhasibat.js` — SAF mühasibat. Faiz GÜNDƏLİK yığılır (act/365)
-  və aylıq dövrün sonunda BİR hadisə kimi yazılır; ödəniş ƏVVƏL faizi, sonra
-  əsas borcu bağlayır; gecikmə (DPD) ödənilməmiş ən köhnə faiz borcunun
-  yaşıdır. **Kompaundinq və cərimə dərəcəsi YOXDUR** — faizin bazası həmişə
-  yalnız əsas borcdur.
+- `lib/kreditMuhasibat.js` — SAF mühasibat. **Faiz aylıqdır (illik/12)** və
+  dövr ərzindəki ÇƏKİLİ ORTA əsas borca hesablanır:
+
+      faiz = (dövrün çəkili orta qalığı) × illikFaiz/100 / 12
+
+  Qalıq ay boyu dəyişməyibsə nəticə dəqiq illik/12-dir (10.000 @ 12% → 100 ₼),
+  qalıq dövr içində azalıbsa faiz elə həmin gündən azalır. Konvensiya
+  `lib/kreditOdenis.js` → `ayliqFaiz` və UI-dakı "İlk ayın faizi ~X" ilə
+  eynidir. Ödəniş ƏVVƏL faizi, sonra əsas borcu bağlayır; gecikmə (DPD)
+  ödənilməmiş ən köhnə faiz borcunun yaşıdır. **Kompaundinq və cərimə
+  dərəcəsi YOXDUR** — faizin bazası həmişə yalnız əsas borcdur.
+- Servis vəziyyəti (`active` / `overdue` / `closed`) və gecikmiş məbləğ
+  HESABLANIR, saxlanılmır: saxlanılan sahə cron olmadan səssizcə köhnələrdi.
 - `db/migrations/004_kredit_muhasibat.sql` — `loans`-a faiz balansları və
   dövr sayğacı, `loan_events`-ə `interest_after` və `due_on`.
 - Hesablama CRON-suzdur: `api/kredit.js` → `faizleriIsle()` hər oxunuşda

@@ -241,6 +241,7 @@ export default {
 
   "kredit.detal.ilkin": "Первоначальная сумма",
   "kredit.detal.faizBorc": "Неоплаченные проценты",
+  "kredit.detal.gecikmis": "Просроченная сумма",
   "kredit.detal.novbeti": "Следующий платёж",
   "kredit.detal.novbetiDeger": "~{mebleg} · {tarix}",
   "kredit.detal.novbetiEsasla": "~{mebleg} · {tarix} · включая основной долг",
@@ -259,6 +260,8 @@ export default {
   "kredit.tarixce.interest_charge": "Начислены проценты",
   "kredit.tarixce.interest_payment": "Оплата процентов",
   "kredit.tarixce.principal_repayment": "Оплата основного долга",
+  "kredit.tarixce.odenis": "Платёж",
+  "kredit.tarixce.bolgu": "проценты {faiz} · основной долг {esas} · остаток {qaliq}",
   "kredit.tarixce.adjustment": "Корректировка",
   "kredit.tarixce.closure": "Кредит закрыт",
   "kredit.tarixce.qaliqSonra": "остаток {mebleg}",

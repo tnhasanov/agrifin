@@ -240,6 +240,7 @@ export default {
 
   "kredit.detal.ilkin": "Original amount",
   "kredit.detal.faizBorc": "Interest due",
+  "kredit.detal.gecikmis": "Overdue amount",
   "kredit.detal.novbeti": "Next payment",
   "kredit.detal.novbetiDeger": "~{mebleg} · {tarix}",
   "kredit.detal.novbetiEsasla": "~{mebleg} · {tarix} · principal included",
@@ -258,6 +259,8 @@ export default {
   "kredit.tarixce.interest_charge": "Interest accrued",
   "kredit.tarixce.interest_payment": "Interest payment",
   "kredit.tarixce.principal_repayment": "Principal payment",
+  "kredit.tarixce.odenis": "Payment",
+  "kredit.tarixce.bolgu": "interest {faiz} · principal {esas} · balance {qaliq}",
   "kredit.tarixce.adjustment": "Adjustment",
   "kredit.tarixce.closure": "Loan closed",
   "kredit.tarixce.qaliqSonra": "balance {mebleg}",
