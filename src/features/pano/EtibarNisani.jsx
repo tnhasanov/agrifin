@@ -13,7 +13,7 @@ export function EtibarNisani({ etibar, say = null, setir = false }) {
   if (!etibar) return null;
 
   const reng =
-    etibar === "yuksek" ? C.field : etibar === "orta" ? C.goldDeep : C.muted;
+    etibar === "yuksek" ? C.field : etibar === "orta" ? C.goldInk : C.pine;
 
   if (setir) {
     // "Məlumat etibarlılığı: Yüksək • 7 mövsüm" — kart altı sətri

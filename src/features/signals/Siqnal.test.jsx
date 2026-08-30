@@ -116,7 +116,7 @@ describe("sahə siqnalları — əsas ekran", () => {
     expect(screen.getByText("Bu gün nə etməli?")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Siqnalı bağla" })).not.toBeInTheDocument();
     // Yuxarıda fermerin öz sahəsi dayanır, kredit CTA-sı da yerindədir
-    expect(screen.getByRole("button", { name: "Məhsul dövrü krediti al" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Məhsul dövrü krediti al" })).toBeInTheDocument();
   });
 
   it("zəngə basanda tam siqnal mənbəyi ilə birlikdə açılır", async () => {

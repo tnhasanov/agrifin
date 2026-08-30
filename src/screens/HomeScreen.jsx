@@ -68,7 +68,12 @@ export function HomeScreen({
   const aqroHali = !bas && indeksHali.indeks?.bant === "yuksek" ? "sevincli" : "sakit";
 
   const aktivKredit = kreditHali?.kredit?.hal === "active" ? kreditHali.kredit : null;
+  // Server cavabı gəlməyibsə (yüklənir/xəta) "açıq iş yoxdur" DEMƏK OLMAZ:
+  // boşluq cavab deyil. Aktiv borcalana xəta anında yeni kredit təklif
+  // etməmək üçün CTA yalnız cavab gələndə açılır.
+  const kreditCavabi = ["hazir", "qurulmayib", "girisYox"].includes(kreditHali?.hal ?? "");
   const acıqIs =
+    !kreditCavabi ||
     aktivKredit ||
     ["submitted", "reviewing", "approved", "offer_issued"].includes(
       kreditHali?.muraciet?.hal ?? "",
@@ -96,6 +101,10 @@ export function HomeScreen({
     else if (h.hereket === "sahe") navigate(pathFor("sahe"));
     else if (h.hereket === "giris") onOpenHesab?.();
     else if (h.hereket === "saheCek") onDrawField?.();
+    // Xəta halında yeganə mənalı hərəkət — məlumatı yenidən istəmək
+    else if (h.hereket === "yenile") kreditHali?.yenile?.();
+    // Sahə ekranında görünməyən siqnal (hava) — tam siyahı Kömək ekranındadır
+    else if (h.hereket === "siqnalSiyahi") navigate(pathFor("advisor"));
     else navigate(pathFor("advisor"));
   };
 

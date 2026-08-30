@@ -2,6 +2,7 @@ import { Card } from "../../components/Card.jsx";
 import { Icon } from "../../components/Icon.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
+import { gunAdi } from "../../lib/tarix.js";
 
 /** Hərəkət tipinə görə ikon/rəng — status yalnız rənglə DEYİL, ikon+mətnlə */
 const GORUNUS = {
@@ -12,6 +13,8 @@ const GORUNUS = {
   odenisYaxin: { icon: "Calendar", reng: C.goldDeep, fon: C.goldSoft },
   saheCek: { icon: "MapPin", reng: C.field, fon: C.fieldSoft },
   komek: { icon: "Check", reng: C.field, fon: C.fieldSoft },
+  yuklenir: { icon: "LoaderCircle", reng: C.muted, fon: C.mist },
+  xeta: { icon: "Info", reng: C.goldDeep, fon: C.goldSoft },
 };
 
 /**
@@ -28,7 +31,12 @@ export function EsasHereketKarti({ hereket, onHereket }) {
   const gorunus = GORUNUS[hereket.tip] ?? GORUNUS.komek;
   const siqnal = hereket.siqnal ?? null;
   const basliq = siqnal ? t(siqnal.basliqKey) : t(hereket.basliqKey);
-  const metn = siqnal ? t(siqnal.metnKey, siqnal.vars) : t(hereket.metnKey, hereket.vars ?? undefined);
+  // Tarix BURADA formatlanır: həlledici safdır, `t`-ni görmür — ona görə
+  // ISO sətri ötürür, istifadəçiyə isə "15 Sentyabr" göstərilir
+  const deyisenler = hereket.tarix
+    ? { ...(hereket.vars ?? {}), tarix: gunAdi(t, hereket.tarix) }
+    : (hereket.vars ?? undefined);
+  const metn = siqnal ? t(siqnal.metnKey, siqnal.vars) : t(hereket.metnKey, deyisenler);
   const tecilidir = hereket.prioritet <= 2;
 
   return (
@@ -55,18 +63,22 @@ export function EsasHereketKarti({ hereket, onHereket }) {
             <p className="mt-0.5 text-xs leading-relaxed" style={{ color: C.muted }}>
               {metn}
             </p>
-            <button
-              type="button"
-              onClick={() => onHereket?.(hereket)}
-              className="mt-2.5 w-full rounded-xl py-2.5 text-sm font-bold"
-              style={{
-                backgroundColor: hereket.tip === "gecikme" ? C.danger : C.pine,
-                color: "#fff",
-                minHeight: 44,
-              }}
-            >
-              {t(hereket.ctaKey)}
-            </button>
+            {/* Yüklənmə halında düymə YOXDUR: hələ nəyin lazım olduğunu
+                bilmirik, "təsadüfi" bir hərəkət təklif etmək yanıldıcıdır */}
+            {hereket.ctaKey && (
+              <button
+                type="button"
+                onClick={() => onHereket?.(hereket)}
+                className="mt-2.5 w-full rounded-xl py-2.5 text-sm font-bold"
+                style={{
+                  backgroundColor: hereket.tip === "gecikme" ? C.danger : C.pine,
+                  color: "#fff",
+                  minHeight: 44,
+                }}
+              >
+                {t(hereket.ctaKey)}
+              </button>
+            )}
           </div>
         </div>
       </Card>

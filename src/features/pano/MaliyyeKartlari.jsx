@@ -3,6 +3,7 @@ import { Chip } from "../../components/Chip.jsx";
 import { Icon } from "../../components/Icon.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
+import { gunAdi } from "../../lib/tarix.js";
 
 /**
  * MALİYYƏ KARTLARI — panonun pul tərəfi. Hamısı SERVER dəyərlərini göstərir
@@ -13,14 +14,6 @@ import { useI18n } from "../../i18n/index.jsx";
  * istənilən vaxt azaldıla bilər, gələcək faiz ona görə dəyişir — tək rəqəm
  * yalan olardı (bax: lib/kreditOdenis.js).
  */
-
-/** "15 Sentyabr" — Intl işlədilmir, az lokalı bəzi quruluşlarda yoxdur */
-function gunAdi(t, deyer) {
-  if (!deyer) return "";
-  const tarix = new Date(deyer);
-  if (Number.isNaN(tarix.getTime())) return "";
-  return `${tarix.getUTCDate()} ${t(`ay.${tarix.getUTCMonth() + 1}`)}`;
-}
 
 function Setir({ etiket, deger, vurgu = false }) {
   return (
@@ -335,7 +328,7 @@ export function TeklifKarti({ teklif, ayliqFaizTexmini = null, azaldilib = false
         type="button"
         onClick={onSonra}
         className="mt-2 w-full rounded-xl py-2.5 text-xs font-bold"
-        style={{ backgroundColor: C.mist, color: C.muted, minHeight: 44 }}
+        style={{ backgroundColor: C.mist, color: C.pine, minHeight: 44 }}
       >
         {t("teklifKart.sonra")}
       </button>
@@ -351,8 +344,20 @@ export function KreditMiniKarti({ kredit, onBax }) {
   const { t, money } = useI18n();
   if (!kredit || kredit.hal !== "active") return null;
 
+  // aria-label kartın MƏTNİNİ ƏVƏZ EDİR — ona görə qalıq, növbəti ödəniş və
+  // gecikmə də ora yazılır. Yoxsa ekran oxuyucusu ilə gəzən borcalan yalnız
+  // "Aktiv kredit" eşidir və gecikməni tamamilə qaçırır.
+  const etiket = [
+    t("maliyye.aktiv"),
+    `${t("pano.kreditQaliq")}: ${money(kredit.qaliqBorc)}`,
+    kredit.novbetiTarix ? `${t("pano.kreditNovbeti")}: ${gunAdi(t, kredit.novbetiTarix)}` : null,
+    kredit.gecikmeGun > 0 ? t("gecikmeKart.gun", { gun: kredit.gecikmeGun }) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <Card className="giris" style={{ marginTop: 12 }} onClick={onBax} ariaLabel={t("maliyye.aktiv")}>
+    <Card className="giris" style={{ marginTop: 12 }} onClick={onBax} ariaLabel={etiket}>
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="rounded-xl p-2" style={{ backgroundColor: C.fieldSoft }}>

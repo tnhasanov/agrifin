@@ -4,7 +4,7 @@ import { C } from "../theme/tokens.js";
  * onClick verilibsə həqiqi <button> kimi render olunur — klaviatura və
  * ekran oxuyucusu ilə işləməsi üçün div-ə onClick qoymaq kifayət etmir.
  */
-export function Card({ children, style, onClick, ariaLabel, className = "" }) {
+export function Card({ children, style, onClick, ariaLabel, role, className = "" }) {
   const base = {
     backgroundColor: C.card,
     border: `1px solid ${C.line}`,
@@ -25,8 +25,10 @@ export function Card({ children, style, onClick, ariaLabel, className = "" }) {
     );
   }
 
+  // `role` ÖTÜRÜLÜR: təcili kartlar (gecikmə, təcili sahə xəbərdarlığı)
+  // role="alert" verir — prop udulsaydı ekran oxuyucusu onları elan etməzdi.
   return (
-    <div className={`rounded-2xl p-4 ${className}`} style={base}>
+    <div className={`rounded-2xl p-4 ${className}`} style={base} role={role}>
       {children}
     </div>
   );

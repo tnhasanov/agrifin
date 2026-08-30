@@ -133,7 +133,7 @@ describe("AgriFin tətbiqi", () => {
     );
     renderApp(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Məhsul dövrü krediti al" }));
+    await user.click(await screen.findByRole("button", { name: "Məhsul dövrü krediti al" }));
 
     // Tavan izah olunur (Nubank "Me explica") və slayder tavana bağlıdır
     const slayder = await screen.findByRole("slider");
@@ -253,7 +253,7 @@ describe("AgriFin tətbiqi", () => {
     );
     renderApp(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Məhsul dövrü krediti al" }));
+    await user.click(await screen.findByRole("button", { name: "Məhsul dövrü krediti al" }));
     await screen.findByRole("slider");
     await user.click(screen.getByRole("button", { name: "Şərtlərə bax" }));
     await user.click(screen.getByRole("button", { name: /üçün müraciət göndər/ }));
@@ -336,7 +336,7 @@ describe("AgriFin tətbiqi", () => {
     });
     renderApp(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Məhsul dövrü krediti al" }));
+    await user.click(await screen.findByRole("button", { name: "Məhsul dövrü krediti al" }));
     await user.click(screen.getByRole("button", { name: "Şərtlərə bax" }));
 
     await waitFor(() =>

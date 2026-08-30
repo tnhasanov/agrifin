@@ -12,6 +12,7 @@ import { HesabatPaylas } from "../features/share/HesabatPaylas.jsx";
 import { BosSahe } from "../features/pano/BosSahe.jsx";
 import { SaheXebardarligi } from "../features/pano/SaheXebardarligi.jsx";
 import { EtibarNisani } from "../features/pano/EtibarNisani.jsx";
+import { SAHE_SIQNALLARI } from "../features/pano/saheSiqnallari.js";
 
 /**
  * SAHƏLƏR EKRANI — sahənin detal görünüşü: xəritə, xəbərdarlıq, tarixçə.
@@ -23,15 +24,6 @@ import { EtibarNisani } from "../features/pano/EtibarNisani.jsx";
  * tam siyahı Kömək ekranındadır. Hava siqnalları (şaxta, isti) sahə kartı
  * deyil — onlar zəngdə qalır.
  */
-const SAHE_SIQNALLARI = new Set([
-  "bitkiZeifleyir",
-  "qonsu",
-  "suGolu",
-  "xesteliyRiski",
-  "suvar",
-  "suvarmaDayan",
-]);
-
 export function SaheScreen({
   peyk = { hal: "yoxdur", seriya: [], xulase: null },
   qonsu = { hal: "yoxdur", muqayise: null },
@@ -150,7 +142,7 @@ export function SaheScreen({
             <p className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
               {t("indeks.tarixceAz")}
             </p>
-            <Chip label={t("pano.tarixceChip")} color={C.goldDeep} bg={C.goldSoft} />
+            <Chip label={t("pano.tarixceChip")} color={C.goldInk} bg={C.goldSoft} />
           </div>
           <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
             {t("indeks.tarixceAzIzah")}

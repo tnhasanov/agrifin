@@ -8,6 +8,9 @@ export const C = {
   gold: "#E9B54A",
   goldDeep: "#C9932B",
   goldSoft: "#FBF1DA",
+  // goldDeep açıq qızılı fonda MƏTN üçün kifayət etmir (2,43:1) — nişan və
+  // xəbərdarlıq mətnləri bunu işlədir (goldSoft üzərində 5,3:1, WCAG AA)
+  goldInk: "#8A5A00",
   blue: "#3E7BFA",
   blueSoft: "#EAF1FD",
   mist: "#EFF2EC",

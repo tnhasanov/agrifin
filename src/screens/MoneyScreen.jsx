@@ -38,16 +38,59 @@ export function MoneyScreen({ onOpenLoan, indeksHali = null, kreditHali = null, 
   const qerar = kreditHali?.qerar ?? null;
   const odenisler = kreditHali?.odenisler ?? [];
 
+  const hal = kreditHali?.hal ?? "yuklenir";
+  // Server cavabı gəlməyibsə BOŞLUQ "kredit yoxdur" demək DEYİL: yüklənmə və
+  // xəta hallarında muraciet/teklif/kredit hamısı null olur, ona görə bütün
+  // qərarlar cavabın gəldiyinə şərtlənir (bax: useKreditVeziyyeti).
+  const cavabGeldi = hal === "hazir" || hal === "qurulmayib";
   const baxilir = muraciet && ["submitted", "reviewing", "approved"].includes(muraciet.hal);
   const teklifVar = muraciet?.hal === "offer_issued" && teklif?.hal === "issued";
   const aktiv = kredit?.hal === "active" ? kredit : null;
   const gecikib = Boolean(aktiv && aktiv.gecikmeGun > 0);
-  // Aktiv borcalana yeni kredit sırınmır (aqressiv cross-sell qadağandır)
-  const yeniMuracietOlar = !aktiv && !baxilir && !teklifVar;
+  // Aktiv borcalana yeni kredit sırınmır (aqressiv cross-sell qadağandır).
+  // Vəziyyət bilinmirsə də sırınmır: xəta anında borcalana "əlavə vəsait"
+  // təklif etmək onun borcunu görməzdən gəlmək olardı.
+  const yeniMuracietOlar = cavabGeldi && !aktiv && !baxilir && !teklifVar;
 
   return (
     <div className="px-4 pb-4">
       <SectionTitle>{t("money.financing")}</SectionTitle>
+
+      {/* Yüklənmə: uydurma rəqəm yox, sadəcə gözləmə sətri */}
+      {hal === "yuklenir" && (
+        <Card style={{ marginBottom: 8 }}>
+          <div className="flex items-center gap-2" aria-live="polite">
+            <Icon name="LoaderCircle" size={14} color={C.muted} />
+            <p className="text-xs" style={{ color: C.muted }}>
+              {t("maliyye.yuklenir")}
+            </p>
+          </div>
+        </Card>
+      )}
+
+      {/* Xəta: SÜKUT YALANDIR — borcalan ekranı boş görüb "borcum yoxdur"
+          nəticəsi çıxarmamalıdır. Açıq deyilir və təkrar cəhd verilir. */}
+      {hal === "xeta" && (
+        <Card style={{ marginBottom: 8, borderColor: C.danger }} role="alert">
+          <div className="flex items-center gap-2">
+            <Icon name="AlertCircle" size={16} color={C.danger} />
+            <p className="text-sm font-bold" style={{ color: C.ink }}>
+              {t("maliyye.xetaBasliq")}
+            </p>
+          </div>
+          <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
+            {t("maliyye.xetaIzah")}
+          </p>
+          <button
+            type="button"
+            onClick={() => kreditHali?.yenile?.()}
+            className="mt-2.5 w-full rounded-xl py-2.5 text-sm font-bold"
+            style={{ backgroundColor: C.pine, color: "#fff", minHeight: 44 }}
+          >
+            {t("maliyye.yenidenCehd")}
+          </button>
+        </Card>
+      )}
 
       {/* Hal E: gecikmə — hörmətli ton, ödə/dəstək yolları */}
       {gecikib && (
@@ -152,10 +195,13 @@ export function MoneyScreen({ onOpenLoan, indeksHali = null, kreditHali = null, 
 
       {/* Demo pul çıxarıldığının işarəsi: wallet dəyəri artıq göstərilmir,
           amma tamamilə səssiz silmək çaşdırıcı olardı — köhnə istifadəçi
-          balansını axtaranda bu qeydi görür. */}
+          balansını axtaranda bu qeydi görür.
+          QEYD DƏQİQ OLMALIDIR: köhnə "bütün məlumatlar nümunədir" mətni
+          serverin verdiyi əsas borcun və gecikmənin altında YALAN idi —
+          onlar real qeydlərdir. Qeyd yalnız SİLİNMİŞ pulqabına aiddir. */}
       {state.wallet !== 0 && (
         <p className="mt-3 px-1 text-center text-xs" style={{ color: C.muted }}>
-          {t("demo.banner")}
+          {t("maliyye.demoQeyd")}
         </p>
       )}
     </div>

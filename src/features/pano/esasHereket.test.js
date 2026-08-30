@@ -122,3 +122,123 @@ describe("əsas hərəkət prioriteti — determinist zəncir", () => {
     expect(adi.tip).toBe("saheCek");
   });
 });
+
+describe("server cavabı gəlməyəndə sakitlik VƏD EDİLMİR", () => {
+  // Ən təhlükəli yalan: gecikmiş borcalan "Hər şey qaydasındadır" oxuyur,
+  // çünki kredit cavabı hələ gəlməyib və ya şəbəkə qırılıb.
+  it("yüklənir: kömək əvəzinə yüklənmə halı, CTA yoxdur", () => {
+    const h = esasHereket({ serverHal: "yuklenir", sahe: SAHE, indi: INDI });
+    expect(h.tip).toBe("yuklenir");
+    expect(h.basliqKey).not.toBe("hereket.komek.basliq");
+    expect(h.ctaKey).toBeNull();
+  });
+
+  it("xəta: açıq deyilir və təkrar cəhd təklif olunur", () => {
+    const h = esasHereket({ serverHal: "xeta", sahe: SAHE, indi: INDI });
+    expect(h.tip).toBe("xeta");
+    expect(h.hereket).toBe("yenile");
+  });
+
+  // 501 = kredit modulu qurulmayıb: gözləniləsi borc da yoxdur, sükut düzdür
+  it("qurulmayıb: kömək halı düzgündür", () => {
+    const h = esasHereket({ serverHal: "qurulmayib", sahe: SAHE, indi: INDI });
+    expect(h.tip).toBe("komek");
+  });
+
+  // Sahə xəbərdarlığı kredit cavabından ASILI DEYİL — yüklənmə onu udmur
+  it("yüklənmə təcili sahə siqnalını udmur", () => {
+    const h = esasHereket({
+      serverHal: "yuklenir",
+      siqnallar: [{ id: "suGolu:1", nov: "suGolu", ciddilik: "tecili" }],
+      sahe: SAHE,
+      indi: INDI,
+    });
+    expect(h.prioritet).toBe(2);
+  });
+});
+
+describe("ödəniş günü boşluğu", () => {
+  // Son tarix günü: DPD hələ 0-dır (floor(0 gün)), amma məbləğ artıq
+  // ödənilməlidir. Əvvəl nə 1-ci, nə 5-ci pillə işləmirdi — fermer məhz
+  // ödəniş günü "Hər şey qaydasındadır" oxuyurdu.
+  it("son tarix günü: 'vaxtı çatıb' halı, sükut yox", () => {
+    const h = esasHereket({
+      kredit: { ...AKTIV, gecikmeGun: 0, gecikmisMebleg: 72, novbetiTarix: "2026-09-15" },
+      serverHal: "hazir",
+      sahe: SAHE,
+      indi: new Date("2026-09-15T09:00:00Z"),
+    });
+    expect(h.tip).toBe("gecikme");
+    expect(h.prioritet).toBe(1);
+    expect(h.basliqKey).toBe("hereket.gecikme.basliqBuGun");
+  });
+
+  it("gecikmə günü varsa gecikmə mətni işlədilir", () => {
+    const h = esasHereket({
+      kredit: { ...AKTIV, gecikmeGun: 3, gecikmisMebleg: 72 },
+      serverHal: "hazir",
+      sahe: SAHE,
+      indi: INDI,
+    });
+    expect(h.basliqKey).toBe("hereket.gecikme.basliq");
+  });
+
+  // Son tarix günü heç nə borclu deyilsə (məs. faiz artıq ödənilib) ödəniş
+  // pəncərəsi yenə də günü ƏHATƏ EDİR — "sabaha qalıb" demək yanlışdır
+  it("son tarix günü borc yoxdursa yaxın ödəniş pilləsi işləyir", () => {
+    const h = esasHereket({
+      kredit: { ...AKTIV, novbetiTarix: "2026-09-15" },
+      serverHal: "hazir",
+      sahe: SAHE,
+      indi: new Date("2026-09-15T20:00:00Z"),
+    });
+    expect(h.tip).toBe("odenisYaxin");
+  });
+
+  // Tarix ISO kimi ötürülür, amma AYRICA sahədə — kart onu formatlayır
+  it("ödəniş tarixi vars-a ISO kimi yazılmır", () => {
+    const h = esasHereket({
+      kredit: AKTIV,
+      serverHal: "hazir",
+      sahe: SAHE,
+      indi: INDI,
+    });
+    expect(h.vars.tarix).toBeUndefined();
+    expect(h.tarix).toBe("2026-09-15");
+  });
+});
+
+describe("siqnal marşrutu", () => {
+  // Hava siqnalı Sahələr ekranında GÖRÜNMÜR — ora göndərmək fermeri
+  // "Sahə yaxşı vəziyyətdədir" yazısının qarşısına çıxarardı
+  it("sahə siqnalı Sahələrə, hava siqnalı siyahıya aparır", () => {
+    const sahede = esasHereket({
+      serverHal: "hazir",
+      siqnallar: [{ id: "suGolu:1", nov: "suGolu", ciddilik: "tecili" }],
+      sahe: SAHE,
+      indi: INDI,
+    });
+    expect(sahede.hereket).toBe("sahe");
+    expect(sahede.ctaKey).toBe("hereket.siqnal.cta");
+
+    const hava = esasHereket({
+      serverHal: "hazir",
+      siqnallar: [{ id: "saxta:1", nov: "saxta", ciddilik: "tecili" }],
+      sahe: SAHE,
+      indi: INDI,
+    });
+    expect(hava.hereket).toBe("siqnalSiyahi");
+    expect(hava.ctaKey).toBe("hereket.siqnal.ctaSiyahi");
+  });
+
+  // "melumat" səviyyəsi bir nömrəli iş deyil (ölçmə köhnəlib və s.)
+  it("məlumat siqnalı 6-cı pilləni tutmur", () => {
+    const h = esasHereket({
+      serverHal: "hazir",
+      siqnallar: [{ id: "olcmeKohne:1", nov: "olcmeKohne", ciddilik: "melumat" }],
+      sahe: SAHE,
+      indi: INDI,
+    });
+    expect(h.tip).toBe("komek");
+  });
+});

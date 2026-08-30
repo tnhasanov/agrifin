@@ -55,7 +55,7 @@ afterEach(() => {
 
 /** Müraciət göndərib təklifə çatır (server stub vasitəsilə) */
 async function teklifeCat(user) {
-  await user.click(screen.getByRole("button", { name: "Məhsul dövrü krediti al" }));
+  await user.click(await screen.findByRole("button", { name: "Məhsul dövrü krediti al" }));
   await screen.findByRole("slider");
   await user.click(screen.getByRole("button", { name: "Şərtlərə bax" }));
   await user.click(screen.getByRole("button", { name: /üçün müraciət göndər/ }));
@@ -267,5 +267,65 @@ describe("məlumat etibarlılığı nişanı", () => {
   it("etibar yoxdursa (3 mövsümdən az) nişan render olunmur", () => {
     const { container } = renderApp(<EtibarNisani etibar={null} say={2} />);
     expect(container.textContent).toBe("");
+  });
+});
+
+/**
+ * SERVER CAVABI GƏLMƏYƏNDƏ — ən təhlükəli hal: ekran boş qalır və fermer
+ * "borcum yoxdur" nəticəsi çıxarır. Nə pano, nə Maliyyə bunu deməməlidir.
+ */
+describe("yüklənmə və xəta halları", () => {
+  /** /api/kredit sorğusunu verilən statusla cavablandırır */
+  function stubStatus(status) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url) =>
+        String(url).includes("/api/kredit")
+          ? Promise.resolve({ ok: false, status, json: () => Promise.resolve({ error: "xeta" }) })
+          : Promise.resolve({ ok: true, json: () => Promise.resolve(WEATHER_FIXTURE) }),
+      ),
+    );
+  }
+
+  it("kredit sorğusu xəta verəndə ana səhifə 'hər şey qaydasındadır' DEMİR", async () => {
+    seedSahe();
+    stubStatus(500);
+    renderApp(<App />);
+
+    await waitFor(() =>
+      expect(screen.getByText("Maliyyə məlumatı gətirilmədi")).toBeInTheDocument(),
+    );
+    expect(screen.queryByText("Hər şey qaydasındadır")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Yenidən cəhd et" })).toBeInTheDocument();
+    // Vəziyyət bilinmirsə aktiv borcalana yeni kredit təklif olunmur
+    expect(
+      screen.queryByRole("button", { name: "Məhsul dövrü krediti al" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("Maliyyə ekranı xətanı açıq deyir, 'əlavə vəsait' sırımır", async () => {
+    const user = userEvent.setup();
+    seedSahe();
+    stubStatus(500);
+    renderApp(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Maliyyə" }));
+    await waitFor(() =>
+      expect(screen.getByText("Kredit məlumatı gətirilmədi")).toBeInTheDocument(),
+    );
+    expect(screen.queryByText("Əlavə vəsait lazımdır?")).not.toBeInTheDocument();
+  });
+
+  // Demo pulqabı qeydi REAL kredit rəqəmlərini "nümunə" adlandırmamalıdır
+  it("Maliyyə ekranında 'bütün məlumatlar nümunədir' yazısı yoxdur", async () => {
+    const user = userEvent.setup();
+    seedSahe();
+    const server = kreditServeri({ mebleg: 5000 });
+    stubla(server);
+    renderApp(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Maliyyə" }));
+    expect(screen.queryByText(/bütün məlumatlar nümunədir/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Nümunə pulqabı balansı bu ekrandan çıxarıldı/)).toBeInTheDocument();
   });
 });

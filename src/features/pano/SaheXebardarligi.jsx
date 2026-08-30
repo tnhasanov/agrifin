@@ -32,7 +32,10 @@ export function SaheXebardarligi({ siqnal, etibar = null, movsumSayi = null, onC
     <Card
       className="giris"
       style={{ marginBottom: 8, borderColor: tecilidir ? C.danger : C.goldDeep }}
-      role="alert"
+      /* Yalnız TƏCİLİ siqnal assertiv elan olunur. "diqqet" səviyyəli
+         tövsiyə (vegetasiya zəifləyir, suvarma) hər ekran açılışında ekran
+         oxuyucusunu kəsməməlidir — mühərrik onu təcili saymır. */
+      role={tecilidir ? "alert" : "status"}
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
@@ -41,7 +44,7 @@ export function SaheXebardarligi({ siqnal, etibar = null, movsumSayi = null, onC
         <Chip
           icon="AlertCircle"
           label={t(tecilidir ? "xeberdarliq.prioritet" : "xeberdarliq.diqqet")}
-          color={tecilidir ? C.danger : C.goldDeep}
+          color={tecilidir ? C.danger : C.goldInk}
           bg={tecilidir ? C.dangerSoft : C.goldSoft}
         />
       </div>
