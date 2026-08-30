@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App.jsx";
 import { kreditServeri, renderApp, seedLocation, seedState, WEATHER_FIXTURE } from "./test/render.jsx";
@@ -21,20 +21,28 @@ afterEach(() => {
 });
 
 describe("AgriFin tətbiqi", () => {
-  it("əsas ekranda kredit limiti, pulqabı və indeks dəvəti göstərilir", async () => {
+  // ── Hal A: yeni fermer — sahəsiz ekranda UYDURMA METRİKA YOXDUR ─────
+  it("sahəsiz fermer ilk sahə dəvətini görür, saxta göstərici görmür", async () => {
     renderApp(<App />);
 
-    // Saxta 782 qövsü silinib: sahə çəkilməmiş nömrə YOX, dəvət göstərilir
-    expect(
-      screen.getByText(/Sahənizi çəkin — aqronomik performans indeksiniz/),
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/FARMSCORE/)).not.toBeInTheDocument();
-    // Saxta 12.000 ₼ limiti SİLİNİB: sahə/bitki yoxdursa rəqəm də yoxdur —
-    // uydurma rəqəm göstərməkdənsə boşluq göstərilir
+    // Dəqiq məhsul mətni: BİR aydın hərəkət + dürüst vaxt gözləntisi.
+    // Dəvət təkdir — ikinci "nə etməli" kartı ilə CTA təkrarlanmır
+    expect(screen.getAllByText("İlk sahənizi əlavə edin")).toHaveLength(1);
+    expect(screen.getByText(/Sahəni xəritədə çəkin\. Biz peyk məlumatlarını/)).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Sahə əlavə et" })).toHaveLength(1);
+    expect(screen.getByText("Təxminən 2 dəqiqə çəkir")).toBeInTheDocument();
+    expect(screen.getByText("Təsərrüfatınızı birlikdə quraq")).toBeInTheDocument();
+
+    // Hal A qadağaları: nə bal, nə KPI, nə kredit, nə demo pulqabı
+    expect(screen.queryByText(/FARMSCORE/i)).not.toBeInTheDocument();
     expect(screen.queryByText("12.000 ₼")).not.toBeInTheDocument();
-    expect(screen.getByText("Kredit imkanı")).toBeInTheDocument();
-    expect(screen.getByText(/sahənizi çəkin və bitkinizi seçin/i)).toBeInTheDocument();
-    expect(screen.getByText("7.280 ₼")).toBeInTheDocument();
+    expect(screen.queryByText("7.280 ₼")).not.toBeInTheDocument();
+    expect(screen.queryByText("Kredit imkanı")).not.toBeInTheDocument();
+    expect(screen.queryByText("Aktiv kredit")).not.toBeInTheDocument();
+
+    // Hal A-da "nə etməli" kartı YOXDUR: dəvət elə bir nömrəli işdir,
+    // hava siqnalı da sahəsiz fermeri "Sahəyə bax"-a aparmamalıdır
+    expect(screen.queryByText("Bu gün nə etməli?")).not.toBeInTheDocument();
   });
 
   it("real hava məlumatını gətirib tövsiyə göstərir", async () => {
@@ -46,22 +54,37 @@ describe("AgriFin tətbiqi", () => {
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("api.open-meteo.com"));
   });
 
-  it("aşağı naviqasiya ilə ekranlar arasında keçir və URL-i dəyişir", async () => {
+  // Naviqasiya DÜZ DÖRD yerdir: Ana səhifə, Sahələr, Maliyyə, Kömək.
+  // Bazar/karbon əsas naviqasiyada YOXDUR, amma dərin linkləri işləyir.
+  it("aşağı naviqasiyada düz dörd yer var və URL-i dəyişir", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Bazar" }));
+    const nav = screen.getByRole("navigation");
+    const duymeler = Array.from(nav.querySelectorAll("button")).map((b) => b.textContent);
+    expect(duymeler).toEqual(["Ana səhifə", "Sahələr", "Maliyyə", "Kömək"]);
 
-    expect(window.location.pathname).toBe("/market");
-    expect(screen.getByText("Məhsul qiymətləriniz")).toBeInTheDocument();
-    expect(screen.getByText("Buğda")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Sahələr" }));
+    expect(window.location.pathname).toBe("/fields");
+
+    await user.click(screen.getByRole("button", { name: "Maliyyə" }));
+    expect(window.location.pathname).toBe("/money");
+
+    await user.click(screen.getByRole("button", { name: "Kömək" }));
+    expect(window.location.pathname).toBe("/advisor");
+    expect(screen.getByText("Aqronom köməkçisi")).toBeInTheDocument();
   });
 
-  it("dərin link birbaşa müvafiq ekranı açır", () => {
+  it("dərin link birbaşa müvafiq ekranı açır — bazar/karbon linkləri qırılmır", () => {
     window.history.pushState({}, "", "/carbon");
     renderApp(<App />);
-
     expect(screen.getByText("BU MÖVSÜM KARBON")).toBeInTheDocument();
+  });
+
+  it("bazar dərin linki naviqasiyasız da işləyir", () => {
+    window.history.pushState({}, "", "/market");
+    renderApp(<App />);
+    expect(screen.getByText("Məhsul qiymətləriniz")).toBeInTheDocument();
   });
 
   // ── Dürüst kredit axını ────────────────────────────────────────────
@@ -71,7 +94,10 @@ describe("AgriFin tətbiqi", () => {
     const user = userEvent.setup();
     renderApp(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Məhsul dövrü krediti al" }));
+    // Sahəsiz ana səhifədə kredit CTA-sı YOXDUR (hal A) — panel Maliyyədən açılır
+    expect(screen.queryByRole("button", { name: "Məhsul dövrü krediti al" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Maliyyə" }));
+    await user.click(screen.getByRole("button", { name: "Əlavə vəsait lazımdır?" }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText("İmkan hələ hesablana bilmir")).toBeInTheDocument();
     expect(screen.getByText(/Sahənizi xəritədə çəkin/)).toBeInTheDocument();
@@ -184,15 +210,19 @@ describe("AgriFin tətbiqi", () => {
     await user.click(screen.getByRole("button", { name: "Təklifi qəbul et" }));
     await waitFor(() => expect(screen.getByText("Aktiv krediti\u00adniz")).toBeInTheDocument());
     expect(server.oxu().kredit.hal).toBe("active");
-    // PUL KÖÇÜRÜLMÜR: pulqabı dəyişməz qalır.
+    // PUL KÖÇÜRÜLMÜR və demo pulqabı ARTIQ HEÇ YERDƏ GÖSTƏRİLMİR:
+    // real kredit qalığının yanında uydurma 7.280 ₼ balans dayanmır.
     // İki "Bağla" var: Sheet-in başlıqdakı düyməsi və məzmundakı CTA
     await user.click(screen.getAllByRole("button", { name: "Bağla" }).at(-1));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(screen.getByText("7.280 ₼")).toBeInTheDocument();
+    expect(screen.queryByText("7.280 ₼")).not.toBeInTheDocument();
 
-    // Aktiv kredit Pul ekranında görünür — nümunə rəqəm deyil, serverdən
-    await user.click(screen.getByRole("button", { name: "Pul" }));
-    expect(screen.getByText("Qalan əsas borc")).toBeInTheDocument();
+    // Aktiv kredit Maliyyə ekranında serverdən görünür (dəqiq mətnlərlə)
+    await user.click(screen.getByRole("button", { name: "Maliyyə" }));
+    expect(screen.getByText("Əsas borc qalığı")).toBeInTheDocument();
+    expect(screen.getByText("Ödənişlər vaxtındadır")).toBeInTheDocument();
+    // Sonda ödəniləcək ümumi məbləğ HEÇ YERDƏ yoxdur
+    expect(screen.queryByText(/[Üü]mumi .*ödəni/)).not.toBeInTheDocument();
   });
 
   // Kredit mühərriki: aktiv kredit ekranı balansı, növbəti ödənişi və
@@ -232,14 +262,16 @@ describe("AgriFin tətbiqi", () => {
     await waitFor(() => expect(screen.getByText("Aktiv krediti­niz")).toBeInTheDocument());
 
     // Balans tam açılır: ödənilməmiş faiz, növbəti ödəniş, gecikmə, jurnal
-    expect(screen.getByText("Ödənilməmiş faiz")).toBeInTheDocument();
-    expect(screen.getByText("Növbəti ödəniş")).toBeInTheDocument();
-    expect(screen.getByText("5 gün gecikmə")).toBeInTheDocument();
-    expect(screen.getByText("Kredit verildi")).toBeInTheDocument();
+    // (arxadakı ana səhifə kartı da "Növbəti ödəniş" deyir — dialoqa baxılır)
+    const dialoq = within(screen.getByRole("dialog"));
+    expect(dialoq.getByText("Ödənilməmiş faiz")).toBeInTheDocument();
+    expect(dialoq.getByText("Növbəti ödəniş")).toBeInTheDocument();
+    expect(dialoq.getByText("5 gün gecikmə")).toBeInTheDocument();
+    expect(dialoq.getByText("Kredit verildi")).toBeInTheDocument();
 
     const qaliqEvvel = server.oxu().kredit.qaliqBorc;
-    await user.type(screen.getByLabelText("Məbləğ"), "200");
-    await user.click(screen.getByRole("button", { name: /ödə$/ }));
+    await user.type(dialoq.getByLabelText("Məbləğ"), "200");
+    await user.click(dialoq.getByRole("button", { name: /^200 ₼ ödə$/ }));
 
     // 200 ₼ → əvvəl 117 faizə, qalan 83 əsas borca
     await waitFor(() => expect(server.oxu().kredit.faizBorc).toBe(0));
@@ -247,8 +279,8 @@ describe("AgriFin tətbiqi", () => {
     expect(server.oxu().kredit.gecikmeGun).toBe(0);
 
     // Jurnalda ödəniş BİR sətirdir, bölgüsü ilə birlikdə
-    await waitFor(() => expect(screen.getByText("Ödəniş")).toBeInTheDocument());
-    expect(screen.getByText(/faiz .* · əsas .* · qalıq/)).toBeInTheDocument();
+    await waitFor(() => expect(dialoq.getByText("Ödəniş")).toBeInTheDocument());
+    expect(dialoq.getByText(/faiz .* · əsas .* · qalıq/)).toBeInTheDocument();
   });
 
   // Peyk təsdiqi girovun əvəzi deyil, amma ölçmə VARSA bunu demək olar.
@@ -318,7 +350,8 @@ describe("AgriFin tətbiqi", () => {
     const user = userEvent.setup();
     renderApp(<App />);
 
-    await user.click(screen.getByRole("button", { name: "Məhsul dövrü krediti al" }));
+    await user.click(screen.getByRole("button", { name: "Maliyyə" }));
+    await user.click(screen.getByRole("button", { name: "Əlavə vəsait lazımdır?" }));
     await user.keyboard("{Escape}");
 
     // Sheet bağlanma animasiyası bitənədək DOM-da qalır (bax: Sheet.jsx)
@@ -342,8 +375,9 @@ describe("AgriFin tətbiqi", () => {
 
     await user.click(screen.getByRole("button", { name: /Dili dəyiş/ }));
 
-    expect(screen.getByRole("button", { name: "Market" })).toBeInTheDocument();
-    expect(screen.getByText("Canopy cover")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Fields" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Help" })).toBeInTheDocument();
+    expect(screen.getByText("Add your first field")).toBeInTheDocument();
   });
 
   it("vəziyyəti localStorage-da saxlayır", async () => {

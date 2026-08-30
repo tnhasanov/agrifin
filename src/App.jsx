@@ -15,6 +15,7 @@ import { SiqnalPaneli } from "./features/signals/SiqnalPaneli.jsx";
 import { HesabSheet } from "./features/hesab/HesabSheet.jsx";
 import { useHesab } from "./features/hesab/useHesab.js";
 import { HomeScreen } from "./screens/HomeScreen.jsx";
+import { SaheScreen } from "./screens/SaheScreen.jsx";
 import { AdvisorScreen } from "./screens/AdvisorScreen.jsx";
 import { MoneyScreen } from "./screens/MoneyScreen.jsx";
 import { MarketScreen } from "./screens/MarketScreen.jsx";
@@ -36,6 +37,7 @@ import { DEFAULT_LOCATION } from "./services/location.js";
 
 const SCREENS = {
   home: HomeScreen,
+  sahe: SaheScreen,
   advisor: AdvisorScreen,
   money: MoneyScreen,
   market: MarketScreen,

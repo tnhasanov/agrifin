@@ -87,7 +87,7 @@ describe("ilk açılış axını", () => {
 
     expect(dialoq()).not.toBeInTheDocument();
     // Rayon seçilməyib, amma tətbiq işləyir — standart rayon işlədilir
-    expect(screen.getByRole("button", { name: "Əsas" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ana səhifə" })).toBeInTheDocument();
   });
 
   // Personaj bələdçidir: sual qabarcıqda onun sözüdür, seçim isə üzündə

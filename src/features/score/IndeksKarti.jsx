@@ -227,14 +227,16 @@ function MovsumQrafiki({ movsumler, t }) {
  *
  * 300-850 aralıqlı FICO görünüşü QƏSDƏN atılıb: o miqyas "kredit balı" deyir.
  */
-export function IndeksKarti({ indeksHali }) {
+export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
   const { t } = useI18n();
   const [acilib, setAcilib] = useState(false);
   const { hal, indeks, movsumler } = indeksHali;
 
   if (hal === "yoxdur") return null;
 
-  // ── Məlumat keyfiyyəti qapısı: bal yoxdur, səbəb var ───────────────
+  // ── Məlumat keyfiyyəti qapısı: bal yoxdur, səbəb var (hal B) ───────
+  // 3 mövsümdən az tarixçə ilə NƏ RƏQƏM, NƏ BANT: "Tarixçə yığılır" +
+  // gedişat + fakt. Fermerə nə çatışmadığı və nə olacağı açıq deyilir.
   if (hal === "hazir" && indeks?.hal === "kifayetsiz") {
     return (
       <div
@@ -247,21 +249,62 @@ export function IndeksKarti({ indeksHali }) {
         <div className="flex items-start gap-2.5">
           <Icon name="Info" size={15} color={C.gold} />
           <div className="min-w-0 flex-1">
-            <p
-              className="text-sm font-bold text-white"
-              style={{ fontFamily: font.display, letterSpacing: "0.01em" }}
-            >
-              {t("indeks.tarixceAz")}
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p
+                className="text-sm font-bold text-white"
+                style={{ fontFamily: font.display, letterSpacing: "0.01em" }}
+              >
+                {t("indeks.tarixceAz")}
+              </p>
+              <span
+                className="rounded-full px-2 py-0.5 font-bold"
+                style={{
+                  fontSize: 10,
+                  color: C.gold,
+                  border: "1px solid rgba(233,181,74,0.45)",
+                  backgroundColor: "rgba(233,181,74,0.12)",
+                }}
+              >
+                {t("pano.tarixceChip")}
+              </span>
+            </div>
             <p className="mt-1 text-xs" style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
               {t("indeks.tarixceAzIzah")}
             </p>
-            <p className="mt-1.5" style={{ color: "rgba(255,255,255,0.5)", fontSize: 10 }}>
-              {t("indeks.movsum", { say: indeks.movsumSayi })}
+            <p
+              className="mt-1.5 text-xs font-bold text-white"
+              style={{ fontVariantNumeric: "tabular-nums" }}
+            >
+              {t("pano.tarixceSay", { say: indeks.movsumSayi })}
+            </p>
+            <div
+              className="mt-1 h-1.5 overflow-hidden rounded-full"
+              style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
+            >
+              <div
+                className="bar-dolur h-1.5 rounded-full"
+                style={{
+                  width: `${Math.min(100, Math.round((indeks.movsumSayi / 3) * 100))}%`,
+                  backgroundColor: C.gold,
+                }}
+              />
+            </div>
+            <p className="mt-1.5" style={{ color: "rgba(255,255,255,0.55)", fontSize: 10 }}>
+              {t("pano.tarixceXeber")}
             </p>
           </div>
         </div>
         <MovsumQrafiki movsumler={movsumler} t={t} />
+        {onSaheyeBax && (
+          <button
+            type="button"
+            onClick={onSaheyeBax}
+            className="mt-2 w-full rounded-xl py-2.5 text-xs font-bold"
+            style={{ backgroundColor: "rgba(255,255,255,0.12)", color: "#fff", minHeight: 44 }}
+          >
+            {t("pano.saheyeBax")}
+          </button>
+        )}
       </div>
     );
   }

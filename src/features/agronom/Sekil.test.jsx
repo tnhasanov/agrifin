@@ -52,7 +52,7 @@ function stubApi() {
 const fayl = () => new File(["xxx"], "yarpaq.jpg", { type: "image/jpeg" });
 
 async function openChat(user) {
-  await user.click(screen.getByRole("button", { name: "Məsləhət" }));
+  await user.click(screen.getByRole("button", { name: "Kömək" }));
   await user.click(screen.getByRole("button", { name: "Aqronoma sual verin" }));
 }
 

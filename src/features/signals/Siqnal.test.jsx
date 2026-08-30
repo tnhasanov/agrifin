@@ -110,9 +110,12 @@ describe("sahə siqnalları — əsas ekran", () => {
     renderApp(<App />);
 
     await siqnalHazir();
-    expect(screen.queryByText("Suvarma vaxtıdır")).not.toBeInTheDocument();
-    expect(screen.queryByText(/3 gündə yağış gözlənmir/)).not.toBeInTheDocument();
-    // Yuxarıda fermerin öz sahəsi dayanır, xəbərdarlıq yox
+    // Siqnal kartı (mənbə + bağla düyməsi ilə) əsas ekranda YOXDUR — siqnal
+    // yalnız "Bu gün nə etməli?" kartının içində BİR yerdə görünür
+    expect(screen.getAllByText("Suvarma vaxtıdır")).toHaveLength(1);
+    expect(screen.getByText("Bu gün nə etməli?")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Siqnalı bağla" })).not.toBeInTheDocument();
+    // Yuxarıda fermerin öz sahəsi dayanır, kredit CTA-sı da yerindədir
     expect(screen.getByRole("button", { name: "Məhsul dövrü krediti al" })).toBeInTheDocument();
   });
 
@@ -151,7 +154,10 @@ describe("sahə siqnalları — əsas ekran", () => {
     renderApp(<App />);
 
     await siqnalHazir();
-    await waitFor(() => expect(screen.getByText(/16 mm yağış gözlənilir/)).toBeInTheDocument());
+    // Eyni cümlə iki yerdə çıxa bilər (hava zolağı + "nə etməli" kartı)
+    await waitFor(() =>
+      expect(screen.getAllByText(/16 mm yağış gözlənilir/).length).toBeGreaterThan(0),
+    );
   });
 
   it("siqnal yoxdursa hava zolağı öz məsləhətini göstərir", async () => {
@@ -222,7 +228,7 @@ describe("Aqronun ifadəsi", () => {
     renderApp(<App />);
     await siqnalHazir();
 
-    await user.click(screen.getByRole("button", { name: "Məsləhət" }));
+    await user.click(screen.getByRole("button", { name: "Kömək" }));
 
     await waitFor(() => expect(uz()).toContain("fermer--narahat"));
     // İzah üzün yanındadır, uzaqda deyil

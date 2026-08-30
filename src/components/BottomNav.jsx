@@ -1,6 +1,6 @@
 import { Icon } from "./Icon.jsx";
 import { C } from "../theme/tokens.js";
-import { ROUTES } from "../routes.js";
+import { NAV_ROUTES } from "../routes.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useRouter } from "../lib/router.jsx";
 
@@ -13,7 +13,7 @@ export function BottomNav() {
       className="az-safe-bottom flex items-center justify-around px-2 pt-2"
       style={{ backgroundColor: C.card, borderTop: `1px solid ${C.line}` }}
     >
-      {ROUTES.map((route) => {
+      {NAV_ROUTES.map((route) => {
         const active = route.path === path;
         return (
           <button

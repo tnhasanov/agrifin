@@ -56,7 +56,7 @@ function stubApi({
 }
 
 async function openChat(user) {
-  await user.click(screen.getByRole("button", { name: "Məsləhət" }));
+  await user.click(screen.getByRole("button", { name: "Kömək" }));
   await user.click(screen.getByRole("button", { name: "Aqronoma sual verin" }));
 }
 

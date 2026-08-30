@@ -132,8 +132,9 @@ describe("aqronomik performans indeksi — əsas ekran", () => {
     stubApi();
     renderApp(<App />);
 
+    // Sahəsiz açılışda dəvət artıq pano kartıdır (hal A): bal/limit YOXDUR
     await waitFor(() =>
-      expect(screen.getByText(/Sahənizi çəkin — aqronomik performans indeksiniz/)).toBeInTheDocument(),
+      expect(screen.getAllByText("İlk sahənizi əlavə edin").length).toBeGreaterThan(0),
     );
     // Bahalı tarixçə sorğusu sahəsiz getməməlidir
     expect(tarixceSorgusu).toBe(0);
@@ -146,8 +147,12 @@ describe("aqronomik performans indeksi — əsas ekran", () => {
     stubApi({ movsumSiyahisi: movsumler({ sayi: 2 }) });
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText("Tarixçə kifayət deyil")).toBeInTheDocument());
-    expect(screen.getByText(/minimum 3 ölçülə bilən mövsüm/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Tarixçə yığılır")).toBeInTheDocument());
+    expect(screen.getByText(/ən azı 3 istifadə oluna bilən mövsüm/)).toBeInTheDocument();
+    // Gedişat və bildiriş vədi dəqiq mətnlərlə
+    expect(screen.getByText(/\/ 3 mövsüm/)).toBeInTheDocument();
+    expect(screen.getByText("Hələ qiymətləndirilməyib")).toBeInTheDocument();
+    expect(screen.getByText("Məlumat kifayət etdikdə sizə xəbər verəcəyik.")).toBeInTheDocument();
     expect(screen.queryByText("Yüksək")).not.toBeInTheDocument();
   });
 

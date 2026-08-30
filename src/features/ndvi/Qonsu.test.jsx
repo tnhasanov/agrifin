@@ -135,6 +135,7 @@ describe("müqayisə kartı", () => {
   it("sahənin ətrafdakı yerini göstərir", async () => {
     seed();
     stubApi();
+    window.history.pushState({}, "", "/fields"); // kart Sahələr ekranındadır
     renderApp(<App />);
 
     await waitFor(() =>
@@ -151,6 +152,7 @@ describe("müqayisə kartı", () => {
   it("nə ilə müqayisə olunduğunu açıq yazır", async () => {
     seed();
     stubApi();
+    window.history.pushState({}, "", "/fields"); // kart Sahələr ekranındadır
     renderApp(<App />);
 
     await waitFor(() => expect(screen.getByText(/EYNİ qayda ilə ölçülür/)).toBeInTheDocument());
@@ -193,7 +195,7 @@ describe("müqayisə kartı", () => {
 
     await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());
     expect(screen.queryByText(/ətrafın/i)).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Əsas" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ana səhifə" })).toBeInTheDocument();
   });
 });
 
@@ -224,6 +226,7 @@ describe("müqayisə siqnalı", () => {
   it("üst çeyrəkdə siqnal vermir, yalnız kartda göstərir", async () => {
     seed();
     stubApi({ qonsu: { p25: 0.3, medyan: 0.4, p75: 0.5, son: bugun, piksel: 5000 } });
+    window.history.pushState({}, "", "/fields"); // kart Sahələr ekranındadır
     renderApp(<App />);
 
     await waitFor(() =>
@@ -239,12 +242,13 @@ describe("aqronom çatı", () => {
     const user = userEvent.setup();
     seed();
     stubApi();
+    window.history.pushState({}, "", "/fields"); // kart Sahələr ekranındadır
     renderApp(<App />);
     await waitFor(() =>
       expect(screen.getByText("Sahəniz ətrafın ortasından yuxarıdır")).toBeInTheDocument(),
     );
 
-    await user.click(screen.getByRole("button", { name: "Məsləhət" }));
+    await user.click(screen.getByRole("button", { name: "Kömək" }));
     await user.click(screen.getByRole("button", { name: "Aqronoma sual verin" }));
     await user.click(screen.getByRole("button", { name: "NDVI göstəricim nə deyir?" }));
 

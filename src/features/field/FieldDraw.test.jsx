@@ -192,7 +192,8 @@ describe("sahə çəkmə", () => {
     for (const [lat, lng] of KUNCLER) xeriteyeToxun(lat, lng);
     await user.click(screen.getByRole("button", { name: /Sahəni saxla/ }));
 
-    // Yenidən açılır — künclər yerindədir
+    // Yenidən açılır — redaktə keçidi artıq Sahələr ekranındadır
+    await user.click(screen.getByRole("button", { name: "Sahələr" }));
     await user.click(screen.getByRole("button", { name: /Sahəm: .* ha — dəyiş/ }));
     await waitFor(() => expect(screen.getByText(/6[.,]\d+ hektar/)).toBeInTheDocument());
   });

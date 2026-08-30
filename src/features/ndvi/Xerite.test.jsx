@@ -73,7 +73,7 @@ function seed() {
 }
 
 beforeEach(() => {
-  window.history.pushState({}, "", "/");
+  window.history.pushState({}, "", "/fields");
   window.localStorage.clear();
   window.localStorage.setItem("agrifin:lang", JSON.stringify("az"));
 });

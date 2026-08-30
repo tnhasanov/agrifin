@@ -1,0 +1,219 @@
+import { Card } from "../components/Card.jsx";
+import { Chip } from "../components/Chip.jsx";
+import { Icon } from "../components/Icon.jsx";
+import { C, font } from "../theme/tokens.js";
+import { useI18n } from "../i18n/index.jsx";
+import { useStore } from "../state/store.jsx";
+import { necheGunEvvel, ortukFaizi } from "../services/ndvi.js";
+import { SaheXeritesi } from "../features/ndvi/SaheXeritesi.jsx";
+import { QonsuMuqayisesi } from "../features/ndvi/QonsuMuqayisesi.jsx";
+import { SaheLenti } from "../features/lent/SaheLenti.jsx";
+import { HesabatPaylas } from "../features/share/HesabatPaylas.jsx";
+import { BosSahe } from "../features/pano/BosSahe.jsx";
+import { SaheXebardarligi } from "../features/pano/SaheXebardarligi.jsx";
+import { EtibarNisani } from "../features/pano/EtibarNisani.jsx";
+
+/**
+ * SAHƏLƏR EKRANI — sahənin detal görünüşü: xəritə, xəbərdarlıq, tarixçə.
+ *
+ * Əsas səhifə "sahəm necədir?" sualına BİR SƏTİRLƏ cavab verir; bura isə
+ * sübutun özüdür: peyk şəkli, ölçmə xronologiyası, ətraf müqayisəsi.
+ *
+ * Sahə siqnalları burada BİR xəbərdarlıq kartı kimi görünür (ən vacibi) —
+ * tam siyahı Kömək ekranındadır. Hava siqnalları (şaxta, isti) sahə kartı
+ * deyil — onlar zəngdə qalır.
+ */
+const SAHE_SIQNALLARI = new Set([
+  "bitkiZeifleyir",
+  "qonsu",
+  "suGolu",
+  "xesteliyRiski",
+  "suvar",
+  "suvarmaDayan",
+]);
+
+export function SaheScreen({
+  peyk = { hal: "yoxdur", seriya: [], xulase: null },
+  qonsu = { hal: "yoxdur", muqayise: null },
+  radar = { hal: "yoxdur", xulase: null },
+  indeksHali = { hal: "yoxdur", indeks: null, movsumler: [] },
+  siqnallar = [],
+  onDrawField,
+  onOpenChat,
+}) {
+  const { t } = useI18n();
+  const { state } = useStore();
+
+  // ── Hal A: sahə yoxdur — bir aydın dəvət, uydurma göstərici yox ─────
+  if (!state.sahe) {
+    return (
+      <div className="px-4 pb-4">
+        <BosSahe onDrawField={onDrawField} onNece={onOpenChat} />
+      </div>
+    );
+  }
+
+  const indeks = indeksHali.indeks;
+  const tarixceYigilir = indeksHali.hal === "hazir" && indeks?.hal === "kifayetsiz";
+  const xulase = peyk.xulase;
+  const cariFaiz = Number.isFinite(xulase?.ndvi) ? ortukFaizi(xulase.ndvi) : null;
+  const gunEvvel = xulase ? necheGunEvvel(xulase.tarix) : null;
+
+  // Ən vacib SAHƏ siqnalı (mühərrik onsuz da ciddiliyə görə sıralayıb)
+  const saheSiqnali = siqnallar.find((s) => SAHE_SIQNALLARI.has(s.nov)) ?? null;
+
+  return (
+    <div className="px-4 pb-4">
+      {/* Başlıq: hektar + bitki + redaktə keçidi */}
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <div>
+          <h2 className="text-base font-bold" style={{ color: C.ink, fontFamily: font.display }}>
+            {t("nav.fields")}
+          </h2>
+          <p className="text-xs" style={{ color: C.muted }}>
+            {t("home.farmLine", {
+              farm: state.chat.crop ? { key: `kbcrop.${state.chat.crop}` } : { key: "farm.name" },
+              ha: { number: state.sahe.hektar },
+            })}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onDrawField}
+          className="flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-bold"
+          style={{ backgroundColor: C.card, color: C.pine, border: `1px solid ${C.line}`, minHeight: 44 }}
+        >
+          <Icon name="MapPin" size={13} color={C.pine} />
+          {t("home.fieldDrawn", { hektar: { number: state.sahe.hektar } })}
+        </button>
+      </div>
+
+      {/* Peyk xəritəsi: problemin HARADA olduğunu göstərir */}
+      <SaheXeritesi sahe={state.sahe} />
+
+      {/* Ölçmə statusu: köhnə/oflayn/xəta halları son-yenilənmə vaxtı ilə
+          açıq deyilir — "yüklənmədi" ilə "buludlu idi" fərqli mənalardır */}
+      {peyk.hal !== "yoxdur" && (
+        <div
+          className="mt-3 flex items-center gap-2 rounded-xl px-3 py-2"
+          style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}
+          aria-live="polite"
+        >
+          <Icon
+            name={peyk.hal === "yuklenir" ? "LoaderCircle" : "Satellite"}
+            size={13}
+            color={peyk.hal === "hazir" ? C.field : C.muted}
+          />
+          <span className="flex-1 text-xs" style={{ color: C.muted }}>
+            {peyk.hal === "yuklenir" && t("ndvi.loading")}
+            {peyk.hal === "hazir" &&
+              (peyk.kohne
+                ? t("ndvi.cached", { gun: gunEvvel ?? 0 })
+                : t("ndvi.measured", { gun: gunEvvel ?? 0, say: xulase?.olcmeSayi ?? 0 }))}
+            {peyk.hal === "olcmeYox" && t("ndvi.noReading")}
+            {peyk.hal === "qurulmayib" && t("ndvi.notConfigured")}
+            {peyk.hal === "xeta" && t("ndvi.error")}
+          </span>
+        </div>
+      )}
+
+      {/* Vəziyyət sətri: xəbərdarlıq yoxdursa yaxşı xəbər açıq deyilir */}
+      {!saheSiqnali && peyk.hal === "hazir" && (
+        <Card className="giris" style={{ marginTop: 12, marginBottom: 8 }}>
+          <div className="flex items-center gap-2">
+            <div className="rounded-full p-1.5" style={{ backgroundColor: C.fieldSoft }}>
+              <Icon name="Check" size={14} color={C.field} />
+            </div>
+            <p className="text-sm font-bold" style={{ color: C.ink }}>
+              {t("pano.saheYaxsi")}
+            </p>
+          </div>
+        </Card>
+      )}
+
+      {/* Hal F: sahə xəbərdarlığı — dəlil, addımlar, mövcud kanallar */}
+      {saheSiqnali && (
+        <div className="mt-3">
+          <SaheXebardarligi
+            siqnal={saheSiqnali}
+            etibar={indeks?.etibar ?? null}
+            movsumSayi={indeks?.movsumSayi ?? null}
+            onChat={onOpenChat}
+          />
+        </div>
+      )}
+
+      {/* Hal B: tarixçə yığılır — bal YOXDUR, olan faktlar dürüst göstərilir */}
+      {tarixceYigilir && (
+        <Card className="giris" style={{ marginBottom: 8 }}>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
+              {t("indeks.tarixceAz")}
+            </p>
+            <Chip label={t("pano.tarixceChip")} color={C.goldDeep} bg={C.goldSoft} />
+          </div>
+          <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
+            {t("indeks.tarixceAzIzah")}
+          </p>
+          <p className="mt-2 text-xs font-bold" style={{ color: C.ink, fontVariantNumeric: "tabular-nums" }}>
+            {t("pano.tarixceSay", { say: indeks.movsumSayi })}
+          </p>
+          <div className="mt-1 h-2 overflow-hidden rounded-full" style={{ backgroundColor: C.mist }}>
+            <div
+              className="bar-dolur h-2 rounded-full"
+              style={{
+                width: `${Math.min(100, Math.round((indeks.movsumSayi / 3) * 100))}%`,
+                backgroundColor: C.gold,
+              }}
+            />
+          </div>
+
+          <p className="mt-3 text-xs font-bold" style={{ color: C.ink }}>
+            {t("pano.bilirik")}
+          </p>
+          <div className="mt-1 grid grid-cols-2 gap-2">
+            <div className="rounded-xl px-2.5 py-2" style={{ backgroundColor: C.mist }}>
+              <p style={{ color: C.muted, fontSize: 10 }}>{t("pano.cariVeg")}</p>
+              <p className="text-sm font-bold" style={{ color: C.ink }}>
+                {cariFaiz != null ? `${cariFaiz}%` : "—"}
+              </p>
+            </div>
+            <div className="rounded-xl px-2.5 py-2" style={{ backgroundColor: C.mist }}>
+              <p style={{ color: C.muted, fontSize: 10 }}>{t("pano.sonYenilenme")}</p>
+              <p className="text-sm font-bold" style={{ color: C.ink }}>
+                {gunEvvel == null ? "—" : gunEvvel === 0 ? t("pano.buGun") : t("pano.gunEvvel", { gun: gunEvvel })}
+              </p>
+            </div>
+          </div>
+          <p className="mt-2 flex items-center gap-1.5 text-xs" style={{ color: C.muted }}>
+            <Icon name="Info" size={12} color={C.muted} />
+            {t("pano.tarixceXeber")}
+          </p>
+        </Card>
+      )}
+
+      {/* Bal varsa etibar sətri kartların altında oxunur.
+          Xəbərdarlıq kartı onu ÖZÜ daşıyır — təkrarlamırıq */}
+      {!saheSiqnali && indeksHali.hal === "hazir" && indeks?.hal === "hazir" && (
+        <div className="mt-1 mb-2 px-1">
+          <EtibarNisani etibar={indeks.etibar} say={indeks.movsumSayi} setir />
+        </div>
+      )}
+
+      {/* Ətraf müqayisəsi: "NDVI 0,68" mücərrəddir, qonşularla müqayisə aydın */}
+      <QonsuMuqayisesi qonsu={qonsu} ndvi={xulase?.ndvi} illik={peyk.illik} />
+
+      {/* Ölçmə xronologiyası — sahənin "bank çıxarışı" */}
+      <SaheLenti peyk={peyk} radar={radar} />
+
+      {/* Hesabatı WhatsApp-a çıxar — aqronomla söhbət orada gedir */}
+      <HesabatPaylas
+        hektar={state.sahe?.hektar}
+        bitkiKey={state.chat.crop ? `kbcrop.${state.chat.crop}` : null}
+        xulase={xulase}
+        muqayise={qonsu.muqayise}
+        siqnal={saheSiqnali}
+      />
+    </div>
+  );
+}

@@ -150,7 +150,11 @@ describe("peyk ölçməsi — əsas ekran", () => {
     stubApi();
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText("Bitki örtüyü")).toBeInTheDocument());
+    // Sahəsiz açılışda KPI plitəsi yoxdur — dəvət kartı görünür
+    await waitFor(() =>
+      expect(screen.getAllByText("İlk sahənizi əlavə edin").length).toBeGreaterThan(0),
+    );
+    expect(screen.queryByText("Bitki örtüyü")).not.toBeInTheDocument();
     expect(fetch.mock.calls.some(([url]) => String(url).includes("/api/ndvi"))).toBe(false);
   });
 
@@ -181,7 +185,7 @@ describe("peyk ölçməsi — əsas ekran", () => {
     renderApp(<App />);
 
     await waitFor(() => expect(screen.getByText(/alınmadı/)).toBeInTheDocument());
-    expect(screen.getByRole("button", { name: "Əsas" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ana səhifə" })).toBeInTheDocument();
   });
 });
 
@@ -193,7 +197,7 @@ describe("peyk ölçməsi — aqronom çatı", () => {
     renderApp(<App />);
     await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());
 
-    await user.click(screen.getByRole("button", { name: "Məsləhət" }));
+    await user.click(screen.getByRole("button", { name: "Kömək" }));
     await user.click(screen.getByRole("button", { name: "Aqronoma sual verin" }));
     await user.click(screen.getByRole("button", { name: "Suvarmanı nə vaxt etməliyəm?" }));
 

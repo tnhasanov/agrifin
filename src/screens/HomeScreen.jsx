@@ -4,6 +4,8 @@ import { WeatherStrip } from "../features/weather/WeatherStrip.jsx";
 import { C, font } from "../theme/tokens.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
+import { useRouter } from "../lib/router.jsx";
+import { pathFor } from "../routes.js";
 import { formatNumber } from "../lib/format.js";
 import { FARM } from "../services/farm.js";
 import { kreditImkani } from "../features/loan/useKredit.js";
@@ -11,10 +13,11 @@ import { DEFAULT_LOCATION } from "../services/location.js";
 import { havaNoqtesi } from "../services/saheYeri.js";
 import { necheGunEvvel, ortukFaizi } from "../services/ndvi.js";
 import { Sparkline } from "../components/Sparkline.jsx";
-import { SaheXeritesi } from "../features/ndvi/SaheXeritesi.jsx";
-import { QonsuMuqayisesi } from "../features/ndvi/QonsuMuqayisesi.jsx";
-import { HesabatPaylas } from "../features/share/HesabatPaylas.jsx";
 import { IndeksKarti } from "../features/score/IndeksKarti.jsx";
+import { esasHereket } from "../features/pano/esasHereket.js";
+import { EsasHereketKarti } from "../features/pano/EsasHereketKarti.jsx";
+import { KreditMiniKarti } from "../features/pano/MaliyyeKartlari.jsx";
+import { BosSahe } from "../features/pano/BosSahe.jsx";
 
 function StatTile({ label, children }) {
   return (
@@ -27,11 +30,20 @@ function StatTile({ label, children }) {
   );
 }
 
+/**
+ * ANA SƏHİFƏ — qərar səthidir, modul kataloqu deyil. Hər açılış üç suala
+ * cavab verir: Sahəm necədir? Pul vəziyyətim necədir? İndi nə etməliyəm?
+ *
+ * "Nə etməliyəm" kartının məzmununu determinist həlledici seçir
+ * (bax: features/pano/esasHereket.js) — kartlar müstəqildir, prioritet
+ * təkdir. Sahə çəkilməmiş fermer NƏ bal, NƏ KPI, NƏ kredit görür (hal A):
+ * uydurma rəqəm etibarı yalnız bir dəfə satır.
+ */
 export function HomeScreen({
   peyk = { hal: "yoxdur", seriya: [], xulase: null },
-  qonsu = { hal: "yoxdur", muqayise: null },
   radar = { hal: "yoxdur", xulase: null },
   indeksHali = { hal: "yoxdur", indeks: null, movsumler: [] },
+  kreditHali = null,
   siqnallar = [],
   onOpenLoan,
   onPickLocation,
@@ -41,58 +53,51 @@ export function HomeScreen({
 }) {
   const { t, money, lang } = useI18n();
   const { state } = useStore();
+  const { navigate } = useRouter();
 
-  // Yer seçilməyibsə default rayonun proqnozu göstərilir
   const location = state.location ?? DEFAULT_LOCATION;
-  // Fermer öz sahəsini çəkibsə həqiqi hektar göstərilir, yoxsa nümunə
-  const hectares = state.sahe?.hektar ?? FARM.hectares;
-  // Proqnoz sahənin öz koordinatı üçün alınır — çatla eyni nöqtə olsun deyə
   const noqte = havaNoqtesi({ location, sahe: state.sahe });
 
-  // Peyk ölçməsi App-də qurulur (bax: App.jsx) — burada yalnız göstərilir
   const olculen = peyk.xulase;
-  // "NDVI 0,68" texniki termindir; fermer "68%" oxuyur. Çevirmə eyni ölçmədir,
-  // onluqsuz — bax: services/ndvi.js
-  //
-  // Sahə çəkilib, amma ölçmə gəlməyibsə NÜMUNƏ RƏQƏMİ göstərmirik. Əvvəl
-  // burada FARM.ndvi qalırdı və ekranda "Bitki örtüyü 72%" ilə "bu dövrdə
-  // təmiz ölçmə yoxdur" yan-yana dururdu — biri o birini yalanlayırdı.
   const olcmeVar = Number.isFinite(olculen?.ndvi);
-  const faiz = ortukFaizi(olcmeVar ? olculen.ndvi : state.sahe ? null : FARM.ndvi);
+  // Sahə çəkilməyibsə NÜMUNƏ RƏQƏMİ YOXDUR (hal A: uydurma KPI qadağandır)
+  const faiz = olcmeVar ? ortukFaizi(olculen.ndvi) : null;
   const gunEvvel = olculen ? necheGunEvvel(olculen.tarix) : null;
 
-  // Ən vacib siqnal ARTIQ ƏSAS EKRANIN BAŞINA ÇIXMIR — başlıqdakı zəngin
-  // arxasındadır (bax: features/signals/SiqnalPaneli.jsx). Səbəb: xəbərdarlıq
-  // kartı hər açılışda salamlaşmanı və indeksi aşağı itələyirdi, yəni fermer
-  // öz sahəsinin vəziyyətini görmək üçün əvvəlcə bildirişi oxumalı olurdu.
-  // Zəngdəki qırmızı nişan onsuz da say verir; oxumaq qərarı fermerindir.
-  //
-  // `bas` yenə hesablanır: iki yerdə İŞ görür — Aqronun üzü və paylaşılan
-  // hesabatın mətni. Yalnız kartın özü ekrandan çıxıb.
   const bas = siqnallar.find((s) => s.ciddilik !== "melumat");
+  const aqroHali = !bas && indeksHali.indeks?.bant === "yuksek" ? "sevincli" : "sakit";
 
-  // Kredit imkanı: aqro indeks → gəlir modeli → ödəniş qabiliyyəti zənciri.
-  // Saxta FARM.creditLimit-in yerinə (bax: features/loan/useKredit.js)
+  const aktivKredit = kreditHali?.kredit?.hal === "active" ? kreditHali.kredit : null;
+  const acıqIs =
+    aktivKredit ||
+    ["submitted", "reviewing", "approved", "offer_issued"].includes(
+      kreditHali?.muraciet?.hal ?? "",
+    );
+
+  // Kredit imkanı (klient təxmini, qeydi ilə) — yalnız sahə çəkiləndə
   const kredit = kreditImkani({
     sahe: state.sahe,
     bitki: state.chat.crop,
     indeks: indeksHali.indeks,
   });
 
-  // ═══ AQRO ƏSAS EKRANDA KƏDƏRLƏNMİR ═══════════════════════════════════
-  // Əvvəl açıq siqnal varsa üz "narahat" olurdu. İki səbəbdən səhv idi:
-  //
-  // 1. "Suvarma vaxtıdır" TƏCİLİ sayılır, amma pis xəbər deyil — adi,
-  //    həll edilən iş. Ona kədərlənmək hava tətbiqinin yağış gördüyü üçün
-  //    qaşqabaqlı olmasına bənzəyir. Ciddilik İŞİN TƏCİLİLİYİdir, xəbərin
-  //    pisliyi deyil; üz isə ikincisini deyirdi.
-  // 2. Siqnal kartı zəngin arxasına keçəndən sonra kədərli üzün YANINDA
-  //    onu izah edən heç nə qalmadı — fermer səbəbsiz qaşqabaq görürdü.
-  //
-  // İndi: iş varsa sakit (Aqro sadəcə yanındadır), hər şey yaxşıdırsa
-  // sevincli. Narahat ifadə məsləhət ekranındadır — orada siqnal kartları
-  // onu izah edir (bax: screens/AdvisorScreen.jsx).
-  const aqroHali = !bas && indeksHali.indeks?.bant === "yuksek" ? "sevincli" : "sakit";
+  // "Bu gün nə etməli?" — determinist prioritet zənciri
+  const hereket = esasHereket({
+    kredit: kreditHali?.kredit ?? null,
+    teklif: kreditHali?.teklif ?? null,
+    muraciet: kreditHali?.muraciet ?? null,
+    serverHal: kreditHali?.hal ?? "yuklenir",
+    siqnallar,
+    sahe: state.sahe,
+  });
+
+  const hereketIcra = (h) => {
+    if (h.hereket === "odenis" || h.hereket === "teklif") onOpenLoan?.();
+    else if (h.hereket === "sahe") navigate(pathFor("sahe"));
+    else if (h.hereket === "giris") onOpenHesab?.();
+    else if (h.hereket === "saheCek") onDrawField?.();
+    else navigate(pathFor("advisor"));
+  };
 
   return (
     <div className="px-4 pb-4">
@@ -101,12 +106,7 @@ export function HomeScreen({
         style={{ background: `linear-gradient(160deg, ${C.pine} 0%, ${C.pineDeep} 70%)` }}
       >
         <div className="flex items-center gap-2.5">
-          {/* AQRO əsas ekranda: bəzək deyil, İKİ iş görür.
-              1) Aqronoma yeganə birbaşa yol — əvvəl çata yalnız siqnal
-                 kartı üzərindən düşmək olurdu, siqnal yoxdursa yol yox idi.
-              2) Üzü sahənin vəziyyətini daşıyır: xəbərdarlıq varsa narahat,
-                 indeks yüksəkdirsə sevincli. Rəqəmə baxmadan oxunur.
-              Başlığı fermerin seçdiyi bitkidir (bax: components/Aqronom.jsx). */}
+          {/* AQRO: aqronoma birbaşa yol + üzü sahənin vəziyyətini daşıyır */}
           <button
             type="button"
             onClick={onOpenChat}
@@ -119,30 +119,27 @@ export function HomeScreen({
 
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>
-              {t("home.greeting", { name: FARM.farmerName })}
+              {state.sahe
+                ? t("home.greeting", { name: FARM.farmerName })
+                : t("pano.salam", { name: FARM.farmerName })}
             </p>
             <p className="text-sm font-bold text-white" style={{ fontFamily: font.display }}>
-              {t("home.farmLine", {
-                farm: { key: FARM.farmNameKey },
-                ha: { number: hectares },
-              })}
+              {state.sahe
+                ? t("home.farmLine", {
+                    farm: { key: FARM.farmNameKey },
+                    ha: { number: state.sahe.hektar },
+                  })
+                : t("pano.qurulus")}
             </p>
           </div>
-          {/* "Bu gün təsdiqlənib" çipi SİLİNDİ. İki səbəb:
-              1) Sabit mətn idi — sahə çəkilməsə də, ölçmə köhnə olsa da
-                 eyni şeyi deyirdi, yəni nümunə məlumat həqiqi məlumat
-                 kimi geyinmişdi;
-              2) aşağıdakı "Peyk ölçməsi · N gün əvvəl" sətri eyni şeyi
-                 DƏQİQ deyir. Yer boşalanda salamlama da sətirlərə
-                 bölünməkdən qurtardı. */}
         </div>
 
-        {/* Sahə çəkilməyibsə açıq dəvət; çəkilibsə redaktə keçidi */}
+        {/* Sahə çəkilməyibsə dəvət; çəkilibsə Sahələr ekranına keçid */}
         <button
           type="button"
-          onClick={onDrawField}
+          onClick={state.sahe ? () => navigate(pathFor("sahe")) : onDrawField}
           className="mt-2 flex w-full items-center justify-between rounded-xl px-3 py-2"
-          style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+          style={{ backgroundColor: "rgba(255,255,255,0.08)", minHeight: 44 }}
         >
           <span className="flex items-center gap-2 text-xs font-semibold text-white">
             <Icon name="MapPin" size={13} color={C.gold} />
@@ -153,14 +150,12 @@ export function HomeScreen({
           <Icon name="ChevronRight" size={14} color="rgba(255,255,255,0.6)" />
         </button>
 
-        {/* Hesab: sahə cihazda yox, hesabda qalsın. Daxil olmuş fermer öz
-            nömrəsini görür (bu, "sinxron işləyir" siqnalıdır), olmayan isə
-            nə üçün lazım olduğunu bir cümlə ilə oxuyur. */}
+        {/* Hesab: sahə cihazda yox, hesabda qalsın */}
         <button
           type="button"
           onClick={onOpenHesab}
           className="mt-2 flex w-full items-center justify-between rounded-xl px-3 py-2"
-          style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+          style={{ backgroundColor: "rgba(255,255,255,0.08)", minHeight: 44 }}
         >
           <span className="flex items-center gap-2 text-xs font-semibold text-white">
             <Icon
@@ -173,181 +168,172 @@ export function HomeScreen({
           <Icon name="ChevronRight" size={14} color="rgba(255,255,255,0.6)" />
         </button>
 
-        {/* Nümunə qövs (782) SİLİNİB: real indeksin yanında saxta bal ikiqat
-            yalan görünür. Sahə çəkilibsə peyk tarixçəsindən hesablanan indeks,
-            çəkilməyibsə nömrə YOX, nəyin gözlədiyini deyən bir sətir — dəvəti
-            üstdəki "Sahəmi xəritədə çək" düyməsi onsuz da verir. */}
-        {state.sahe ? (
-          <IndeksKarti indeksHali={indeksHali} />
-        ) : (
-          <div
-            className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2"
-            style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
-          >
-            <Icon name="Satellite" size={13} color="rgba(255,255,255,0.6)" />
-            <span className="text-xs" style={{ color: "rgba(255,255,255,0.72)" }}>
-              {t("indeks.saheYox")}
-            </span>
-          </div>
-        )}
+        {/* Sahə varsa: indeks kartı (qapı ilə) + göstəricilər. Yoxdursa HEÇ NƏ —
+            hal A-da bal, KPI, kredit rəqəmi göstərilmir (uydurma metrika yox). */}
+        {state.sahe && (
+          <>
+            <IndeksKarti indeksHali={indeksHali} onSaheyeBax={() => navigate(pathFor("sahe"))} />
 
-        <div className="mt-2 grid grid-cols-3 gap-2">
-          <StatTile label={t("home.cropHealth")}>
-            {faiz == null ? "—" : `${formatNumber(faiz, lang)}%`}{" "}
-            {olculen && olculen.istiqamet !== "sabit" && (
-              <span style={{ color: olculen.istiqamet === "artir" ? "#7FD6A4" : "#F0A0A0" }}>
-                {olculen.istiqamet === "artir" ? "▲" : "▼"}
-              </span>
-            )}
-          </StatTile>
-          {/* SAXTA 12.000 ₼ SİLİNDİ: rəqəm indi ödəniş qabiliyyətindən çıxır
-              (bax: features/loan/useKredit.js). Hesablana bilmirsə "—" —
-              uydurma rəqəm göstərməkdənsə boşluq göstərmək dürüstdür. */}
-          <StatTile label={t("home.kreditImkani")}>
-            <span style={{ color: C.gold }}>
-              {/* imkanYoxdur halında da RƏQƏM göstərilir (məs. 300 ₼):
-                  kiçik qabiliyyət "hesablana bilmədi" deyil — dürüst cavabdır */}
-              {kredit.maxKredit != null ? money(kredit.maxKredit) : "—"}
-            </span>
-          </StatTile>
-          <StatTile label={t("home.wallet")}>{money(state.wallet)}</StatTile>
-        </div>
-
-        {/* Rəqəmin mənbəyi bir sətirlə deyilir: haradan gəldiyi bilinməyən
-            limit fermeri yanlış plana aparır */}
-        <p
-          className="mt-1.5 text-center"
-          style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, lineHeight: 1.4 }}
-        >
-          {t(kredit.maxKredit != null ? "home.kreditQeyd" : "home.kreditQeydYox")}
-        </p>
-
-        {/* Peyk ölçməsinin vəziyyəti. Hər hal ayrı cümlə deyir: peyk məlumatı
-            havadan fərqli olaraq həmişə mövcud olmur və "yoxdur" ilə "xəta"
-            fermer üçün tamamilə fərqli mənalardır. */}
-        {state.sahe && peyk.hal !== "yoxdur" && (
-          <div
-            className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2"
-            style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
-            aria-live="polite"
-          >
-            <Icon
-              name={peyk.hal === "yuklenir" ? "LoaderCircle" : "Satellite"}
-              size={13}
-              color={peyk.hal === "hazir" ? "#7FD6A4" : "rgba(255,255,255,0.6)"}
-            />
-            <span className="flex-1 text-xs" style={{ color: "rgba(255,255,255,0.72)" }}>
-              {peyk.hal === "yuklenir" && t("ndvi.loading")}
-              {peyk.hal === "hazir" &&
-                (peyk.kohne
-                  ? t("ndvi.cached", { gun: gunEvvel ?? 0 })
-                  : t("ndvi.measured", { gun: gunEvvel ?? 0, say: olculen.olcmeSayi }))}
-              {peyk.hal === "olcmeYox" && t("ndvi.noReading")}
-              {peyk.hal === "qurulmayib" && t("ndvi.notConfigured")}
-              {peyk.hal === "xeta" && t("ndvi.error")}
-            </span>
-            {peyk.hal === "hazir" && peyk.seriya.length > 1 && (
-              <Sparkline
-                points={peyk.seriya.map((n) => n.ndvi)}
-                up={olculen.istiqamet !== "azalir"}
-                width={56}
-                height={20}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Radar: optik ölçmə buludun altında qalanda görünür. Bura fermerin
-            "bu dövrdə təmiz ölçmə yoxdur" oxuduğu yerdir — indi ondan sonra
-            ikinci peykin nə gördüyü yazılır. */}
-        {radar.hal !== "yoxdur" && (
-          <div
-            className="mt-2 flex items-start gap-2 rounded-xl px-3 py-2"
-            style={{
-              backgroundColor: radar.xulase?.suVar
-                ? "rgba(74,144,226,0.20)"
-                : "rgba(255,255,255,0.08)",
-            }}
-            aria-live="polite"
-          >
-            <Icon
-              name={radar.hal === "yuklenir" ? "LoaderCircle" : "Radar"}
-              size={13}
-              color={radar.hal === "hazir" ? "#9AC8F0" : "rgba(255,255,255,0.6)"}
-            />
-            <div className="flex-1">
-              <p className="text-xs" style={{ color: "rgba(255,255,255,0.78)" }}>
-                {radar.hal === "yuklenir" && t("radar.loading")}
-                {radar.hal === "olcmeYox" && t("radar.noReading")}
-                {radar.hal === "qurulmayib" && t("ndvi.notConfigured")}
-                {radar.hal === "xeta" && t("radar.error")}
-                {radar.hal === "hazir" &&
-                  (radar.xulase?.suVar
-                    ? t("radar.suVar", { faiz: Math.round(radar.xulase.suPayi * 100) })
-                    : t(`radar.${radar.xulase?.istiqamet ?? "sabit"}`))}
-              </p>
-              {radar.hal === "hazir" && (
-                <p className="mt-0.5" style={{ color: "rgba(255,255,255,0.45)", fontSize: 10 }}>
-                  {t("radar.measured", { gun: necheGunEvvel(radar.xulase.tarix) ?? 0 })}
-                </p>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              <StatTile label={t("home.cropHealth")}>
+                {faiz == null ? "—" : `${formatNumber(faiz, lang)}%`}{" "}
+                {olculen && olculen.istiqamet !== "sabit" && (
+                  <span style={{ color: olculen.istiqamet === "artir" ? "#7FD6A4" : "#F0A0A0" }}>
+                    {olculen.istiqamet === "artir" ? "▲" : "▼"}
+                  </span>
+                )}
+              </StatTile>
+              {/* Aktiv borclu üçün "imkan" təxmini yanıldıcıdır (yeni müraciət
+                  onsuz da bağlıdır) — real qalıq göstərilir */}
+              {aktivKredit ? (
+                <StatTile label={t("maliyye.aktiv")}>
+                  <span style={{ color: C.gold }}>{money(aktivKredit.qaliqBorc)}</span>
+                </StatTile>
+              ) : (
+                <StatTile label={t("home.kreditImkani")}>
+                  <span style={{ color: C.gold }}>
+                    {kredit.maxKredit != null ? money(kredit.maxKredit) : "—"}
+                  </span>
+                </StatTile>
               )}
+              <StatTile label={t("pano.sonYenilenme")}>
+                {gunEvvel == null
+                  ? "—"
+                  : gunEvvel === 0
+                    ? t("pano.buGun")
+                    : t("pano.gunEvvel", { gun: gunEvvel })}
+              </StatTile>
             </div>
-          </div>
-        )}
+            <p
+              className="mt-1.5 text-center"
+              style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, lineHeight: 1.4 }}
+            >
+              {aktivKredit
+                ? t("home.kreditQeydAktiv")
+                : t(kredit.maxKredit != null ? "home.kreditQeyd" : "home.kreditQeydYox")}
+            </p>
 
-        {/* Su vəziyyəti ayrıca göstərilir: NDVI "zəifdir" deyir, rütubət isə
-            səbəbin su olub-olmadığını — suvarma qərarı buna bağlıdır. */}
-        {peyk.hal === "hazir" && olculen?.suSeviyyesi && (
-          <div
-            className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2"
-            style={{
-              backgroundColor:
-                olculen.suSeviyyesi === "az" ? "rgba(233,181,74,0.16)" : "rgba(255,255,255,0.08)",
-            }}
-          >
-            <Icon
-              name="Droplets"
-              size={13}
-              color={olculen.suSeviyyesi === "az" ? C.gold : "#7FD6A4"}
-            />
-            {/* Xam NDMI rəqəmi ("NDMI 0,30") burada idi və heç nəyə xidmət
-                etmirdi: fermer onu nə ilə müqayisə edəcəyini bilmir, cümlə
-                isə qərarı onsuz da deyir. Nəmlik faizə çevrilmir — NDMI quru
-                torpaqda mənfi olur, "0%" quru ilə çox quru arasındakı fərqi
-                itirər. Rəng xəritəsi bunu ayırd edir. */}
-            <span className="flex-1 text-xs" style={{ color: "rgba(255,255,255,0.78)" }}>
-              {t(`ndvi.water.${olculen.suSeviyyesi}`)}
-            </span>
-          </div>
-        )}
+            {/* Peyk ölçməsinin vəziyyəti — hər hal öz cümləsini deyir */}
+            {peyk.hal !== "yoxdur" && (
+              <div
+                className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2"
+                style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+                aria-live="polite"
+              >
+                <Icon
+                  name={peyk.hal === "yuklenir" ? "LoaderCircle" : "Satellite"}
+                  size={13}
+                  color={peyk.hal === "hazir" ? "#7FD6A4" : "rgba(255,255,255,0.6)"}
+                />
+                <span className="flex-1 text-xs" style={{ color: "rgba(255,255,255,0.72)" }}>
+                  {peyk.hal === "yuklenir" && t("ndvi.loading")}
+                  {peyk.hal === "hazir" &&
+                    (peyk.kohne
+                      ? t("ndvi.cached", { gun: gunEvvel ?? 0 })
+                      : t("ndvi.measured", { gun: gunEvvel ?? 0, say: olculen.olcmeSayi }))}
+                  {peyk.hal === "olcmeYox" && t("ndvi.noReading")}
+                  {peyk.hal === "qurulmayib" && t("ndvi.notConfigured")}
+                  {peyk.hal === "xeta" && t("ndvi.error")}
+                </span>
+                {peyk.hal === "hazir" && peyk.seriya.length > 1 && (
+                  <Sparkline
+                    points={peyk.seriya.map((n) => n.ndvi)}
+                    up={olculen.istiqamet !== "azalir"}
+                    width={56}
+                    height={20}
+                  />
+                )}
+              </div>
+            )}
 
-        <button
-          type="button"
-          onClick={onOpenLoan}
-          className="mt-3 w-full rounded-xl py-3 text-sm font-bold"
-          style={{ backgroundColor: C.gold, color: C.pine, fontFamily: font.display }}
-        >
-          {t("home.loanCta")}
-        </button>
-        <p className="mt-2 text-center text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
-          {t("home.loanNote")}
-        </p>
+            {/* Radar: optik ölçmə buludun altında qalanda ikinci peyk danışır */}
+            {radar.hal !== "yoxdur" && (
+              <div
+                className="mt-2 flex items-start gap-2 rounded-xl px-3 py-2"
+                style={{
+                  backgroundColor: radar.xulase?.suVar
+                    ? "rgba(74,144,226,0.20)"
+                    : "rgba(255,255,255,0.08)",
+                }}
+                aria-live="polite"
+              >
+                <Icon
+                  name={radar.hal === "yuklenir" ? "LoaderCircle" : "Radar"}
+                  size={13}
+                  color={radar.hal === "hazir" ? "#9AC8F0" : "rgba(255,255,255,0.6)"}
+                />
+                <div className="flex-1">
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.78)" }}>
+                    {radar.hal === "yuklenir" && t("radar.loading")}
+                    {radar.hal === "olcmeYox" && t("radar.noReading")}
+                    {radar.hal === "qurulmayib" && t("ndvi.notConfigured")}
+                    {radar.hal === "xeta" && t("radar.error")}
+                    {radar.hal === "hazir" &&
+                      (radar.xulase?.suVar
+                        ? t("radar.suVar", { faiz: Math.round(radar.xulase.suPayi * 100) })
+                        : t(`radar.${radar.xulase?.istiqamet ?? "sabit"}`))}
+                  </p>
+                  {radar.hal === "hazir" && (
+                    <p className="mt-0.5" style={{ color: "rgba(255,255,255,0.45)", fontSize: 10 }}>
+                      {t("radar.measured", { gun: necheGunEvvel(radar.xulase.tarix) ?? 0 })}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Su vəziyyəti: NDVI "zəifdir" deyir, rütubət səbəbi ayırır */}
+            {peyk.hal === "hazir" && olculen?.suSeviyyesi && (
+              <div
+                className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2"
+                style={{
+                  backgroundColor:
+                    olculen.suSeviyyesi === "az"
+                      ? "rgba(233,181,74,0.16)"
+                      : "rgba(255,255,255,0.08)",
+                }}
+              >
+                <Icon
+                  name="Droplets"
+                  size={13}
+                  color={olculen.suSeviyyesi === "az" ? C.gold : "#7FD6A4"}
+                />
+                <span className="flex-1 text-xs" style={{ color: "rgba(255,255,255,0.78)" }}>
+                  {t(`ndvi.water.${olculen.suSeviyyesi}`)}
+                </span>
+              </div>
+            )}
+
+            {/* Kredit CTA yalnız açıq iş YOXDURSA: aktiv borcalana yeni kredit
+                sırımaq olmaz — mövcud borc yuxarıdakı kartda onsuz da görünür */}
+            {!acıqIs && (
+              <>
+                <button
+                  type="button"
+                  onClick={onOpenLoan}
+                  className="mt-3 w-full rounded-xl py-3 text-sm font-bold"
+                  style={{ backgroundColor: C.gold, color: C.pine, fontFamily: font.display }}
+                >
+                  {t("home.loanCta")}
+                </button>
+                <p className="mt-2 text-center text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
+                  {t("home.loanNote")}
+                </p>
+              </>
+            )}
+          </>
+        )}
       </div>
 
-      {/* Sahə çəkilibsə: problemin HARADA olduğunu göstərən xəritə */}
-      {state.sahe && <SaheXeritesi sahe={state.sahe} />}
+      {/* Hal A: yeni fermer — BİR aydın dəvət, ikinci "nə etməli" kartı yox
+          (dəvətin özü elə bir nömrəli işdir; təkrar CTA diqqəti bölür) */}
+      {!state.sahe && <BosSahe onDrawField={onDrawField} onNece={onOpenChat} />}
 
-      {/* "NDVI 0,68" mücərrəddir; "qonşulardan yaxşıdır" isə dərhal aydındır */}
-      <QonsuMuqayisesi qonsu={qonsu} ndvi={olculen?.ndvi} illik={peyk.illik} />
+      {/* "Bu gün nə etməli?" — bir nömrəli iş */}
+      {state.sahe && <EsasHereketKarti hereket={hereket} onHereket={hereketIcra} />}
 
-      {/* Ölçmə WhatsApp-a çıxsın deyə: aqronomla söhbət orada gedir */}
-      <HesabatPaylas
-        hektar={state.sahe?.hektar}
-        bitkiKey={state.chat.crop ? `kbcrop.${state.chat.crop}` : null}
-        xulase={olculen}
-        muqayise={qonsu.muqayise}
-        siqnal={bas}
-      />
+      {/* Maliyyə xülasəsi: aktiv kredit varsa qalıq + növbəti ödəniş */}
+      <KreditMiniKarti kredit={aktivKredit} onBax={() => navigate(pathFor("money"))} />
 
       {/* key yeri dəyişdikdə komponenti sıfırdan qurur — yeni proqnoz yüklənir */}
       <WeatherStrip
@@ -358,10 +344,6 @@ export function HomeScreen({
         onPickLocation={onPickLocation}
         onDrawField={onDrawField}
         deqiq={noqte.deqiq}
-        // Məsləhət ARTIQ SÖNDÜRÜLMÜR. Əvvəl siqnal kartı əsas ekranda idi və
-        // eyni proqnozdan eyni cümləni deyirdi — təkrar olmasın deyə bu sətir
-        // gizlədilirdi. Kart zəngin arxasına keçəndən sonra gizlətmək ekranı
-        // tamam susdururdu: nə siqnal, nə məsləhət.
       />
     </div>
   );
