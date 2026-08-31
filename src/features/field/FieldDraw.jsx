@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "../../components/Icon.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
-import { merkez, sahəHektar, sahəniYoxla } from "../../services/geo.js";
+import { merkez, sahəHektar, sahəniYoxla } from "../../../lib/geo.js";
 import { track } from "../../lib/analytics.js";
 
 // Peyk təsviri Esri World Imagery-dəndir — pulsuz istifadəyə açıqdır,

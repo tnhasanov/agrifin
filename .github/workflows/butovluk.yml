@@ -1,0 +1,55 @@
+# Prod bütövlük yoxlaması — TAM READ-ONLY.
+#
+# Bu workflow MİQRASİYA TƏTBİQ ETMİR, DEPLOY ETMİR, MERGE ETMİR və bazaya
+# heç nə YAZMIR: yeganə addımı `scripts/butovluk-yoxla.mjs`-dir, o da ancaq
+# SELECT işlədir. Miqrasiya workflow-undan qəsdən AYRIDIR ki, "sadəcə
+# baxmaq" üçün sxemə toxunan bir job işə salmaq lazım gəlməsin.
+#
+# Nə vaxt işlədilir: 005 kimi invariant əlavə edən miqrasiyadan ƏVVƏL —
+# məsələn "bir aktiv kredit" partial unique index-i, bazada artıq iki aktiv
+# krediti olan istifadəçi varsa, yaradıla bilmir və miqrasiya yarıda qalır.
+#
+# İki qəsdən yol (miqrasiya workflow-u ilə eyni naxış):
+#   • workflow_dispatch (fayl main-də olandan sonra Actions UI/API-dən);
+#   • `yoxlama-run` adlı XÜSUSİ ref-ə push — GitHub dispatch-i yalnız default
+#     branch-dakı workflow-lara verir, merge-dən ƏVVƏL icra üçün:
+#     git push origin <branch>:yoxlama-run
+#
+# Bağlantı "production" environment-indəki PROD_DATABASE_URL sirrindəndir.
+# Connection string heç vaxt loglanmır — yalnız host və baza adı göstərilir;
+# skript nə telefon, nə ad çap edir, yalnız daxili id və toplu saylar.
+name: Prod bütövlük yoxlaması (read-only)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [yoxlama-run]
+
+concurrency: prod-butovluk
+
+jobs:
+  yoxla:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Hədəfi göstər (yalnız host və baza adı — sirr çap olunmur)
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::PROD_DATABASE_URL sirri qurulmayıb — Settings → Environments → production → Add environment secret."
+            exit 1
+          fi
+          node -e "const u = new URL(process.env.DATABASE_URL); console.log('Hədəf: ' + u.hostname + u.pathname)"
+
+      - name: Bütövlük yoxlaması (yalnız SELECT)
+        run: node scripts/butovluk-yoxla.mjs
