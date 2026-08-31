@@ -392,6 +392,10 @@ async function sxemDiaqnostikasi() {
     hesabQurulub: hesabQurulub(),
     muhit: process.env.VERCEL_ENV ?? null,
     acar: baglantiAcari(),
+    // HANSI BURAXILIŞA BAXIRIQ: hər push yeni deployment yaradır və köhnə
+    // URL heç vaxt yenilənmir. "Kod düzəldilib, amma davranış köhnədir"
+    // sualı yalnız bununla bir baxışda bağlanır. Commit sha-sı sirr deyil.
+    buraxilis: (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7) || null,
   };
   if (!cavab.dbQurulub) return cavab;
 

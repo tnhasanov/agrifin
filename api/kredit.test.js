@@ -121,9 +121,14 @@ describe("kredit API — təhlükəsizlik", () => {
   // "Miqrasiyanı işlətdim, amma xəta qalır" — səbəb adətən miqrasiyanın
   // BAŞQA bazaya düşməsidir. Bu uc tətbiqin öz bazasını göstərir.
   it("diaqnostika sxemin vəziyyətini deyir, sirr sızdırmır", async () => {
+    process.env.VERCEL_GIT_COMMIT_SHA = "abc1234567890";
     const cavab = await isle({ query: { diaqnostika: "1" } });
+    delete process.env.VERCEL_GIT_COMMIT_SHA;
 
     expect(cavab.statusCode).toBe(200);
+    // Hansı buraxılışın cavab verdiyi görünməlidir — köhnə deployment-i
+    // yeni ilə səhv salmaq bu axtarışda ən çox vaxt aparan şey oldu
+    expect(cavab.govde.buraxilis).toBe("abc1234");
     expect(cavab.govde.kreditHazir).toBe(true);
     expect(cavab.govde.cedveller.credit_applications).toBe(true);
     expect(cavab.govde.miqrasiyalar).toContain("004_kredit_muhasibat.sql");
