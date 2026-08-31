@@ -284,6 +284,16 @@ export default {
 
   // ── Fermer panosu (dashboard) — dəqiq məhsul mətnləri ──────────────
   "pano.salam": "Salam, {name}",
+  "pano.salamAlt": "Təsərrüfatınız bu gün",
+  "pano.torpaqRutubeti": "Torpaq rütubəti",
+  "pano.su.az": "Az",
+  "pano.su.orta": "Orta",
+  "pano.su.kafi": "Kafi",
+  "komek.sual1": "Bu həftə nə edim?",
+  "komek.sual2": "Sahəmin vəziyyətini izah et",
+  "komek.sual3": "Kredit ödənişim nə vaxtdır?",
+  "komek.tapsiriqlar": "Açıq tapşırıqlar",
+  "komek.tapsiriqSahe": "Sahəni yoxla — təcili xəbərdarlıq var",
   "pano.qurulus": "Təsərrüfatınızı birlikdə quraq",
   "pano.bosBasliq": "İlk sahənizi əlavə edin",
   "pano.bosMetn": "Sahəni xəritədə çəkin. Biz peyk məlumatlarını toplayıb vəziyyəti təhlil edəcəyik.",

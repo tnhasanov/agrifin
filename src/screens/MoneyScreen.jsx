@@ -153,21 +153,32 @@ export function MoneyScreen({ onOpenLoan, indeksHali = null, kreditHali = null, 
 
       {/* Yeni müraciət — yalnız açıq iş yoxdursa */}
       {yeniMuracietOlar && (
-        <Card style={{ marginTop: 8 }} onClick={onOpenLoan} ariaLabel={t("maliyye.elaveVesait")}>
+        <Card
+          style={{ marginTop: 8, backgroundColor: C.fieldSoft, border: "none" }}
+          onClick={onOpenLoan}
+          ariaLabel={t("maliyye.elaveVesait")}
+        >
           <div className="flex items-center gap-3">
-            <div className="rounded-xl p-2" style={{ backgroundColor: C.fieldSoft }}>
+            <div className="rounded-full bg-white p-2">
               <Icon name="Sprout" size={16} color={C.field} />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-semibold" style={{ color: C.ink }}>
+              <p className="text-sm font-bold" style={{ color: C.ink }}>
                 {t("maliyye.elaveVesait")}
               </p>
               <p className="text-xs" style={{ color: C.muted }}>
                 {t("maliyye.elaveVesaitIzah")}
               </p>
             </div>
-            <Icon name="ChevronRight" size={16} color={C.muted} />
           </div>
+          {/* Mock-dakı tam enli tünd yaşıl düymə (kart özü düymədir) */}
+          <p
+            className="mt-3 flex items-center justify-center gap-1 rounded-xl py-3 text-sm font-bold"
+            style={{ backgroundColor: C.pine, color: "#fff" }}
+          >
+            {t("maliyye.yeniMuraciet")}
+            <Icon name="ChevronRight" size={14} color="#fff" />
+          </p>
         </Card>
       )}
 

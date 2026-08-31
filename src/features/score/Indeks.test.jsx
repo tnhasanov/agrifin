@@ -233,8 +233,8 @@ describe("aqronomik performans indeksi — əsas ekran", () => {
     renderApp(<App />);
 
     await waitFor(() => expect(screen.getByText(/Tarixçə alınmadı/)).toBeInTheDocument());
-    // Peyk zolağı yerindədir
-    expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument();
+    // Qalan ekran işləyir: hava zolağı yerindədir
+    expect(await screen.findByText(/Sahədə hava/)).toBeInTheDocument();
   });
 
   // ── CARİ MÖVSÜM QATI ────────────────────────────────────────────────

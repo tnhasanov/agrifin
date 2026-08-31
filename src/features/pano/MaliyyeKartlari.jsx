@@ -48,12 +48,14 @@ export function AktivKreditXulasesi({ kredit, odenisler = [], onOdenis, onQrafik
   const sonOdenis = odenisler[0] ?? null;
 
   return (
-    <Card className="giris" style={{ marginBottom: 8 }}>
+    // PDF dizayn dili: MALİYYƏ BƏNÖVŞƏYİDİR, aqro yaşıl — fermer rəngdən
+    // hansı dünyada olduğunu bilir (bax: theme/tokens.js → mal)
+    <Card className="giris" style={{ marginBottom: 8, backgroundColor: C.malSoft, border: "none" }}>
       <div className="flex items-center gap-2">
-        <div className="rounded-xl p-2" style={{ backgroundColor: C.fieldSoft }}>
-          <Icon name="CreditCard" size={16} color={C.field} />
+        <div className="rounded-xl p-2" style={{ backgroundColor: "#fff" }}>
+          <Icon name="CreditCard" size={16} color={C.mal} />
         </div>
-        <h3 className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
+        <h3 className="text-sm font-bold" style={{ color: C.mal, fontFamily: font.display }}>
           {t("maliyye.aktiv")}
         </h3>
       </div>
@@ -78,10 +80,10 @@ export function AktivKreditXulasesi({ kredit, odenisler = [], onOdenis, onQrafik
         )}
       </div>
 
-      <div className="mt-1 h-2 overflow-hidden rounded-full" style={{ backgroundColor: C.mist }}>
+      <div className="mt-1 h-2 overflow-hidden rounded-full" style={{ backgroundColor: C.malTrack }}>
         <div
           className="bar-dolur h-2 rounded-full"
-          style={{ width: `${odenilibFaiz}%`, backgroundColor: C.field }}
+          style={{ width: `${odenilibFaiz}%`, backgroundColor: C.mal }}
         />
       </div>
       <div className="mt-1 flex items-center justify-between">
@@ -101,7 +103,7 @@ export function AktivKreditXulasesi({ kredit, odenisler = [], onOdenis, onQrafik
           type="button"
           onClick={onOdenis}
           className="flex-1 rounded-xl py-2.5 text-sm font-bold"
-          style={{ backgroundColor: C.pine, color: "#fff", minHeight: 44 }}
+          style={{ backgroundColor: C.mal, color: "#fff", minHeight: 44 }}
         >
           {t("maliyye.odenisEt")}
         </button>
@@ -109,7 +111,7 @@ export function AktivKreditXulasesi({ kredit, odenisler = [], onOdenis, onQrafik
           type="button"
           onClick={onQrafik}
           className="flex-1 rounded-xl py-2.5 text-sm font-bold"
-          style={{ backgroundColor: C.mist, color: C.pine, minHeight: 44 }}
+          style={{ backgroundColor: "#fff", color: C.mal, border: `1px solid ${C.mal}`, minHeight: 44 }}
         >
           {t("maliyye.qrafik")}
         </button>
@@ -141,7 +143,7 @@ export function AktivKreditXulasesi({ kredit, odenisler = [], onOdenis, onQrafik
             type="button"
             onClick={onQrafik}
             className="text-xs font-bold"
-            style={{ color: C.pine, minHeight: 44, paddingTop: 4 }}
+            style={{ color: C.mal, minHeight: 44, paddingTop: 4 }}
           >
             {t("maliyye.hamisi")}
           </button>
@@ -164,9 +166,13 @@ export function GecikmeKarti({ kredit, onOdenis, onDestek, onEtrafli }) {
   if (!kredit || kredit.hal !== "active" || !(kredit.gecikmeGun > 0)) return null;
 
   return (
-    <Card className="giris" style={{ marginBottom: 8, borderColor: C.danger }} role="alert">
+    <Card
+      className="giris"
+      style={{ marginBottom: 8, backgroundColor: C.warnSoft, borderColor: C.danger }}
+      role="alert"
+    >
       <div className="flex items-center gap-2">
-        <div className="rounded-xl p-2" style={{ backgroundColor: C.dangerSoft }}>
+        <div className="rounded-xl p-2" style={{ backgroundColor: "#fff" }}>
           <Icon name="AlertCircle" size={16} color={C.danger} />
         </div>
         <h3 className="text-sm font-bold" style={{ color: C.danger, fontFamily: font.display }}>
@@ -260,13 +266,15 @@ export function TeklifKarti({ teklif, ayliqFaizTexmini = null, azaldilib = false
         {t("teklifKart.altyazi")}
       </p>
 
-      <div className="mt-2.5 rounded-2xl px-3.5 py-3" style={{ backgroundColor: C.fieldSoft }}>
-        <p className="text-xs font-semibold" style={{ color: C.pine }}>
+      {/* Təklifin özü LAVANDA kartda — maliyyə bənövşəyidir (PDF dizaynı) */}
+      <div className="mt-2.5 rounded-2xl px-3.5 py-3" style={{ backgroundColor: C.malSoft }}>
+        <p className="flex items-center gap-1.5 text-xs font-bold" style={{ color: C.mal }}>
+          <Icon name="Wallet" size={14} color={C.mal} />
           {t("teklifKart.adi")}
         </p>
         <p
           className="text-3xl font-extrabold"
-          style={{ color: C.pine, fontFamily: font.display, fontVariantNumeric: "tabular-nums" }}
+          style={{ color: C.mal, fontFamily: font.display, fontVariantNumeric: "tabular-nums" }}
         >
           {money(teklif.mebleg)}
         </p>
@@ -301,18 +309,24 @@ export function TeklifKarti({ teklif, ayliqFaizTexmini = null, azaldilib = false
       <p className="mt-3 text-xs font-bold" style={{ color: C.ink }}>
         {t("teklifKart.niye")}
       </p>
-      <ul className="mt-1 space-y-1">
+      <ul className="mt-1 space-y-1.5">
         {["teklifKart.sebeb1", "teklifKart.sebeb2", "teklifKart.sebeb3"].map((acar) => (
-          <li key={acar} className="flex items-start gap-1.5 text-xs" style={{ color: C.muted }}>
-            <Icon name="Check" size={12} color={C.field} />
+          <li key={acar} className="flex items-start gap-2 text-xs" style={{ color: C.ink }}>
+            <span
+              className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full"
+              style={{ backgroundColor: C.mal }}
+            >
+              <Icon name="Check" size={10} color="#fff" />
+            </span>
             {t(acar)}
           </li>
         ))}
       </ul>
       <p
-        className="mt-2 rounded-lg px-2.5 py-2 text-xs leading-relaxed"
-        style={{ backgroundColor: C.mist, color: C.pine }}
+        className="mt-2 flex items-start gap-1.5 rounded-lg px-2.5 py-2 text-xs leading-relaxed"
+        style={{ backgroundColor: C.malSoft, color: C.mal }}
       >
+        <Icon name="ShieldCheck" size={13} color={C.mal} />
         {t("teklifKart.qeyd")}
       </p>
 
@@ -320,7 +334,7 @@ export function TeklifKarti({ teklif, ayliqFaizTexmini = null, azaldilib = false
         type="button"
         onClick={onBax}
         className="mt-3 w-full rounded-xl py-3 text-sm font-bold"
-        style={{ backgroundColor: C.pine, color: "#fff", minHeight: 44 }}
+        style={{ backgroundColor: C.mal, color: "#fff", minHeight: 44 }}
       >
         {t("teklifKart.bax")}
       </button>
@@ -328,7 +342,7 @@ export function TeklifKarti({ teklif, ayliqFaizTexmini = null, azaldilib = false
         type="button"
         onClick={onSonra}
         className="mt-2 w-full rounded-xl py-2.5 text-xs font-bold"
-        style={{ backgroundColor: C.mist, color: C.pine, minHeight: 44 }}
+        style={{ backgroundColor: "#fff", color: C.mal, border: `1px solid ${C.mal}`, minHeight: 44 }}
       >
         {t("teklifKart.sonra")}
       </button>
@@ -357,13 +371,18 @@ export function KreditMiniKarti({ kredit, onBax }) {
     .join(" · ");
 
   return (
-    <Card className="giris" style={{ marginTop: 12 }} onClick={onBax} ariaLabel={etiket}>
+    <Card
+      className="giris"
+      style={{ marginTop: 12, backgroundColor: C.malSoft, border: "none" }}
+      onClick={onBax}
+      ariaLabel={etiket}
+    >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <div className="rounded-xl p-2" style={{ backgroundColor: C.fieldSoft }}>
-            <Icon name="CreditCard" size={14} color={C.field} />
+          <div className="rounded-xl p-2" style={{ backgroundColor: "#fff" }}>
+            <Icon name="CreditCard" size={14} color={C.mal} />
           </div>
-          <p className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
+          <p className="text-sm font-bold" style={{ color: C.mal, fontFamily: font.display }}>
             {t("maliyye.aktiv")}
           </p>
         </div>
@@ -399,9 +418,13 @@ export function KreditMiniKarti({ kredit, onBax }) {
           </div>
         )}
       </div>
-      <p className="mt-1.5 flex items-center gap-1 text-xs font-bold" style={{ color: C.pine }}>
+      {/* Mock-dakı kimi tam enli bənövşəyi düymə görünüşü (kart özü düymədir) */}
+      <p
+        className="mt-2.5 flex items-center justify-center gap-1 rounded-xl py-2.5 text-sm font-bold"
+        style={{ backgroundColor: C.mal, color: "#fff" }}
+      >
         {t("pano.etrafliBax")}
-        <Icon name="ChevronRight" size={13} color={C.pine} />
+        <Icon name="ChevronRight" size={14} color="#fff" />
       </p>
     </Card>
   );

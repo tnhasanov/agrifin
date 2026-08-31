@@ -283,6 +283,16 @@ export default {
 
 
   "pano.salam": "Hello, {name}",
+  "pano.salamAlt": "Your farm today",
+  "pano.torpaqRutubeti": "Soil moisture",
+  "pano.su.az": "Low",
+  "pano.su.orta": "Medium",
+  "pano.su.kafi": "Good",
+  "komek.sual1": "What should I do this week?",
+  "komek.sual2": "Explain my field's condition",
+  "komek.sual3": "When is my loan payment?",
+  "komek.tapsiriqlar": "Open tasks",
+  "komek.tapsiriqSahe": "Check your field — urgent alert",
   "pano.qurulus": "Let's set up your farm together",
   "pano.bosBasliq": "Add your first field",
   "pano.bosMetn": "Draw the field on the map. We will collect satellite data and analyse its condition.",

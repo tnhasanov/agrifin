@@ -20,6 +20,16 @@ export const C = {
   line: "#E3E8E0",
   danger: "#C24A3F",
   dangerSoft: "#FBEAE7",
+  // ── Maliyyə vurğusu (PDF mockup: bənövşəyi = pul, yaşıl = aqro) ─────
+  // Dolu düymə/rəqəm; lavandada 8,4:1, ağda 9,6:1 — WCAG AA/AAA
+  mal: "#4B2CA3",
+  malSoft: "#F2EEF5",
+  malTrack: "#E4DFEE",
+  // FarmScore kartının yastı yaşılı (ağ mətnlə 8,0:1)
+  scoreCard: "#245B3A",
+  // Sahə xəbərdarlığının isti fonu və mürəkkəbi (6,1:1)
+  warnSoft: "#FDF2EA",
+  warnInk: "#9A3F1E",
 };
 
 export const font = {

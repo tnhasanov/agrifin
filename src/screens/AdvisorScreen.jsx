@@ -7,10 +7,35 @@ import { useStore } from "../state/store.jsx";
 import { SiqnalKarti } from "../features/signals/SiqnalKarti.jsx";
 import { TovsiyeKarti } from "../features/tovsiye/TovsiyeKarti.jsx";
 import { SaheLenti } from "../features/lent/SaheLenti.jsx";
+import { useRouter } from "../lib/router.jsx";
+import { pathFor } from "../routes.js";
 
-export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [], peyk, radar }) {
+export function AdvisorScreen({ onOpenChat, onOpenHesab, siqnallar = [], tovsiyeler = [], peyk, radar, indeksHali = null }) {
   const { t } = useI18n();
   const { state, actions } = useStore();
+  const { navigate } = useRouter();
+
+  // Sürətli suallar (PDF mockup) — hərəsi çatı HƏMİN SUALLA açır:
+  // sual giriş xanasına yazılır, göndərməyi fermer özü təsdiqləyir
+  const suallar = ["komek.sual1", "komek.sual2", "komek.sual3"];
+
+  // "Açıq tapşırıqlar" — yalnız HƏQİQİ işlər: uydurma tapşırıq siyahısı yox.
+  // Hesab girişi əvvəl ana səhifənin tünd hero-sunda idi — evi indi buradır.
+  const tecili = siqnallar.find((s) => s.ciddilik === "tecili");
+  const tapsiriqlar = [
+    !state.hesab.telefon && {
+      acar: "hesab",
+      ikon: "ShieldCheck",
+      metn: t("hesab.cta"),
+      icra: onOpenHesab,
+    },
+    tecili && {
+      acar: "sahe",
+      ikon: "MapPin",
+      metn: t("komek.tapsiriqSahe"),
+      icra: () => navigate(pathFor("sahe")),
+    },
+  ].filter(Boolean);
 
   return (
     <div className="px-4 pb-4">
@@ -34,7 +59,15 @@ export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [], pey
                 ai-ikon sinfi QƏSDƏN yoxdur: onun nəfəs animasiyası riqin
                 öz nəfəsi ilə üst-üstə düşüb ikiqat yellənmə verirdi. */}
             <Aqronom
-              hal={siqnallar.some((s) => s.ciddilik === "tecili") ? "narahat" : "sakit"}
+              /* Üz vəziyyəti daşıyır: təcili iş → narahat; iş yoxdur və
+                 indeks yüksəkdir → sevincli (əvvəl bu, ana səhifədə idi) */
+              hal={
+                siqnallar.some((s) => s.ciddilik === "tecili")
+                  ? "narahat"
+                  : siqnallar.length === 0 && indeksHali?.indeks?.bant === "yuksek"
+                    ? "sevincli"
+                    : "sakit"
+              }
               bitki={state.chat.crop}
               olcu={104}
               gorunus="tam"
@@ -70,6 +103,56 @@ export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [], pey
           </div>
         </button>
       </div>
+
+      {/* Sürətli suallar — çatı hazır sualla açır (mock: 03 Visual ref) */}
+      <div className="mt-3 space-y-2">
+        {suallar.map((acar, sira) => (
+          <button
+            key={acar}
+            type="button"
+            onClick={() => onOpenChat?.(t(acar))}
+            className="giris flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left"
+            style={{ backgroundColor: C.fieldSoft, "--i": sira, minHeight: 48 }}
+          >
+            <span className="rounded-xl bg-white p-2">
+              <Icon
+                name={sira === 0 ? "Calendar" : sira === 1 ? "Leaf" : "CreditCard"}
+                size={15}
+                color={C.field}
+              />
+            </span>
+            <span className="flex-1 text-sm font-semibold" style={{ color: C.ink }}>
+              {t(acar)}
+            </span>
+            <Icon name="ChevronRight" size={15} color={C.muted} />
+          </button>
+        ))}
+      </div>
+
+      {/* Açıq tapşırıqlar — brief-in mandatoryTasks siyahısı. Yalnız həqiqi
+          işlər görünür; boşdursa bölmə də yoxdur (uydurma sıra qadağandır) */}
+      {tapsiriqlar.length > 0 && (
+        <>
+          <SectionTitle>{t("komek.tapsiriqlar")}</SectionTitle>
+          {tapsiriqlar.map((tapsiriq, sira) => (
+            <button
+              key={tapsiriq.acar}
+              type="button"
+              onClick={tapsiriq.icra}
+              className="giris mb-2 flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left"
+              style={{ backgroundColor: C.card, border: `1px solid ${C.line}`, "--i": sira, minHeight: 48 }}
+            >
+              <span className="rounded-xl p-2" style={{ backgroundColor: C.mist }}>
+                <Icon name={tapsiriq.ikon} size={15} color={C.pine} />
+              </span>
+              <span className="flex-1 text-sm font-semibold" style={{ color: C.ink }}>
+                {tapsiriq.metn}
+              </span>
+              <Icon name="ChevronRight" size={15} color={C.muted} />
+            </button>
+          ))}
+        </>
+      )}
 
       {/* Bütün siyahı BU sahənin ölçmələrindən çıxır. Əvvəl burada nümunə
           tövsiyələr də vardı — uydurma rəqəmlərlə, üstəlik həqiqi siqnallarla

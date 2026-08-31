@@ -65,7 +65,8 @@ function seed() {
 }
 
 beforeEach(() => {
-  window.history.pushState({}, "", "/");
+  // Radar status sətirləri SAHƏLƏR ekranındadır (sübutun evi oradır)
+  window.history.pushState({}, "", "/fields");
   window.localStorage.clear();
   window.localStorage.setItem("agrifin:lang", JSON.stringify("az"));
 });
@@ -152,11 +153,16 @@ describe("radar ölçməsi — əsas ekran", () => {
   // Ölçmə yoxdursa nümunə rəqəmi göstərmək "72% örtük" ilə "ölçmə yoxdur"
   // cümlələrini yan-yana qoyurdu — biri o birini yalanlayır
   it("optik ölçmə yoxdursa örtük faizi nümunə rəqəmi göstərmir", async () => {
+    const user = userEvent.setup();
     seed();
     stubApi({ seriya: [], radar: [] });
     renderApp(<App />);
 
     await waitFor(() => expect(screen.getByText(/buludlu olub/)).toBeInTheDocument());
+    expect(screen.queryByText(/72%/)).not.toBeInTheDocument();
+
+    // Ana səhifədəki FarmScore lövhəsi də uydurma rəqəm göstərmir
+    await user.click(screen.getByRole("button", { name: "Ana səhifə" }));
     expect(screen.getByText("Bitki örtüyü").parentElement).toHaveTextContent("—");
     expect(screen.queryByText(/72%/)).not.toBeInTheDocument();
   });

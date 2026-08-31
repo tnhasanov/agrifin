@@ -110,6 +110,62 @@ export function SaheScreen({
         </div>
       )}
 
+      {/* Radar: optik ölçmə buludun altında qalanda ikinci peyk danışır.
+          (Əvvəl ana səhifədə idi — sübutun evi buradır) */}
+      {radar.hal !== "yoxdur" && (
+        <div
+          className="mt-2 flex items-start gap-2 rounded-xl px-3 py-2"
+          style={{
+            backgroundColor: radar.xulase?.suVar ? "rgba(74,144,226,0.12)" : C.card,
+            border: `1px solid ${C.line}`,
+          }}
+          aria-live="polite"
+        >
+          <Icon
+            name={radar.hal === "yuklenir" ? "LoaderCircle" : "Radar"}
+            size={13}
+            color={radar.hal === "hazir" ? "#4A90E2" : C.muted}
+          />
+          <div className="flex-1">
+            <p className="text-xs" style={{ color: C.muted }}>
+              {radar.hal === "yuklenir" && t("radar.loading")}
+              {radar.hal === "olcmeYox" && t("radar.noReading")}
+              {radar.hal === "qurulmayib" && t("ndvi.notConfigured")}
+              {radar.hal === "xeta" && t("radar.error")}
+              {radar.hal === "hazir" &&
+                (radar.xulase?.suVar
+                  ? t("radar.suVar", { faiz: Math.round(radar.xulase.suPayi * 100) })
+                  : t(`radar.${radar.xulase?.istiqamet ?? "sabit"}`))}
+            </p>
+            {radar.hal === "hazir" && (
+              <p className="mt-0.5" style={{ color: C.muted, fontSize: 10 }}>
+                {t("radar.measured", { gun: necheGunEvvel(radar.xulase.tarix) ?? 0 })}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Su vəziyyəti: NDVI "zəifdir" deyir, rütubət səbəbi ayırır */}
+      {peyk.hal === "hazir" && xulase?.suSeviyyesi && (
+        <div
+          className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2"
+          style={{
+            backgroundColor: xulase.suSeviyyesi === "az" ? C.goldSoft : C.card,
+            border: `1px solid ${C.line}`,
+          }}
+        >
+          <Icon
+            name="Droplets"
+            size={13}
+            color={xulase.suSeviyyesi === "az" ? C.goldInk : C.field}
+          />
+          <span className="flex-1 text-xs" style={{ color: C.muted }}>
+            {t(`ndvi.water.${xulase.suSeviyyesi}`)}
+          </span>
+        </div>
+      )}
+
       {/* Vəziyyət sətri: xəbərdarlıq yoxdursa yaxşı xəbər açıq deyilir */}
       {!saheSiqnali && peyk.hal === "hazir" && (
         <Card className="giris" style={{ marginTop: 12, marginBottom: 8 }}>

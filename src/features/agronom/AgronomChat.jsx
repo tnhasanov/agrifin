@@ -41,6 +41,9 @@ function errorKeyFor(error) {
 
 export function AgronomChat({
   onClose,
+  // Kömək ekranındakı sürətli sualdan gəlir: sual giriş xanasına YAZILIR,
+  // amma GÖNDƏRİLMİR — göndərmək fermerin öz toxunuşudur
+  ilkSual = null,
   // Peyk ölçməsi və müqayisə App-də bir dəfə qurulur (bax: App.jsx) — burada
   // yenidən soruşsaq eyni Copernicus sorğusu ikinci dəfə gedərdi
   peyk = { xulase: null },
@@ -53,7 +56,7 @@ export function AgronomChat({
   const sahe = state.sahe;
   // Keşdən gəlir — əsas ekran onsuz da yükləyib
 
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(ilkSual ?? "");
   const [busy, setBusy] = useState(false);
   // Axın gedərkən yığılan mətn. Tamamlananda store-a bir dəfə yazılır —
   // hər parçada store-u yeniləsək, bütün tətbiq hər hərfdə render olunardı.

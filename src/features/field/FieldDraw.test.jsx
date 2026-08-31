@@ -62,7 +62,8 @@ const KUNCLER = [
 ];
 
 async function acFieldDraw(user) {
-  await user.click(screen.getByRole("button", { name: /Sahəmi xəritədə çək/ }));
+  // Hal A dəvəti: "Sahə əlavə et" (köhnə hero sətri PDF dizaynı ilə getdi)
+  await user.click(screen.getByRole("button", { name: "Sahə əlavə et" }));
   await waitFor(() =>
     expect(screen.getByRole("dialog", { name: "Sahənizi çəkin" })).toBeInTheDocument(),
   );
@@ -111,9 +112,9 @@ describe("sahə çəkmə", () => {
     for (const [lat, lng] of KUNCLER) xeriteyeToxun(lat, lng);
     await user.click(screen.getByRole("button", { name: /Sahəni saxla/ }));
 
-    // Dialoq bağlanır, əsas ekranda həqiqi hektar
+    // Dialoq bağlanır, FarmScore lövhəsində həqiqi hektar (farmLine)
     expect(screen.queryByRole("dialog", { name: "Sahənizi çəkin" })).not.toBeInTheDocument();
-    expect(screen.getByText(/Sahəm: 6[.,]\d+ ha/)).toBeInTheDocument();
+    expect(screen.getAllByText(/6[.,]\d+ ha/).length).toBeGreaterThan(0);
 
     const saxlanan = JSON.parse(window.localStorage.getItem("agrifin:state")).state;
     expect(saxlanan.sahe.noqteler).toHaveLength(4);
@@ -213,7 +214,7 @@ describe("saxlanan sahənin yüklənməsi", () => {
     );
     renderApp(<App />);
     expect(screen.getByText(/Gəncə/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Sahəmi xəritədə çək/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sahə əlavə et" })).toBeInTheDocument();
   });
 
   it("zədələnmiş sahə konturu səssizcə atılır", () => {
@@ -230,6 +231,6 @@ describe("saxlanan sahənin yüklənməsi", () => {
     );
     renderApp(<App />);
     // Tətbiq çökmür, sahə çəkilməmiş sayılır
-    expect(screen.getByRole("button", { name: /Sahəmi xəritədə çək/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sahə əlavə et" })).toBeInTheDocument();
   });
 });

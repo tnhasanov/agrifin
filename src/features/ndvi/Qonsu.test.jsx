@@ -182,6 +182,7 @@ describe("müqayisə kartı", () => {
   it("ətraf məlumatı yoxdursa kart göstərilmir və tətbiq işləyir", async () => {
     seed();
     stubApi({ qonsu: null });
+    window.history.pushState({}, "", "/fields"); // status sətri Sahələrdədir
     renderApp(<App />);
 
     await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());
@@ -191,6 +192,7 @@ describe("müqayisə kartı", () => {
   it("server xətasında kart göstərilmir", async () => {
     seed();
     stubApi({ qonsuStatus: 502 });
+    window.history.pushState({}, "", "/fields"); // status sətri Sahələrdədir
     renderApp(<App />);
 
     await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());

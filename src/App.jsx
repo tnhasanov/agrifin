@@ -49,6 +49,7 @@ export default function App() {
   const { state, actions } = useStore();
   const [loanOpen, setLoanOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [chatSual, setChatSual] = useState(null);
   const [fieldOpen, setFieldOpen] = useState(false);
   // Bildirişlər paneli: zəng ekran dəyişmir, üstdə açılır
   const [siqnalOpen, setSiqnalOpen] = useState(false);
@@ -153,7 +154,11 @@ export default function App() {
                 tovsiyeler={tovsiyeler}
                 onOpenLoan={() => setLoanOpen(true)}
                 onPickLocation={() => setLocationOpen(true)}
-                onOpenChat={() => setChatOpen(true)}
+                onOpenChat={(sual) => {
+                  // onClick-dən çağırılanda arqument hadisə obyektidir — sual deyil
+                  setChatSual(typeof sual === "string" ? sual : null);
+                  setChatOpen(true);
+                }}
                 onDrawField={() => setFieldOpen(true)}
                 onOpenHesab={() => setHesabOpen(true)}
                 />
@@ -184,7 +189,7 @@ export default function App() {
               }}
             />
 
-            {chatOpen && <AgronomChat peyk={peyk} qonsu={qonsu} onClose={closeChat} />}
+            {chatOpen && <AgronomChat peyk={peyk} qonsu={qonsu} ilkSual={chatSual} onClose={closeChat} />}
 
             <HesabSheet acilib={hesabOpen} onBagla={closeHesab} />
 

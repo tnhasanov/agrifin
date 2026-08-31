@@ -115,8 +115,10 @@ describe("sahə siqnalları — əsas ekran", () => {
     expect(screen.getAllByText("Suvarma vaxtıdır")).toHaveLength(1);
     expect(screen.getByText("Bu gün nə etməli?")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Siqnalı bağla" })).not.toBeInTheDocument();
-    // Yuxarıda fermerin öz sahəsi dayanır, kredit CTA-sı da yerindədir
-    expect(await screen.findByRole("button", { name: "Məhsul dövrü krediti al" })).toBeInTheDocument();
+    // Yuxarıda fermerin öz sahəsi dayanır (FarmScore lövhəsi); kredit CTA
+    // artıq ana səhifədə DEYİL — yeni müraciət yolu Maliyyədədir
+    expect(screen.getByText("Bitki örtüyü")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Məhsul dövrü krediti al" })).not.toBeInTheDocument();
   });
 
   it("zəngə basanda tam siqnal mənbəyi ilə birlikdə açılır", async () => {
@@ -184,7 +186,7 @@ describe("sahə siqnalları — əsas ekran", () => {
     stubApi({ seriya: SAKIT });
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/70%/)).toBeInTheDocument());
     expect(screen.queryByText("Suvarma vaxtıdır")).not.toBeInTheDocument();
     expect(screen.queryByText("Şaxta riski")).not.toBeInTheDocument();
   });
@@ -211,14 +213,15 @@ describe("sahə siqnalları — əsas ekran", () => {
 describe("Aqronun ifadəsi", () => {
   const uz = () => document.querySelector(".fermer").className;
 
-  it("əsas ekranda təcili siqnal olsa da kədərlənmir", async () => {
+  // Personaj artıq ana səhifədə YOXDUR (PDF dizaynı: salamlama sadə mətndir,
+  // personajın evi Kömək ekranıdır) — təcili siqnal da onu evə gətirmir
+  it("əsas ekranda personaj yoxdur — təcili siqnal olsa belə", async () => {
     seed();
     stubApi(); // quraq sahə → "Suvarma vaxtıdır", ciddilik: tecili
     renderApp(<App />);
 
     await siqnalHazir();
-    expect(uz()).not.toContain("fermer--narahat");
-    expect(uz()).toContain("fermer--sakit");
+    expect(document.querySelector(".fermer")).toBeNull();
   });
 
   it("məsləhət ekranında narahatdır — orada kartlar səbəbi izah edir", async () => {
@@ -238,15 +241,17 @@ describe("Aqronun ifadəsi", () => {
     expect(uz()).toContain("fermer--tam");
   });
 
-  it("iş yoxdursa və indeks yüksəkdirsə sevinir", async () => {
+  it("iş yoxdursa Kömək ekranında narahat deyil", async () => {
+    const user = userEvent.setup();
     seed();
     stubApi({ seriya: SAKIT });
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/70%/)).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Kömək" }));
     // Bu quruluşda tarixçə sorğusu 501 verir, yəni indeks yoxdur → sakit,
     // amma ƏSAS olan budur: narahat deyil
-    expect(uz()).not.toContain("fermer--narahat");
+    await waitFor(() => expect(uz()).not.toContain("fermer--narahat"));
   });
 });
 

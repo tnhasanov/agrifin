@@ -73,7 +73,9 @@ function stubApi({ ok: uygun = true, status = 200, seriya = SERIYA } = {}) {
 }
 
 beforeEach(() => {
-  window.history.pushState({}, "", "/");
+  // Peyk statusu, su sətri və ölçmə izahları SAHƏLƏR ekranındadır
+  // (ana səhifə yalnız FarmScore lövhəsində yığcam faktları göstərir)
+  window.history.pushState({}, "", "/fields");
   window.localStorage.clear();
   window.localStorage.setItem("agrifin:lang", JSON.stringify("az"));
 });
@@ -84,6 +86,8 @@ afterEach(() => {
 
 describe("peyk ölçməsi — əsas ekran", () => {
   it("sahə çəkilibsə ölçülmüş örtük faizini və azalma oxunu göstərir", async () => {
+    // Faiz + trend oxu ana səhifədəki FarmScore lövhəsindədir
+    window.history.pushState({}, "", "/");
     seedSahe();
     stubApi();
     renderApp(<App />);
@@ -91,7 +95,6 @@ describe("peyk ölçməsi — əsas ekran", () => {
     // Nümunə 0,72 deyil, ölçülmüş 0,68 — ekranda tam faizlə: 68%
     await waitFor(() => expect(screen.getByText(/68%/)).toBeInTheDocument());
     expect(screen.getByText(/68%/).textContent).toContain("▼");
-    expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument();
   });
 
   // Bu sətir ölçməni deyir, qərarı yox: "suvar" və ya "saxla" qərarı yağışdan

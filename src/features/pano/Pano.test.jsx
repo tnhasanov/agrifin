@@ -55,7 +55,8 @@ afterEach(() => {
 
 /** Müraciət göndərib təklifə çatır (server stub vasitəsilə) */
 async function teklifeCat(user) {
-  await user.click(await screen.findByRole("button", { name: "Məhsul dövrü krediti al" }));
+  await user.click(screen.getByRole("button", { name: "Maliyyə" }));
+    await user.click(await screen.findByRole("button", { name: "Əlavə vəsait lazımdır?" }));
   await screen.findByRole("slider");
   await user.click(screen.getByRole("button", { name: "Şərtlərə bax" }));
   await user.click(screen.getByRole("button", { name: /üçün müraciət göndər/ }));
@@ -117,6 +118,8 @@ describe("hal C — server təklifi Maliyyə ekranında", () => {
     await user.click(screen.getAllByRole("button", { name: "Bağla" }).at(-1));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
 
+    // Müraciət Maliyyədən açıldığı üçün əvvəl evə qayıdırıq
+    await user.click(screen.getByRole("button", { name: "Ana səhifə" }));
     expect(screen.getByText("Sizə uyğun təklif hazırdır")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Təklifi nəzərdən keçir" })).toBeInTheDocument();
   });
