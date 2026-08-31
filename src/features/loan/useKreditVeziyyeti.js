@@ -33,6 +33,9 @@ function xetaHali(xeta) {
  * atıb, yəni şəbəkə getməyib.
  */
 function xetaSebebi(xeta) {
+  // Server açıq deyir ki, bazada cədvəl yoxdur (503 sxemYoxdur) — bu, nə
+  // şəbəkə, nə də təsadüfi server xətasıdır: miqrasiya işlədilməyib
+  if (xeta?.acar === "sxemYoxdur") return "sxem";
   return xeta?.status ? "server" : "sebeke";
 }
 

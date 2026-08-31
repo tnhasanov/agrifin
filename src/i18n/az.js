@@ -354,6 +354,7 @@ export default {
   "maliyye.xetaBasliq": "Kredit məlumatı gətirilmədi",
   "maliyye.xetaIzah": "Bağlantı kəsildi. Aktiv kreditiniz varsa, bu ekran onu göstərmir — yenidən cəhd edin.",
   "maliyye.xetaIzahServer": "Server cavab vermədi. Aktiv kreditiniz varsa, bu ekran onu göstərmir — bir azdan yenidən cəhd edin.",
+  "maliyye.xetaIzahSxem": "Kredit modulu bu quraşdırmada hazır deyil: bazanın sxemi yenilənməyib. Məlumatınız itməyib — sistem hazır olandan sonra yenidən cəhd edin.",
   "maliyye.yenidenCehd": "Yenidən cəhd et",
 
   // Təklif kartı (state C)

@@ -329,6 +329,28 @@ async function halDeyis(muracietId, haradan, haraya, hadise, detay = null) {
   );
 }
 
+/**
+ * SXEM YOXDUR — baza var, cədvəl yoxdur (Postgres 42P01 "undefined_table").
+ *
+ * Bu, "gözlənilməz xəta" DEYİL, quraşdırma vəziyyətidir: miqrasiyalar həmin
+ * bazada işlədilməyib. Vercel preview deployment-lərində Neon hər branch üçün
+ * AYRI baza yaradır — kredit cədvəlləri gələnə qədər açılmış branch-ın
+ * bazasında `credit_applications` yoxdur, halbuki kod onu gözləyir.
+ * 500 qaytarsaq ekran "server sındı" deyir və axtarış səhv yerdə başlayır;
+ * ayrıca kod isə cavabın özündə "npm run db:migrate işlədilməyib" deməkdir.
+ */
+function sxemYoxdur(error) {
+  return (
+    error?.code === "42P01" ||
+    /relation ".*" does not exist/i.test(String(error?.message ?? ""))
+  );
+}
+
+function sxemCavabi(res, error) {
+  console.error("kredit sxem yoxdur (miqrasiya işlədilməyib):", error?.message);
+  return res.status(503).json({ error: "sxemYoxdur" });
+}
+
 export default async function handler(req, res) {
   if (!dbQurulub() || !hesabQurulub()) {
     return res.status(501).json({ error: "Kredit sistemi hələ qurulmayıb." });
@@ -338,6 +360,9 @@ export default async function handler(req, res) {
   try {
     istifadeci = await sessiyaOxu(cookieToken(req));
   } catch (error) {
+    // Sessiya cədvəli də sxemin bir hissəsidir — miqrasiya işlədilməyibsə
+    // səbəb eynidir, cavab da eyni olmalıdır
+    if (sxemYoxdur(error)) return sxemCavabi(res, error);
     console.error("kredit sessiya:", error?.message);
     return res.status(500).json({ error: "Gözlənilməz xəta." });
   }
@@ -813,6 +838,7 @@ export default async function handler(req, res) {
     if (error?.kod === "kecidYanlis") {
       return res.status(409).json({ error: "kecidYanlis" });
     }
+    if (sxemYoxdur(error)) return sxemCavabi(res, error);
     // Daxili detal klientə getmir — yalnız server logunda
     console.error("kredit error:", error?.message);
     return res.status(500).json({ error: "Gözlənilməz xəta." });

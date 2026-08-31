@@ -352,6 +352,7 @@ export default {
   "maliyye.xetaBasliq": "Could not load loan data",
   "maliyye.xetaIzah": "The connection dropped. If you have an active loan, this screen is not showing it — please try again.",
   "maliyye.xetaIzahServer": "The server did not respond. If you have an active loan, this screen is not showing it — please try again shortly.",
+  "maliyye.xetaIzahSxem": "The loan module is not ready in this environment: the database schema has not been updated. Nothing of yours is lost — please try again once it is ready.",
   "maliyye.yenidenCehd": "Try again",
 
   "teklifKart.basliq": "An offer for you",

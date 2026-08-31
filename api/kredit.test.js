@@ -111,6 +111,29 @@ describe("kredit API — təhlükəsizlik", () => {
     expect(cavab.statusCode).toBe(401);
   });
 
+  /**
+   * MİQRASİYA İŞLƏDİLMƏYİB — Vercel preview deployment-lərində Neon hər
+   * branch üçün ayrı baza yaradır; kredit cədvəlləri gələnə qədər açılmış
+   * branch-ın bazasında `credit_applications` yoxdur. Bu, "gözlənilməz
+   * xəta" deyil, quraşdırma vəziyyətidir və cavabda belə də adlanmalıdır —
+   * yoxsa ekran "server sındı" deyir və axtarış səhv yerdə başlayır.
+   */
+  it("cədvəl yoxdursa 503 sxemYoxdur qaytarır, 500 yox", async () => {
+    const xeta = Object.assign(new Error('relation "credit_applications" does not exist'), {
+      code: "42P01",
+    });
+    musterTeyin({
+      query: () => Promise.reject(xeta),
+    });
+
+    const cavab = await isle({ cookie: "agrifin_sessiya=hansisa-token" });
+
+    expect(cavab.statusCode).toBe(503);
+    expect(cavab.govde).toEqual({ error: "sxemYoxdur" });
+    // Daxili SQL mətni klientə sızmır
+    expect(JSON.stringify(cavab.govde)).not.toMatch(/relation|does not exist/);
+  });
+
   it("A fermeri B-nin təklifini qəbul edə bilmir (IDOR)", async () => {
     const a = await fermer({ telefon: "+994501111111" });
     await tarixceYaz(a.id);

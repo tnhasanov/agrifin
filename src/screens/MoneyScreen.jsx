@@ -17,6 +17,17 @@ import {
 } from "../features/pano/MaliyyeKartlari.jsx";
 
 /**
+ * Xətanın SƏBƏBİ üçün mətn (bax: useKreditVeziyyeti → xetaSebebi).
+ * Hamısına "bağlantı kəsildi" demək fermeri öz internetini yoxlamağa
+ * göndərir, halbuki problem bizim tərəfdə ola bilər.
+ */
+const XETA_IZAHI = {
+  sebeke: "maliyye.xetaIzah",
+  server: "maliyye.xetaIzahServer",
+  sxem: "maliyye.xetaIzahSxem",
+};
+
+/**
  * MALİYYƏ EKRANI — kredit mərkəzli pilotda pulun həqiqi vəziyyəti.
  *
  * DEMO PULQABI, NÜMUNƏ ƏMƏLİYYATLAR, SIĞORTA/RESURS KARTLARI ÇIXARILDI:
@@ -107,7 +118,7 @@ export function MoneyScreen({
               kəsildi" demək fermeri öz internetini yoxlamağa göndərir,
               halbuki problem bizdədir (bax: useKreditVeziyyeti → xetaSebebi) */}
           <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
-            {t(kreditHali?.xetaNovu === "server" ? "maliyye.xetaIzahServer" : "maliyye.xetaIzah")}
+            {t(XETA_IZAHI[kreditHali?.xetaNovu] ?? "maliyye.xetaIzah")}
           </p>
           <button
             type="button"

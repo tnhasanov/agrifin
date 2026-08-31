@@ -335,6 +335,33 @@ describe("yüklənmə və xəta halları", () => {
     expect(screen.queryByText(/Bağlantı kəsildi/)).not.toBeInTheDocument();
   });
 
+  // Server "cədvəl yoxdur" deyəndə (503 sxemYoxdur) ekran da bunu deməlidir:
+  // "server cavab vermədi" fermeri gözləməyə, düzgün mətn isə quraşdırmanı
+  // yoxlamağa yönəldir
+  it("baza sxemi yoxdursa səbəb açıq deyilir", async () => {
+    const user = userEvent.setup();
+    seedSahe();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url) =>
+        String(url).includes("/api/kredit")
+          ? Promise.resolve({
+              ok: false,
+              status: 503,
+              json: () => Promise.resolve({ error: "sxemYoxdur" }),
+            })
+          : Promise.resolve({ ok: true, json: () => Promise.resolve(WEATHER_FIXTURE) }),
+      ),
+    );
+    renderApp(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Maliyyə" }));
+    await waitFor(() =>
+      expect(screen.getByText(/bazanın sxemi yenilənməyib/)).toBeInTheDocument(),
+    );
+    expect(screen.queryByText(/Bağlantı kəsildi/)).not.toBeInTheDocument();
+  });
+
   it("şəbəkə sorğusu alınmasa bağlantı mətni qalır", async () => {
     const user = userEvent.setup();
     seedSahe();
