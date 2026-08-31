@@ -284,6 +284,13 @@ export default {
 
   "pano.salam": "Hello, {name}",
   "pano.salamAlt": "Your farm today",
+  "sahe.altSetir": "{ha} ha · {rayon}",
+  "sahe.deyis": "Edit",
+  "sahe.geri": "Back",
+  "pano.buludOrtuyu": "Cloud cover",
+  "pano.bulud.asagi": "Low",
+  "pano.bulud.orta": "Medium",
+  "pano.bulud.yuksek": "High",
   "pano.torpaqRutubeti": "Soil moisture",
   "pano.su.az": "Low",
   "pano.su.orta": "Medium",

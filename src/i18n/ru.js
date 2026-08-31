@@ -285,6 +285,13 @@ export default {
 
   "pano.salam": "Здравствуйте, {name}",
   "pano.salamAlt": "Ваше хозяйство сегодня",
+  "sahe.altSetir": "{ha} га · {rayon}",
+  "sahe.deyis": "Изменить",
+  "sahe.geri": "Назад",
+  "pano.buludOrtuyu": "Облачность",
+  "pano.bulud.asagi": "Низкая",
+  "pano.bulud.orta": "Средняя",
+  "pano.bulud.yuksek": "Высокая",
   "pano.torpaqRutubeti": "Влажность почвы",
   "pano.su.az": "Мало",
   "pano.su.orta": "Средне",

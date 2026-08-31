@@ -285,6 +285,13 @@ export default {
   // ── Fermer panosu (dashboard) — dəqiq məhsul mətnləri ──────────────
   "pano.salam": "Salam, {name}",
   "pano.salamAlt": "Təsərrüfatınız bu gün",
+  "sahe.altSetir": "{ha} ha · {rayon}",
+  "sahe.deyis": "Dəyiş",
+  "sahe.geri": "Geri",
+  "pano.buludOrtuyu": "Bulud örtüyü",
+  "pano.bulud.asagi": "Aşağı",
+  "pano.bulud.orta": "Orta",
+  "pano.bulud.yuksek": "Yüksək",
   "pano.torpaqRutubeti": "Torpaq rütubəti",
   "pano.su.az": "Az",
   "pano.su.orta": "Orta",

@@ -195,7 +195,7 @@ describe("sahə çəkmə", () => {
 
     // Yenidən açılır — redaktə keçidi artıq Sahələr ekranındadır
     await user.click(screen.getByRole("button", { name: "Sahələr" }));
-    await user.click(screen.getByRole("button", { name: /Sahəm: .* ha — dəyiş/ }));
+    await user.click(screen.getByRole("button", { name: "Dəyiş" }));
     await waitFor(() => expect(screen.getByText(/6[.,]\d+ hektar/)).toBeInTheDocument());
   });
 });

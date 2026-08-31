@@ -21,7 +21,7 @@ import { EtibarNisani } from "./EtibarNisani.jsx";
  */
 const BAXIS_TELEB_EDEN = new Set(["bitkiZeifleyir", "qonsu", "xesteliyRiski", "suGolu"]);
 
-export function SaheXebardarligi({ siqnal, etibar = null, movsumSayi = null, onChat }) {
+export function SaheXebardarligi({ siqnal, etibar = null, movsumSayi = null, qonsuFerq = null, onChat }) {
   const { t } = useI18n();
   if (!siqnal) return null;
 
@@ -31,14 +31,18 @@ export function SaheXebardarligi({ siqnal, etibar = null, movsumSayi = null, onC
   return (
     <Card
       className="giris"
-      style={{ marginBottom: 8, borderColor: tecilidir ? C.danger : C.goldDeep }}
+      style={{
+        marginBottom: 8,
+        backgroundColor: C.warnSoft,
+        borderColor: tecilidir ? C.danger : C.goldDeep,
+      }}
       /* Yalnız TƏCİLİ siqnal assertiv elan olunur. "diqqet" səviyyəli
          tövsiyə (vegetasiya zəifləyir, suvarma) hər ekran açılışında ekran
          oxuyucusunu kəsməməlidir — mühərrik onu təcili saymır. */
       role={tecilidir ? "alert" : "status"}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
+        <p className="text-sm font-bold" style={{ color: C.warnInk, fontFamily: font.display }}>
           {t(siqnal.basliqKey)}
         </p>
         <Chip
@@ -51,6 +55,14 @@ export function SaheXebardarligi({ siqnal, etibar = null, movsumSayi = null, onC
       <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
         {t(siqnal.metnKey, siqnal.vars)}
       </p>
+
+      {/* İkinci sübut sətri (mock 04): rayonla müqayisə — yalnız GERİDƏDİRSƏ.
+          Rəqəm müqayisə mühərrikindəndir (median bazalı), uydurma deyil */}
+      {Number.isFinite(qonsuFerq) && qonsuFerq < 0 && (
+        <p className="mt-1 text-xs font-semibold" style={{ color: C.warnInk }}>
+          {t("veg.ferqAlt", { faiz: Math.abs(qonsuFerq) })}
+        </p>
+      )}
 
       {addimliDir && (
         <>

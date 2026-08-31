@@ -28,7 +28,7 @@ const TamEkranXerite = lazy(() =>
  * kvotasını iki dəfə xərcləyər, halbuki fermerlərin çoxu birinə baxıb
  * keçəcək. Açılmış qat keşdə qalır — geri qayıdanda sorğu getmir.
  */
-export function SaheXeritesi({ sahe }) {
+export function SaheXeritesi({ sahe, konturRengi }) {
   const { t } = useI18n();
   // Qat başına ayrı nəticə və hal — keçid zamanı köhnə şəkil itməsin.
   // Sahə açarı vəziyyətin İÇİNDƏ saxlanılır: effektin içində sıfırlama
@@ -113,6 +113,7 @@ export function SaheXeritesi({ sahe }) {
               sekil={netice.sekil}
               sinirler={netice.sinirler}
               etiket={t(`ndvi.mapAlt.${aktiv}`)}
+              konturRengi={konturRengi}
             />
             {/* Peyk skanı: yeni şəkil gələndə üstündən bir dəfə skan xətti
                 keçir — "peyk sahəni indi oxudu" anı (bax: index.css).

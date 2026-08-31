@@ -4,6 +4,8 @@ import { Icon } from "../components/Icon.jsx";
 import { C, font } from "../theme/tokens.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
+import { useRouter } from "../lib/router.jsx";
+import { pathFor } from "../routes.js";
 import { necheGunEvvel, ortukFaizi } from "../services/ndvi.js";
 import { SaheXeritesi } from "../features/ndvi/SaheXeritesi.jsx";
 import { QonsuMuqayisesi } from "../features/ndvi/QonsuMuqayisesi.jsx";
@@ -36,6 +38,7 @@ export function SaheScreen({
 }) {
   const { t } = useI18n();
   const { state } = useStore();
+  const { navigate } = useRouter();
 
   // ── Hal A: sahə yoxdur — bir aydın dəvət, uydurma göstərici yox ─────
   if (!state.sahe) {
@@ -50,6 +53,9 @@ export function SaheScreen({
   const tarixceYigilir = indeksHali.hal === "hazir" && indeks?.hal === "kifayetsiz";
   const xulase = peyk.xulase;
   const cariFaiz = Number.isFinite(xulase?.ndvi) ? ortukFaizi(xulase.ndvi) : null;
+  // Son ölçmənin bulud payı (0-1) — seriyanın son elementindən
+  const sonOlcme = peyk.seriya?.[peyk.seriya.length - 1];
+  const buludPayi = Number.isFinite(sonOlcme?.ortulu) ? sonOlcme.ortulu : null;
   const gunEvvel = xulase ? necheGunEvvel(xulase.tarix) : null;
 
   // Ən vacib SAHƏ siqnalı (mühərrik onsuz da ciddiliyə görə sıralayıb)
@@ -57,16 +63,25 @@ export function SaheScreen({
 
   return (
     <div className="px-4 pb-4">
-      {/* Başlıq: hektar + bitki + redaktə keçidi */}
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <div>
-          <h2 className="text-base font-bold" style={{ color: C.ink, fontFamily: font.display }}>
-            {t("nav.fields")}
+      {/* Başlıq (mock 04): geri oxu + sahənin adı + "N ha · rayon" */}
+      <div className="mt-3 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => navigate(pathFor("home"))}
+          aria-label={t("sahe.geri")}
+          className="flex items-center justify-center rounded-full"
+          style={{ minWidth: 44, minHeight: 44 }}
+        >
+          <Icon name="ChevronLeft" size={20} color={C.ink} />
+        </button>
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-base font-bold" style={{ color: C.ink, fontFamily: font.display }}>
+            {t(state.chat.crop ? `kbcrop.${state.chat.crop}` : "farm.name")}
           </h2>
           <p className="text-xs" style={{ color: C.muted }}>
-            {t("home.farmLine", {
-              farm: state.chat.crop ? { key: `kbcrop.${state.chat.crop}` } : { key: "farm.name" },
+            {t("sahe.altSetir", {
               ha: { number: state.sahe.hektar },
+              rayon: state.location?.name ?? "—",
             })}
           </p>
         </div>
@@ -77,12 +92,13 @@ export function SaheScreen({
           style={{ backgroundColor: C.card, color: C.pine, border: `1px solid ${C.line}`, minHeight: 44 }}
         >
           <Icon name="MapPin" size={13} color={C.pine} />
-          {t("home.fieldDrawn", { hektar: { number: state.sahe.hektar } })}
+          {t("sahe.deyis")}
         </button>
       </div>
 
-      {/* Peyk xəritəsi: problemin HARADA olduğunu göstərir */}
-      <SaheXeritesi sahe={state.sahe} />
+      {/* Peyk xəritəsi: problemin HARADA olduğunu göstərir. Xəbərdarlıq
+          aktivdirsə kontur narıncıdır (mock 04, hal F) */}
+      <SaheXeritesi sahe={state.sahe} konturRengi={saheSiqnali ? "#C97A28" : undefined} />
 
       {/* Ölçmə statusu: köhnə/oflayn/xəta halları son-yenilənmə vaxtı ilə
           açıq deyilir — "yüklənmədi" ilə "buludlu idi" fərqli mənalardır */}
@@ -187,6 +203,7 @@ export function SaheScreen({
             siqnal={saheSiqnali}
             etibar={indeks?.etibar ?? null}
             movsumSayi={indeks?.movsumSayi ?? null}
+            qonsuFerq={qonsu.muqayise?.ferq ?? null}
             onChat={onOpenChat}
           />
         </div>
@@ -220,14 +237,24 @@ export function SaheScreen({
           <p className="mt-3 text-xs font-bold" style={{ color: C.ink }}>
             {t("pano.bilirik")}
           </p>
-          <div className="mt-1 grid grid-cols-2 gap-2">
-            <div className="rounded-xl px-2.5 py-2" style={{ backgroundColor: C.mist }}>
+          {/* Üç fakt (mock 04): "Bulud örtüyü" da REALDIR — son ölçmənin
+              `ortulu` sahəsi buludun payıdır (api/ndvi.js), uydurma deyil */}
+          <div className="mt-1 grid grid-cols-3 gap-2">
+            <div className="rounded-xl px-2 py-2" style={{ backgroundColor: C.mist }}>
               <p style={{ color: C.muted, fontSize: 10 }}>{t("pano.cariVeg")}</p>
               <p className="text-sm font-bold" style={{ color: C.ink }}>
                 {cariFaiz != null ? `${cariFaiz}%` : "—"}
               </p>
             </div>
-            <div className="rounded-xl px-2.5 py-2" style={{ backgroundColor: C.mist }}>
+            <div className="rounded-xl px-2 py-2" style={{ backgroundColor: C.mist }}>
+              <p style={{ color: C.muted, fontSize: 10 }}>{t("pano.buludOrtuyu")}</p>
+              <p className="text-sm font-bold" style={{ color: C.ink }}>
+                {buludPayi == null
+                  ? "—"
+                  : t(`pano.bulud.${buludPayi <= 0.2 ? "asagi" : buludPayi <= 0.5 ? "orta" : "yuksek"}`)}
+              </p>
+            </div>
+            <div className="rounded-xl px-2 py-2" style={{ backgroundColor: C.mist }}>
               <p style={{ color: C.muted, fontSize: 10 }}>{t("pano.sonYenilenme")}</p>
               <p className="text-sm font-bold" style={{ color: C.ink }}>
                 {gunEvvel == null ? "—" : gunEvvel === 0 ? t("pano.buGun") : t("pano.gunEvvel", { gun: gunEvvel })}

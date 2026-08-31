@@ -34,7 +34,7 @@ const CERCEVE_PAY = 8;
  * Merkator göstərir. Sahə ölçüsündə (bir neçə yüz metr) fərq santimetrlərlə
  * ölçülür — 500 m-lik sahədə ~3 sm. Piksel 10 m olduğuna görə görünməzdir.
  */
-export function XeriteQati({
+export function XeriteQati({ konturRengi = "#FFD264",
   noqteler,
   sekil,
   sinirler,
@@ -75,7 +75,9 @@ export function XeriteQati({
         });
         L.tileLayer(PEYK_URL, { attribution: PEYK_ATRIBUT, maxZoom: 19 }).addTo(map);
         L.polygon(noqteler, {
-          color: "#FFD264",
+          // Xəbərdarlıq aktivdirsə kontur narıncıdır (mock 04, hal F) —
+          // xəritənin özü də "hara baxmalı" sualına işarə verir
+          color: konturRengi,
           weight: 2,
           fill: false,
           interactive: false,
