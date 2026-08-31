@@ -118,6 +118,20 @@ describe("kredit API — təhlükəsizlik", () => {
    * xəta" deyil, quraşdırma vəziyyətidir və cavabda belə də adlanmalıdır —
    * yoxsa ekran "server sındı" deyir və axtarış səhv yerdə başlayır.
    */
+  // "Miqrasiyanı işlətdim, amma xəta qalır" — səbəb adətən miqrasiyanın
+  // BAŞQA bazaya düşməsidir. Bu uc tətbiqin öz bazasını göstərir.
+  it("diaqnostika sxemin vəziyyətini deyir, sirr sızdırmır", async () => {
+    const cavab = await isle({ query: { diaqnostika: "1" } });
+
+    expect(cavab.statusCode).toBe(200);
+    expect(cavab.govde.kreditHazir).toBe(true);
+    expect(cavab.govde.cedveller.credit_applications).toBe(true);
+    expect(cavab.govde.miqrasiyalar).toContain("004_kredit_muhasibat.sql");
+    // Sessiya tələb olunmur (quraşdırma ucudur), amma məlumat da verilmir
+    const metn = JSON.stringify(cavab.govde);
+    expect(metn).not.toMatch(/postgres:|password|@|telefon/);
+  });
+
   it("cədvəl yoxdursa 503 sxemYoxdur qaytarır, 500 yox", async () => {
     const xeta = Object.assign(new Error('relation "credit_applications" does not exist'), {
       code: "42P01",
