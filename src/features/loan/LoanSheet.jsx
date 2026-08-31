@@ -456,7 +456,9 @@ export function LoanSheet({ onClose, indeksHali = null, kreditHali, onOpenHesab 
             <button
               type="button"
               disabled={kreditHali.gedir}
-              onClick={() => kreditHali.teklifiQebulEt(teklif.id)}
+              // Açar TƏKLİFƏ bağlıdır: şəbəkə qırılıb fermer yenidən
+              // toxunsa server eyni sorğunu tanıyır, ikinci kredit açmır
+              onClick={() => kreditHali.teklifiQebulEt(teklif.id, `t-${teklif.id}`)}
               className="mt-4 w-full rounded-xl py-3 text-sm font-bold"
               style={{ backgroundColor: C.gold, color: C.pine, opacity: kreditHali.gedir ? 0.6 : 1 }}
             >

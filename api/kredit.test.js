@@ -1230,3 +1230,166 @@ describe("sübut bütövlüyü", () => {
     expect(await sorgu("SELECT id FROM loans")).toHaveLength(1);
   });
 });
+
+/**
+ * ERKƏN TAM BAĞLANMA — ayın ortasında bağlayan fermer həmin günlərin
+ * faizini ödəməlidir. Əvvəl bu aralıq jurnala düşmürdü: balanslar
+ * sıfırlanır, kredit `repaid` olurdu və act/365 faizi itirdi.
+ */
+describe("erkən tam bağlanma", () => {
+  /** Kredit verib aktivləşdirir */
+  async function kreditAc(mebleg = 2000) {
+    const f = await fermer();
+    await tarixceYaz(f.id);
+    await muracietEt(f.cookie, mebleg);
+    const [teklif] = await sorgu("SELECT id FROM credit_offers");
+    await isle({
+      method: "POST",
+      cookie: f.cookie,
+      body: { emel: "teklif-qebul", teklifId: teklif.id },
+    });
+    const [kredit] = await sorgu("SELECT * FROM loans");
+    return { f, kredit };
+  }
+
+  it("ay ortasında bağlananda yarımçıq dövrün faizi yazılır", async () => {
+    const { f, kredit } = await kreditAc();
+    // Verilmə tarixini 45 gün geri çəkirik: 1 tam dövr + 15 gün qalır
+    const verilme = new Date(Date.now() - 45 * 86_400_000);
+    await sorgu("UPDATE loans SET disbursed_at=$2, created_at=$2 WHERE id=$1", [
+      kredit.id,
+      verilme.toISOString(),
+    ]);
+    await sorgu("UPDATE loan_events SET created_at=$2 WHERE loan_id=$1", [
+      kredit.id,
+      verilme.toISOString(),
+    ]);
+
+    const cavab = await isle({
+      method: "POST",
+      cookie: f.cookie,
+      body: { emel: "odenis", tam: true, acar: "payoff-1" },
+    });
+    expect(cavab.statusCode).toBe(200);
+
+    const [son] = await sorgu("SELECT * FROM loans WHERE id=$1", [kredit.id]);
+    // Kredit bağlanıb və HEÇ BİR qalıq yoxdur
+    expect(son.status).toBe("repaid");
+    expect(Number(son.principal_outstanding)).toBe(0);
+    expect(Number(son.interest_outstanding)).toBe(0);
+
+    // Yarımçıq dövrün faizi jurnalda AYRICA hadisədir
+    const payoffFaizler = await sorgu(
+      "SELECT amount, detay FROM loan_events WHERE loan_id=$1 AND idempotency_key LIKE 'faiz-payoff-%'",
+      [kredit.id],
+    );
+    expect(payoffFaizler).toHaveLength(1);
+    expect(Number(payoffFaizler[0].amount)).toBeGreaterThan(0);
+
+    // Ödənilən faizin cəmi tam dövr + yarımçıq dövrün cəmidir
+    expect(Number(son.interest_paid_total)).toBeCloseTo(Number(son.interest_accrued_total), 2);
+  });
+
+  it("payoff məbləği cavabda gəlir və qalıqdan böyükdür", async () => {
+    const { f, kredit } = await kreditAc();
+    const verilme = new Date(Date.now() - 40 * 86_400_000);
+    await sorgu("UPDATE loans SET disbursed_at=$2, created_at=$2 WHERE id=$1", [
+      kredit.id,
+      verilme.toISOString(),
+    ]);
+    await sorgu("UPDATE loan_events SET created_at=$2 WHERE loan_id=$1", [
+      kredit.id,
+      verilme.toISOString(),
+    ]);
+
+    const cavab = await isle({ cookie: f.cookie });
+    const k = cavab.govde.kredit;
+    // Bağlamaq üçün lazım olan məbləğ qalıq borcdan böyükdür (faiz var)
+    expect(k.payoffMebleg).toBeGreaterThan(k.qaliqBorc);
+  });
+
+  it("eyni gün təkrar payoff ikinci dəfə faiz yazmır", async () => {
+    const { f, kredit } = await kreditAc();
+    const verilme = new Date(Date.now() - 45 * 86_400_000);
+    await sorgu("UPDATE loans SET disbursed_at=$2, created_at=$2 WHERE id=$1", [
+      kredit.id,
+      verilme.toISOString(),
+    ]);
+    await sorgu("UPDATE loan_events SET created_at=$2 WHERE loan_id=$1", [
+      kredit.id,
+      verilme.toISOString(),
+    ]);
+
+    await isle({
+      method: "POST",
+      cookie: f.cookie,
+      body: { emel: "odenis", tam: true, acar: "payoff-2" },
+    });
+    const tekrar = await isle({
+      method: "POST",
+      cookie: f.cookie,
+      body: { emel: "odenis", tam: true, acar: "payoff-2" },
+    });
+    // Kredit onsuz da bağlanıb — ikinci sorğu yeni borc yaratmır
+    expect(tekrar.statusCode).toBeLessThan(500);
+    const payoffFaizler = await sorgu(
+      "SELECT id FROM loan_events WHERE loan_id=$1 AND idempotency_key LIKE 'faiz-payoff-%'",
+      [kredit.id],
+    );
+    expect(payoffFaizler).toHaveLength(1);
+  });
+});
+
+/** İDEMPOTENTLİK — təkrar sorğu ikinci maliyyə əməli yaratmamalıdır */
+describe("təklif qəbulunun idempotentliyi", () => {
+  it("eyni açarla iki qəbul bir kredit yaradır", async () => {
+    const f = await fermer();
+    await tarixceYaz(f.id);
+    await muracietEt(f.cookie, 2000);
+    const [teklif] = await sorgu("SELECT id FROM credit_offers");
+
+    const govde = { emel: "teklif-qebul", teklifId: teklif.id, acar: `t-${teklif.id}` };
+    const bir = await isle({ method: "POST", cookie: f.cookie, body: govde });
+    const iki = await isle({ method: "POST", cookie: f.cookie, body: govde });
+
+    expect(bir.statusCode).toBe(200);
+    // Təkrar sorğu UĞURDUR (əməl deyil) — fermerə xəta göstərilmir
+    expect(iki.statusCode).toBe(200);
+    expect(await sorgu("SELECT id FROM loans")).toHaveLength(1);
+  });
+
+  it("aktiv kredit varkən başqa təklif qəbul edilə bilmir", async () => {
+    const f = await fermer();
+    await tarixceYaz(f.id);
+    await muracietEt(f.cookie, 2000);
+    const [teklif] = await sorgu("SELECT id FROM credit_offers");
+    await isle({
+      method: "POST",
+      cookie: f.cookie,
+      body: { emel: "teklif-qebul", teklifId: teklif.id, acar: "t-1" },
+    });
+
+    // Süni ikinci təklif (adi axında müraciət qapısı buna imkan vermir —
+    // burada məhz KREDİT qapısını yoxlayırıq)
+    const [muraciet] = await sorgu("SELECT id FROM credit_applications");
+    const [qerar] = await sorgu("SELECT id FROM credit_decisions");
+    const [ikinciTeklif] = await sorgu(
+      `INSERT INTO credit_offers
+         (application_id, decision_id, amount, annual_rate, term_months,
+          repayment_structure, matures_on, expires_at, status)
+       VALUES ($1,$2,1000,11.5,6,'aylik_faiz_cevik_esas', CURRENT_DATE + 180,
+               now() + interval '30 days','issued')
+       RETURNING id`,
+      [muraciet.id, qerar.id],
+    );
+
+    const cavab = await isle({
+      method: "POST",
+      cookie: f.cookie,
+      body: { emel: "teklif-qebul", teklifId: ikinciTeklif.id, acar: "t-2" },
+    });
+    expect(cavab.statusCode).toBe(409);
+    expect(cavab.govde.error).toBe("aktivKreditVar");
+    expect(await sorgu("SELECT id FROM loans")).toHaveLength(1);
+  });
+});
