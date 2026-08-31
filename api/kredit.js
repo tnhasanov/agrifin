@@ -51,6 +51,7 @@ import {
   qepik,
 } from "../lib/kreditMuhasibat.js";
 import { bicinTarixi } from "../lib/movsum.js";
+import { balJurnalinaYaz, saheSubutu } from "../lib/saheSubutu.js";
 
 /**
  * Ölçülü hadisə jurnalı. Şəxsi məlumat, token, OTP və bağlantı sətri
@@ -369,11 +370,18 @@ export default async function handler(req, res) {
 
     // ── Yeni müraciət: SERVER anderraytinq edir ────────────────────────
     if (emel === "muraciet") {
-      const [sahe] = await sorgu(
-        "SELECT id, hektar, bitki FROM saheler WHERE istifadeci_id=$1",
-        [istifadeci.id],
-      );
-      if (!sahe) return res.status(409).json({ error: "saheYoxdur" });
+      // ═══ SÜBUT SERVERDƏN ═════════════════════════════════════════════
+      // Hektar konturdan hesablanır, mövsüm tarixçəsini server özü gətirir,
+      // FarmScore serverdə hesablanır (bax: lib/saheSubutu.js). Klientin
+      // yazdığı snapshot və bal bu qərara DAXİL OLMUR.
+      const subut = await saheSubutu({ istifadeciId: istifadeci.id });
+      if (subut.hal === "yoxdur") return res.status(409).json({ error: "saheYoxdur" });
+      if (subut.hal === "subutYoxdur") {
+        // Peyk sübutu yoxdursa AVTOMATİK TƏSDİQ VERİLMİR — klient
+        // məlumatına keçmək bağladığımız qapını yenidən açardı.
+        return res.status(503).json({ error: "peykSubutuYoxdur" });
+      }
+      const sahe = { id: subut.sahe.id, bitki: subut.sahe.bitki, hektar: subut.hektar };
 
       // Müddət SERVERDƏ təyin olunur: klient onu şişirdib limiti böyüdə bilməsin
       const muddetAy = muddetTeyin(sahe.bitki);
@@ -388,12 +396,19 @@ export default async function handler(req, res) {
       );
       if (acıq) return res.status(409).json({ error: "artiqMuracietVar" });
 
-      // Peyk tarixçəsi SERVERDƏKİ snapshot-dan — klientin göndərdiyindən yox
-      const [snapshot] = await sorgu(
-        "SELECT mezmun FROM peyk_snapshotlar WHERE sahe_id=$1 AND nov='tarixce'",
-        [sahe.id],
+      // AKTİV KREDİT VARSA İKİNCİSİ AÇILMIR. 002-də yalnız açıq MÜRACİƏT
+      // təkləşdirilmişdi: kredit qəbul olunandan sonra müraciət 'accepted'
+      // olur və bu yoxlama olmasa fermer ikinci krediti aça bilərdi. İkinci
+      // aktiv kredit ödəniş yolunu ("ən son kredit") köhnə kreditdən
+      // ayırardı — yəni borc UI-dan və ödənişdən itərdi.
+      // (005-də eyni invariant partial unique index kimi bazadadır.)
+      const [aktivKredit] = await sorgu(
+        "SELECT id FROM loans WHERE istifadeci_id=$1 AND status='active' LIMIT 1",
+        [istifadeci.id],
       );
-      const movsumler = Array.isArray(snapshot?.mezmun?.movsumler) ? snapshot.mezmun.movsumler : [];
+      if (aktivKredit) return res.status(409).json({ error: "aktivKreditVar" });
+
+      const movsumler = subut.movsumler ?? [];
 
       const netice = anderraytinq({
         mebleg: giris.mebleg,
@@ -526,6 +541,15 @@ export default async function handler(req, res) {
         }
         throw xeta;
       }
+
+      // Qərarın balı SERVER damğası ilə jurnala düşür: sonradan "bu qərar
+      // hansı bal və hansı konturla verilib" sualına cavab verilə bilsin
+      // (klient jurnalı ayrı sətirdir, menbe='klient').
+      await balJurnalinaYaz({
+        saheId: sahe.id,
+        indeks: subut.indeks,
+        hash: subut.konturHash,
+      });
 
       jurnal("application_created", {
         istifadeci_id: istifadeci.id,

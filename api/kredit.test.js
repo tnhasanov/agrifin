@@ -1,6 +1,8 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
 import { musterTeyin, sorgu } from "../lib/db.js";
+import { sahəHektar } from "../lib/geo.js";
+import { konturHash } from "../lib/konturHash.js";
 import { miqrasiyalariTetbiqEt } from "../lib/miqrasiya.js";
 import { otpTesdiqle, otpYarat } from "../lib/hesab.js";
 import { ayliqFaiz } from "../lib/kreditOdenis.js";
@@ -58,38 +60,86 @@ async function isle({ method = "GET", body, cookie, query } = {}) {
 
 const NOQTELER = [
   [40.4, 47.1],
-  [40.4023, 47.1],
-  [40.4023, 47.1029],
-  [40.4, 47.1029],
+  [40.402902, 47.1],
+  [40.402902, 47.103659],
+  [40.4, 47.103659],
 ];
+// Kontur QƏSDƏN dəqiq 10 ha-dır: hektar artıq klientin dediyi deyil, məhz
+// bu konturdan geodezik hesablanır (bax: lib/saheSubutu.js). Əvvəl testdə
+// "hektar: 10" yazılırdı, konturun özü isə 6,28 ha idi — yəni testlər
+// klientin iddiasını yoxlayırdı, sahənin həqiqətini yox.
+
+/**
+ * Verilmiş ölçüdə kontur qurur. Ölçü artıq İDDİA deyil, HƏNDƏSƏDİR:
+ * `fermer({hektar: 0.5})` həqiqətən 0,5 ha-lıq kontur yazır, çünki
+ * anderraytinq hektarı konturdan hesablayır.
+ */
+function konturYarat(hektar) {
+  const k = Math.sqrt(hektar / 10);
+  const dEn = 0.002902 * k;
+  const dUz = 0.003659 * k;
+  return [
+    [40.4, 47.1],
+    [40.4 + dEn, 47.1],
+    [40.4 + dEn, 47.1 + dUz],
+    [40.4, 47.1 + dUz],
+  ];
+}
 
 /** Giriş edir və (istəyə görə) sahə yazır — kredit üçün sahə şərtdir */
 async function fermer({ telefon = "+994501234567", hektar = 10, bitki = "pomidor" } = {}) {
+  const noqteler = hektar ? konturYarat(hektar) : NOQTELER;
   const { kod } = await otpYarat({ telefon, ip: null });
   const { token } = await otpTesdiqle({ telefon, kod });
   const [istifadeci] = await sorgu("SELECT id FROM istifadeciler WHERE telefon=$1", [telefon]);
   if (hektar) {
+    // hektar sütunu KLİENTİN dediyidir (diaqnostika); anderraytinq
+    // hektar_server-i oxuyur — burada da konturdan hesablanır
     await sorgu(
-      "INSERT INTO saheler (istifadeci_id, noqteler, hektar, bitki) VALUES ($1,$2,$3,$4)",
-      [istifadeci.id, JSON.stringify(NOQTELER), hektar, bitki],
+      `INSERT INTO saheler (istifadeci_id, noqteler, hektar, hektar_server, kontur_hash, bitki)
+       VALUES ($1,$2,$3,$4,$5,$6)`,
+      [
+        istifadeci.id,
+        JSON.stringify(noqteler),
+        hektar,
+        sahəHektar(noqteler),
+        konturHash(noqteler),
+        bitki,
+      ],
     );
   }
   return { cookie: `agrifin_sessiya=${token}`, id: istifadeci.id };
 }
 
-/** Peyk tarixçəsi snapshot-u — anderraytinq serverdəki bu sətri oxuyur */
-async function tarixceYaz(istifadeciId, il = new Date().getFullYear()) {
-  const [sahe] = await sorgu("SELECT id FROM saheler WHERE istifadeci_id=$1", [istifadeciId]);
-  const movsumler = Array.from({ length: 6 }, (_, i) => ({
-    il: il - 5 + i,
-    zirve: 0.72,
-    zirveAyi: `${il - 5 + i}-05`,
-    etrafMedyan: 0.6,
-    olcmeSayi: 6,
-  }));
+/**
+ * Peyk tarixçəsi snapshot-u — anderraytinq YALNIZ menbe='server' və kontura
+ * uyğun kontur_hash-i olan sətri oxuyur (bax: lib/saheSubutu.js). Test də
+ * məhz belə yazır: klient sətri qərara düşmür.
+ *
+ * @param {string} menbe 'server' (qərara düşür) | 'klient' (düşməməlidir)
+ */
+async function tarixceYaz(
+  istifadeciId,
+  il = new Date().getFullYear(),
+  { menbe = "server", hash, movsumler: verilen } = {},
+) {
+  const [sahe] = await sorgu(
+    "SELECT id, kontur_hash FROM saheler WHERE istifadeci_id=$1",
+    [istifadeciId],
+  );
+  const movsumler =
+    verilen ??
+    Array.from({ length: 6 }, (_, i) => ({
+      il: il - 5 + i,
+      zirve: 0.72,
+      zirveAyi: `${il - 5 + i}-05`,
+      etrafMedyan: 0.6,
+      olcmeSayi: 6,
+    }));
   await sorgu(
-    "INSERT INTO peyk_snapshotlar (sahe_id, nov, mezmun) VALUES ($1,'tarixce',$2)",
-    [sahe.id, JSON.stringify({ movsumler })],
+    `INSERT INTO peyk_snapshotlar (sahe_id, nov, mezmun, menbe, kontur_hash)
+     VALUES ($1,'tarixce',$2,$3,$4)`,
+    [sahe.id, JSON.stringify({ movsumler }), menbe, hash ?? sahe.kontur_hash],
   );
 }
 
@@ -250,15 +300,31 @@ describe("müraciət → qərar → təklif", () => {
     expect(g.peyk.hash).toMatch(/^[0-9a-f]{64}$/);
   });
 
-  it("peyk tarixçəsi olmayan müraciət səbəbdə qeyd olunur", async () => {
+  // FƏRQ VACİBDİR: "peyk cavab verdi, amma bu sahədə istifadə oluna bilən
+  // mövsüm yoxdur" QƏRARDIR (səbəbi ilə). "Peyk ümumiyyətlə əlçatmazdır"
+  // isə qərar deyil — 503, əl ilə baxış (aşağıdakı test).
+  it("peyk tarixçəsi boşdursa qərar səbəblə verilir", async () => {
     const f = await fermer();
+    await tarixceYaz(f.id, undefined, { movsumler: [] });
     const cavab = await muracietEt(f.cookie, 2000);
     expect(cavab.govde.qerar.sebebler).toContain("peykTarixcesiYoxdur");
+  });
+
+  it("server sübutu ümumiyyətlə yoxdursa AVTOMATİK QƏRAR VERİLMİR", async () => {
+    // Klient snapshot-u var, server snapshot-u yox — köhnə davranışda bu,
+    // qərara girirdi. İndi girmir: 503 və əl ilə baxış.
+    const f = await fermer();
+    await tarixceYaz(f.id, undefined, { menbe: "klient" });
+    const cavab = await muracietEt(f.cookie, 2000);
+    expect(cavab.statusCode).toBe(503);
+    expect(cavab.govde.error).toBe("peykSubutuYoxdur");
+    expect(await sorgu("SELECT id FROM credit_applications")).toHaveLength(0);
   });
 
   it("qabiliyyət azdırsa rədd olunur və səbəb yazılır", async () => {
     // Kiçik sahədə aşağı marjalı bitki nağd borc daşımır
     const f = await fermer({ hektar: 0.5, bitki: "bugda" });
+    await tarixceYaz(f.id);
     const cavab = await muracietEt(f.cookie, 2000);
 
     expect(cavab.govde.muraciet.hal).toBe("rejected");
@@ -341,6 +407,7 @@ describe("müraciət → qərar → təklif", () => {
   it("rədd yolunda da yazılış bütövdür — qırılma heç nə qoymur", async () => {
     // Kiçik sahə + aşağı marja → anderraytinq rədd edəcək
     const f = await fermer({ hektar: 0.5, bitki: "bugda" });
+    await tarixceYaz(f.id);
 
     const esl = pg;
     musterTeyin({
@@ -1090,5 +1157,76 @@ describe("maliyyə qeydləri adi silinmə ilə itmir", () => {
     const [muraciet] = await sorgu("SELECT sahe_id, decision_inputs FROM credit_applications");
     expect(muraciet.sahe_id).toBeNull();
     expect(muraciet.decision_inputs.sahe.hektar).toBe(10);
+  });
+});
+
+/**
+ * SÜBUT BÜTÖVLÜYÜ — anderraytinqin girişi klientdən yazıla bilməməlidir.
+ *
+ * Bu blok Pilot Integrity Hardening v1-in əsas iddiasını yoxlayır: hektar
+ * konturdan çıxır, peyk sübutu kontura bağlıdır, klientin yazdığı sətir
+ * qərara girmir.
+ */
+describe("sübut bütövlüyü", () => {
+  it("saxta hektar limitə təsir etmir — ölçü konturdan çıxır", async () => {
+    const f = await fermer({ hektar: 1 });
+    await tarixceYaz(f.id);
+    // Klient bazadakı "iddia" sütununu 500 ha etsə də qərar dəyişmir
+    await sorgu("UPDATE saheler SET hektar=500 WHERE istifadeci_id=$1", [f.id]);
+
+    const cavab = await muracietEt(f.cookie, 20000);
+    const [qerar] = await sorgu("SELECT approved_amount FROM credit_decisions");
+    const [muraciet] = await sorgu("SELECT decision_inputs FROM credit_applications");
+
+    // Qərarın girişi geodezik ölçüdür (1 ha), 500 deyil
+    expect(muraciet.decision_inputs.sahe.hektar).toBeCloseTo(1, 1);
+    // 1 ha-lıq sahə 20.000 ₼ daşımır — saxta hektar keçsəydi daşıyardı
+    expect(Number(qerar?.approved_amount ?? 0)).toBeLessThan(20000);
+    expect(cavab.statusCode).toBeLessThan(500);
+  });
+
+  it("başqa konturun tarixçəsi qərara girmir", async () => {
+    const f = await fermer();
+    // Sübut BAŞQA sahənin heşi ilə yazılır (kontur uyğun gəlmir)
+    await tarixceYaz(f.id, undefined, { hash: konturHash(konturYarat(3)) });
+
+    const cavab = await muracietEt(f.cookie, 2000);
+    // Uyğun sübut yoxdur → avtomatik qərar YOXDUR
+    expect(cavab.statusCode).toBe(503);
+    expect(cavab.govde.error).toBe("peykSubutuYoxdur");
+  });
+
+  it("sahə dəyişəndə köhnə sübut etibarsız olur", async () => {
+    const f = await fermer();
+    await tarixceYaz(f.id);
+    // Fermer konturu dəyişir — köhnə "yaxşı" tarixçə artıq bu sahəyə aid deyil
+    const yeni = konturYarat(4);
+    await sorgu("UPDATE saheler SET noqteler=$2, kontur_hash=$3 WHERE istifadeci_id=$1", [
+      f.id,
+      JSON.stringify(yeni),
+      konturHash(yeni),
+    ]);
+
+    const cavab = await muracietEt(f.cookie, 2000);
+    expect(cavab.statusCode).toBe(503);
+  });
+
+  it("aktiv krediti olan fermer ikinci müraciət göndərə bilmir", async () => {
+    const f = await fermer();
+    await tarixceYaz(f.id);
+    await muracietEt(f.cookie, 2000);
+    const [teklif] = await sorgu("SELECT id FROM credit_offers");
+    await isle({
+      method: "POST",
+      cookie: f.cookie,
+      body: { emel: "teklif-qebul", teklifId: teklif.id },
+    });
+    const [kredit] = await sorgu("SELECT id, status FROM loans");
+    expect(kredit.status).toBe("active");
+
+    const ikinci = await muracietEt(f.cookie, 1000);
+    expect(ikinci.statusCode).toBe(409);
+    expect(ikinci.govde.error).toBe("aktivKreditVar");
+    expect(await sorgu("SELECT id FROM loans")).toHaveLength(1);
   });
 });
