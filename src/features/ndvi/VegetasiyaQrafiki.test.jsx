@@ -100,3 +100,20 @@ describe("ox etiketləri", () => {
     expect(screen.getByText("avq")).toBeInTheDocument();
   });
 });
+
+describe("başlıqdakı dəyişmə", () => {
+  // 150 günlük pəncərədə "ilk vs son" əkin vaxtı ilə müqayisədir və
+  // həmişə böyük müsbət rəqəm verir — mənasızdır. Son 2 həftə göstərilir.
+  it("bütün pəncərəni yox, son 2 həftəni göstərir", () => {
+    const movsum = [0.2, 0.3, 0.45, 0.6, 0.68, 0.7, 0.72].map((ndvi, i) => ({
+      son: `2026-0${4 + Math.floor(i / 3)}-0${(i % 3) + 1}`,
+      ndvi,
+    }));
+    renderApp(<VegetasiyaQrafiki peyk={{ hal: "hazir", seriya: movsum }} muqayise={null} />);
+
+    // Son (72%) vs 3 dövr əvvəl (60%) = 12 vahid — 20-dən (ilk ölçmə) yox
+    expect(screen.getByText(/▲ 12%/)).toBeInTheDocument();
+    expect(screen.getByText("· 2 həftə")).toBeInTheDocument();
+    expect(screen.queryByText(/52%/)).not.toBeInTheDocument();
+  });
+});

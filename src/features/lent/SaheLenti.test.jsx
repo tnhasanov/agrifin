@@ -100,4 +100,31 @@ describe("sahə lenti — məsləhət ekranı", () => {
     await waitFor(() => expect(screen.getByText("Aqronom köməkçisi")).toBeInTheDocument());
     expect(screen.queryByText("Sahə lenti")).not.toBeInTheDocument();
   });
+
+  // Pəncərə 150 gündür (bax: useNdvi) — 30-a qədər ölçmə telefonda
+  // sonsuz siyahıdır. Lent kəsilir, amma kəsilmə GİZLİ QALMIR.
+  it("çox ölçmədə lent son 10-u göstərir və qalanını açıq deyir", async () => {
+    seed();
+    const cox = Array.from({ length: 26 }, (_, i) => ({
+      baslangic: gunEvvel(150 - i * 5),
+      son: gunEvvel(145 - i * 5),
+      ndvi: 0.4 + i * 0.01,
+      nemlik: 0.25,
+    }));
+    stubApi({ seriya: cox });
+    renderApp(<App />);
+
+    await waitFor(() => expect(screen.getByText("Sahə lenti")).toBeInTheDocument());
+    expect(screen.getAllByText("Peyk ölçməsi")).toHaveLength(10);
+    expect(screen.getByText("Daha 16 ölçmə göstərilmir · son 150 gündə cəmi 26")).toBeInTheDocument();
+  });
+
+  it("ölçmə azdırsa kəsilmə qeydi yazılmır", async () => {
+    seed();
+    stubApi();
+    renderApp(<App />);
+
+    await waitFor(() => expect(screen.getByText("Sahə lenti")).toBeInTheDocument());
+    expect(screen.queryByText(/göstərilmir/)).not.toBeInTheDocument();
+  });
 });

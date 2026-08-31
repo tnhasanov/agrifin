@@ -408,6 +408,7 @@ export default {
 
   "lent.basliq": "Лента поля",
   "lent.olcme": "Спутниковый замер",
+  "lent.dahaCox": "Ещё {say} измерений не показаны · всего {cemi} за 150 дней",
   "lent.radar": "Радарный замер",
   "lent.radarSu": "Радар: {faiz}% поля под водой",
   "lent.buGun": "Сегодня",
@@ -442,6 +443,7 @@ export default {
 
   "veg.basliq": "Динамика вегетации",
   "veg.sizinSahe": "Ваше поле",
+  "veg.sonIkiHefte": "· 2 недели",
   "veg.rayonOrtalamasi": "Средний по району",
   "veg.ferqUst": "На {faiz}% выше среднего по району",
   "veg.ferqAlt": "На {faiz}% ниже среднего по району",

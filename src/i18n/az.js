@@ -415,6 +415,7 @@ export default {
   // Sahə lenti — hər peyk keçidi bir sətir
   "lent.basliq": "Sahə lenti",
   "lent.olcme": "Peyk ölçməsi",
+  "lent.dahaCox": "Daha {say} ölçmə göstərilmir · son 150 gündə cəmi {cemi}",
   "lent.radar": "Radar ölçməsi",
   "lent.radarSu": "Radar: sahənin {faiz}%-i su altında",
   "lent.buGun": "Bu gün",
@@ -450,6 +451,7 @@ export default {
 
   "veg.basliq": "Vegetasiya dinamikası",
   "veg.sizinSahe": "Sizin sahə",
+  "veg.sonIkiHefte": "· 2 həftə",
   "veg.rayonOrtalamasi": "Rayon ortalaması",
   "veg.ferqUst": "Rayon ortalamasından {faiz}% yuxarı",
   "veg.ferqAlt": "Rayon ortalamasından {faiz}% aşağı",

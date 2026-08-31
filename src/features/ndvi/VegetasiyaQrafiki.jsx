@@ -50,7 +50,12 @@ export function VegetasiyaQrafiki({ peyk = { hal: "yoxdur", seriya: [] }, muqayi
   const xett = noqteler.map((n, i) => `${x(i)},${y(n.faiz)}`).join(" ");
   const son = noqteler[noqteler.length - 1];
   const ilk = noqteler[0];
-  const deyisme = son.faiz - ilk.faiz;
+  // Başlıqdakı dəyişmə SON 2 HƏFTƏdir, bütün pəncərə deyil: 150 gün əvvəl
+  // əkin vaxtıdır, ona görə "ilk vs son" həmişə böyük müsbət rəqəm verir və
+  // heç nə demir. 3 dövr = 15 gün — mühərrikin trend tərifi ilə eynidir
+  // (bax: services/ndvi.js → xulase).
+  const evvel = noqteler[Math.max(0, noqteler.length - 4)];
+  const deyisme = son.faiz - evvel.faiz;
 
   // Ay adları: ilk, orta və son ölçmənin ayı (üçdən çoxu 360 px-də sıxlaşır)
   const ayEtiketi = (tarix) => {
@@ -75,6 +80,9 @@ export function VegetasiyaQrafiki({ peyk = { hal: "yoxdur", seriya: [] }, muqayi
           style={{ color: deyisme >= 0 ? C.field : C.danger, fontVariantNumeric: "tabular-nums" }}
         >
           {deyisme >= 0 ? "▲" : "▼"} {Math.abs(deyisme)}%
+          <span className="ml-1 font-normal" style={{ color: C.muted }}>
+            {t("veg.sonIkiHefte")}
+          </span>
         </span>
       </div>
 

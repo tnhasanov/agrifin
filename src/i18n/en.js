@@ -406,6 +406,7 @@ export default {
 
   "lent.basliq": "Field feed",
   "lent.olcme": "Satellite reading",
+  "lent.dahaCox": "{say} more readings not shown · {cemi} in the last 150 days",
   "lent.radar": "Radar reading",
   "lent.radarSu": "Radar: {faiz}% of the field under water",
   "lent.buGun": "Today",
@@ -440,6 +441,7 @@ export default {
 
   "veg.basliq": "Vegetation trend",
   "veg.sizinSahe": "Your field",
+  "veg.sonIkiHefte": "· 2 weeks",
   "veg.rayonOrtalamasi": "District average",
   "veg.ferqUst": "{faiz}% above the district average",
   "veg.ferqAlt": "{faiz}% below the district average",

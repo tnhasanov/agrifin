@@ -16,13 +16,22 @@ import { necheGunEvvel, ortukFaizi } from "../../services/ndvi.js";
  * Yalnız REAL ölçmələr: seriya boşdursa lent də yoxdur. Uydurma sətir,
  * nümunə tarix yoxdur.
  */
+/** Lentdə göstərilən ən yeni ölçmə sayı */
+const LENT_MAX = 10;
+
 export function SaheLenti({ peyk = { hal: "yoxdur", seriya: [] }, radar = { hal: "yoxdur" } }) {
   const { t } = useI18n();
 
   if (peyk.hal !== "hazir" || (peyk.seriya?.length ?? 0) === 0) return null;
 
-  // Ən yenisi üstdə; dəyişmə əvvəlki ölçmə ilə müqayisədir
-  const setirler = peyk.seriya
+  // Ən yenisi üstdə; dəyişmə əvvəlki ölçmə ilə müqayisədir.
+  //
+  // LENT KƏSİLİR, MƏLUMAT KƏSİLMİR: pəncərə 150 gündür (bax: useNdvi),
+  // yəni 30-a qədər ölçmə gələ bilər — telefonda bu, sonsuz siyahıdır.
+  // Lent son LENT_MAX ölçməni göstərir, altında isə CƏMİ neçə ölçmə
+  // olduğu yazılır ki, kəsilmə gizli qalmasın. Qrafik bütün seriyanı
+  // işlədir (bax: VegetasiyaQrafiki).
+  const hamisi = peyk.seriya
     .map((olcme, i) => {
       const evvelki = peyk.seriya[i - 1];
       const faiz = ortukFaizi(olcme.ndvi);
@@ -36,6 +45,8 @@ export function SaheLenti({ peyk = { hal: "yoxdur", seriya: [] }, radar = { hal:
       };
     })
     .reverse();
+  const setirler = hamisi.slice(0, LENT_MAX);
+  const gizlenen = hamisi.length - setirler.length;
 
   // Radar oxunuşu lentin öz sətri kimi: optik ölçmə buludda qalanda bu,
   // lentin yeganə təzə xəbəri olur
@@ -117,6 +128,13 @@ export function SaheLenti({ peyk = { hal: "yoxdur", seriya: [] }, radar = { hal:
             </div>
           </div>
         ))}
+
+        {/* Kəsilmə GİZLİ QALMIR: neçə ölçmənin göstərilmədiyi yazılır */}
+        {gizlenen > 0 && (
+          <p className="pt-2 text-xs" style={{ color: C.muted, borderTop: `1px solid ${C.line}` }}>
+            {t("lent.dahaCox", { say: gizlenen, cemi: hamisi.length })}
+          </p>
+        )}
       </Card>
     </>
   );
