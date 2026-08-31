@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card } from "../../components/Card.jsx";
 import { Icon } from "../../components/Icon.jsx";
 import { SectionTitle } from "../../components/SectionTitle.jsx";
@@ -10,28 +11,32 @@ import { necheGunEvvel, ortukFaizi } from "../../services/ndvi.js";
  *
  * Bankda hər əməliyyat lentə düşür; burada "əməliyyat" peykin sahədən
  * keçməsidir. Hər ölçmə bir sətirdir: nə vaxt, örtük neçə faiz, əvvəlkinə
- * görə hansı istiqamətdə. Fermer siyahını yuxarıdan aşağı oxuyub mövsümün
- * hekayəsini görür — sparkline bunu deyə bilmir, çünki rəqəmsiz və tarixsizdir.
+ * görə hansı istiqamətdə.
+ *
+ * ═══ QRAFİKLƏ MÜNASİBƏTİ ═════════════════════════════════════════════
+ * Vegetasiya qrafiki (bax: features/ndvi/VegetasiyaQrafiki.jsx) EYNİ NDVI
+ * seriyasını əyri kimi göstərir: forma, trend, rayonla müqayisə. Lentin
+ * işi başqadır — DƏQİQ RƏQƏMLƏR və tarixlər ("10 gün əvvəl neçə idi?").
+ *
+ * Qrafik gələndən sonra 10-30 sətir onun altında təkrar oxunurdu, ona görə
+ * ölçmə siyahısı YIĞILIB: "Bütün ölçmələr (N)" düyməsi ilə açılır. Məlumat
+ * itmir, sadəcə əsas cavab (əyri) qabaqda durur.
+ *
+ * RADAR SƏTRİ HƏMİŞƏ AÇIQDIR: o, Sentinel-1-dəndir və qrafikdə YOXDUR —
+ * optik ölçmə buludda qalanda lentin yeganə təzə xəbəri elə odur.
  *
  * Yalnız REAL ölçmələr: seriya boşdursa lent də yoxdur. Uydurma sətir,
  * nümunə tarix yoxdur.
  */
-/** Lentdə göstərilən ən yeni ölçmə sayı */
-const LENT_MAX = 10;
 
 export function SaheLenti({ peyk = { hal: "yoxdur", seriya: [] }, radar = { hal: "yoxdur" } }) {
   const { t } = useI18n();
+  const [aciq, setAciq] = useState(false);
 
   if (peyk.hal !== "hazir" || (peyk.seriya?.length ?? 0) === 0) return null;
 
-  // Ən yenisi üstdə; dəyişmə əvvəlki ölçmə ilə müqayisədir.
-  //
-  // LENT KƏSİLİR, MƏLUMAT KƏSİLMİR: pəncərə 150 gündür (bax: useNdvi),
-  // yəni 30-a qədər ölçmə gələ bilər — telefonda bu, sonsuz siyahıdır.
-  // Lent son LENT_MAX ölçməni göstərir, altında isə CƏMİ neçə ölçmə
-  // olduğu yazılır ki, kəsilmə gizli qalmasın. Qrafik bütün seriyanı
-  // işlədir (bax: VegetasiyaQrafiki).
-  const hamisi = peyk.seriya
+  // Ən yenisi üstdə; dəyişmə əvvəlki ölçmə ilə müqayisədir
+  const setirler = peyk.seriya
     .map((olcme, i) => {
       const evvelki = peyk.seriya[i - 1];
       const faiz = ortukFaizi(olcme.ndvi);
@@ -45,8 +50,6 @@ export function SaheLenti({ peyk = { hal: "yoxdur", seriya: [] }, radar = { hal:
       };
     })
     .reverse();
-  const setirler = hamisi.slice(0, LENT_MAX);
-  const gizlenen = hamisi.length - setirler.length;
 
   // Radar oxunuşu lentin öz sətri kimi: optik ölçmə buludda qalanda bu,
   // lentin yeganə təzə xəbəri olur
@@ -87,13 +90,28 @@ export function SaheLenti({ peyk = { hal: "yoxdur", seriya: [] }, radar = { hal:
           </div>
         )}
 
+        {/* Ölçmə siyahısı yığılıb: əsas cavab qrafikdədir, dəqiq rəqəmlərə
+            isə fermer nadir hallarda baxır — amma bir toxunuşla açılır */}
+        <button
+          type="button"
+          onClick={() => setAciq((e) => !e)}
+          aria-expanded={aciq}
+          aria-controls="lent-olcmeler"
+          className="flex w-full items-center justify-between py-3 text-sm font-bold"
+          style={{ color: C.pine, minHeight: 44 }}
+        >
+          {aciq ? t("lent.gizle") : t("lent.hamisi", { say: setirler.length })}
+          <Icon name={aciq ? "ChevronUp" : "ChevronDown"} size={16} color={C.pine} />
+        </button>
+
+        <div id="lent-olcmeler" hidden={!aciq}>
         {setirler.map((s, index) => (
           <div
             key={s.acar}
             className="giris flex items-center gap-3 py-3"
             style={{
               "--i": index,
-              borderBottom: index < setirler.length - 1 ? `1px solid ${C.line}` : "none",
+              borderTop: `1px solid ${C.line}`,
             }}
           >
             <div className="rounded-full p-2" style={{ backgroundColor: C.fieldSoft }}>
@@ -128,13 +146,7 @@ export function SaheLenti({ peyk = { hal: "yoxdur", seriya: [] }, radar = { hal:
             </div>
           </div>
         ))}
-
-        {/* Kəsilmə GİZLİ QALMIR: neçə ölçmənin göstərilmədiyi yazılır */}
-        {gizlenen > 0 && (
-          <p className="pt-2 text-xs" style={{ color: C.muted, borderTop: `1px solid ${C.line}` }}>
-            {t("lent.dahaCox", { say: gizlenen, cemi: hamisi.length })}
-          </p>
-        )}
+        </div>
       </Card>
     </>
   );

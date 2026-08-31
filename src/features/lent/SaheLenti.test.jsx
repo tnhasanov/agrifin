@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import App from "../../App.jsx";
 import { renderApp, seedState, WEATHER_FIXTURE } from "../../test/render.jsx";
 import { DEFAULT_LOCATION } from "../../services/location.js";
@@ -60,14 +61,29 @@ describe("sahə lenti — məsləhət ekranı", () => {
     stubApi();
     renderApp(<App />);
 
+    const user = userEvent.setup();
     await waitFor(() => expect(screen.getByText("Sahə lenti")).toBeInTheDocument());
+
+    // Siyahı YIĞILIB: əsas cavab qrafikdədir (bax: VegetasiyaQrafiki)
+    expect(screen.getByRole("button", { name: /Bütün ölçmələr \(3\)/ })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(screen.getAllByText("Peyk ölçməsi")[0]).not.toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: /Bütün ölçmələr/ }));
     const setirler = screen.getAllByText("Peyk ölçməsi");
     expect(setirler).toHaveLength(3);
+    expect(setirler[0]).toBeVisible();
 
     // Ən yeni ölçmə (61%) siyahının başındadır
     const kart = setirler[0].closest("div.giris");
     expect(within(kart).getByText("61%")).toBeInTheDocument();
     expect(within(kart).getByText("Bu gün · Sentinel-2")).toBeInTheDocument();
+
+    // Təkrar toxunuş bağlayır
+    await user.click(screen.getByRole("button", { name: /Ölçmələri gizlət/ }));
+    expect(screen.getAllByText("Peyk ölçməsi")[0]).not.toBeVisible();
   });
 
   // Monzo lentindəki məbləğ dəyişməsi kimi: hər sətir əvvəlkinə görə fərqi deyir
@@ -101,9 +117,10 @@ describe("sahə lenti — məsləhət ekranı", () => {
     expect(screen.queryByText("Sahə lenti")).not.toBeInTheDocument();
   });
 
-  // Pəncərə 150 gündür (bax: useNdvi) — 30-a qədər ölçmə telefonda
-  // sonsuz siyahıdır. Lent kəsilir, amma kəsilmə GİZLİ QALMIR.
-  it("çox ölçmədə lent son 10-u göstərir və qalanını açıq deyir", async () => {
+  // 150 günlük pəncərədə 30-a qədər ölçmə gəlir — düymə sayı özü deyir,
+  // yəni fermer açmadan da nə qədər sübut olduğunu bilir
+  it("düymə ölçmə sayını göstərir, siyahı açılanda hamısı gəlir", async () => {
+    const user = userEvent.setup();
     seed();
     const cox = Array.from({ length: 26 }, (_, i) => ({
       baslangic: gunEvvel(150 - i * 5),
@@ -115,16 +132,10 @@ describe("sahə lenti — məsləhət ekranı", () => {
     renderApp(<App />);
 
     await waitFor(() => expect(screen.getByText("Sahə lenti")).toBeInTheDocument());
-    expect(screen.getAllByText("Peyk ölçməsi")).toHaveLength(10);
-    expect(screen.getByText("Daha 16 ölçmə göstərilmir · son 150 gündə cəmi 26")).toBeInTheDocument();
-  });
+    expect(screen.getByRole("button", { name: /Bütün ölçmələr \(26\)/ })).toBeInTheDocument();
 
-  it("ölçmə azdırsa kəsilmə qeydi yazılmır", async () => {
-    seed();
-    stubApi();
-    renderApp(<App />);
-
-    await waitFor(() => expect(screen.getByText("Sahə lenti")).toBeInTheDocument());
-    expect(screen.queryByText(/göstərilmir/)).not.toBeInTheDocument();
+    // Açılanda HAMISI gəlir — kəsilmiş siyahı deyil
+    await user.click(screen.getByRole("button", { name: /Bütün ölçmələr/ }));
+    expect(screen.getAllByText("Peyk ölçməsi")).toHaveLength(26);
   });
 });

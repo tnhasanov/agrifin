@@ -408,7 +408,8 @@ export default {
 
   "lent.basliq": "Лента поля",
   "lent.olcme": "Спутниковый замер",
-  "lent.dahaCox": "Ещё {say} измерений не показаны · всего {cemi} за 150 дней",
+  "lent.hamisi": "Все измерения ({say})",
+  "lent.gizle": "Скрыть измерения",
   "lent.radar": "Радарный замер",
   "lent.radarSu": "Радар: {faiz}% поля под водой",
   "lent.buGun": "Сегодня",

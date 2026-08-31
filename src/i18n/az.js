@@ -415,7 +415,8 @@ export default {
   // Sahə lenti — hər peyk keçidi bir sətir
   "lent.basliq": "Sahə lenti",
   "lent.olcme": "Peyk ölçməsi",
-  "lent.dahaCox": "Daha {say} ölçmə göstərilmir · son 150 gündə cəmi {cemi}",
+  "lent.hamisi": "Bütün ölçmələr ({say})",
+  "lent.gizle": "Ölçmələri gizlət",
   "lent.radar": "Radar ölçməsi",
   "lent.radarSu": "Radar: sahənin {faiz}%-i su altında",
   "lent.buGun": "Bu gün",

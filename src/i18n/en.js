@@ -406,7 +406,8 @@ export default {
 
   "lent.basliq": "Field feed",
   "lent.olcme": "Satellite reading",
-  "lent.dahaCox": "{say} more readings not shown · {cemi} in the last 150 days",
+  "lent.hamisi": "All readings ({say})",
+  "lent.gizle": "Hide readings",
   "lent.radar": "Radar reading",
   "lent.radarSu": "Radar: {faiz}% of the field under water",
   "lent.buGun": "Today",
