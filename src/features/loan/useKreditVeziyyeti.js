@@ -106,7 +106,7 @@ export function useKreditVeziyyeti(telefon) {
     yenile,
     // Yalnız MƏBLƏĞ göndərilir: müddət, dərəcə, limit və qərar serverdədir
     muracietEt: (mebleg, acar) => emelEt(() => apiMuracietGonder({ mebleg, acar })),
-    teklifiQebulEt: (teklifId) => emelEt(() => apiTeklifQebul(teklifId)),
+    teklifiQebulEt: (teklifId, acar) => emelEt(() => apiTeklifQebul(teklifId, acar)),
     legvEt: () => emelEt(() => apiMuracietLegv()),
     // Bölgü (əvvəl faiz, sonra əsas) SERVERDƏDİR — burada yalnız məbləğ gedir
     odeEt: (mebleg, acar) => emelEt(() => apiOdenisEt({ mebleg, acar })),

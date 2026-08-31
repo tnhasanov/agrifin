@@ -48,9 +48,11 @@ import {
   hesablanacaqDovrler,
   novbetiOdenis,
   odenisTarixcesi,
+  payoffFaizi,
   qepik,
 } from "../lib/kreditMuhasibat.js";
 import { bicinTarixi } from "../lib/movsum.js";
+import { balJurnalinaYaz, saheSubutu } from "../lib/saheSubutu.js";
 
 /**
  * Ölçülü hadisə jurnalı. Şəxsi məlumat, token, OTP və bağlantı sətri
@@ -58,6 +60,21 @@ import { bicinTarixi } from "../lib/movsum.js";
  */
 function jurnal(hadise, melumat) {
   console.log(JSON.stringify({ hadise, ...melumat }));
+}
+
+/**
+ * İDEMPOTENTLİK — HƏLƏ MƏCBURİ DEYİL, AMMA İZLƏNİLİR.
+ *
+ * Açar olmadan gələn maliyyə əməli təkrar sorğuda ikinci dəfə tətbiq oluna
+ * bilər. UI artıq hər üç əməldə (müraciət, təklif qəbulu, ödəniş) açar
+ * göndərir — amma servis işçisi köhnə versiyanı keşdə saxlaya bilir, ona
+ * görə API-ni DƏRHAL 400-ə keçirmək köhnə cihazlarda ödənişi sındırardı.
+ *
+ * Ona görə iki mərhələ: (1) indi — açarsız sorğu qəbul olunur və loglanır;
+ * (2) log təmizləndikdən sonra — 400. Bu funksiya birinci mərhələdir.
+ */
+function acarsizEmel(emel, istifadeciId) {
+  console.warn(JSON.stringify({ hadise: "acarsiz_emel", emel, istifadeci_id: istifadeciId }));
 }
 
 const reqem = (deyer) => (deyer == null ? null : Number(deyer));
@@ -138,6 +155,20 @@ function kreditCavabi(setir, hadiseler = [], indi = new Date()) {
     novbetiEsasDaxil: novbeti ? novbeti.esasDaxil : false,
     // İndi ödənilməli olan: yığılmış faiz + (son tarix keçibsə) əsas borc
     odenilecekIndi: qepik(faizBorc + (yetkinlikKecib ? esasBorc : 0)),
+    // BU GÜN TAM BAĞLAMAQ ÜÇÜN: qalıq + yığılmış faiz + son dövrdən bu ana
+    // qədərki faiz. Rəqəm GÜNƏ bağlıdır (act/365) — sabah başqa olacaq,
+    // ona görə UI onu "bu gün" qeydi ilə göstərməlidir.
+    payoffMebleg: qepik(
+      esasBorc +
+        faizBorc +
+        payoffFaizi({
+          xett: esasXetti(hadiseler),
+          verilme: setir.disbursed_at ?? setir.created_at,
+          hesablanmisDovr: setir.accrued_periods ?? 0,
+          indi,
+          illikFaiz: reqem(setir.annual_rate),
+        }),
+    ),
     gecikmeGun: gecikmeHali.gunler,
     gecikmisMebleg: qepik(gecikmeHali.mebleg + (yetkinlikKecib ? esasBorc : 0)),
     tarix: setir.created_at,
@@ -234,6 +265,74 @@ async function faizleriIsle(kredit, indi) {
     });
   }
   return cari;
+}
+
+
+/**
+ * ERKƏN TAM BAĞLANMA FAİZİ — son yazılmış dövrdən BU ANA qədər.
+ *
+ * `faizleriIsle` yalnız TAM bitmiş aylıq dövrləri yazır. Ay ortasında tam
+ * bağlanmada həmin yarımçıq aralığın faizi heç vaxt jurnala düşmürdü:
+ * balanslar sıfırlanır, kredit `repaid` olurdu və act/365 müqaviləsinə görə
+ * fermerin borclu olduğu günlərin faizi itirdi.
+ *
+ * Ona görə payoff-dan ƏVVƏL həmin aralıq ayrıca `interest_charge` kimi
+ * yazılır. İdempotentlik açarı GÜNƏ bağlıdır (`faiz-payoff-<gün>`): eyni
+ * gün təkrar cəhd ikinci dəfə faiz yazmır.
+ *
+ * @returns {Promise<object>} yenilənmiş kredit sətri (faiz yoxdursa dəyişməz)
+ */
+async function payoffFaiziniYaz(kredit, indi) {
+  const verilme = kredit.disbursed_at ?? kredit.created_at;
+  const hadiseler = await sorgu(
+    `SELECT event_type, amount, principal_after, created_at FROM loan_events
+     WHERE loan_id=$1 ORDER BY created_at, id`,
+    [kredit.id],
+  );
+  const faiz = payoffFaizi({
+    xett: esasXetti(hadiseler),
+    verilme,
+    hesablanmisDovr: kredit.accrued_periods ?? 0,
+    indi,
+    illikFaiz: reqem(kredit.annual_rate),
+  });
+  if (!(faiz > 0)) return kredit;
+
+  let yeni;
+  try {
+    [yeni] = await sorgu(
+      `WITH hadise AS (
+         INSERT INTO loan_events
+           (loan_id, event_type, amount, principal_after, interest_after, due_on, idempotency_key, detay)
+         SELECT l.id, 'interest_charge', $2::numeric, l.principal_outstanding,
+                l.interest_outstanding + $2::numeric, $3::date, $4::text,
+                jsonb_build_object('payoff', true)
+         FROM loans l
+         WHERE l.id=$1 AND l.status='active'
+         RETURNING loan_id
+       ), yenilenen AS (
+         UPDATE loans l
+            SET interest_outstanding = l.interest_outstanding + $2::numeric,
+                interest_accrued_total = l.interest_accrued_total + $2::numeric,
+                updated_at = now()
+         FROM hadise h WHERE l.id = h.loan_id
+         RETURNING l.*
+       )
+       SELECT * FROM yenilenen`,
+      [kredit.id, faiz, gun(indi), `faiz-payoff-${gun(indi)}`],
+    );
+  } catch (xeta) {
+    // Eyni gün ikinci cəhd: faiz onsuz da yazılıb
+    if (!String(xeta?.message ?? "").includes("loan_event_idempotent")) throw xeta;
+    return kredit;
+  }
+  if (!yeni) return kredit;
+  jurnal("payoff_interest_accrued", {
+    loan_id: kredit.id,
+    faiz,
+    faiz_borcu: reqem(yeni.interest_outstanding),
+  });
+  return yeni;
 }
 
 /** İstifadəçinin ən son müraciəti + ona bağlı qərar/təklif/kredit */
@@ -369,11 +468,18 @@ export default async function handler(req, res) {
 
     // ── Yeni müraciət: SERVER anderraytinq edir ────────────────────────
     if (emel === "muraciet") {
-      const [sahe] = await sorgu(
-        "SELECT id, hektar, bitki FROM saheler WHERE istifadeci_id=$1",
-        [istifadeci.id],
-      );
-      if (!sahe) return res.status(409).json({ error: "saheYoxdur" });
+      // ═══ SÜBUT SERVERDƏN ═════════════════════════════════════════════
+      // Hektar konturdan hesablanır, mövsüm tarixçəsini server özü gətirir,
+      // FarmScore serverdə hesablanır (bax: lib/saheSubutu.js). Klientin
+      // yazdığı snapshot və bal bu qərara DAXİL OLMUR.
+      const subut = await saheSubutu({ istifadeciId: istifadeci.id });
+      if (subut.hal === "yoxdur") return res.status(409).json({ error: "saheYoxdur" });
+      if (subut.hal === "subutYoxdur") {
+        // Peyk sübutu yoxdursa AVTOMATİK TƏSDİQ VERİLMİR — klient
+        // məlumatına keçmək bağladığımız qapını yenidən açardı.
+        return res.status(503).json({ error: "peykSubutuYoxdur" });
+      }
+      const sahe = { id: subut.sahe.id, bitki: subut.sahe.bitki, hektar: subut.hektar };
 
       // Müddət SERVERDƏ təyin olunur: klient onu şişirdib limiti böyüdə bilməsin
       const muddetAy = muddetTeyin(sahe.bitki);
@@ -388,12 +494,19 @@ export default async function handler(req, res) {
       );
       if (acıq) return res.status(409).json({ error: "artiqMuracietVar" });
 
-      // Peyk tarixçəsi SERVERDƏKİ snapshot-dan — klientin göndərdiyindən yox
-      const [snapshot] = await sorgu(
-        "SELECT mezmun FROM peyk_snapshotlar WHERE sahe_id=$1 AND nov='tarixce'",
-        [sahe.id],
+      // AKTİV KREDİT VARSA İKİNCİSİ AÇILMIR. 002-də yalnız açıq MÜRACİƏT
+      // təkləşdirilmişdi: kredit qəbul olunandan sonra müraciət 'accepted'
+      // olur və bu yoxlama olmasa fermer ikinci krediti aça bilərdi. İkinci
+      // aktiv kredit ödəniş yolunu ("ən son kredit") köhnə kreditdən
+      // ayırardı — yəni borc UI-dan və ödənişdən itərdi.
+      // (005-də eyni invariant partial unique index kimi bazadadır.)
+      const [aktivKredit] = await sorgu(
+        "SELECT id FROM loans WHERE istifadeci_id=$1 AND status='active' LIMIT 1",
+        [istifadeci.id],
       );
-      const movsumler = Array.isArray(snapshot?.mezmun?.movsumler) ? snapshot.mezmun.movsumler : [];
+      if (aktivKredit) return res.status(409).json({ error: "aktivKreditVar" });
+
+      const movsumler = subut.movsumler ?? [];
 
       const netice = anderraytinq({
         mebleg: giris.mebleg,
@@ -403,6 +516,7 @@ export default async function handler(req, res) {
       });
 
       const acar = typeof req.body?.acar === "string" ? req.body.acar.slice(0, 64) : null;
+      if (!acar) acarsizEmel("muraciet", istifadeci.id);
 
       // ═══ NƏTİCƏNİN TAMAMI BİR İFADƏDƏ YAZILIR ═══════════════════════
       // Əvvəl müraciət, hadisələr, qərar və təklif 8 ayrı sorğu idi —
@@ -527,6 +641,15 @@ export default async function handler(req, res) {
         throw xeta;
       }
 
+      // Qərarın balı SERVER damğası ilə jurnala düşür: sonradan "bu qərar
+      // hansı bal və hansı konturla verilib" sualına cavab verilə bilsin
+      // (klient jurnalı ayrı sətirdir, menbe='klient').
+      await balJurnalinaYaz({
+        saheId: sahe.id,
+        indeks: subut.indeks,
+        hash: subut.konturHash,
+      });
+
       jurnal("application_created", {
         istifadeci_id: istifadeci.id,
         application_id: setir.muraciet_id,
@@ -553,6 +676,28 @@ export default async function handler(req, res) {
     if (emel === "teklif-qebul") {
       const teklifId = Number(req.body?.teklifId);
       if (!Number.isInteger(teklifId)) return res.status(400).json({ error: "yanlis" });
+      const acar = typeof req.body?.acar === "string" ? req.body.acar.slice(0, 64) : null;
+      if (!acar) acarsizEmel("teklif-qebul", istifadeci.id);
+
+      // SIRA VACİBDİR: əvvəl İDEMPOTENTLİK, sonra aktiv kredit qapısı.
+      // Əks halda şəbəkə qırılıb təkrar göndərilən EYNİ sorğu öz yaratdığı
+      // kreditə ilişib "aktiv krediti var" xətası alardı — fermer uğurlu
+      // əməli uğursuz sanardı.
+      if (acar) {
+        const [evvelki] = await sorgu(
+          "SELECT id FROM loans WHERE istifadeci_id=$1 AND idempotency_key=$2",
+          [istifadeci.id, acar],
+        );
+        if (evvelki) return res.status(200).json(await veziyyetOxu(istifadeci.id, indi));
+      }
+
+      // Aktiv kredit varsa ikincisi AÇILMIR. 005-də eyni invariant partial
+      // unique index kimi bazadadır; burada isə fermer aydın cavab alır.
+      const [movcudAktiv] = await sorgu(
+        "SELECT id FROM loans WHERE istifadeci_id=$1 AND status='active' LIMIT 1",
+        [istifadeci.id],
+      );
+      if (movcudAktiv) return res.status(409).json({ error: "aktivKreditVar" });
 
       // SAHİBLİK: təklif JOIN ilə istifadəçiyə bağlanır — başqasının
       // təklifinin id-si ilə sorğu 404 alır (IDOR qapalıdır)
@@ -610,12 +755,14 @@ export default async function handler(req, res) {
          ), yeni_kredit AS (
            INSERT INTO loans
              (istifadeci_id, application_id, offer_id, principal_original, principal_outstanding,
-              annual_rate, term_months, status, matures_on, disbursed_at, next_due_on)
+              annual_rate, term_months, status, matures_on, disbursed_at, next_due_on,
+              idempotency_key)
            SELECT $2, t.application_id, t.id, t.amount, t.amount, t.annual_rate, t.term_months,
                   'active', t.matures_on, now(),
                   -- İlk faiz ödənişi verilmədən bir ay sonra: dövr sayğacı
                   -- da elə bu andan başlayır (bax: lib/kreditMuhasibat.js)
-                  (now() + interval '1 month')::date
+                  (now() + interval '1 month')::date,
+                  $3::text
            FROM teklif t
            JOIN muraciet m ON m.id = t.application_id
            RETURNING id, application_id, status, principal_original, principal_outstanding,
@@ -635,9 +782,20 @@ export default async function handler(req, res) {
            RETURNING loan_id
          )
          SELECT * FROM yeni_kredit`,
-        [teklifId, istifadeci.id],
+        [teklifId, istifadeci.id, acar],
       );
-      if (!kredit) return res.status(409).json({ error: "teklifBaglidir" });
+      if (!kredit) {
+        // İdempotent təkrar: eyni açarla kredit onsuz da yaranıbsa bu,
+        // uğurdur — cari vəziyyət qaytarılır, ikinci kredit AÇILMIR
+        if (acar) {
+          const [movcud] = await sorgu(
+            "SELECT id FROM loans WHERE istifadeci_id=$1 AND idempotency_key=$2",
+            [istifadeci.id, acar],
+          );
+          if (movcud) return res.status(200).json(await veziyyetOxu(istifadeci.id, indi));
+        }
+        return res.status(409).json({ error: "teklifBaglidir" });
+      }
 
       jurnal("offer_accepted", {
         istifadeci_id: istifadeci.id,
@@ -689,21 +847,42 @@ export default async function handler(req, res) {
 
     // ── Ödəniş: ƏVVƏL FAİZ, SONRA ƏSAS BORC ───────────────────────────
     if (emel === "odenis") {
-      const mebleg = Number(req.body?.mebleg);
-      if (!Number.isFinite(mebleg) || mebleg <= 0 || mebleg > KREDIT_SERTLERI.mumkunMaxMebleg) {
+      // `tam: true` — ERKƏN TAM BAĞLANMA. Məbləği server hesablayır, çünki
+      // bağlanma anına qədərki faiz saniyə dəqiqliyində dəyişir: klientin
+      // göndərdiyi rəqəm həmişə köhnə olardı.
+      const tamBaglanma = req.body?.tam === true;
+      const mebleg = tamBaglanma ? null : Number(req.body?.mebleg);
+      if (!tamBaglanma && (!Number.isFinite(mebleg) || mebleg <= 0 || mebleg > KREDIT_SERTLERI.mumkunMaxMebleg)) {
         return res.status(400).json({ error: "meblegYanlis" });
       }
       const acar = typeof req.body?.acar === "string" ? req.body.acar.slice(0, 64) : null;
+      if (!acar) acarsizEmel("odenis", istifadeci.id);
 
-      const [aktiv] = await sorgu(
-        "SELECT * FROM loans WHERE istifadeci_id=$1 AND status='active' ORDER BY id DESC LIMIT 1",
+      // Aktiv kredit BİRDƏNDİR (005: partial unique index). Yenə də birdən
+      // çox tapılsa bu, invariant pozuntusudur — səssizcə "ən sonuncunu"
+      // seçmək köhnə borcu görünməz edərdi.
+      const aktivler = await sorgu(
+        "SELECT * FROM loans WHERE istifadeci_id=$1 AND status='active' ORDER BY id",
         [istifadeci.id],
       );
+      if (aktivler.length > 1) {
+        console.error(`[invariant] istifadeci_id=${istifadeci.id} üçün ${aktivler.length} aktiv kredit`);
+        return res.status(500).json({ error: "kreditInvariantiPozulub" });
+      }
+      const aktiv = aktivler[0];
       if (!aktiv) return res.status(404).json({ error: "kreditYoxdur" });
 
       // Ödənişdən ƏVVƏL faiz bugünə gətirilir: fermer bu günə qədər yığılan
       // faizi ödəyir, "sonra hesablanan" gizli borc qalmır
-      const kredit = await faizleriIsle(aktiv, indi);
+      let kredit = await faizleriIsle(aktiv, indi);
+      // Tam bağlanmada yarımçıq dövrün faizi də bu ana gətirilir
+      if (tamBaglanma) kredit = await payoffFaiziniYaz(kredit, indi);
+      const odenilecek = tamBaglanma
+        ? qepik(reqem(kredit.interest_outstanding) + reqem(kredit.principal_outstanding))
+        : mebleg;
+      if (tamBaglanma && !(odenilecek > 0)) {
+        return res.status(409).json({ error: "borcYoxdur" });
+      }
 
       // BÖLGÜ VƏ TƏTBİQ KİLİDLİ CARİ BALANSDAN HESABLANIR. Ödəniş əvvəl faiz
       // borcunu, sonra əsas borcu bağlayır (bax: lib/kreditMuhasibat.js →
@@ -771,7 +950,7 @@ export default async function handler(req, res) {
              RETURNING id
            )
            SELECT * FROM yenilenen`,
-          [kredit.id, mebleg, acar],
+          [kredit.id, odenilecek, acar],
         );
       } catch (xeta) {
         // Yarış şəraitində eyni açarla iki sorğu: "evvel" qapısı köhnə

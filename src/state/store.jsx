@@ -11,7 +11,7 @@ import * as storage from "../lib/storage.js";
 import { FARM } from "../services/farm.js";
 import { CARBON, carbonPayout } from "../services/carbon.js";
 import { isValidLocation, readLegacyLocation } from "../services/location.js";
-import { duzgunSahe } from "../services/geo.js";
+import { duzgunSahe } from "../../lib/geo.js";
 
 export const PERSIST_KEY = "state";
 // Saxlanan formanı dəyişəndə bu rəqəmi artırın və MIQRASIYALAR-a keçid yazın.

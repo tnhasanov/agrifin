@@ -1,4 +1,4 @@
-import { merkez } from "./geo.js";
+import { merkez } from "../../lib/geo.js";
 
 /**
  * Hava və peyk sorğuları üçün ən dəqiq koordinat.

@@ -4,7 +4,9 @@
 // telefon dəyişsə — kontur, tarixçə snapshot-u və bal jurnalı qalır.
 //
 //   GET             → {sahe, snapshotlar: {tarixce}}
-//   PUT             → {noqteler, hektar, bitki} — sahəni yazır/yeniləyir
+//   PUT             → {noqteler, bitki} — sahəni yazır/yeniləyir. HEKTAR
+//                     KLİENTDƏN QƏBUL EDİLMİR: serverdə konturdan geodezik
+//                     hesablanır (kredit tavanı ona bağlıdır).
 //   POST snapshot   → {nov: "tarixce", mezmun} — bahalı peyk nəticəsinin nüsxəsi
 //   POST bal        → {bal, bant, etibar, amiller} — KALİBRLƏMƏ JURNALI:
 //                     hər hesablama amillərlə yazılır ki, ödəniş nəticələri
@@ -17,6 +19,8 @@ import { sorgu, dbQurulub } from "../lib/db.js";
 import { cookieToken, hesabQurulub, sessiyaOxu } from "../lib/hesab.js";
 import { MIN_NOQTE, polygonaCevir } from "../lib/geoJson.js";
 import { CEDVEL, BANTLAR } from "../lib/mehsuldarliq.js";
+import { sahəHektar, sahəniYoxla } from "../lib/geo.js";
+import { konturHash } from "../lib/konturHash.js";
 
 // Cədvəl dəyişəndə bu versiya da dəyişməlidir — jurnal sətri hansı çəkilərlə
 // yazıldığını bilməlidir. Məzmundan çıxarılır: unutmaq mümkün deyil.
@@ -42,7 +46,7 @@ export default async function handler(req, res) {
   try {
     if (req.method === "GET") {
       const [sahe] = await sorgu(
-        "SELECT id, noqteler, hektar, bitki FROM saheler WHERE istifadeci_id=$1",
+        "SELECT id, noqteler, hektar, hektar_server, bitki FROM saheler WHERE istifadeci_id=$1",
         [istifadeci.id],
       );
       if (!sahe) return res.status(200).json({ sahe: null, snapshotlar: {} });
@@ -53,7 +57,13 @@ export default async function handler(req, res) {
       );
       const snapshotlar = Object.fromEntries(snapshotSetirleri.map((s) => [s.nov, s.mezmun]));
       return res.status(200).json({
-        sahe: { noqteler: sahe.noqteler, hektar: sahe.hektar, bitki: sahe.bitki },
+        // Serverin ölçüsü varsa O qayıdır (avtoritativ); köhnə sətirlərdə
+        // hələ backfill olunmayıbsa klient dəyəri ilə davam edilir
+        sahe: {
+          noqteler: sahe.noqteler,
+          hektar: sahe.hektar_server ?? sahe.hektar,
+          bitki: sahe.bitki,
+        },
         snapshotlar,
       });
     }
@@ -64,19 +74,35 @@ export default async function handler(req, res) {
       if (!polygonaCevir(noqteler)) {
         return res.status(400).json({ error: `Sahə konturu yararsızdır (ən azı ${MIN_NOQTE} künc).` });
       }
+      // ═══ HEKTAR KLİENTDƏN QƏBUL EDİLMİR ═══════════════════════════════
+      // Gəlir modeli gəliri hektara vurur (lib/gelir.js) və kredit tavanı
+      // oradan çıxır — yəni klientin dediyi hektar limitə birbaşa təsir
+      // edərdi. Ölçü konturun ÖZÜNDƏN, geodezik düsturla hesablanır;
+      // klientin göndərdiyi rəqəm yalnız diaqnostika sütununda qalır.
+      const serverHektar = sahəHektar(noqteler);
+      const yoxlama = sahəniYoxla(noqteler);
+      if (!yoxlama.ok) {
+        return res.status(400).json({ error: "Sahə konturu yararsızdır.", sebeb: yoxlama.xetaAcari });
+      }
+      const hash = konturHash(noqteler);
       await sorgu(
-        `INSERT INTO saheler (istifadeci_id, noqteler, hektar, bitki)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO saheler (istifadeci_id, noqteler, hektar, hektar_server, kontur_hash, bitki)
+         VALUES ($1, $2, $3, $4, $5, $6)
          ON CONFLICT (istifadeci_id) DO UPDATE
-           SET noqteler=$2, hektar=$3, bitki=$4, yenilenib=now()`,
+           SET noqteler=$2, hektar=$3, hektar_server=$4, kontur_hash=$5, bitki=$6,
+               yenilenib=now()`,
         [
           istifadeci.id,
           JSON.stringify(noqteler),
           Number.isFinite(hektar) ? hektar : null,
+          serverHektar,
+          hash,
           typeof bitki === "string" ? bitki : null,
         ],
       );
-      return res.status(200).json({ yazildi: true });
+      // Cavabda SERVERİN dəyəri qayıdır — klient öz rəqəmini deyil, bunu
+      // göstərməlidir ki, ekranla qərar eyni ölçüdən danışsın
+      return res.status(200).json({ yazildi: true, hektar: serverHektar });
     }
 
     if (req.method === "POST") {
@@ -90,9 +116,14 @@ export default async function handler(req, res) {
         if (!SNAPSHOT_NOVLERI.has(nov) || mezmun == null) {
           return res.status(400).json({ error: "yanlis" });
         }
+        // KLİENT SNAPSHOT-U ANDERRAYTİNQDƏ İŞLƏDİLMİR: burada yazılan sətir
+        // menbe='klient' damğası alır və kredit qərarı onu oxumur (qərar
+        // yalnız serverin özünün gətirdiyi ölçmələrə baxır — bax:
+        // lib/saheSubutu.js). Sətir yenə saxlanılır: oflayn UI-ni sürətli
+        // açır və kalibrləmə üçün dəyərlidir.
         await sorgu(
-          `INSERT INTO peyk_snapshotlar (sahe_id, nov, mezmun) VALUES ($1, $2, $3)
-           ON CONFLICT (sahe_id, nov) DO UPDATE SET mezmun=$3, yaradilib=now()`,
+          `INSERT INTO peyk_snapshotlar (sahe_id, nov, mezmun, menbe) VALUES ($1, $2, $3, 'klient')
+           ON CONFLICT (sahe_id, nov, menbe) DO UPDATE SET mezmun=$3, yaradilib=now()`,
           [sahe.id, nov, JSON.stringify(mezmun)],
         );
         return res.status(200).json({ yazildi: true });
@@ -111,9 +142,11 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: "yanlis" });
         }
         // Jurnal yalnız artır — köhnə sətirlərə toxunulmur (audit prinsipi)
+        // menbe='klient': bu sətir KALİBRLƏMƏ jurnalıdır, qərar mənbəyi deyil.
+        // Qərarın balı serverdə hesablanır və menbe='server' ilə yazılır.
         await sorgu(
-          `INSERT INTO bal_jurnali (sahe_id, bal, bant, etibar, amiller, cedvel_versiyasi)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
+          `INSERT INTO bal_jurnali (sahe_id, bal, bant, etibar, amiller, cedvel_versiyasi, menbe)
+           VALUES ($1, $2, $3, $4, $5, $6, 'klient')`,
           [sahe.id, bal, bant, etibar, JSON.stringify(amiller), CEDVEL_VERSIYASI],
         );
         return res.status(200).json({ yazildi: true });
