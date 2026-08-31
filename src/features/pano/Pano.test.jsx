@@ -323,6 +323,52 @@ describe("yüklənmə və xəta halları", () => {
     expect(screen.queryByText("Əlavə vəsait lazımdır?")).not.toBeInTheDocument();
   });
 
+  // Server 500 verəndə "internetini yoxla" demək fermeri yanlış yerə göndərir
+  it("server xətası ilə şəbəkə kəsilməsi eyni cümlə ilə izah olunmur", async () => {
+    const user = userEvent.setup();
+    seedSahe();
+    stubStatus(500);
+    renderApp(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Maliyyə" }));
+    await waitFor(() => expect(screen.getByText(/Server cavab vermədi/)).toBeInTheDocument());
+    expect(screen.queryByText(/Bağlantı kəsildi/)).not.toBeInTheDocument();
+  });
+
+  it("şəbəkə sorğusu alınmasa bağlantı mətni qalır", async () => {
+    const user = userEvent.setup();
+    seedSahe();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url) =>
+        String(url).includes("/api/kredit")
+          ? Promise.reject(new TypeError("Failed to fetch"))
+          : Promise.resolve({ ok: true, json: () => Promise.resolve(WEATHER_FIXTURE) }),
+      ),
+    );
+    renderApp(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Maliyyə" }));
+    await waitFor(() => expect(screen.getByText(/Bağlantı kəsildi/)).toBeInTheDocument());
+  });
+
+  // 404 = marşrut yoxdur (lokal `npm run dev`, ya da funksiya yayımlanmayıb).
+  // Bu, sınıq sistem deyil — qırmızı xəta kartı yanlış xəbərdir.
+  it("kredit marşrutu yoxdursa (404) xəta yox, 'qurulmayıb' halı işləyir", async () => {
+    const user = userEvent.setup();
+    seedSahe();
+    stubStatus(404);
+    renderApp(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Maliyyə" }));
+    // Sahə və bitki var, server "modul yoxdur" deyir → zəncir sonuncu
+    // pilləni göstərir, qırmızı xəta kartı yox
+    await waitFor(() =>
+      expect(screen.getByText("Əlavə vəsait lazımdır?")).toBeInTheDocument(),
+    );
+    expect(screen.queryByText("Kredit məlumatı gətirilmədi")).not.toBeInTheDocument();
+  });
+
   // Server-avtoritativ kredit rəqəmlərinin yanında HEÇ BİR "nümunə" qeydi
   // olmamalıdır — köhnə pulqabı bandı da daxil (PDF 18: legacy banner silinir)
   it("Maliyyə ekranında nümunə/demo qeydi yoxdur", async () => {

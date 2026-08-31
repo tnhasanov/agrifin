@@ -103,8 +103,11 @@ export function MoneyScreen({
               {t("maliyye.xetaBasliq")}
             </p>
           </div>
+          {/* Səbəb düzgün adlandırılır: server 500 qaytarıbsa "bağlantı
+              kəsildi" demək fermeri öz internetini yoxlamağa göndərir,
+              halbuki problem bizdədir (bax: useKreditVeziyyeti → xetaSebebi) */}
           <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
-            {t("maliyye.xetaIzah")}
+            {t(kreditHali?.xetaNovu === "server" ? "maliyye.xetaIzahServer" : "maliyye.xetaIzah")}
           </p>
           <button
             type="button"
