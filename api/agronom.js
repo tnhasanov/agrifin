@@ -64,7 +64,15 @@ Cavabın strukturu:
 3) İndi nə etmək olar (aqrotexnika, suvarma, müşahidə — preparat YOX)
 4) Lazım olduqda: "Dəqiq preparat üçün dilerlə/aqronomla təsdiqlə"
 
-Başlıq, markdown ulduzu və emoji istifadə etmə. Sadə mətn və qısa abzaslar.`;
+VURĞU — cavab telefonda kiçik şriftlə oxunur, gözün tutacağı yer lazımdır
+- Ən vacib 1–3 İFADƏNİ ikiqat ulduza al: **sarı pas**, **bu həftə**,
+  **suvarmanı saxla**. Tətbiq bunu qalın yazıya çevirir.
+- Vurğu problemin ADI, VAXT və ya GÖRÜLƏCƏK İŞ olsun. Bütöv cümləni,
+  abzası və ya hər ikinci sözü vurğulama — hər şey vurğulananda heç nə
+  vurğulanmır.
+- Addımları ayrı sətirlərə böl, sətrin əvvəlinə "- " qoy (və ya "1) ").
+- Başqa markdown YOXDUR: başlıq, cədvəl, link, kod bloku, tək ulduz və
+  emoji işlətmə — onlar mətnin içində işarə kimi görünəcək.`;
 
 // Şəkil həddi: müştəri onsuz da 1024 piksel/JPEG-ə kiçildir, bu isə
 // serverin öz qoruyucusudur — müştəriyə güvənmirik.

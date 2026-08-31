@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "../../components/Icon.jsx";
 import { Aqronom } from "../../components/Aqronom.jsx";
+import { CavabMetni } from "./CavabMetni.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { useStore } from "../../state/store.jsx";
@@ -298,16 +299,26 @@ export function AgronomChat({
               className={`mb-3 flex ${isUser ? "justify-end" : "justify-start"}`}
             >
               <div
-                className="rounded-2xl px-3 py-2 text-xs leading-relaxed"
+                className="rounded-2xl px-3 py-2 leading-relaxed"
                 style={{
                   maxWidth: "85%",
-                  whiteSpace: "pre-wrap",
+                  fontSize: 13,
+                  // Fermerin öz yazısı hərfi qalır — sətir sonları da onundur.
+                  // Aqronomun cavabı bloklara bölünür, ona görə pre-wrap
+                  // orada ikiqat boşluq yaradardı.
+                  whiteSpace: isUser || message.errorKey ? "pre-wrap" : undefined,
                   backgroundColor: isUser ? C.pine : C.card,
                   color: isUser ? "#fff" : message.errorKey ? C.danger : C.ink,
                   border: isUser ? "none" : `1px solid ${C.line}`,
                 }}
               >
-                {message.errorKey ? t(message.errorKey) : message.content}
+                {message.errorKey ? (
+                  t(message.errorKey)
+                ) : isUser ? (
+                  message.content
+                ) : (
+                  <CavabMetni metn={message.content} />
+                )}
               </div>
             </div>
           );
@@ -319,19 +330,26 @@ export function AgronomChat({
             {axanMetn ? (
               <div
                 aria-live="polite"
-                className="rounded-2xl px-3 py-2 text-xs leading-relaxed"
+                className="rounded-2xl px-3 py-2 leading-relaxed"
                 style={{
                   maxWidth: "85%",
-                  whiteSpace: "pre-wrap",
+                  fontSize: 13,
                   backgroundColor: C.card,
                   color: C.ink,
                   border: `1px solid ${C.line}`,
                 }}
               >
-                {axanMetn}
-                <span className="ml-0.5 animate-pulse" style={{ color: C.muted }}>
-                  ▍
-                </span>
+                {/* Axın da eyni formatlayıcıdan keçir: bağlanmamış ulduz cütü
+                    vurğu kimi göstərilir, ona görə mətn gələrkən ekranda
+                    çılpaq "**" görünmür (bax: lib/cavabMetni.js) */}
+                <CavabMetni
+                  metn={axanMetn}
+                  kursor={
+                    <span className="ml-0.5 animate-pulse" style={{ color: C.muted }}>
+                      ▍
+                    </span>
+                  }
+                />
               </div>
             ) : (
               <div
