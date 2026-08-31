@@ -78,7 +78,12 @@ describe("AgriFin tətbiqi", () => {
   it("dərin link birbaşa müvafiq ekranı açır — bazar/karbon linkləri qırılmır", () => {
     window.history.pushState({}, "", "/carbon");
     renderApp(<App />);
-    expect(screen.getByText("BU MÖVSÜM KARBON")).toBeInTheDocument();
+    // Ekran açılır (link qırılmayıb), amma SAHƏSİZ istifadəçiyə ölçülmüş
+    // iddia göstərilmir: "MRV təsdiqli" və tCO₂e rəqəmi arxasında heç nə yoxdur
+    expect(screen.getByText("Karbon üçün təsdiqlənmiş sahə lazımdır")).toBeInTheDocument();
+    expect(screen.queryByText("BU MÖVSÜM KARBON")).not.toBeInTheDocument();
+    expect(screen.queryByText("MRV təsdiqli")).not.toBeInTheDocument();
+    expect(screen.queryByText(/tCO/)).not.toBeInTheDocument();
   });
 
   it("bazar dərin linki naviqasiyasız da işləyir", () => {
@@ -90,19 +95,103 @@ describe("AgriFin tətbiqi", () => {
   // ── Dürüst kredit axını ────────────────────────────────────────────
   // Köhnə axın "Qəbul et" ilə pulqabına DƏRHAL pul yazırdı — qərar
   // mühərriki olmayan yerdə bu, yalan idi. Yeni axın müraciətlə bitir.
-  it("sahə çəkilməmiş kredit paneli imkanın niyə olmadığını deyir", async () => {
+  // v2 DALAN QADAĞASI: Maliyyə ekranı kredit panelini AÇIB içində "əvvəl
+  // sahə çək" deməməlidir. Ekranın özü növbəti əskik şərti göstərir.
+  it("sahə çəkilməyibsə Maliyyə dalan açmır — birbaşa sahə çəkməyə aparır", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
 
-    // Sahəsiz ana səhifədə kredit CTA-sı YOXDUR (hal A) — panel Maliyyədən açılır
+    // Sahəsiz ana səhifədə kredit CTA-sı YOXDUR (hal A)
     expect(screen.queryByRole("button", { name: "Məhsul dövrü krediti al" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Maliyyə" }));
-    await user.click(screen.getByRole("button", { name: "Əlavə vəsait lazımdır?" }));
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText("İmkan hələ hesablana bilmir")).toBeInTheDocument();
-    expect(screen.getByText(/Sahənizi xəritədə çəkin/)).toBeInTheDocument();
-    // Slayder yoxdur — uydurma tavanla məbləğ seçdirilmir
+
+    expect(screen.getByText("Maliyyələşmə")).toBeInTheDocument();
+    expect(
+      screen.getByText("Kredit imkanını hesablamaq üçün sahənizi əlavə edin."),
+    ).toBeInTheDocument();
+    const cta = screen.getByRole("button", { name: /Kredit üçün növbəti addım|Əlavə vəsait lazımdır/ });
+    expect(cta.textContent).toContain("Sahə əlavə et");
+    expect(cta.textContent).not.toContain("Yeni müraciət");
+
+    await user.click(cta);
+    // Kredit paneli DEYİL, sahə çəkmə açılır
+    expect(await screen.findByText("Sahənizi çəkin")).toBeInTheDocument();
     expect(screen.queryByRole("slider")).not.toBeInTheDocument();
+    expect(screen.queryByText("İmkan hələ hesablana bilmir")).not.toBeInTheDocument();
+  });
+
+  it("bitki seçilməyibsə növbəti addım bitki seçimidir", async () => {
+    const user = userEvent.setup();
+    seedState({
+      location: DEFAULT_LOCATION,
+      onboarded: true,
+      sahe: {
+        hektar: 10,
+        noqteler: [
+          [40.4, 47.1],
+          [40.4023, 47.1],
+          [40.4023, 47.1029],
+          [40.4, 47.1029],
+        ],
+      },
+      chat: { messages: [], crop: null, referral: false },
+    });
+    renderApp(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Maliyyə" }));
+    expect(
+      await screen.findByText("Kredit imkanını hesablamaq üçün bitkinizi seçin."),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Kredit üçün növbəti addım|Əlavə vəsait lazımdır/ }));
+    // Bitki seçici açılır — kredit paneli yox
+    expect(await screen.findByRole("dialog", { name: "Nə əkirsiniz?" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Pomidor" }));
+
+    // Seçimdən sonra növbəti addım təklif yoxlamasıdır
+    await waitFor(() =>
+      expect(
+        screen.getByText("Məlumatlarınız hazırdır. Sizə uyğun təklifi yoxlayaq."),
+      ).toBeInTheDocument(),
+    );
+  });
+
+  it("server 401 deyəndə növbəti addım hesab yaratmaqdır", async () => {
+    const user = userEvent.setup();
+    seedState({
+      location: DEFAULT_LOCATION,
+      onboarded: true,
+      sahe: {
+        hektar: 10,
+        noqteler: [
+          [40.4, 47.1],
+          [40.4023, 47.1],
+          [40.4023, 47.1029],
+          [40.4, 47.1029],
+        ],
+      },
+      chat: { messages: [], crop: "pomidor", referral: false },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((url) =>
+        String(url).includes("/api/kredit")
+          ? Promise.resolve({
+              ok: false,
+              status: 401,
+              json: () => Promise.resolve({ error: "girisLazim" }),
+            })
+          : Promise.resolve({ ok: true, json: () => Promise.resolve(WEATHER_FIXTURE) }),
+      ),
+    );
+    renderApp(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Maliyyə" }));
+    const cta = await screen.findByRole("button", { name: /Kredit üçün növbəti addım|Əlavə vəsait lazımdır/ });
+    expect(cta.textContent).toContain("Hesab yarat");
+
+    await user.click(cta);
+    expect(await screen.findByRole("dialog", { name: "Hesab" })).toBeInTheDocument();
   });
 
   it("kredit axını pul köçürmür — müraciətlə bitir", async () => {
@@ -134,7 +223,7 @@ describe("AgriFin tətbiqi", () => {
     renderApp(<App />);
 
     await user.click(screen.getByRole("button", { name: "Maliyyə" }));
-    await user.click(await screen.findByRole("button", { name: "Əlavə vəsait lazımdır?" }));
+    await user.click(await screen.findByRole("button", { name: /Kredit üçün növbəti addım|Əlavə vəsait lazımdır/ }));
 
     // Tavan izah olunur (Nubank "Me explica") və slayder tavana bağlıdır
     const slayder = await screen.findByRole("slider");
@@ -255,7 +344,7 @@ describe("AgriFin tətbiqi", () => {
     renderApp(<App />);
 
     await user.click(screen.getByRole("button", { name: "Maliyyə" }));
-    await user.click(await screen.findByRole("button", { name: "Əlavə vəsait lazımdır?" }));
+    await user.click(await screen.findByRole("button", { name: /Kredit üçün növbəti addım|Əlavə vəsait lazımdır/ }));
     await screen.findByRole("slider");
     await user.click(screen.getByRole("button", { name: "Şərtlərə bax" }));
     await user.click(screen.getByRole("button", { name: /üçün müraciət göndər/ }));
@@ -339,7 +428,7 @@ describe("AgriFin tətbiqi", () => {
     renderApp(<App />);
 
     await user.click(screen.getByRole("button", { name: "Maliyyə" }));
-    await user.click(await screen.findByRole("button", { name: "Əlavə vəsait lazımdır?" }));
+    await user.click(await screen.findByRole("button", { name: /Kredit üçün növbəti addım|Əlavə vəsait lazımdır/ }));
     await user.click(screen.getByRole("button", { name: "Şərtlərə bax" }));
 
     await waitFor(() =>
@@ -354,22 +443,43 @@ describe("AgriFin tətbiqi", () => {
     renderApp(<App />);
 
     await user.click(screen.getByRole("button", { name: "Maliyyə" }));
-    await user.click(screen.getByRole("button", { name: "Əlavə vəsait lazımdır?" }));
+    await user.click(screen.getByRole("button", { name: /Kredit üçün növbəti addım|Əlavə vəsait lazımdır/ }));
     await user.keyboard("{Escape}");
 
     // Sheet bağlanma animasiyası bitənədək DOM-da qalır (bax: Sheet.jsx)
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
-  it("karbon kreditlərini satır və pulqabına 360 ₼ əlavə edir", async () => {
-    const user = userEvent.setup();
+  // GİZLİ DEMO PULQABI: karbon ekranındakı "sat" düyməsi heç bir ekranda
+  // göstərilməyən balansı artırırdı. Düymə də, gizli pul hərəkəti də getdi.
+  it("karbon ekranında gizli pulqabı dəyişən satış düyməsi yoxdur", async () => {
+    seedState({
+      location: DEFAULT_LOCATION,
+      onboarded: true,
+      sahe: {
+        hektar: 10,
+        noqteler: [
+          [40.4, 47.1],
+          [40.4023, 47.1],
+          [40.4023, 47.1029],
+          [40.4, 47.1029],
+        ],
+      },
+    });
     window.history.pushState({}, "", "/carbon");
     renderApp(<App />);
 
-    await user.click(screen.getByRole("button", { name: "360 ₼-a sat" }));
+    expect(screen.queryByRole("button", { name: /sat$/ })).not.toBeInTheDocument();
+    expect(screen.getByText("Satış hələ açıq deyil")).toBeInTheDocument();
+    expect(screen.queryByText(/pulqabınıza əlavə olundu/)).not.toBeInTheDocument();
+  });
 
-    expect(screen.getByText("Satıldı")).toBeInTheDocument();
-    expect(screen.getByText("360 ₼ pulqabınıza əlavə olundu")).toBeInTheDocument();
+  it("bazarda işləməyən forvard düyməsi yoxdur, qiymətlər nümunə kimi etiketlənir", () => {
+    window.history.pushState({}, "", "/market");
+    renderApp(<App />);
+
+    expect(screen.queryByRole("button", { name: "Forvard müqaviləsi yarat" })).not.toBeInTheDocument();
+    expect(screen.getByText(/Qiymətlər nümunədir/)).toBeInTheDocument();
   });
 
   it("dil düyməsi interfeysi ingiliscəyə keçirir", async () => {
@@ -383,15 +493,26 @@ describe("AgriFin tətbiqi", () => {
     expect(screen.getByText("Add your first field")).toBeInTheDocument();
   });
 
-  it("vəziyyəti localStorage-da saxlayır", async () => {
-    const user = userEvent.setup();
-    window.history.pushState({}, "", "/carbon");
+  it("vəziyyəti localStorage-da saxlayır", () => {
     const { unmount } = renderApp(<App />);
-
-    await user.click(screen.getByRole("button", { name: "360 ₼-a sat" }));
+    expect(screen.getAllByText("İlk sahənizi əlavə edin")).toHaveLength(1);
     unmount();
 
+    // Sahə saxlanmış vəziyyətdən gəlir — yenidən montaj onu itirmir
+    seedState({
+      location: DEFAULT_LOCATION,
+      onboarded: true,
+      sahe: {
+        hektar: 10,
+        noqteler: [
+          [40.4, 47.1],
+          [40.4023, 47.1],
+          [40.4023, 47.1029],
+          [40.4, 47.1029],
+        ],
+      },
+    });
     renderApp(<App />);
-    expect(screen.getByText("Satıldı")).toBeInTheDocument();
+    expect(screen.queryByText("İlk sahənizi əlavə edin")).not.toBeInTheDocument();
   });
 });

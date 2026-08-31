@@ -8,6 +8,7 @@ import { useStore } from "../state/store.jsx";
 import { useRouter } from "../lib/router.jsx";
 import { pathFor } from "../routes.js";
 import { MovsumPulu } from "../features/money/MovsumPulu.jsx";
+import { novbetiSert } from "../features/money/sertler.js";
 import { ayliqFaiz } from "../../lib/kreditOdenis.js";
 import {
   AktivKreditXulasesi,
@@ -21,13 +22,24 @@ import {
  * DEMO PULQABI, NÜMUNƏ ƏMƏLİYYATLAR, SIĞORTA/RESURS KARTLARI ÇIXARILDI:
  * onlar serverə bağlı deyildi və real kredit qalığının yanında uydurma
  * 7.280 ₼ balans göstərirdilər — təsirli görünən saxta məlumat əvəzinə
- * yoxlanılmış davranış (bax: store.jsx-dəki DEMO qeydi; wallet/txns store-da
- * qalır, sadəcə bu ekran onları artıq göstərmir).
+ * yoxlanılmış davranış (bax: store.jsx-dəki DEMO qeydi).
+ *
+ * DALAN YOXDUR: yeni müraciət düyməsi hər halda kredit panelini açmır —
+ * ekranın özü növbəti əskik şərti həll edir (sahə → bitki → hesab → təklif,
+ * bax: features/money/sertler.js) və düymə həmin addımı adlandırır.
  *
  * Bütün maliyyə dəyərləri SERVERDƏNDİR (kreditHali → api/kredit.js).
  * "Sonda ödəniləcək ümumi məbləğ" heç yerdə yoxdur.
  */
-export function MoneyScreen({ onOpenLoan, indeksHali = null, kreditHali = null, onOpenChat }) {
+export function MoneyScreen({
+  onOpenLoan,
+  indeksHali = null,
+  kreditHali = null,
+  onOpenChat,
+  onDrawField,
+  onOpenBitki,
+  onOpenHesab,
+}) {
   const { t } = useI18n();
   const { state } = useStore();
   const { navigate } = useRouter();
@@ -50,7 +62,20 @@ export function MoneyScreen({ onOpenLoan, indeksHali = null, kreditHali = null, 
   // Aktiv borcalana yeni kredit sırınmır (aqressiv cross-sell qadağandır).
   // Vəziyyət bilinmirsə də sırınmır: xəta anında borcalana "əlavə vəsait"
   // təklif etmək onun borcunu görməzdən gəlmək olardı.
-  const yeniMuracietOlar = cavabGeldi && !aktiv && !baxilir && !teklifVar;
+  //
+  // "girisYox" (401) da bitmiş cavabdır: serverin dediyi budur ki, əvvəl
+  // hesaba girmək lazımdır — şərt zənciri elə bunu göstərəcək.
+  const sertCavabi = cavabGeldi || hal === "girisYox";
+  const yeniMuracietOlar = sertCavabi && !aktiv && !baxilir && !teklifVar;
+
+  // Növbəti əskik addım — düymənin adı da, hərəkəti də bundan çıxır
+  const sert = novbetiSert({ sahe: state.sahe, bitki: state.chat.crop, serverHal: hal });
+  const sertIcra = () => {
+    if (sert.hereket === "saheCek") onDrawField?.();
+    else if (sert.hereket === "bitkiSec") onOpenBitki?.();
+    else if (sert.hereket === "hesab") onOpenHesab?.();
+    else onOpenLoan?.();
+  };
 
   return (
     <div className="px-4 pb-4">
@@ -151,23 +176,28 @@ export function MoneyScreen({ onOpenLoan, indeksHali = null, kreditHali = null, 
       {/* Mövsüm pulu — fermerin "maaş dövrü" (bax: features/money/MovsumPulu) */}
       <MovsumPulu indeksHali={indeksHali} kreditHali={kreditHali} />
 
-      {/* Yeni müraciət — yalnız açıq iş yoxdursa */}
+      {/* Yeni müraciət — yalnız açıq iş yoxdursa. Kart NÖVBƏTİ ƏSKİK ADDIMI
+          göstərir: sahə yoxdursa "Sahə əlavə et", bitki yoxdursa "Bitkini
+          seç", giriş yoxdursa "Hesab yarat", hamısı hazırdırsa "Təklifi
+          yoxla". Panelin içində "əvvəl sahə çək" demək dalandır. */}
       {yeniMuracietOlar && (
         <Card
           style={{ marginTop: 8, backgroundColor: C.fieldSoft, border: "none" }}
-          onClick={onOpenLoan}
-          ariaLabel={t("maliyye.elaveVesait")}
+          onClick={sertIcra}
+          // Kart özü düymədir, ona görə aria-label MƏTNİ ƏVƏZ EDİR: başlıq,
+          // növbəti addımın izahı və CTA — üçü də oxunmalıdır
+          ariaLabel={`${t(sert.kartBasliqKey)} — ${t(sert.basliqKey)} ${t(sert.ctaKey)}`}
         >
           <div className="flex items-center gap-3">
             <div className="rounded-full bg-white p-2">
-              <Icon name="Sprout" size={16} color={C.field} />
+              <Icon name={sert.ikon} size={16} color={C.field} />
             </div>
             <div className="flex-1">
               <p className="text-sm font-bold" style={{ color: C.ink }}>
-                {t("maliyye.elaveVesait")}
+                {t(sert.kartBasliqKey)}
               </p>
-              <p className="text-xs" style={{ color: C.muted }}>
-                {t("maliyye.elaveVesaitIzah")}
+              <p className="text-xs leading-relaxed" style={{ color: C.muted }}>
+                {t(sert.basliqKey)}
               </p>
             </div>
           </div>
@@ -176,44 +206,10 @@ export function MoneyScreen({ onOpenLoan, indeksHali = null, kreditHali = null, 
             className="mt-3 flex items-center justify-center gap-1 rounded-xl py-3 text-sm font-bold"
             style={{ backgroundColor: C.pine, color: "#fff" }}
           >
-            {t("maliyye.yeniMuraciet")}
+            {t(sert.ctaKey)}
             <Icon name="ChevronRight" size={14} color="#fff" />
           </p>
         </Card>
-      )}
-
-      {/* Rədd olunmuş son müraciətin qeydi LoanSheet-dədir; burada səssizlik
-          qərar deyil — sadəcə kart yoxdur. Server xətası/giriş halları da
-          LoanSheet-də tam görünür (bax: features/loan/LoanSheet.jsx). */}
-      {kreditHali?.hal === "girisYox" && (
-        <Card style={{ marginTop: 8 }} onClick={onOpenLoan} ariaLabel={t("kredit.girisBasliq")}>
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl p-2" style={{ backgroundColor: C.mist }}>
-              <Icon name="ShieldCheck" size={16} color={C.pine} />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold" style={{ color: C.ink }}>
-                {t("kredit.girisBasliq")}
-              </p>
-              <p className="text-xs" style={{ color: C.muted }}>
-                {t("kredit.girisIzah")}
-              </p>
-            </div>
-            <Icon name="ChevronRight" size={16} color={C.muted} />
-          </div>
-        </Card>
-      )}
-
-      {/* Demo pul çıxarıldığının işarəsi: wallet dəyəri artıq göstərilmir,
-          amma tamamilə səssiz silmək çaşdırıcı olardı — köhnə istifadəçi
-          balansını axtaranda bu qeydi görür.
-          QEYD DƏQİQ OLMALIDIR: köhnə "bütün məlumatlar nümunədir" mətni
-          serverin verdiyi əsas borcun və gecikmənin altında YALAN idi —
-          onlar real qeydlərdir. Qeyd yalnız SİLİNMİŞ pulqabına aiddir. */}
-      {state.wallet !== 0 && (
-        <p className="mt-3 px-1 text-center text-xs" style={{ color: C.muted }}>
-          {t("maliyye.demoQeyd")}
-        </p>
       )}
     </div>
   );
