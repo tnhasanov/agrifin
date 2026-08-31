@@ -213,7 +213,8 @@ describe("saxlanan sahənin yüklənməsi", () => {
       }),
     );
     renderApp(<App />);
-    expect(screen.getByText(/Gəncə/)).toBeInTheDocument();
+    // Rayon adı bir neçə yerdə görünür (yer seçicisi + rayon üzrə hava başlığı)
+    expect(screen.getAllByText(/Gəncə/).length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "Sahə əlavə et" })).toBeInTheDocument();
   });
 

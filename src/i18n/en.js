@@ -6,7 +6,6 @@ export default {
 
   "common.today": "Today",
   "common.ready": "Done",
-  "common.sold": "Sold",
   "common.close": "Close",
   "common.verify": "Verify",
   "common.days7": "7 days",
@@ -120,8 +119,6 @@ export default {
   "txn.fuel.meta": "Diesel · card ••{card}",
   "txn.insurance.name": "Drought insurance",
   "txn.insurance.meta": "Monthly premium",
-  "txn.carbon.name": "Carbon credits",
-  "txn.carbon.meta": "{count} credits sold · verified",
   "txn.loan.name": "Crop loan",
   "txn.loan.meta": "Transferred instantly",
 
@@ -152,7 +149,6 @@ export default {
   "carbon.earn": "Earn from carbon",
   "carbon.creditsReady": "{count} verified credits ready",
   "carbon.creditsPrice": "Market price {price} / credit · {total} total",
-  "carbon.sellCta": "Sell for {total}",
   "carbon.scoreNote":
     "Selling credits also improves your FarmScore — sustainable farms repay credit more reliably.",
   "carbon.practices": "Practices",
@@ -181,7 +177,7 @@ export default {
   "kredit.imkanYoxMeslehet":
     "Alternatives: in-kind seed and fertiliser credit, or subsidy-backed products. Talk to the agronomist.",
   "kredit.faizSetri": "First month's interest: ~{faiz}",
-  "kredit.faizAzalir": "It falls in later months as the principal shrinks",
+  "kredit.faizAzalir": "It falls in later months as the principal shrinks.",
   "kredit.sonTarixSetri": "Final due date: {tarix} (harvest)",
   "kredit.niyeBuQeder": "Why at most {max}?",
   "kredit.izah.xalis": "Net farm income, conservative scenario",
@@ -356,7 +352,6 @@ export default {
   "maliyye.xetaBasliq": "Could not load loan data",
   "maliyye.xetaIzah": "The connection dropped. If you have an active loan, this screen is not showing it — please try again.",
   "maliyye.yenidenCehd": "Try again",
-  "maliyye.demoQeyd": "The sample wallet balance was removed from this screen. Loan figures come from the server.",
 
   "teklifKart.basliq": "An offer for you",
   "teklifKart.altyazi": "Based on your farm data",
@@ -364,7 +359,6 @@ export default {
   "teklifKart.muddet": "Term",
   "teklifKart.ayDeyeri": "{ay} months",
   "teklifKart.faiz": "Annual interest",
-  "teklifKart.ayliqFaiz": "Monthly interest payment",
   "teklifKart.niye": "Why this amount?",
   "teklifKart.sebeb1": "Matched to your seasonal income",
   "teklifKart.sebeb2": "A payment reserve is taken into account",
@@ -375,8 +369,6 @@ export default {
 
   "maliyye.aktiv": "Active loan",
   "maliyye.esasQaliq": "Principal outstanding",
-  "maliyye.buAyFaiz": "This month's interest",
-  "maliyye.sonTarix": "Due date",
   "maliyye.odenilibFaiz": "{faiz}% paid",
   "maliyye.vaxtinda": "Payments are on time",
   "maliyye.odenisEt": "Make a payment",
@@ -386,7 +378,6 @@ export default {
   "maliyye.faizOdenisi": "Interest payment",
   "maliyye.esasOdenisi": "Principal payment",
   "maliyye.elaveVesait": "Need extra funds?",
-  "maliyye.elaveVesaitIzah": "Let's check an offer matched to your crop and field data.",
   "maliyye.yeniMuraciet": "New application",
 
   "gecikmeKart.basliq": "Payment overdue",
@@ -493,7 +484,6 @@ export default {
   "loan.successLine": "{amount} is in your wallet",
   "loan.successNote": "Repay {repay} on {date}. We'll remind you when the grain sells.",
 
-  "toast.creditsSold": "{amount} added to your wallet",
   "toast.locationSelected": "Forecast loaded for {name}",
 
   "date.aug15.short": "15 Aug",
@@ -513,7 +503,7 @@ export default {
   "home.fieldDrawn": "My field: {hektar} ha — edit",
   "toast.fieldSaved": "Field saved: {hektar} ha",
   "field.title": "Draw your field",
-  "field.subtitle": "Tap the corners of your field on the satellite image",
+  "field.subtitle": "Tap the corners of the field one after another.",
   "field.close": "Close field drawing",
   "field.loading": "Loading map…",
   "field.tapHint": "Tap the corners ({count}/3+)",
@@ -533,7 +523,7 @@ export default {
   "ndvi.cached": "Saved reading · {gun} days ago (no network)",
   "ndvi.noReading": "No clear reading this period — it was cloudy",
   "ndvi.notConfigured": "Satellite integration is not set up yet",
-  "ndvi.error": "Could not get satellite data",
+  "ndvi.error": "The measurement failed. Please check again shortly.",
   "ndvi.mapTitle": "Satellite map of your field",
   "ndvi.mapLoading": "Preparing map…",
   "ndvi.layer.bitki": "Vegetation",
@@ -810,11 +800,11 @@ export default {
 
   "hesab.basliq": "Account",
   "hesab.altyazi": "Your field and measurements are tied to your phone number — they survive a device change.",
-  "hesab.cta": "Create an account — keep your field safe",
+  "hesab.cta": "Keep your field in your account",
   "hesab.telefonEtiket": "Phone number",
-  "hesab.kodGonder": "Send code",
+  "hesab.kodGonder": "Send the code",
   "hesab.kodGonderildi": "A 6-digit code was sent to {telefon}.",
-  "hesab.kodEtiket": "SMS code",
+  "hesab.kodEtiket": "Verification code",
   "hesab.tesdiqle": "Confirm",
   "hesab.geri": "Different number",
   "hesab.gonderilir": "Sending…",
@@ -830,4 +820,51 @@ export default {
   "hesab.xeta.xeta": "Something went wrong — please try again.",
   "toast.hesabGirdi": "Signed in — your field is being saved to your account",
   "toast.hesabCixdi": "Signed out",
+  // ── v2: first-field explainer, signal scope, finance prerequisites ──
+  "nece.altYazi": "Drawing a field takes three steps — about 2 minutes.",
+  "nece.addim1": "Tap the corners",
+  "nece.addim1Metn": "Tap the corners of your field one after another on the satellite image. Each tap adds a corner.",
+  "nece.addim2": "At least three corners",
+  "nece.addim2Metn": "The outline needs at least 3 corners to close. Remove a wrong point with “Undo”.",
+  "nece.addim3": "Save the field",
+  "nece.addim3Metn": "After “Save field” we start reading the satellite archive — the first measurement arrives within minutes.",
+
+  "bitki.altYazi": "Recommendations, the income model and credit capacity are all calculated per crop.",
+
+  "maliyye.sert.sahe": "Add your field so we can calculate your credit capacity.",
+  "maliyye.sert.saheCta": "Add field",
+  "maliyye.sert.bitki": "Choose your crop so we can calculate your credit capacity.",
+  "maliyye.sert.bitkiCta": "Choose crop",
+  "maliyye.sert.hesab": "The application is tied to your account — create one with your phone number.",
+  "maliyye.sert.hesabCta": "Create account",
+  "maliyye.sert.hazir": "Your data is ready. Let's check the offer that fits you.",
+  "maliyye.sert.hazirCta": "Check the offer",
+
+  "siqnal.rayonTitle": "Weather alerts for {rayon}",
+  "siqnal.rayonSubtitle": "No field has been drawn, so alerts come only from the district-centre forecast — there is no satellite measurement.",
+  "siqnal.rayonBosBasliq": "Nothing needs attention in {rayon}",
+  "siqnal.rayonBosMetn": "The district forecast is normal. Draw your field and satellite measurements will show up here too.",
+  "siqnal.panelRayonAltYazi": "{count} open weather alerts for {rayon}",
+  "siqnal.panelRayonBosAltYazi": "No open weather alerts for {rayon}",
+  "siqnal.menbe.havaRayon": "Weather forecast · {rayon} district centre",
+  "siqnal.menbe.rutubetRayon": "{rayon} district centre · humidity and temperature",
+  "weather.titleRayon": "Weather in {rayon}",
+
+  "sahe.melumatKeyfiyyeti": "Data quality",
+  "ndvi.xeritedeBax": "View on map",
+
+  "hesab.saheIzah": "Your field data stays in your account even if your phone changes.",
+  "hesab.tesdiqlendi": "Account verified",
+
+  "maliyye.buDovrFaiz": "Interest for this period",
+  "maliyye.novbetiOdenis": "Next payment",
+  "teklifKart.ilkAyFaiz": "Estimated first-month interest",
+
+  "carbon.saheLazim": "Carbon needs a verified field",
+  "carbon.saheLazimIzah": "Captured carbon is derived from the field's measurement history. Without your field there is no figure to show.",
+  "carbon.satisHazirDeyil": "Selling is not open yet",
+  "market.forvardHazirDeyil": "The forward contract flow is not built yet — it opens once buyers, terms and execution tracking are ready.",
+  "market.numuneQeyd": "These prices are samples — a live market source is not connected yet.",
+  "chat.openDescRayon": "The forecast for {rayon} is taken into account",
+  "maliyye.sert.kartBasliq": "Next step towards credit",
 };

@@ -65,8 +65,10 @@ describe("başlıqdaki bildiriş zəngi", () => {
 
     await user.click(zeng());
 
+    // Sahə çəkilməyib: mətn rayon üzrədir, "sahənizdə" iddiası yoxdur
     expect(
-      await screen.findByText("Sahənizdə diqqət tələb edən heç nə yoxdur"),
+      await screen.findByText(/üzrə diqqət tələb edən hava yoxdur$/),
     ).toBeInTheDocument();
+    expect(screen.queryByText(/Sahənizdə/)).not.toBeInTheDocument();
   });
 });

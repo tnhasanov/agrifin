@@ -6,7 +6,6 @@ export default {
 
   "common.today": "Bu gün",
   "common.ready": "Hazırdır",
-  "common.sold": "Satıldı",
   "common.close": "Bağla",
   "common.verify": "Təsdiqlə",
   "common.days7": "7 gün",
@@ -119,8 +118,6 @@ export default {
   "txn.fuel.meta": "Dizel · kart ••{card}",
   "txn.insurance.name": "Quraqlıq sığortası",
   "txn.insurance.meta": "Aylıq haqq",
-  "txn.carbon.name": "Karbon kreditləri",
-  "txn.carbon.meta": "{count} kredit satıldı · təsdiqlənib",
   "txn.loan.name": "Məhsul krediti",
   "txn.loan.meta": "Dərhal köçürüldü",
 
@@ -151,7 +148,6 @@ export default {
   "carbon.earn": "Karbondan qazanın",
   "carbon.creditsReady": "{count} təsdiqlənmiş kredit hazırdır",
   "carbon.creditsPrice": "Bazar qiyməti {price} / kredit · cəmi {total}",
-  "carbon.sellCta": "{total}-a sat",
   "carbon.scoreNote":
     "Kredit satışı FarmScore balınızı da yaxşılaşdırır — davamlı təsərrüfatlar krediti daha yaxşı qaytarır.",
   "carbon.practices": "Təcrübələr",
@@ -181,7 +177,7 @@ export default {
   "kredit.imkanYoxMeslehet":
     "Alternativ: toxum-gübrə üçün mal krediti və ya subsidiya təminatlı məhsullar. Aqronomla danışın.",
   "kredit.faizSetri": "İlk ayın faizi: ~{faiz}",
-  "kredit.faizAzalir": "Sonrakı aylarda qalan əsas borca görə azalır",
+  "kredit.faizAzalir": "Sonrakı aylarda qalan əsas borca görə azalır.",
   "kredit.sonTarixSetri": "Son tarix: {tarix} (biçin)",
   "kredit.niyeBuQeder": "Niyə ən çoxu {max}?",
   "kredit.izah.xalis": "Ehtiyatlı ssenaridə xalis təsərrüfat gəliri",
@@ -358,7 +354,6 @@ export default {
   "maliyye.xetaBasliq": "Kredit məlumatı gətirilmədi",
   "maliyye.xetaIzah": "Bağlantı kəsildi. Aktiv kreditiniz varsa, bu ekran onu göstərmir — yenidən cəhd edin.",
   "maliyye.yenidenCehd": "Yenidən cəhd et",
-  "maliyye.demoQeyd": "Nümunə pulqabı balansı bu ekrandan çıxarıldı. Kredit rəqəmləri serverdən gəlir.",
 
   // Təklif kartı (state C)
   "teklifKart.basliq": "Sizə uyğun təklif",
@@ -367,7 +362,6 @@ export default {
   "teklifKart.muddet": "Müddət",
   "teklifKart.ayDeyeri": "{ay} ay",
   "teklifKart.faiz": "İllik faiz",
-  "teklifKart.ayliqFaiz": "Aylıq faiz ödənişi",
   "teklifKart.niye": "Niyə bu məbləğ?",
   "teklifKart.sebeb1": "Mövsümi gəlirinizə uyğundur",
   "teklifKart.sebeb2": "Ödəniş ehtiyatı nəzərə alınıb",
@@ -379,8 +373,6 @@ export default {
   // Maliyyə — aktiv kredit xülasəsi (state D)
   "maliyye.aktiv": "Aktiv kredit",
   "maliyye.esasQaliq": "Əsas borc qalığı",
-  "maliyye.buAyFaiz": "Bu ayın faizi",
-  "maliyye.sonTarix": "Son tarix",
   "maliyye.odenilibFaiz": "Ödənilib {faiz}%",
   "maliyye.vaxtinda": "Ödənişlər vaxtındadır",
   "maliyye.odenisEt": "Ödəniş et",
@@ -390,7 +382,6 @@ export default {
   "maliyye.faizOdenisi": "Faiz ödənişi",
   "maliyye.esasOdenisi": "Əsas borc ödənişi",
   "maliyye.elaveVesait": "Əlavə vəsait lazımdır?",
-  "maliyye.elaveVesaitIzah": "Məhsul və sahə məlumatlarınıza uyğun təklif yoxlayaq.",
   "maliyye.yeniMuraciet": "Yeni müraciət",
 
   // Gecikmə kartı (state E)
@@ -503,7 +494,6 @@ export default {
   "loan.successLine": "{amount} pulqabınızdadır",
   "loan.successNote": "{date} tarixində {repay} ödəyin. Taxıl satılanda sizə xatırladacağıq.",
 
-  "toast.creditsSold": "{amount} pulqabınıza əlavə olundu",
   "toast.locationSelected": "{name} üçün hava proqnozu yükləndi",
 
   "date.aug15.short": "15 avq",
@@ -523,7 +513,7 @@ export default {
   "home.fieldDrawn": "Sahəm: {hektar} ha — dəyiş",
   "toast.fieldSaved": "Sahə saxlanıldı: {hektar} ha",
   "field.title": "Sahənizi çəkin",
-  "field.subtitle": "Peyk şəklində sahənizin künclərinə toxunun",
+  "field.subtitle": "Sahənin künclərinə ardıcıllıqla toxunun.",
   "field.close": "Sahə çəkməni bağla",
   "field.loading": "Xəritə yüklənir…",
   "field.tapHint": "Künclərə toxunun ({count}/3+)",
@@ -543,7 +533,7 @@ export default {
   "ndvi.cached": "Saxlanmış ölçmə · {gun} gün əvvəl (şəbəkə yoxdur)",
   "ndvi.noReading": "Bu dövrdə təmiz ölçmə yoxdur — buludlu olub",
   "ndvi.notConfigured": "Peyk inteqrasiyası hələ qurulmayıb",
-  "ndvi.error": "Peyk məlumatı alınmadı",
+  "ndvi.error": "Ölçmə alınmadı. Bir az sonra yenidən yoxlayın.",
   "ndvi.mapTitle": "Sahənin peyk xəritəsi",
   "ndvi.mapLoading": "Xəritə hazırlanır…",
   "ndvi.layer.bitki": "Bitki",
@@ -824,11 +814,11 @@ export default {
 
   "hesab.basliq": "Hesab",
   "hesab.altyazi": "Sahəniz və ölçmələriniz telefon nömrənizə bağlanır — cihaz dəyişsə də itmir.",
-  "hesab.cta": "Hesab yarat — sahən qorunsun",
+  "hesab.cta": "Sahəni hesabında qoruyun",
   "hesab.telefonEtiket": "Telefon nömrəsi",
-  "hesab.kodGonder": "Kod göndər",
+  "hesab.kodGonder": "Kodu göndər",
   "hesab.kodGonderildi": "{telefon} nömrəsinə 6 rəqəmli kod göndərildi.",
-  "hesab.kodEtiket": "SMS kodu",
+  "hesab.kodEtiket": "Təsdiq kodu",
   "hesab.tesdiqle": "Təsdiqlə",
   "hesab.geri": "Başqa nömrə",
   "hesab.gonderilir": "Göndərilir…",
@@ -844,4 +834,51 @@ export default {
   "hesab.xeta.xeta": "Xəta baş verdi — yenidən cəhd edin.",
   "toast.hesabGirdi": "Daxil oldunuz — sahəniz hesabınıza yazılır",
   "toast.hesabCixdi": "Hesabdan çıxdınız",
+  // ── v2: ilk sahə izahı, siqnal əhatəsi, maliyyə şərtləri ───────────
+  "nece.altYazi": "Sahə çəkmək üç addımdır — təxminən 2 dəqiqə.",
+  "nece.addim1": "Künclərə toxunun",
+  "nece.addim1Metn": "Peyk şəklində sahənizin künclərinə ardıcıllıqla toxunun. Hər toxunuş bir künc qoyur.",
+  "nece.addim2": "Ən azı üç künc",
+  "nece.addim2Metn": "Kontur bağlanması üçün ən azı 3 künc lazımdır. Səhv nöqtəni «Geri al» ilə götürün.",
+  "nece.addim3": "Sahəni saxlayın",
+  "nece.addim3Metn": "«Sahəni saxla»dan sonra peyk arxivini oxumağa başlayırıq — ilk ölçmə bir neçə dəqiqəyə gəlir.",
+
+  "bitki.altYazi": "Tövsiyələr, gəlir modeli və kredit imkanı bitkiyə görə hesablanır.",
+
+  "maliyye.sert.sahe": "Kredit imkanını hesablamaq üçün sahənizi əlavə edin.",
+  "maliyye.sert.saheCta": "Sahə əlavə et",
+  "maliyye.sert.bitki": "Kredit imkanını hesablamaq üçün bitkinizi seçin.",
+  "maliyye.sert.bitkiCta": "Bitkini seç",
+  "maliyye.sert.hesab": "Müraciət hesabınıza bağlanır — telefon nömrənizlə hesab yaradın.",
+  "maliyye.sert.hesabCta": "Hesab yarat",
+  "maliyye.sert.hazir": "Məlumatlarınız hazırdır. Sizə uyğun təklifi yoxlayaq.",
+  "maliyye.sert.hazirCta": "Təklifi yoxla",
+
+  "siqnal.rayonTitle": "{rayon} üzrə hava xəbərdarlıqları",
+  "siqnal.rayonSubtitle": "Sahə çəkilməyib, ona görə xəbərdarlıqlar yalnız rayon mərkəzinin hava proqnozundan çıxarılır — peyk ölçməsi yoxdur.",
+  "siqnal.rayonBosBasliq": "{rayon} üzrə diqqət tələb edən hava yoxdur",
+  "siqnal.rayonBosMetn": "Rayon proqnozu normaldır. Sahənizi çəksəniz peyk ölçmələri də bura düşəcək.",
+  "siqnal.panelRayonAltYazi": "{rayon} üzrə {count} açıq hava xəbərdarlığı",
+  "siqnal.panelRayonBosAltYazi": "{rayon} üzrə açıq hava xəbərdarlığı yoxdur",
+  "siqnal.menbe.havaRayon": "Hava proqnozu · {rayon} rayon mərkəzi",
+  "siqnal.menbe.rutubetRayon": "{rayon} rayon mərkəzi · rütubət və temperatur",
+  "weather.titleRayon": "{rayon} üzrə hava",
+
+  "sahe.melumatKeyfiyyeti": "Məlumat keyfiyyəti",
+  "ndvi.xeritedeBax": "Xəritədə bax",
+
+  "hesab.saheIzah": "Telefon dəyişsə belə sahə məlumatlarınız hesabınızda qalacaq.",
+  "hesab.tesdiqlendi": "Hesab təsdiqləndi",
+
+  "maliyye.buDovrFaiz": "Bu dövrün faizi",
+  "maliyye.novbetiOdenis": "Növbəti ödəniş",
+  "teklifKart.ilkAyFaiz": "İlk ayın təxmini faizi",
+
+  "carbon.saheLazim": "Karbon üçün təsdiqlənmiş sahə lazımdır",
+  "carbon.saheLazimIzah": "Tutulan karbon sahənin ölçmə tarixçəsindən hesablanır. Sahəniz olmadan göstəriləsi rəqəm yoxdur.",
+  "carbon.satisHazirDeyil": "Satış hələ açıq deyil",
+  "market.forvardHazirDeyil": "Forvard müqaviləsi axını hələ qurulmayıb — alıcı, şərtlər və icra izləməsi hazır olanda açılacaq.",
+  "market.numuneQeyd": "Qiymətlər nümunədir — canlı bazar mənbəyi hələ qoşulmayıb.",
+  "chat.openDescRayon": "{rayon} üzrə hava proqnozu nəzərə alınır",
+  "maliyye.sert.kartBasliq": "Kredit üçün növbəti addım",
 };

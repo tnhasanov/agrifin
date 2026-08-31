@@ -174,7 +174,8 @@ describe("müqayisə kartı", () => {
     stubApi();
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText(/Sahədə hava/)).toBeInTheDocument());
+    // Sahəsiz halda başlıq rayon üzrədir — "Sahədə hava" iddia edilmir
+    await waitFor(() => expect(screen.getByText(/üzrə hava$/)).toBeInTheDocument());
     expect(fetch.mock.calls.some(([url]) => String(url).includes("/api/qonsu"))).toBe(false);
   });
 

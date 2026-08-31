@@ -157,7 +157,7 @@ describe("saxlanan məlumatın miqrasiyası", () => {
 
     expect(dialoq()).not.toBeInTheDocument();
     // Köhnə məlumat da qalır, sadəcə atılmır
-    expect(screen.getByText(/Gəncə/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Gəncə/).length).toBeGreaterThan(0);
   });
 
   it("köhnə versiyada rayonu olmayan fermerdən soruşulur", () => {

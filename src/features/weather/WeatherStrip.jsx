@@ -104,7 +104,10 @@ export function WeatherStrip({
       }
       onAction={onPickLocation}
     >
-      {t("weather.title")}
+      {/* Sahə çəkilməyibsə proqnoz rayon mərkəzinindir — başlıq da bunu
+          deməlidir. "Sahədə hava" sahəsiz fermerə uydurma dəqiqlik vəd edir
+          (bax: services/saheYeri.js — deqiq bayrağı). */}
+      {deqiq ? t("weather.title") : t("weather.titleRayon", { rayon: locationName ?? "" })}
     </SectionTitle>
   );
 

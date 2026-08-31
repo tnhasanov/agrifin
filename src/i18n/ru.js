@@ -6,7 +6,6 @@ export default {
 
   "common.today": "Сегодня",
   "common.ready": "Готово",
-  "common.sold": "Продано",
   "common.close": "Закрыть",
   "common.verify": "Подтвердить",
   "common.days7": "7 дней",
@@ -121,8 +120,6 @@ export default {
   "txn.fuel.meta": "Дизель · карта ••{card}",
   "txn.insurance.name": "Страхование от засухи",
   "txn.insurance.meta": "Месячный взнос",
-  "txn.carbon.name": "Углеродные кредиты",
-  "txn.carbon.meta": "Продано {count} кредитов · подтверждено",
   "txn.loan.name": "Сезонный кредит",
   "txn.loan.meta": "Переведено мгновенно",
 
@@ -153,7 +150,6 @@ export default {
   "carbon.earn": "Заработайте на углероде",
   "carbon.creditsReady": "Готово {count} подтверждённых кредитов",
   "carbon.creditsPrice": "Рыночная цена {price} / кредит · всего {total}",
-  "carbon.sellCta": "Продать за {total}",
   "carbon.scoreNote":
     "Продажа кредитов также улучшает ваш FarmScore — устойчивые хозяйства надёжнее возвращают кредиты.",
   "carbon.practices": "Практики",
@@ -182,7 +178,7 @@ export default {
   "kredit.imkanYoxMeslehet":
     "Альтернативы: товарный кредит на семена и удобрения или продукты под субсидию. Поговорите с агрономом.",
   "kredit.faizSetri": "Проценты за первый месяц: ~{faiz}",
-  "kredit.faizAzalir": "В следующие месяцы они уменьшаются вместе с остатком долга",
+  "kredit.faizAzalir": "В следующие месяцы они уменьшаются вместе с остатком долга.",
   "kredit.sonTarixSetri": "Крайний срок: {tarix} (уборка)",
   "kredit.niyeBuQeder": "Почему максимум {max}?",
   "kredit.izah.xalis": "Чистый доход хозяйства, осторожный сценарий",
@@ -357,7 +353,6 @@ export default {
   "maliyye.xetaBasliq": "Не удалось загрузить данные по кредиту",
   "maliyye.xetaIzah": "Связь прервалась. Если у вас есть активный кредит, этот экран его не показывает — повторите попытку.",
   "maliyye.yenidenCehd": "Повторить",
-  "maliyye.demoQeyd": "Демо-баланс кошелька убран с этого экрана. Данные по кредиту приходят с сервера.",
 
   "teklifKart.basliq": "Предложение для вас",
   "teklifKart.altyazi": "На основе данных вашего хозяйства",
@@ -365,7 +360,6 @@ export default {
   "teklifKart.muddet": "Срок",
   "teklifKart.ayDeyeri": "{ay} мес.",
   "teklifKart.faiz": "Годовая ставка",
-  "teklifKart.ayliqFaiz": "Ежемесячный платёж процентов",
   "teklifKart.niye": "Почему эта сумма?",
   "teklifKart.sebeb1": "Соответствует вашему сезонному доходу",
   "teklifKart.sebeb2": "Учтён платёжный резерв",
@@ -376,8 +370,6 @@ export default {
 
   "maliyye.aktiv": "Активный кредит",
   "maliyye.esasQaliq": "Остаток основного долга",
-  "maliyye.buAyFaiz": "Проценты за этот месяц",
-  "maliyye.sonTarix": "Срок платежа",
   "maliyye.odenilibFaiz": "Оплачено {faiz}%",
   "maliyye.vaxtinda": "Платежи вовремя",
   "maliyye.odenisEt": "Внести платёж",
@@ -387,7 +379,6 @@ export default {
   "maliyye.faizOdenisi": "Оплата процентов",
   "maliyye.esasOdenisi": "Оплата основного долга",
   "maliyye.elaveVesait": "Нужны дополнительные средства?",
-  "maliyye.elaveVesaitIzah": "Проверим предложение по данным вашей культуры и поля.",
   "maliyye.yeniMuraciet": "Новая заявка",
 
   "gecikmeKart.basliq": "Платёж просрочен",
@@ -495,7 +486,6 @@ export default {
   "loan.successLine": "{amount} в вашем кошельке",
   "loan.successNote": "Выплатите {repay} {date}. Мы напомним, когда зерно будет продано.",
 
-  "toast.creditsSold": "{amount} добавлено в ваш кошелёк",
   "toast.locationSelected": "Прогноз погоды загружен для {name}",
 
   "date.aug15.short": "15 авг",
@@ -515,7 +505,7 @@ export default {
   "home.fieldDrawn": "Моё поле: {hektar} га — изменить",
   "toast.fieldSaved": "Поле сохранено: {hektar} га",
   "field.title": "Обведите ваше поле",
-  "field.subtitle": "Коснитесь углов поля на спутниковом снимке",
+  "field.subtitle": "Коснитесь углов поля по очереди.",
   "field.close": "Закрыть рисование поля",
   "field.loading": "Карта загружается…",
   "field.tapHint": "Коснитесь углов ({count}/3+)",
@@ -535,7 +525,7 @@ export default {
   "ndvi.cached": "Сохранённое измерение · {gun} дн. назад (нет сети)",
   "ndvi.noReading": "За этот период нет чистого измерения — было облачно",
   "ndvi.notConfigured": "Спутниковая интеграция ещё не настроена",
-  "ndvi.error": "Не удалось получить спутниковые данные",
+  "ndvi.error": "Измерение не получено. Проверьте чуть позже.",
   "ndvi.mapTitle": "Спутниковая карта поля",
   "ndvi.mapLoading": "Карта готовится…",
   "ndvi.layer.bitki": "Растительность",
@@ -812,11 +802,11 @@ export default {
 
   "hesab.basliq": "Аккаунт",
   "hesab.altyazi": "Поле и измерения привязываются к номеру телефона — при смене устройства ничего не теряется.",
-  "hesab.cta": "Создайте аккаунт — поле будет сохранено",
+  "hesab.cta": "Сохраните поле в аккаунте",
   "hesab.telefonEtiket": "Номер телефона",
   "hesab.kodGonder": "Отправить код",
   "hesab.kodGonderildi": "6-значный код отправлен на {telefon}.",
-  "hesab.kodEtiket": "Код из SMS",
+  "hesab.kodEtiket": "Код подтверждения",
   "hesab.tesdiqle": "Подтвердить",
   "hesab.geri": "Другой номер",
   "hesab.gonderilir": "Отправка…",
@@ -832,4 +822,51 @@ export default {
   "hesab.xeta.xeta": "Произошла ошибка — попробуйте ещё раз.",
   "toast.hesabGirdi": "Вы вошли — поле сохраняется в аккаунт",
   "toast.hesabCixdi": "Вы вышли из аккаунта",
+  // ── v2: объяснение первого поля, охват сигналов, условия финансирования ──
+  "nece.altYazi": "Нарисовать поле — три шага, примерно 2 минуты.",
+  "nece.addim1": "Коснитесь углов",
+  "nece.addim1Metn": "Коснитесь углов поля по очереди на спутниковом снимке. Каждое касание ставит угол.",
+  "nece.addim2": "Минимум три угла",
+  "nece.addim2Metn": "Чтобы контур замкнулся, нужно минимум 3 угла. Неверную точку уберите кнопкой «Отменить».",
+  "nece.addim3": "Сохраните поле",
+  "nece.addim3Metn": "После «Сохранить поле» мы начинаем читать спутниковый архив — первое измерение придёт через несколько минут.",
+
+  "bitki.altYazi": "Рекомендации, модель дохода и кредитная возможность считаются по культуре.",
+
+  "maliyye.sert.sahe": "Добавьте поле, чтобы рассчитать кредитную возможность.",
+  "maliyye.sert.saheCta": "Добавить поле",
+  "maliyye.sert.bitki": "Выберите культуру, чтобы рассчитать кредитную возможность.",
+  "maliyye.sert.bitkiCta": "Выбрать культуру",
+  "maliyye.sert.hesab": "Заявка привязывается к аккаунту — создайте его по номеру телефона.",
+  "maliyye.sert.hesabCta": "Создать аккаунт",
+  "maliyye.sert.hazir": "Ваши данные готовы. Проверим подходящее предложение.",
+  "maliyye.sert.hazirCta": "Проверить предложение",
+
+  "siqnal.rayonTitle": "Погодные предупреждения по району {rayon}",
+  "siqnal.rayonSubtitle": "Поле не нарисовано, поэтому предупреждения берутся только из прогноза по центру района — спутниковых измерений нет.",
+  "siqnal.rayonBosBasliq": "В районе {rayon} ничего не требует внимания",
+  "siqnal.rayonBosMetn": "Прогноз по району обычный. Нарисуйте поле — сюда добавятся и спутниковые измерения.",
+  "siqnal.panelRayonAltYazi": "{count} открытых погодных предупреждений по району {rayon}",
+  "siqnal.panelRayonBosAltYazi": "По району {rayon} открытых погодных предупреждений нет",
+  "siqnal.menbe.havaRayon": "Прогноз погоды · центр района {rayon}",
+  "siqnal.menbe.rutubetRayon": "Центр района {rayon} · влажность и температура",
+  "weather.titleRayon": "Погода по району {rayon}",
+
+  "sahe.melumatKeyfiyyeti": "Качество данных",
+  "ndvi.xeritedeBax": "Посмотреть на карте",
+
+  "hesab.saheIzah": "Данные поля останутся в аккаунте, даже если сменится телефон.",
+  "hesab.tesdiqlendi": "Аккаунт подтверждён",
+
+  "maliyye.buDovrFaiz": "Проценты за этот период",
+  "maliyye.novbetiOdenis": "Следующий платёж",
+  "teklifKart.ilkAyFaiz": "Ориентировочные проценты за первый месяц",
+
+  "carbon.saheLazim": "Для углерода нужно подтверждённое поле",
+  "carbon.saheLazimIzah": "Захваченный углерод считается по истории измерений поля. Без вашего поля показывать нечего.",
+  "carbon.satisHazirDeyil": "Продажа пока недоступна",
+  "market.forvardHazirDeyil": "Форвардный контракт пока не реализован — он откроется, когда будут покупатели, условия и контроль исполнения.",
+  "market.numuneQeyd": "Цены приведены как образец — живой источник рынка ещё не подключён.",
+  "chat.openDescRayon": "Учитывается прогноз погоды по району {rayon}",
+  "maliyye.sert.kartBasliq": "Следующий шаг к кредиту",
 };

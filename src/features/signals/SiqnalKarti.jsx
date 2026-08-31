@@ -1,6 +1,7 @@
 import { Icon } from "../../components/Icon.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
+import { menbeSetri } from "./siqnalEhate.js";
 
 /**
  * Rəng ciddilikdən gəlir, məzmun növündən yox: fermer ekrana baxanda
@@ -12,9 +13,23 @@ const CIDDILIK_RENGI = {
   melumat: { fg: "#2C5BC7", bg: C.blueSoft, kenar: "rgba(62,123,250,0.22)" },
 };
 
-export function SiqnalKarti({ siqnal, onBagla, onHereket, style, className = "giris" }) {
+/**
+ * @param {boolean} saheVar Sahə çəkilibmi? Çəkilməyibsə mənbə sətri rayon
+ *   dilində yazılır — "sahənin koordinatı" iddiası sahəsiz halda yalandır
+ *   (bax: siqnalEhate.js).
+ */
+export function SiqnalKarti({
+  siqnal,
+  onBagla,
+  onHereket,
+  style,
+  className = "giris",
+  saheVar = true,
+  rayon = null,
+}) {
   const { t } = useI18n();
   const reng = CIDDILIK_RENGI[siqnal.ciddilik] ?? CIDDILIK_RENGI.melumat;
+  const menbe = menbeSetri(siqnal, { saheVar, rayon });
 
   return (
     <div
@@ -58,7 +73,7 @@ export function SiqnalKarti({ siqnal, onBagla, onHereket, style, className = "gi
 
           <div className="mt-2 flex items-center justify-between gap-2">
             <span className="text-xs" style={{ color: C.muted }}>
-              {t(siqnal.menbeKey)}
+              {t(menbe.key, menbe.vars)}
             </span>
             {/* Yalnız işi başqa ekranda görülən siqnalda düymə olur —
                 "OK" düyməsi fermerə heç nə vermir */}

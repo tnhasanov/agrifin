@@ -19,11 +19,18 @@ export function AdvisorScreen({ onOpenChat, onOpenHesab, siqnallar = [], tovsiye
   // sual giriş xanasına yazılır, göndərməyi fermer özü təsdiqləyir
   const suallar = ["komek.sual1", "komek.sual2", "komek.sual3"];
 
+  const saheVar = Boolean(state.sahe);
+  const rayon = state.location?.name ?? "";
+
   // "Açıq tapşırıqlar" — yalnız HƏQİQİ işlər: uydurma tapşırıq siyahısı yox.
-  // Hesab girişi əvvəl ana səhifənin tünd hero-sunda idi — evi indi buradır.
+  //
+  // HESAB TƏBLİĞİ YALNIZ DƏYƏR GÖRÜNƏNDƏN SONRA: sahəsi olmayan fermerə
+  // "hesab yarat" demək onun heç bir sualına cavab vermir — qorunacaq bir şey
+  // yoxdur. Sahə çəkiləndən sonra cümlə də kontekstlidir: qoruduğumuz şey
+  // sahədir (bax: PDF 22 — "Sahəni hesabında qoruyun").
   const tecili = siqnallar.find((s) => s.ciddilik === "tecili");
   const tapsiriqlar = [
-    !state.hesab.telefon && {
+    saheVar && !state.hesab.telefon && {
       acar: "hesab",
       ikon: "ShieldCheck",
       metn: t("hesab.cta"),
@@ -95,8 +102,10 @@ export function AdvisorScreen({ onOpenChat, onOpenHesab, siqnallar = [], tovsiye
                   AI
                 </span>
               </div>
+              {/* Kartın altyazısı NƏYİN nəzərə alındığını vəd edir — sahəsiz
+                  halda peyk göstəricisi yoxdur, ona görə vəd də rayon üzrədir */}
               <p className="mt-0.5 text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>
-                {t("chat.openDesc")}
+                {saheVar ? t("chat.openDesc") : t("chat.openDescRayon", { rayon })}
               </p>
             </div>
             <Icon name="ChevronRight" size={18} color="rgba(255,255,255,0.5)" />
@@ -157,9 +166,14 @@ export function AdvisorScreen({ onOpenChat, onOpenHesab, siqnallar = [], tovsiye
       {/* Bütün siyahı BU sahənin ölçmələrindən çıxır. Əvvəl burada nümunə
           tövsiyələr də vardı — uydurma rəqəmlərlə, üstəlik həqiqi siqnallarla
           eyni görkəmdə. Fermer hansının ölçülmüş olduğunu ayıra bilmirdi. */}
-      <SectionTitle>{t("siqnal.title")}</SectionTitle>
+      {/* SAHƏSİZ HALDA BAŞLIQ RAYON ÜZRƏDİR: peyk ölçməsi yoxdur, proqnoz
+          rayon mərkəzinin koordinatındandır. "Sahənizdən siqnallar" yazmaq
+          olmayan dəlilə istinad etmək olardı (bax: siqnalEhate.js). */}
+      <SectionTitle>
+        {saheVar ? t("siqnal.title") : t("siqnal.rayonTitle", { rayon })}
+      </SectionTitle>
       <p className="-mt-1 mb-3 px-1 text-xs" style={{ color: C.muted }}>
-        {t("siqnal.subtitle")}
+        {saheVar ? t("siqnal.subtitle") : t("siqnal.rayonSubtitle")}
       </p>
 
       {siqnallar.length === 0 ? (
@@ -174,10 +188,10 @@ export function AdvisorScreen({ onOpenChat, onOpenHesab, siqnallar = [], tovsiye
             <Aqronom hal="sevincli" bitki={state.chat.crop} olcu={110} gorunus="tam" />
           </div>
           <p className="mt-1.5 text-sm font-semibold" style={{ color: C.ink }}>
-            {t("siqnal.bosBasliq")}
+            {saheVar ? t("siqnal.bosBasliq") : t("siqnal.rayonBosBasliq", { rayon })}
           </p>
           <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
-            {t("siqnal.bosMetn")}
+            {saheVar ? t("siqnal.bosMetn") : t("siqnal.rayonBosMetn")}
           </p>
         </div>
       ) : (
@@ -185,6 +199,8 @@ export function AdvisorScreen({ onOpenChat, onOpenHesab, siqnallar = [], tovsiye
           <SiqnalKarti
             key={siqnal.id}
             siqnal={siqnal}
+            saheVar={saheVar}
+            rayon={rayon}
             onBagla={actions.siqnaliBagla}
             onHereket={onOpenChat}
             style={{ marginBottom: 10, "--i": index + 1 }}
