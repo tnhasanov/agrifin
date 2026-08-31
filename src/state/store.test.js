@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { initialState, reducer } from "./store.jsx";
-import { carbonPayout } from "../services/carbon.js";
 import { LOAN_TERMS, computeRepayment } from "../services/farm.js";
 
 describe("reducer", () => {
@@ -15,34 +14,28 @@ describe("reducer", () => {
     expect(twice).toBe(once);
   });
 
-  it("karbon kreditləri satılanda pulqabını və əməliyyatları yeniləyir", () => {
+  // GÖRÜNMƏYƏN PULQABI ARTIQ DƏYİŞMİR. `carbon/sell` reducer-i SİLİNDİ:
+  // karbon ekranındakı "sat" düyməsi heç bir ekranda göstərilməyən demo
+  // balansı 360 ₼ artırırdı. İstifadəçinin görmədiyi balansı dəyişən gizli
+  // hərəkət audit oluna bilməyən pul hərəkətidir (bax: store.jsx DEMO qeydi).
+  it("karbon satışı gizli demo pulqabını DƏYİŞMİR", () => {
     const next = reducer(initialState, { type: "carbon/sell" });
-    expect(next.creditsSold).toBe(true);
-    expect(next.wallet).toBe(initialState.wallet + carbonPayout());
-    expect(next.txns).toHaveLength(initialState.txns.length + 1);
-    expect(next.txns[0]).toMatchObject({ nameKey: "txn.carbon.name", amount: carbonPayout() });
+    expect(next).toBe(initialState);
+    expect(next.wallet).toBe(initialState.wallet);
+    expect(next.creditsSold).toBe(false);
+    expect(next.txns).toHaveLength(initialState.txns.length);
   });
 
-  it("kreditləri yalnız bir dəfə satır", () => {
-    const once = reducer(initialState, { type: "carbon/sell" });
-    const twice = reducer(once, { type: "carbon/sell" });
-    expect(twice).toBe(once);
-  });
-
-  // `loan/take` reducer-i SİLİNDİ: kredit vəziyyəti artıq serverdədir
-  // (bax: api/kredit.js). Pulqabına dərhal pul yazan yol qalmadı.
-  it("hər yeni əməliyyata unikal id verir", () => {
-    const afterSell = reducer(initialState, { type: "carbon/sell" });
-    const afterLoan = reducer(afterSell, { type: "loan/take", amount: 1000 });
-    const ids = afterLoan.txns.map((txn) => txn.id);
-    expect(new Set(ids).size).toBe(ids.length);
+  // `loan/take` reducer-i də SİLİNMİŞDİ: kredit vəziyyəti serverdədir
+  // (bax: api/kredit.js). Pulqabına dərhal pul yazan heç bir yol qalmadı.
+  it("heç bir köhnə demo əməliyyatı vəziyyəti dəyişmir", () => {
+    for (const type of ["carbon/sell", "loan/take", "rec/complete"]) {
+      expect(reducer(initialState, { type, amount: 1000, id: "aphid" })).toBe(initialState);
+    }
   });
 
   it("demo sıfırlanması ilk vəziyyətə qaytarır", () => {
-    const dirty = reducer(reducer(initialState, { type: "carbon/sell" }), {
-      type: "rec/complete",
-      id: "aphid",
-    });
+    const dirty = reducer(initialState, { type: "hesab/set", telefon: "+994501234567" });
     expect(reducer(dirty, { type: "demo/reset" })).toEqual(initialState);
   });
 

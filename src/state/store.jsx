@@ -9,7 +9,6 @@ import {
 } from "react";
 import * as storage from "../lib/storage.js";
 import { FARM } from "../services/farm.js";
-import { CARBON, carbonPayout } from "../services/carbon.js";
 import { isValidLocation, readLegacyLocation } from "../services/location.js";
 import { duzgunSahe } from "../services/geo.js";
 
@@ -92,12 +91,16 @@ const INITIAL_TXNS = [
 const CHAT_LIMIT = 40;
 
 export const initialState = {
-  // ═══ DEMO PUL — REAL DEYİL ══════════════════════════════════════════
-  // wallet, txns və karbon satışı PROTOTİP NÜMUNƏLƏRİDİR: heç bir server
-  // hesabına bağlı deyil, heç bir kredit axını onları oxumur və ya yazmır
-  // (yoxlanılıb: api/kredit.js bu sahələrə toxunmur). Real pul hərəkəti
-  // gələndə bunlar da server hesabına köçəcək — o vaxta qədər bu blok
-  // yalnız vitrin məlumatıdır və real balansla QARIŞDIRILMAMALIDIR.
+  // ═══ DEMO PUL — REAL DEYİL, DAHA DƏYİŞMİR ══════════════════════════
+  // wallet və txns PROTOTİP VİTRİNİDİR: heç bir server hesabına bağlı deyil,
+  // heç bir kredit axını onları oxumur və ya yazmır (yoxlanılıb: api/kredit.js
+  // bu sahələrə toxunmur) və HEÇ BİR EKRAN ONLARI GÖSTƏRMİR.
+  //
+  // ARTIQ HEÇ BİR HƏRƏKƏT ONLARI DƏYİŞMİR: karbon "sat" düyməsi əvvəl
+  // görünməyən pulqabı 360 ₼ artırır və nümunə əməliyyat sətri yazırdı —
+  // istifadəçinin görmədiyi balansı dəyişən düymə audit olunmayan pul
+  // hərəkətidir. Karbon ekranı indi yalnız oxunur (bax: CarbonScreen.jsx).
+  // Sahələr yalnız köhnə yaddaşın miqrasiyası üçün qalır.
   wallet: 7280,
   // false olduqda ilk açılışda qeydiyyat axını göstərilir
   onboarded: false,
@@ -128,27 +131,6 @@ export function reducer(state, action) {
       // Siyahı sonsuz böyüməsin: id-lər tarixlidir, köhnələr bir daha
       // qurulmur, ona görə saxlamağın mənası yoxdur
       return { ...state, bagliSiqnallar: [...state.bagliSiqnallar, action.id].slice(-40) };
-    }
-
-    case "carbon/sell": {
-      if (state.creditsSold) return state;
-      const amount = carbonPayout();
-      return {
-        ...state,
-        creditsSold: true,
-        wallet: state.wallet + amount,
-        nextTxnId: state.nextTxnId + 1,
-        txns: [
-          {
-            id: `t${state.nextTxnId}`,
-            nameKey: "txn.carbon.name",
-            metaKey: "txn.carbon.meta",
-            metaVars: { count: CARBON.creditsReady },
-            amount,
-          },
-          ...state.txns,
-        ],
-      };
     }
 
     case "chat/user": {
@@ -285,10 +267,6 @@ export function StoreProvider({ children }) {
     () => ({
       showToast,
       clearToast: () => dispatch({ type: "toast/clear" }),
-      sellCredits: () => {
-        dispatch({ type: "carbon/sell" });
-        showToast("toast.creditsSold", { amount: { money: carbonPayout() } });
-      },
       siqnaliBagla: (id) => dispatch({ type: "siqnal/bagla", id }),
       setLocation: (location) => {
         dispatch({ type: "location/set", location });

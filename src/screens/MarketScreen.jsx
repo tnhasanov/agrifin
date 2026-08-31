@@ -13,6 +13,12 @@ export function MarketScreen() {
   return (
     <div className="px-4 pb-4">
       <SectionTitle>{t("market.yourPrices")}</SectionTitle>
+      {/* MƏNBƏ ETİKETİ MƏCBURDUR: bu qiymətlər statik nümunədir (bax:
+          services/market.js). Real kredit rəqəmləri ilə eyni tətbiqdə
+          etiketsiz nümunə göstərmək ikisini bir-birinə qatır. */}
+      <p className="-mt-1 mb-2 px-1 text-xs" style={{ color: C.muted }}>
+        {t("market.numuneQeyd")}
+      </p>
       <Card style={{ padding: "6px 16px" }}>
         {CROP_PRICES.map((crop, index) => {
           const up = crop.change >= 0;
@@ -59,13 +65,15 @@ export function MarketScreen() {
         <p className="text-xs leading-relaxed" style={{ color: C.muted }}>
           {t(SELL_WINDOW.bodyKey)}
         </p>
-        <button
-          type="button"
-          className="mt-3 w-full rounded-xl py-2.5 text-sm font-bold"
-          style={{ backgroundColor: C.pine, color: "#fff" }}
+        {/* "Forvard müqaviləsi yarat" ARXASINDA AXIN YOXDUR: alıcı, şərt
+            sənədi, imza və icra izləməsi qurulmayıb. İşləməyən düymə fermerə
+            olmayan bir imkanı vəd edir — vəziyyət açıq yazılır. */}
+        <p
+          className="mt-3 rounded-xl px-3 py-2.5 text-xs leading-relaxed"
+          style={{ backgroundColor: C.mist, color: C.muted }}
         >
-          {t("market.forwardCta")}
-        </button>
+          {t("market.forvardHazirDeyil")}
+        </p>
       </Card>
 
       <SectionTitle>{t("market.buyers")}</SectionTitle>

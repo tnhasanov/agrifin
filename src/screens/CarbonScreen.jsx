@@ -9,12 +9,46 @@ import { formatNumber } from "../lib/format.js";
 import { CARBON, PRACTICES, carbonPayout } from "../services/carbon.js";
 import { useCountUp } from "../lib/useCountUp.js";
 
+/**
+ * KARBON — TƏXİRƏ SALINMIŞ EKRAN (əsas naviqasiyada yoxdur, dərin link işləyir).
+ *
+ * İKİ QAYDA:
+ *  1. TƏSDİQLƏNMİŞ SAHƏSİ OLMAYANA rəqəm göstərilmir. "9,4 tCO₂e tutulub" və
+ *     "MRV təsdiqli" ölçülmüş iddiadır; sahəsi olmayan istifadəçi üçün onların
+ *     arxasında heç nə yoxdur.
+ *  2. SATIŞ DÜYMƏSİ YOXDUR. Əvvəl o düymə görünməyən demo pulqabını 360 ₼
+ *     artırırdı — real MRV, server satış vəziyyəti və ödəniş reyestri
+ *     olmadan "satıldı" demək uydurma pul hərəkətidir (bax: store.jsx).
+ */
 export function CarbonScreen() {
-  const { t, money, lang } = useI18n();
-  const { state, actions } = useStore();
+  const { t, lang } = useI18n();
+  const { state } = useStore();
   const payout = carbonPayout();
   // Tutulan karbon 0-dan saydırılır — ölçülmüş dəyər təəssüratı üçün
   const tonlar = useCountUp(CARBON.capturedTonnes, { onluq: 1 });
+
+  if (!state.sahe) {
+    return (
+      <div className="px-4 pb-4">
+        <SectionTitle>{t("carbon.earn")}</SectionTitle>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl p-2" style={{ backgroundColor: C.mist }}>
+              <Icon name="Info" size={16} color={C.muted} />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
+                {t("carbon.saheLazim")}
+              </p>
+              <p className="mt-0.5 text-xs leading-relaxed" style={{ color: C.muted }}>
+                {t("carbon.saheLazimIzah")}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 pb-4">
@@ -61,23 +95,15 @@ export function CarbonScreen() {
               })}
             </p>
           </div>
-          {state.creditsSold ? (
-            <span
-              className="flex shrink-0 items-center gap-1 text-xs font-bold"
-              style={{ color: C.field }}
-            >
-              <Icon name="Check" size={14} color={C.field} /> {t("common.sold")}
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={actions.sellCredits}
-              className="shrink-0 rounded-lg px-3 py-2 text-xs font-bold"
-              style={{ backgroundColor: C.gold, color: C.pine }}
-            >
-              {t("carbon.sellCta", { total: money(payout) })}
-            </button>
-          )}
+          {/* SATIŞ AXINI HƏLƏ YOXDUR: alıcı, server satış vəziyyəti və ödəniş
+              reyestri qurulmayıb. Düyməni "işləyirmiş kimi" saxlamaq əvəzinə
+              vəziyyət açıq yazılır — söndürülmüş düymə də vəd verir. */}
+          <span
+            className="shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-bold"
+            style={{ backgroundColor: C.mist, color: C.muted }}
+          >
+            {t("carbon.satisHazirDeyil")}
+          </span>
         </div>
         <p
           className="mt-3 rounded-lg px-3 py-2 text-xs"
