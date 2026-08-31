@@ -36,8 +36,8 @@ export function HomeScreen({
   onOpenLoan,
   onPickLocation,
   onDrawField,
-  onOpenChat,
   onOpenHesab,
+  onOpenNece,
 }) {
   const { t } = useI18n();
   const { state } = useStore();
@@ -89,8 +89,11 @@ export function HomeScreen({
         </p>
       </div>
 
-      {/* Hal A: yeni fermer — BİR aydın dəvət, başqa heç nə */}
-      {!state.sahe && <BosSahe onDrawField={onDrawField} onNece={onOpenChat} />}
+      {/* Hal A: yeni fermer — BİR aydın dəvət, başqa heç nə.
+          "Necə işləyir?" ÜÇ ADDIMLIQ İZAH panelini açır, ümumi çatı yox:
+          sahə çəkməyi bilməyən fermerə boş sual xanası kömək etmir
+          (bax: features/pano/NeceIsleyir.jsx). */}
+      {!state.sahe && <BosSahe onDrawField={onDrawField} onNece={onOpenNece} />}
 
       {/* Sahə varsa: yaşıl FarmScore kartı (bal və ya hal B qapısı içindədir) */}
       {state.sahe && (

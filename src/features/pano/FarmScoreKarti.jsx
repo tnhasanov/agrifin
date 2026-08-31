@@ -47,8 +47,10 @@ export function FarmScoreKarti({
         <Icon name="ChevronRight" size={16} color="rgba(255,255,255,0.7)" />
       </button>
 
-      {/* Bal və ya hal B qapısı — mövcud komponent, tünd fon üçün onsuz da uyğundur */}
-      <IndeksKarti indeksHali={indeksHali} />
+      {/* Bal və ya hal B qapısı — mövcud komponent, tünd fon üçün onsuz da
+          uyğundur. Hal B-nin ƏSAS HƏRƏKƏTİ "Sahəyə bax"dır (PDF 14): bal
+          yoxdursa fermerin görə biləcəyi yeganə dəlil sahə ekranındadır. */}
+      <IndeksKarti indeksHali={indeksHali} onSaheyeBax={onBax} />
 
       {/* Ağ fakt lövhəsi — mock-dakı üç sütun */}
       <div className="mt-3 grid grid-cols-3 gap-0 rounded-2xl bg-white px-1 py-2.5">

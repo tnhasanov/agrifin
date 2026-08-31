@@ -12,6 +12,8 @@ const FieldDraw = lazy(() =>
 );
 import { AgronomChat } from "./features/agronom/AgronomChat.jsx";
 import { SiqnalPaneli } from "./features/signals/SiqnalPaneli.jsx";
+import { NeceIsleyir } from "./features/pano/NeceIsleyir.jsx";
+import { BitkiSheet } from "./features/crop/BitkiSheet.jsx";
 import { HesabSheet } from "./features/hesab/HesabSheet.jsx";
 import { useHesab } from "./features/hesab/useHesab.js";
 import { HomeScreen } from "./screens/HomeScreen.jsx";
@@ -32,6 +34,7 @@ import { useKreditVeziyyeti } from "./features/loan/useKreditVeziyyeti.js";
 import { useSiqnallar } from "./features/signals/useSiqnallar.js";
 import { useTovsiyeler } from "./features/tovsiye/useTovsiyeler.js";
 import { acigSiqnallar } from "./services/siqnal.js";
+import { ehateliSiqnallar } from "./features/signals/siqnalEhate.js";
 import { havaNoqtesi } from "./services/saheYeri.js";
 import { DEFAULT_LOCATION } from "./services/location.js";
 
@@ -51,6 +54,10 @@ export default function App() {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatSual, setChatSual] = useState(null);
   const [fieldOpen, setFieldOpen] = useState(false);
+  // "Necə işləyir?" — hal A-nın üç addımlıq izahı (ümumi çat DEYİL)
+  const [neceOpen, setNeceOpen] = useState(false);
+  // Bitki seçimi — Maliyyədəki şərt zəncirinin ikinci addımı
+  const [bitkiOpen, setBitkiOpen] = useState(false);
   // Bildirişlər paneli: zəng ekran dəyişmir, üstdə açılır
   const [siqnalOpen, setSiqnalOpen] = useState(false);
   // Yer seçimi paneli sonradan rayonu dəyişmək üçündür; ilk açılışda
@@ -96,7 +103,13 @@ export default function App() {
     muqayise: qonsu.muqayise,
     radar: radar.xulase,
   });
-  const siqnallar = acigSiqnallar(butunSiqnallar, state.bagliSiqnallar);
+  // Sahə yoxdursa siyahıda YALNIZ hava xəbərdarlıqları qala bilər: peyk/radar
+  // mənbəli siqnal sahəsiz mövcud ola bilməz, bu süzgəc isə niyyəti kodda
+  // sabitləyir (bax: features/signals/siqnalEhate.js)
+  const siqnallar = ehateliSiqnallar(
+    acigSiqnallar(butunSiqnallar, state.bagliSiqnallar),
+    Boolean(state.sahe),
+  );
   const tovsiyeler = useTovsiyeler({
     sahe: state.sahe,
     bitki: state.chat.crop,
@@ -110,6 +123,8 @@ export default function App() {
   const closeChat = useCallback(() => setChatOpen(false), []);
   const closeSiqnal = useCallback(() => setSiqnalOpen(false), []);
   const closeField = useCallback(() => setFieldOpen(false), []);
+  const closeNece = useCallback(() => setNeceOpen(false), []);
+  const closeBitki = useCallback(() => setBitkiOpen(false), []);
   const closeLoan = useCallback(() => setLoanOpen(false), []);
   const closeLocation = useCallback(() => setLocationOpen(false), []);
   const closeHesab = useCallback(() => setHesabOpen(false), []);
@@ -161,6 +176,8 @@ export default function App() {
                 }}
                 onDrawField={() => setFieldOpen(true)}
                 onOpenHesab={() => setHesabOpen(true)}
+                onOpenNece={() => setNeceOpen(true)}
+                onOpenBitki={() => setBitkiOpen(true)}
                 />
               </div>
             </main>
@@ -180,6 +197,8 @@ export default function App() {
             <SiqnalPaneli
               acilib={siqnalOpen}
               siqnallar={siqnallar}
+              saheVar={Boolean(state.sahe)}
+              rayon={(state.location ?? DEFAULT_LOCATION).name}
               onBagla={closeSiqnal}
               onSiqnaliBagla={actions.siqnaliBagla}
               onHereket={() => setChatOpen(true)}
@@ -190,6 +209,15 @@ export default function App() {
             />
 
             {chatOpen && <AgronomChat peyk={peyk} qonsu={qonsu} ilkSual={chatSual} onClose={closeChat} />}
+
+            {/* Hal A izahı: üç addım + elə oradan sahə çəkməyə keçid */}
+            <NeceIsleyir
+              acilib={neceOpen}
+              onBagla={closeNece}
+              onDrawField={() => setFieldOpen(true)}
+            />
+
+            <BitkiSheet acilib={bitkiOpen} onBagla={closeBitki} />
 
             <HesabSheet acilib={hesabOpen} onBagla={closeHesab} />
 

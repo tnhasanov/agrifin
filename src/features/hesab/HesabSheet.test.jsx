@@ -36,14 +36,14 @@ describe("HesabSheet", () => {
     vi.unstubAllGlobals();
   });
 
-  it("SMS kodunu yazarkən də fokus itmir", async () => {
+  it("təsdiq kodunu yazarkən də fokus itmir", async () => {
     vi.stubGlobal("fetch", vi.fn(() => fetchCavabi({ gonderildi: true, rejim: "log" })));
     renderApp(<HesabSheet acilib onBagla={() => {}} />);
 
     fireEvent.change(screen.getByLabelText(/telefon/i), { target: { value: "0501234567" } });
-    fireEvent.click(screen.getByRole("button", { name: /kod göndər/i }));
+    fireEvent.click(screen.getByRole("button", { name: /kodu göndər/i }));
 
-    const kodXanasi = await screen.findByLabelText(/sms kodu/i);
+    const kodXanasi = await screen.findByLabelText(/təsdiq kodu/i);
     kodXanasi.focus();
     for (const deyer of ["1", "12", "123"]) {
       fireEvent.change(kodXanasi, { target: { value: deyer } });
@@ -65,13 +65,13 @@ describe("HesabSheet", () => {
     renderApp(<HesabSheet acilib onBagla={() => {}} />);
 
     fireEvent.change(screen.getByLabelText(/telefon/i), { target: { value: "0501234567" } });
-    fireEvent.click(screen.getByRole("button", { name: /kod göndər/i }));
+    fireEvent.click(screen.getByRole("button", { name: /kodu göndər/i }));
 
     // Log rejimi gizlədilmir: fermer SMS gözləməsin
     await screen.findByText(/sınaq rejimi/i);
     expect(fetchMock.mock.calls[0][1].body).toContain("kod-iste");
 
-    fireEvent.change(screen.getByLabelText(/sms kodu/i), { target: { value: "123456" } });
+    fireEvent.change(screen.getByLabelText(/təsdiq kodu/i), { target: { value: "123456" } });
     fireEvent.click(screen.getByRole("button", { name: /təsdiqlə/i }));
 
     // Giriş bitdi: toast + göndərilən əməl kod-tesdiq idi
@@ -89,7 +89,7 @@ describe("HesabSheet", () => {
 
     renderApp(<HesabSheet acilib onBagla={() => {}} />);
     fireEvent.change(screen.getByLabelText(/telefon/i), { target: { value: "0501234567" } });
-    fireEvent.click(screen.getByRole("button", { name: /kod göndər/i }));
+    fireEvent.click(screen.getByRole("button", { name: /kodu göndər/i }));
 
     const xeta = await screen.findByRole("alert");
     expect(xeta.textContent).toMatch(/çox cəhd/i);

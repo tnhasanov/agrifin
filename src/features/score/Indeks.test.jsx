@@ -156,6 +156,19 @@ describe("aqronomik performans indeksi — əsas ekran", () => {
     expect(screen.queryByText("Yüksək")).not.toBeInTheDocument();
   });
 
+  // PDF 14: hal B-nin əsas hərəkəti "Sahəyə bax"dır — bal yoxdursa fermerin
+  // görə biləcəyi yeganə dəlil sahə ekranındadır
+  it("tarixçə yığılan halda ana səhifədə 'Sahəyə bax' əsas hərəkətdir", async () => {
+    const user = userEvent.setup();
+    seed();
+    stubApi({ movsumSiyahisi: movsumler({ sayi: 2 }) });
+    renderApp(<App />);
+
+    await waitFor(() => expect(screen.getByText("Tarixçə yığılır")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Sahəyə bax" }));
+    expect(window.location.pathname).toBe("/fields");
+  });
+
   // Fermer balın SƏBƏBİNİ görməlidir — gizli düstur etibar yaratmır
   it("kart açılanda amil adları, səbəblər və mövsüm zolağı görünür", async () => {
     const user = userEvent.setup();
