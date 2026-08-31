@@ -28,7 +28,7 @@
 //   • `status` klientdən qəbul edilmir; keçidlər vəziyyət maşınındadır.
 //   • Vaxt damğaları serverdədir (now()) — klient tarixi yazmır.
 //   • Xəta mətnləri daxili detal sızdırmır; stack yalnız server logundadır.
-import { sorgu, dbQurulub } from "../lib/db.js";
+import { sorgu, baglantiKimliyi, dbQurulub } from "../lib/db.js";
 import { cookieToken, hesabQurulub, sessiyaOxu } from "../lib/hesab.js";
 import {
   ACIQ_HALLAR,
@@ -347,7 +347,17 @@ function sxemYoxdur(error) {
 }
 
 function sxemCavabi(res, error) {
-  console.error("kredit sxem yoxdur (miqrasiya işlədilməyib):", error?.message);
+  // Hansı bazaya bağlandığımız da yazılır: "miqrasiyanı işlətdim, amma xəta
+  // qalır" halının səbəbi adətən başqa branch-ın bazasıdır. Parol və
+  // istifadəçi adı YOX — yalnız host + baza adı (bax: lib/db.js).
+  console.error(
+    JSON.stringify({
+      hadise: "kreditSxemYoxdur",
+      baza: baglantiKimliyi(),
+      sebeb: error?.message,
+      hell: "npm run db:migrate — həmin bazanın bağlantı sətri ilə",
+    }),
+  );
   return res.status(503).json({ error: "sxemYoxdur" });
 }
 
