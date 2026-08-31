@@ -7,6 +7,7 @@ import { useStore } from "../state/store.jsx";
 import { necheGunEvvel, ortukFaizi } from "../services/ndvi.js";
 import { SaheXeritesi } from "../features/ndvi/SaheXeritesi.jsx";
 import { QonsuMuqayisesi } from "../features/ndvi/QonsuMuqayisesi.jsx";
+import { VegetasiyaQrafiki } from "../features/ndvi/VegetasiyaQrafiki.jsx";
 import { SaheLenti } from "../features/lent/SaheLenti.jsx";
 import { HesabatPaylas } from "../features/share/HesabatPaylas.jsx";
 import { BosSahe } from "../features/pano/BosSahe.jsx";
@@ -191,6 +192,10 @@ export function SaheScreen({
           <EtibarNisani etibar={indeks.etibar} say={indeks.movsumSayi} setir />
         </div>
       )}
+
+      {/* Vegetasiya dinamikası: rəqəm "haradayıq"ı deyir, əyri "hara
+          gedirik"i. Ölçmə ikidən azdırsa qrafik çəkilmir. */}
+      <VegetasiyaQrafiki peyk={peyk} muqayise={qonsu.muqayise} />
 
       {/* Ətraf müqayisəsi: "NDVI 0,68" mücərrəddir, qonşularla müqayisə aydın */}
       <QonsuMuqayisesi qonsu={qonsu} ndvi={xulase?.ndvi} illik={peyk.illik} />
