@@ -56,7 +56,7 @@ afterEach(() => {
 /** Müraciət göndərib təklifə çatır (server stub vasitəsilə) */
 async function teklifeCat(user) {
   await user.click(screen.getByRole("button", { name: "Maliyyə" }));
-    await user.click(await screen.findByRole("button", { name: "Əlavə vəsait lazımdır?" }));
+    await user.click(await screen.findByRole("button", { name: /Kredit üçün növbəti addım|Əlavə vəsait lazımdır/ }));
   await screen.findByRole("slider");
   await user.click(screen.getByRole("button", { name: "Şərtlərə bax" }));
   await user.click(screen.getByRole("button", { name: /üçün müraciət göndər/ }));
@@ -84,7 +84,11 @@ describe("hal C — server təklifi Maliyyə ekranında", () => {
     expect(screen.getByText("Müddət")).toBeInTheDocument();
     expect(screen.getByText("12 ay")).toBeInTheDocument();
     expect(screen.getByText("İllik faiz")).toBeInTheDocument();
-    expect(screen.getByText("Aylıq faiz ödənişi")).toBeInTheDocument();
+    // PDF 19 dəqiq mətni: rəqəm İLK AYIN TƏXMİNİdir, sabit aylıq ödəniş deyil
+    expect(screen.getByText("İlk ayın təxmini faizi")).toBeInTheDocument();
+    expect(
+      screen.getByText("Sonrakı aylarda qalan əsas borca görə azalır."),
+    ).toBeInTheDocument();
     expect(screen.getByText("Niyə bu məbləğ?")).toBeInTheDocument();
     expect(screen.getByText("Mövsümi gəlirinizə uyğundur")).toBeInTheDocument();
     expect(screen.getByText("Ödəniş ehtiyatı nəzərə alınıb")).toBeInTheDocument();
@@ -150,8 +154,8 @@ describe("hal D/E — aktiv kredit və gecikmə Maliyyə ekranında", () => {
     expect(
       screen.getAllByText(formatMoney(server.oxu().kredit.qaliqBorc, "az")).length,
     ).toBeGreaterThan(0);
-    expect(screen.getByText("Bu ayın faizi")).toBeInTheDocument();
-    expect(screen.getByText("Son tarix")).toBeInTheDocument();
+    expect(screen.getByText("Bu dövrün faizi")).toBeInTheDocument();
+    expect(screen.getByText("Növbəti ödəniş")).toBeInTheDocument();
     expect(screen.getByText("Ödənilib 0%")).toBeInTheDocument();
     expect(screen.getByText("Ödənişlər vaxtındadır")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Ödəniş et" })).toBeInTheDocument();
@@ -319,8 +323,9 @@ describe("yüklənmə və xəta halları", () => {
     expect(screen.queryByText("Əlavə vəsait lazımdır?")).not.toBeInTheDocument();
   });
 
-  // Demo pulqabı qeydi REAL kredit rəqəmlərini "nümunə" adlandırmamalıdır
-  it("Maliyyə ekranında 'bütün məlumatlar nümunədir' yazısı yoxdur", async () => {
+  // Server-avtoritativ kredit rəqəmlərinin yanında HEÇ BİR "nümunə" qeydi
+  // olmamalıdır — köhnə pulqabı bandı da daxil (PDF 18: legacy banner silinir)
+  it("Maliyyə ekranında nümunə/demo qeydi yoxdur", async () => {
     const user = userEvent.setup();
     seedSahe();
     const server = kreditServeri({ mebleg: 5000 });
@@ -329,6 +334,7 @@ describe("yüklənmə və xəta halları", () => {
 
     await user.click(screen.getByRole("button", { name: "Maliyyə" }));
     expect(screen.queryByText(/bütün məlumatlar nümunədir/)).not.toBeInTheDocument();
-    expect(screen.getByText(/Nümunə pulqabı balansı bu ekrandan çıxarıldı/)).toBeInTheDocument();
+    expect(screen.queryByText(/Nümunə pulqabı/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/nümunə/i)).not.toBeInTheDocument();
   });
 });

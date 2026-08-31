@@ -73,10 +73,10 @@ export function AktivKreditXulasesi({ kredit, odenisler = [], onOdenis, onQrafik
       <div className="mt-2">
         {/* Bu ayın faizi: yığılmış borc + cari dövr proqnozu (server) */}
         {kredit.novbetiMebleg != null && !kredit.novbetiEsasDaxil && (
-          <Setir etiket={t("maliyye.buAyFaiz")} deger={`~${money(kredit.novbetiMebleg)}`} />
+          <Setir etiket={t("maliyye.buDovrFaiz")} deger={`~${money(kredit.novbetiMebleg)}`} />
         )}
         {kredit.novbetiTarix && (
-          <Setir etiket={t("maliyye.sonTarix")} deger={gunAdi(t, kredit.novbetiTarix)} />
+          <Setir etiket={t("maliyye.novbetiOdenis")} deger={gunAdi(t, kredit.novbetiTarix)} />
         )}
       </div>
 
@@ -292,12 +292,18 @@ export function TeklifKarti({ teklif, ayliqFaizTexmini = null, azaldilib = false
             </p>
           </div>
           <div>
-            <p style={{ color: C.muted, fontSize: 10 }}>{t("teklifKart.ayliqFaiz")}</p>
+            <p style={{ color: C.muted, fontSize: 10 }}>{t("teklifKart.ilkAyFaiz")}</p>
             <p className="text-xs font-bold" style={{ color: C.ink, fontVariantNumeric: "tabular-nums" }}>
               {ayliqFaizTexmini != null ? `~${money(ayliqFaizTexmini)}` : "—"}
             </p>
           </div>
         </div>
+        {/* Azalan faiz qeydi RƏQƏMİN YANINDADIR: "~45 ₼" tək başına aylıq
+            sabit ödəniş kimi oxunur. Faiz qalan əsas borca hesablanır, ona
+            görə əsas borc azaldıqca bu rəqəm də azalır (PDF 19). */}
+        <p className="mt-2 text-xs leading-relaxed" style={{ color: C.mal }}>
+          {t("kredit.faizAzalir")}
+        </p>
       </div>
 
       {azaldilib && istenilen != null && (

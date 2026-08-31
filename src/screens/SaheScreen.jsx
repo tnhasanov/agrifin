@@ -1,6 +1,7 @@
 import { Card } from "../components/Card.jsx";
 import { Chip } from "../components/Chip.jsx";
 import { Icon } from "../components/Icon.jsx";
+import { SectionTitle } from "../components/SectionTitle.jsx";
 import { C, font } from "../theme/tokens.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
@@ -35,16 +36,19 @@ export function SaheScreen({
   siqnallar = [],
   onDrawField,
   onOpenChat,
+  onOpenNece,
 }) {
   const { t } = useI18n();
   const { state } = useStore();
   const { navigate } = useRouter();
 
   // ── Hal A: sahə yoxdur — bir aydın dəvət, uydurma göstərici yox ─────
+  // Ana səhifə ilə eyni komponentdir (hero təkrarlanmır), "Necə işləyir?"
+  // də eyni izah panelini açır.
   if (!state.sahe) {
     return (
       <div className="px-4 pb-4">
-        <BosSahe onDrawField={onDrawField} onNece={onOpenChat} />
+        <BosSahe onDrawField={onDrawField} onNece={onOpenNece} />
       </div>
     );
   }
@@ -98,13 +102,23 @@ export function SaheScreen({
 
       {/* Peyk xəritəsi: problemin HARADA olduğunu göstərir. Xəbərdarlıq
           aktivdirsə kontur narıncıdır (mock 04, hal F) */}
-      <SaheXeritesi sahe={state.sahe} konturRengi={saheSiqnali ? "#C97A28" : undefined} />
+      <SaheXeritesi
+        sahe={state.sahe}
+        konturRengi={saheSiqnali ? "#C97A28" : undefined}
+        // Əsas hərəkət hala görədir: xəbərdarlıq varsa "Yoxlamaya başla"
+        // (xəbərdarlıq kartındadır), yoxdursa "Xəritədə bax" (PDF 15)
+        tamCta={!saheSiqnali}
+      />
 
-      {/* Ölçmə statusu: köhnə/oflayn/xəta halları son-yenilənmə vaxtı ilə
-          açıq deyilir — "yüklənmədi" ilə "buludlu idi" fərqli mənalardır */}
+      {/* MƏLUMAT KEYFİYYƏTİ — ölçmənin özü qədər vacibdir: köhnə/oflayn/xəta
+          halları son-yenilənmə vaxtı ilə açıq deyilir. "Yüklənmədi" ilə
+          "buludlu idi" fərqli mənalardır və fermer fərqi görməlidir. */}
+      {(peyk.hal !== "yoxdur" || radar.hal !== "yoxdur") && (
+        <SectionTitle>{t("sahe.melumatKeyfiyyeti")}</SectionTitle>
+      )}
       {peyk.hal !== "yoxdur" && (
         <div
-          className="mt-3 flex items-center gap-2 rounded-xl px-3 py-2"
+          className="flex items-center gap-2 rounded-xl px-3 py-2"
           style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}
           aria-live="polite"
         >

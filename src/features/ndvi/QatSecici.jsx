@@ -23,7 +23,15 @@ export function QatSecici({ aktiv, onSec, aciq = false }) {
             className="flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold"
             style={
               secili
-                ? { backgroundColor: aciq ? C.gold : C.pine, color: C.pine, border: "1px solid transparent" }
+                ? {
+                    backgroundColor: aciq ? C.gold : C.pine,
+                    // KART GÖRÜNÜŞÜNDƏ MƏTN AĞDIR: əvvəl seçili düymənin
+                    // fonu da, mətni də C.pine idi — ad tünd fonda tünd
+                    // qalıb tamamilə oxunmurdu (yalnız ikon görünürdü).
+                    // Tam ekranda fon qızılıdır, orada tünd mətn düzdür.
+                    color: aciq ? C.pine : "#fff",
+                    border: "1px solid transparent",
+                  }
                 : {
                     backgroundColor: aciq ? "rgba(255,255,255,0.12)" : C.card,
                     color: aciq ? "#fff" : C.ink,

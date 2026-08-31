@@ -28,7 +28,12 @@ const TamEkranXerite = lazy(() =>
  * kvotasını iki dəfə xərcləyər, halbuki fermerlərin çoxu birinə baxıb
  * keçəcək. Açılmış qat keşdə qalır — geri qayıdanda sorğu getmir.
  */
-export function SaheXeritesi({ sahe, konturRengi }) {
+/**
+ * @param {boolean} tamCta Xəritənin altında tam enli "Xəritədə bax" düyməsi.
+ *   Sahə ekranının əsas hərəkəti xəbərdarlıq yoxdursa budur (PDF 15) —
+ *   künçdəki kiçik "Böyüt" düyməsi əsas hərəkət kimi oxunmur.
+ */
+export function SaheXeritesi({ sahe, konturRengi, tamCta = false }) {
   const { t } = useI18n();
   // Qat başına ayrı nəticə və hal — keçid zamanı köhnə şəkil itməsin.
   // Sahə açarı vəziyyətin İÇİNDƏ saxlanılır: effektin içində sıfırlama
@@ -163,6 +168,17 @@ export function SaheXeritesi({ sahe, konturRengi }) {
           >
             {t(`ndvi.mapNote.${aktiv}`)}
           </p>
+          {tamCta && (
+            <button
+              type="button"
+              onClick={() => setTamEkran(true)}
+              className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold"
+              style={{ backgroundColor: C.pine, color: "#fff", minHeight: 48 }}
+            >
+              <Icon name="Map" size={16} color="#fff" />
+              {t("ndvi.xeritedeBax")}
+            </button>
+          )}
         </>
       )}
 

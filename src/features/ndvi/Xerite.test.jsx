@@ -217,4 +217,33 @@ describe("xəritə qatları", () => {
     await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());
     expect(screen.queryByRole("button", { name: "Nəmlik" })).not.toBeInTheDocument();
   });
+
+  // PDF 15: sahə ekranının ƏSAS hərəkəti — xəbərdarlıq yoxdursa xəritəyə
+  // baxmaqdır. Künçdəki kiçik "Böyüt" düyməsi əsas hərəkət kimi oxunmur.
+  it("xəbərdarlıq yoxdursa tam enli 'Xəritədə bax' düyməsi göstərilir", async () => {
+    const user = userEvent.setup();
+    seed();
+    stubApi();
+    renderApp(<App />);
+
+    // Ölçmə statusu ayrıca "Məlumat keyfiyyəti" bölməsindədir
+    expect(await screen.findByText("Məlumat keyfiyyəti")).toBeInTheDocument();
+
+    const cta = await screen.findByRole("button", { name: "Xəritədə bax" });
+    await user.click(cta);
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+  });
+
+  // ƏLÇATANLIQ: seçili qat düyməsinin fonu da, mətni də tünd şam rəngi idi —
+  // ad görünmürdü. Mətn fonla eyni rəngdə OLMAMALIDIR (WCAG AA).
+  it("seçili qat düyməsinin adı fonda itmir", async () => {
+    seed();
+    stubApi();
+    renderApp(<App />);
+
+    const secili = await screen.findByRole("button", { name: "Bitki" });
+    const stil = window.getComputedStyle(secili);
+    expect(stil.color).not.toBe(stil.backgroundColor);
+    expect(stil.color).toBe("rgb(255, 255, 255)");
+  });
 });
