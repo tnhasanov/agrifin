@@ -688,6 +688,66 @@ export default {
     "Sahəniz və 5 km radiusdakı torpaq EYNİ qayda ilə ölçülür: bulud, kölgə və su çıxarılır, biçilmiş və çılpaq sahələr hər iki tərəfdə sayılır. Eyni peyk keçidi, eyni gün.",
 
   "paylas.duyme": "Hesabatı paylaş",
+
+  "pdf.duyme": "Sahə pasportu (PDF)",
+
+  "pdf.izah": "Bank, aqronom və alıcı üçün — peyk ölçmələri, bal və gəlir hesablaması bir sənəddə.",
+
+  "pdf.qurulur": "Sənəd hazırlanır…",
+
+  "pdf.xeta": "Sənəd yaradıla bilmədi. Bir azdan yenidən cəhd edin.",
+
+  "pdf.basliq": "Sahə pasportu",
+
+  "pdf.basliq2": "Sahə pasportu — qiymətləndirmə",
+
+  "pdf.altyazi": "Peyk ölçmələri və qiymətləndirmə",
+
+  "pdf.yaradilib": "Yaradılıb",
+
+  "pdf.fermer": "Fermer",
+
+  "pdf.telefon": "Telefon",
+
+  "pdf.koordinat": "Sahənin mərkəzi",
+
+  "pdf.bitkiYox": "Bitki seçilməyib",
+
+  "pdf.sekilAlt": "Peyk görüntüsü · bitki örtüyü · 10×10 m piksel",
+
+  "pdf.cariVeziyyet": "Cari vəziyyət",
+
+  "pdf.muqayise": "Rayonla müqayisə",
+
+  "pdf.sizinSahe": "Sizin sahə",
+
+  "pdf.rayonMedyani": "Rayon medianı",
+
+  "pdf.movsumTarixcesi": "Mövsümlər üzrə zirvə",
+
+  "pdf.movsumYoxdur": "Mövsüm tarixçəsi hələ yığılır",
+
+  "pdf.mehsuldarliq": "Məhsuldarlıq və gəlir",
+
+  "pdf.gozlenilenMehsul": "Gözlənilən məhsuldarlıq",
+
+  "pdf.qiymet": "Hesablamada qiymət",
+
+  "pdf.ortaSsenari": "orta ssenari",
+
+  "pdf.modelQeydi": "Bu rəqəmlər ÖLÇÜLMƏYİB, ekspert normaları ilə hesablanıb (kalibrlənməmiş model). Peyk ölçmələri isə yuxarıdakı bölmələrdədir.",
+
+  "pdf.gelirYoxdur": "Gəlir hesablaması üçün bitki və sahə lazımdır.",
+
+  "pdf.balYoxdur": "Bal üçün ən azı 3 istifadə oluna bilən mövsüm lazımdır.",
+
+  "pdf.menbe": "Ölçmə mənbəyi",
+
+  "pdf.olcmeSayi": "Ölçmə sayı (150 gün)",
+
+  "pdf.sonOlcme": "Son ölçmə",
+
+  "pdf.altQeyd": "AgriFin · Rəsmi arayış və ya qiymətləndirmə hesabatı deyil. Peyk ölçmələri Copernicus Sentinel məlumatlarına əsaslanır.",
   "paylas.basliq": "AgriFin — sahə hesabatı",
   "paylas.sahe": "Sahə: {hektar} ha",
   "paylas.saheBitki": "Sahə: {hektar} ha · {bitki}",

@@ -13,6 +13,7 @@ import { QonsuMuqayisesi } from "../features/ndvi/QonsuMuqayisesi.jsx";
 import { VegetasiyaQrafiki } from "../features/ndvi/VegetasiyaQrafiki.jsx";
 import { SaheLenti } from "../features/lent/SaheLenti.jsx";
 import { HesabatPaylas } from "../features/share/HesabatPaylas.jsx";
+import { HesabatDuymesi } from "../features/hesabat/HesabatDuymesi.jsx";
 import { BosSahe } from "../features/pano/BosSahe.jsx";
 import { SaheXebardarligi } from "../features/pano/SaheXebardarligi.jsx";
 import { EtibarNisani } from "../features/pano/EtibarNisani.jsx";
@@ -33,6 +34,7 @@ export function SaheScreen({
   qonsu = { hal: "yoxdur", muqayise: null },
   radar = { hal: "yoxdur", xulase: null },
   indeksHali = { hal: "yoxdur", indeks: null, movsumler: [] },
+  kreditHali = null,
   siqnallar = [],
   onDrawField,
   onOpenChat,
@@ -300,7 +302,15 @@ export function SaheScreen({
       {/* Ölçmə xronologiyası — sahənin "bank çıxarışı" */}
       <SaheLenti peyk={peyk} radar={radar} />
 
-      {/* Hesabatı WhatsApp-a çıxar — aqronomla söhbət orada gedir */}
+      {/* Sahə pasportu: sübutu sənəd kimi binadan çıxarır (bank, alıcı) */}
+      <HesabatDuymesi
+        peyk={peyk}
+        qonsu={qonsu}
+        indeksHali={indeksHali}
+        kreditHali={kreditHali}
+      />
+
+      {/* Qısa mətn — aqronomla söhbət WhatsApp-dadır, orada PDF ağırdır */}
       <HesabatPaylas
         hektar={state.sahe?.hektar}
         bitkiKey={state.chat.crop ? `kbcrop.${state.chat.crop}` : null}

@@ -676,6 +676,66 @@ export default {
     "Your field and the land within 5 km are measured the SAME way: cloud, shadow and water are excluded, while harvested and bare ground counts on both sides. Same satellite pass, same day.",
 
   "paylas.duyme": "Share the report",
+
+  "pdf.duyme": "Field passport (PDF)",
+
+  "pdf.izah": "For the bank, agronomist and buyer — satellite measurements, score and income estimate in one document.",
+
+  "pdf.qurulur": "Preparing document…",
+
+  "pdf.xeta": "The document could not be created. Please try again shortly.",
+
+  "pdf.basliq": "Field passport",
+
+  "pdf.basliq2": "Field passport — assessment",
+
+  "pdf.altyazi": "Satellite measurements and assessment",
+
+  "pdf.yaradilib": "Generated",
+
+  "pdf.fermer": "Farmer",
+
+  "pdf.telefon": "Phone",
+
+  "pdf.koordinat": "Field centre",
+
+  "pdf.bitkiYox": "No crop selected",
+
+  "pdf.sekilAlt": "Satellite image · crop cover · 10×10 m pixels",
+
+  "pdf.cariVeziyyet": "Current condition",
+
+  "pdf.muqayise": "Comparison with the district",
+
+  "pdf.sizinSahe": "Your field",
+
+  "pdf.rayonMedyani": "District median",
+
+  "pdf.movsumTarixcesi": "Seasonal peaks",
+
+  "pdf.movsumYoxdur": "Season history is still building",
+
+  "pdf.mehsuldarliq": "Yield and income",
+
+  "pdf.gozlenilenMehsul": "Expected yield",
+
+  "pdf.qiymet": "Price used",
+
+  "pdf.ortaSsenari": "mid scenario",
+
+  "pdf.modelQeydi": "These figures are NOT MEASURED; they are computed from expert norms (uncalibrated model). The satellite measurements are in the sections above.",
+
+  "pdf.gelirYoxdur": "A crop and a field are needed for the income estimate.",
+
+  "pdf.balYoxdur": "At least 3 usable seasons are needed for a score.",
+
+  "pdf.menbe": "Measurement source",
+
+  "pdf.olcmeSayi": "Measurements (150 days)",
+
+  "pdf.sonOlcme": "Last measurement",
+
+  "pdf.altQeyd": "AgriFin · Not an official certificate or valuation report. Satellite measurements are based on Copernicus Sentinel data.",
   "paylas.basliq": "AgriFin — field report",
   "paylas.sahe": "Field: {hektar} ha",
   "paylas.saheBitki": "Field: {hektar} ha · {bitki}",
