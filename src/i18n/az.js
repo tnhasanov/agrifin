@@ -730,7 +730,10 @@ export default {
   "siqnal.panelAltYazi": "Sahənizdən {count} açıq siqnal",
   "siqnal.panelBosAltYazi": "Sahənizdən açıq siqnal yoxdur",
   "siqnal.panelHamisi": "Məsləhət ekranında hamısına bax",
-  "indeks.basliq": "Aqronomik performans indeksi",
+  // Məhsulun adı brief-dəki kimi "FarmScore"dur. Nə olduğu (aqronomik
+  // göstərici, kredit balı DEYİL) açılan hissədəki izahda qalır —
+  // ad qısa olmalıdır, izah isə itməməlidir (bax: indeks.izah)
+  "indeks.basliq": "FarmScore",
   "indeks.yuklenir": "Sahənin çoxillik tarixçəsi yüklənir…",
   "indeks.olcmeYox": "İndeks üçün kifayət qədər tarixçə yoxdur.",
   "indeks.xeta": "Tarixçə alınmadı — indeks sonra hesablanacaq.",

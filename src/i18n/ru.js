@@ -720,7 +720,7 @@ export default {
   "siqnal.panelAltYazi": "{count} открытых сигналов с вашего поля",
   "siqnal.panelBosAltYazi": "Открытых сигналов с вашего поля нет",
   "siqnal.panelHamisi": "Посмотреть всё на экране советов",
-  "indeks.basliq": "Индекс агрономической эффективности",
+  "indeks.basliq": "FarmScore",
   "indeks.yuklenir": "Загружается многолетняя история поля…",
   "indeks.olcmeYox": "Недостаточно истории для индекса.",
   "indeks.xeta": "История недоступна — индекс будет рассчитан позже.",

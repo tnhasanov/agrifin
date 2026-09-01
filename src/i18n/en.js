@@ -718,7 +718,7 @@ export default {
   "siqnal.panelAltYazi": "{count} open signals from your field",
   "siqnal.panelBosAltYazi": "No open signals from your field",
   "siqnal.panelHamisi": "See everything on the advisor screen",
-  "indeks.basliq": "Agronomic performance index",
+  "indeks.basliq": "FarmScore",
   "indeks.yuklenir": "Loading the field's multi-season history…",
   "indeks.olcmeYox": "Not enough history for the index.",
   "indeks.xeta": "History unavailable — the index will be computed later.",
