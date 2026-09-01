@@ -1,7 +1,7 @@
 export default {
   "app.name": "AgriFin",
   "app.tagline": "Smart finance for farmers",
-  "farm.name": "Green Valley Farm",
+  "sahe.adsiz": "Your field",
   "demo.banner": "Demo prototype — all data is sample data",
 
   "common.today": "Today",

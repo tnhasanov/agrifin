@@ -1,7 +1,7 @@
 export default {
   "app.name": "AgriFin",
   "app.tagline": "Умные финансы для фермеров",
-  "farm.name": "Хозяйство «Зелёная долина»",
+  "sahe.adsiz": "Ваш участок",
   "demo.banner": "Демо-прототип — все данные примерные",
 
   "common.today": "Сегодня",

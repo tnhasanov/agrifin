@@ -98,8 +98,13 @@ export function HomeScreen({
       {/* Sahə varsa: yaşıl FarmScore kartı (bal və ya hal B qapısı içindədir) */}
       {state.sahe && (
         <FarmScoreKarti
+          /* Başlıq UYDURMA TƏSƏRRÜFAT ADI DAŞIMIR. Əvvəl "Yaşıl Vadi
+             Təsərrüfatı" yazılırdı — heç kimin qoymadığı ad, prototip
+             qalığı. İndi fermerin ÖZ SEÇDİYİ bitki yazılır (mock-dakı
+             "Alma bağı · 4.2 ha" quruluşu), bitki seçilməyibsə neytral
+             "Sahəniz" qalır. */
           farmLine={t("home.farmLine", {
-            farm: { key: FARM.farmNameKey },
+            farm: { key: state.chat.crop ? `kbcrop.${state.chat.crop}` : "sahe.adsiz" },
             ha: { number: state.sahe.hektar },
           })}
           indeksHali={indeksHali}

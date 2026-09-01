@@ -1,7 +1,9 @@
 export default {
   "app.name": "AgriFin",
   "app.tagline": "Fermerlər üçün ağıllı maliyyə",
-  "farm.name": "Yaşıl Vadi Təsərrüfatı",
+  // Uydurma təsərrüfat adı yoxdur: başlıq fermerin SEÇDİYİ bitkidən çıxır,
+  // bitki seçilməyibsə neytral sözlə qalır (bax: HomeScreen, SaheScreen)
+  "sahe.adsiz": "Sahəniz",
   "demo.banner": "Demo prototip — bütün məlumatlar nümunədir",
 
   "common.today": "Bu gün",
