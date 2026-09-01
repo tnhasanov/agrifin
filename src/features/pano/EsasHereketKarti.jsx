@@ -1,4 +1,5 @@
 import { Card } from "../../components/Card.jsx";
+import { SectionTitle } from "../../components/SectionTitle.jsx";
 import { Icon } from "../../components/Icon.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
@@ -38,15 +39,17 @@ export function EsasHereketKarti({ hereket, onHereket }) {
     : (hereket.vars ?? undefined);
   const metn = siqnal ? t(siqnal.metnKey, siqnal.vars) : t(hereket.metnKey, deyisenler);
   const tecilidir = hereket.prioritet <= 2;
+  // Ən aşağı prioritet = görüləsi iş yoxdur ("Hər şey qaydasındadır").
+  // Yüklənmə/xəta halları da sakit deyil: onlarda ya düymə yoxdur, ya da
+  // "yenidən cəhd" real hərəkətdir.
+  const sakitdir = hereket.tip === "komek";
 
   return (
     <>
-      <p
-        className="mt-4 mb-2 px-1 text-xs font-bold"
-        style={{ color: C.muted, letterSpacing: "0.08em", textTransform: "uppercase" }}
-      >
-        {t("pano.hereketBasliq")}
-      </p>
+      {/* Başlıq PAYLAŞILAN komponentdir: bu kart əvvəl özünə məxsus böyük
+          hərfli boz sətir yazırdı, qonşu bölmələr isə SectionTitle. Eyni
+          səviyyəli iki başlıq iki cür görünəndə ekran səliqəsiz oxunur. */}
+      <SectionTitle>{t("pano.hereketBasliq")}</SectionTitle>
       <Card
         className="giris"
         style={tecilidir ? { borderColor: gorunus.reng } : undefined}
@@ -65,20 +68,35 @@ export function EsasHereketKarti({ hereket, onHereket }) {
             </p>
             {/* Yüklənmə halında düymə YOXDUR: hələ nəyin lazım olduğunu
                 bilmirik, "təsadüfi" bir hərəkət təklif etmək yanıldıcıdır */}
-            {hereket.ctaKey && (
-              <button
-                type="button"
-                onClick={() => onHereket?.(hereket)}
-                className="mt-2.5 w-full rounded-xl py-2.5 text-sm font-bold"
-                style={{
-                  backgroundColor: hereket.tip === "gecikme" ? C.danger : C.pine,
-                  color: "#fff",
-                  minHeight: 44,
-                }}
-              >
-                {t(hereket.ctaKey)}
-              </button>
-            )}
+            {/* SAKİT HAL SAKİT GÖRÜNÜR. "Hər şey qaydasındadır" halında
+                tam enli tünd düymə ekranın ən güclü elementi olurdu —
+                halbuki görüləsi iş YOXDUR. Təklif olunan kömək indi mətn
+                keçididir; toxunma sahəsi 44px qalır. */}
+            {hereket.ctaKey &&
+              (sakitdir ? (
+                <button
+                  type="button"
+                  onClick={() => onHereket?.(hereket)}
+                  className="mt-1.5 flex items-center gap-1 text-sm font-bold"
+                  style={{ color: C.field, minHeight: 44 }}
+                >
+                  {t(hereket.ctaKey)}
+                  <Icon name="ChevronRight" size={15} color={C.field} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onHereket?.(hereket)}
+                  className="mt-2.5 w-full rounded-xl py-2.5 text-sm font-bold"
+                  style={{
+                    backgroundColor: hereket.tip === "gecikme" ? C.danger : C.pine,
+                    color: "#fff",
+                    minHeight: 44,
+                  }}
+                >
+                  {t(hereket.ctaKey)}
+                </button>
+              ))}
           </div>
         </div>
       </Card>

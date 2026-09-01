@@ -198,7 +198,7 @@ export function SaheScreen({
 
       {/* Vəziyyət sətri: xəbərdarlıq yoxdursa yaxşı xəbər açıq deyilir */}
       {!saheSiqnali && peyk.hal === "hazir" && (
-        <Card className="giris" style={{ marginTop: 12, marginBottom: 8 }}>
+        <Card className="giris" style={{ marginTop: 12, marginBottom: 12 }}>
           <div className="flex items-center gap-2">
             <div className="rounded-full p-1.5" style={{ backgroundColor: C.fieldSoft }}>
               <Icon name="Check" size={14} color={C.field} />
@@ -225,7 +225,7 @@ export function SaheScreen({
 
       {/* Hal B: tarixçə yığılır — bal YOXDUR, olan faktlar dürüst göstərilir */}
       {tarixceYigilir && (
-        <Card className="giris" style={{ marginBottom: 8 }}>
+        <Card className="giris" style={{ marginBottom: 12 }}>
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
               {t("indeks.tarixceAz")}

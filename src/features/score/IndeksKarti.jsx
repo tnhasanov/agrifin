@@ -240,11 +240,10 @@ export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
   if (hal === "hazir" && indeks?.hal === "kifayetsiz") {
     return (
       <div
-        className="mt-2 rounded-2xl px-3.5 py-3"
-        style={{
-          background: "linear-gradient(150deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.05) 100%)",
-          border: "1px solid rgba(255,255,255,0.13)",
-        }}
+        /* KART İÇİNDƏ KART YOXDUR: bu blok onsuz da yaşıl kartın
+           içindədir (bax: features/pano/FarmScoreKarti.jsx). Ayrıca fon və
+           çərçivə üçüncü qat yaradırdı — məzmun eynidir, çərçivə artıqdır. */
+        className="mt-3"
       >
         <div className="flex items-start gap-2.5">
           <Icon name="Info" size={15} color={C.gold} />
@@ -315,8 +314,7 @@ export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
   if (hal === "yuklenir") {
     return (
       <div
-        className="mt-2 flex items-center gap-3.5 rounded-2xl px-3.5 py-3"
-        style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+        className="mt-3 flex items-center gap-3.5"
         role="status"
         aria-label={t("indeks.yuklenir")}
       >
@@ -333,8 +331,7 @@ export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
   if (hal !== "hazir" || !indeks) {
     return (
       <div
-        className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2"
-        style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+        className="mt-3 flex items-center gap-2"
       >
         <Icon name="Info" size={13} color="rgba(255,255,255,0.6)" />
         <span className="text-xs" style={{ color: "rgba(255,255,255,0.72)" }}>
@@ -362,11 +359,7 @@ export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
 
   return (
     <div
-      className="mt-2 rounded-2xl px-3.5 py-3"
-      style={{
-        background: "linear-gradient(150deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.05) 100%)",
-        border: "1px solid rgba(255,255,255,0.13)",
-      }}
+      className="mt-3"
     >
       <button
         type="button"

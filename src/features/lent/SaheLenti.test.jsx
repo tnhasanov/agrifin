@@ -46,7 +46,7 @@ function seed() {
 }
 
 beforeEach(() => {
-  window.history.pushState({}, "", "/advisor");
+  window.history.pushState({}, "", "/fields");
   window.localStorage.clear();
   window.localStorage.setItem("agrifin:lang", JSON.stringify("az"));
 });
@@ -55,7 +55,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("sahə lenti — məsləhət ekranı", () => {
+describe("sahə lenti — Sahələr ekranı", () => {
   it("hər ölçmə tarixi və faizi ilə bir sətirdir, ən yenisi üstdə", async () => {
     seed();
     stubApi();
@@ -113,7 +113,8 @@ describe("sahə lenti — məsləhət ekranı", () => {
     stubApi({ seriya: [] });
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText("Aqronom köməkçisi")).toBeInTheDocument());
+    // Sahələr ekranı açıqdır (başlıq bitki adıdır), amma lent bölməsi yoxdur
+    await waitFor(() => expect(screen.getByText("Sahənin peyk xəritəsi")).toBeInTheDocument());
     expect(screen.queryByText("Sahə lenti")).not.toBeInTheDocument();
   });
 

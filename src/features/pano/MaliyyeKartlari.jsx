@@ -45,12 +45,13 @@ export function AktivKreditXulasesi({ kredit, odenisler = [], onOdenis, onQrafik
       ? Math.round((1 - kredit.qaliqBorc / kredit.esasBorc) * 100)
       : 0;
   const vaxtinda = kredit.gecikmeGun === 0;
+  const gecikib = !vaxtinda;
   const sonOdenis = odenisler[0] ?? null;
 
   return (
     // PDF dizayn dili: MALİYYƏ BƏNÖVŞƏYİDİR, aqro yaşıl — fermer rəngdən
     // hansı dünyada olduğunu bilir (bax: theme/tokens.js → mal)
-    <Card className="giris" style={{ marginBottom: 8, backgroundColor: C.malSoft, border: "none" }}>
+    <Card className="giris" style={{ marginBottom: 12, backgroundColor: C.malSoft, border: "none" }}>
       <div className="flex items-center gap-2">
         <div className="rounded-xl p-2" style={{ backgroundColor: "#fff" }}>
           <Icon name="CreditCard" size={16} color={C.mal} />
@@ -98,20 +99,36 @@ export function AktivKreditXulasesi({ kredit, odenisler = [], onOdenis, onQrafik
         )}
       </div>
 
+      {/* BİR EKRANDA BİR ÖDƏNİŞ YOLU. Gecikmə varsa bu ekranın yuxarısında
+          GecikmeKarti-nın qırmızı "İndi ödə" düyməsi durur — burada ikinci,
+          bənövşəyi "Ödəniş et" göstərmək eyni işi iki ad və iki rənglə
+          təklif etmək olardı. Gecikmiş halda bu kart yalnız qrafikə aparır;
+          ödəniş qərarı yuxarıdakı kartındır. */}
       <div className="mt-3 flex gap-2">
-        <button
-          type="button"
-          onClick={onOdenis}
-          className="flex-1 rounded-xl py-2.5 text-sm font-bold"
-          style={{ backgroundColor: C.mal, color: "#fff", minHeight: 44 }}
-        >
-          {t("maliyye.odenisEt")}
-        </button>
+        {!gecikib && (
+          <button
+            type="button"
+            onClick={onOdenis}
+            className="flex-1 rounded-xl py-2.5 text-sm font-bold"
+            style={{ backgroundColor: C.mal, color: "#fff", minHeight: 44 }}
+          >
+            {t("maliyye.odenisEt")}
+          </button>
+        )}
         <button
           type="button"
           onClick={onQrafik}
           className="flex-1 rounded-xl py-2.5 text-sm font-bold"
-          style={{ backgroundColor: "#fff", color: C.mal, border: `1px solid ${C.mal}`, minHeight: 44 }}
+          style={
+            gecikib
+              ? { backgroundColor: C.mal, color: "#fff", minHeight: 44 }
+              : {
+                  backgroundColor: "#fff",
+                  color: C.mal,
+                  border: `1px solid ${C.mal}`,
+                  minHeight: 44,
+                }
+          }
         >
           {t("maliyye.qrafik")}
         </button>
@@ -168,7 +185,7 @@ export function GecikmeKarti({ kredit, onOdenis, onDestek, onEtrafli }) {
   return (
     <Card
       className="giris"
-      style={{ marginBottom: 8, backgroundColor: C.warnSoft, borderColor: C.danger }}
+      style={{ marginBottom: 12, backgroundColor: C.warnSoft, borderColor: C.danger }}
       role="alert"
     >
       <div className="flex items-center gap-2">
@@ -258,7 +275,7 @@ export function TeklifKarti({ teklif, ayliqFaizTexmini = null, azaldilib = false
   if (!teklif || teklif.hal !== "issued") return null;
 
   return (
-    <Card className="giris" style={{ marginBottom: 8 }}>
+    <Card className="giris" style={{ marginBottom: 12 }}>
       <p className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
         {t("teklifKart.basliq")}
       </p>

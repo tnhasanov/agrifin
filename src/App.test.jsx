@@ -265,7 +265,9 @@ describe("AgriFin tətbiqi", () => {
     await user.click(screen.getByRole("button", { name: "Şərtlərə bax" }));
     // Şərtlər: ilk ay faizi (~ ilə, sabit deyil) + çevik əsas borc + son tarix
     expect(screen.getByText("İlk ayın faizi")).toBeInTheDocument();
-    expect(screen.getByText(/^~/)).toBeInTheDocument();
+    // "~" nişanı PANELDƏ axtarılır: arxadakı mövsüm kartı da orta ssenarini
+    // "~" ilə yazır, ona görə ekran boyu axtarış iki nəticə verir
+    expect(within(screen.getByRole("dialog")).getByText(/^~/)).toBeInTheDocument();
     expect(screen.getByText("Müddət")).toBeInTheDocument();
     expect(screen.getByText("Son tarix")).toBeInTheDocument();
     expect(

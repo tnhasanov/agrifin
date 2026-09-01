@@ -71,7 +71,11 @@ describe("mövsüm pulu — Pul ekranı", () => {
     expect(screen.getByText(/Biçinə \d+ ay|Biçin ayıdır/)).toBeInTheDocument();
     // Gəlir TƏK RƏQƏM DEYİL: kalibrlənməmiş modeldən aralıq göstərilir
     expect(screen.getByText("Gözlənilən xalis gəlir")).toBeInTheDocument();
-    expect(screen.getByText(/₼ – .*₼/)).toBeInTheDocument();
+    // Aralıq indi zolaqdır: uc rəqəmləri ayrı-ayrı sətirlərdədir, tam
+    // aralıq isə zolağın əlçatan adındadır (ekran oxuyucu da eşidir)
+    expect(
+      screen.getByRole("img", { name: /Gözlənilən xalis gəlir aralığı: .*₼ – .*₼/ }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Mövsümün xərci")).toBeInTheDocument();
     // Mənbə gizlədilmir
     expect(screen.getByText(/kalibrlənməmiş model/)).toBeInTheDocument();

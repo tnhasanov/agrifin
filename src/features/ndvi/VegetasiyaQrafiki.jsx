@@ -70,7 +70,7 @@ export function VegetasiyaQrafiki({ peyk = { hal: "yoxdur", seriya: [] }, muqayi
   const tekAy = ayEtiketleri.length === 1;
 
   return (
-    <Card className="giris" style={{ marginTop: 12, marginBottom: 8 }}>
+    <Card className="giris" style={{ marginTop: 12, marginBottom: 12 }}>
       <div className="flex items-baseline justify-between gap-2">
         <h3 className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
           {t("veg.basliq")}

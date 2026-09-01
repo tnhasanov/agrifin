@@ -6,11 +6,16 @@ import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
 import { SiqnalKarti } from "../features/signals/SiqnalKarti.jsx";
 import { TovsiyeKarti } from "../features/tovsiye/TovsiyeKarti.jsx";
-import { SaheLenti } from "../features/lent/SaheLenti.jsx";
 import { useRouter } from "../lib/router.jsx";
 import { pathFor } from "../routes.js";
 
-export function AdvisorScreen({ onOpenChat, onOpenHesab, siqnallar = [], tovsiyeler = [], peyk, radar, indeksHali = null }) {
+export function AdvisorScreen({
+  onOpenChat,
+  onOpenHesab,
+  siqnallar = [],
+  tovsiyeler = [],
+  indeksHali = null,
+}) {
   const { t } = useI18n();
   const { state, actions } = useStore();
   const { navigate } = useRouter();
@@ -203,14 +208,16 @@ export function AdvisorScreen({ onOpenChat, onOpenHesab, siqnallar = [], tovsiye
             rayon={rayon}
             onBagla={actions.siqnaliBagla}
             onHereket={onOpenChat}
-            style={{ marginBottom: 10, "--i": index + 1 }}
+            style={{ marginBottom: 12, "--i": index + 1 }}
           />
         ))
       )}
 
-      {/* Lent siqnallardan sonra: siqnal bu gün görüləcək işdir, lent isə
-          tarixçədir — iş həmişə xronologiyadan öndə gəlir. */}
-      <SaheLenti peyk={peyk} radar={radar} />
+      {/* SAHƏ LENTİ BURADAN GETDİ: eyni ölçmə siyahısı Sahələr ekranında da
+          vardı. Bir məzmunun iki evi olanda fermer hansına baxacağını
+          bilmir — ölçmələrin evi Sahələrdir (xəritə, qrafik və müqayisə
+          orada, yanaşı durur). Kömək ekranı indi yalnız SORĞU və İŞ
+          ekranıdır: sual ver, siqnala bax, bu mərhələdə nə etməli. */}
 
       {/* Tövsiyələr siqnallardan SONRA gəlir: siqnal bu gün görülməli işdir,
           tövsiyə isə mövsümün bu mərhələsinin planıdır. */}
