@@ -156,6 +156,18 @@ export function RayonSecici({ secilen, sonKodlar = [], onSec, avtoFokus = false 
         })}
       </div>
 
+      {/* RAYONUN NƏ OLDUĞU VƏ NƏ OLMADIĞI. Bu qeyd bəzək deyil: rayon
+          seçimindən sonra fermer "deməli sahəmi tanıdınız" nəticəsi
+          çıxarırdı. Sahəyə aid iddia (suvarma, peyk ölçməsi) yalnız
+          çəkilmiş konturdan gəlir. */}
+      <div
+        className="mt-4 flex items-start gap-2 px-3 py-2.5"
+        style={{ backgroundColor: C.infoSoft, borderRadius: RADIUS.idare }}
+      >
+        <Icon name="Info" size={16} color={C.info} />
+        <p style={{ color: C.info, ...TIPO.qeyd }}>{t("onb.rayon.qeyd")}</p>
+      </div>
+
       <RayonVereqi
         acilib={vereq}
         onBagla={() => setVereq(false)}

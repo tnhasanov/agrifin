@@ -40,25 +40,29 @@ export function SaheHero({ className = "" }) {
 
       <rect width="390" height="300" fill="url(#hero-goy)" />
 
-      {/* Uzaq təpələr */}
-      <path d="M0 96 L64 78 L128 92 L196 70 L268 90 L330 76 L390 88 L390 130 L0 130 Z" fill={YASIL[300]} opacity="0.55" />
-      <path d="M0 112 L78 100 L150 114 L232 98 L310 112 L390 104 L390 150 L0 150 Z" fill={YASIL[400]} opacity="0.5" />
+      {/* Üfüq alçaqdır: kadrın böyük hissəsi TARLADIR, göy deyil — aerofoto
+          belə qurulur, mənzərə şəkli isə əksinə */}
+      <path d="M0 54 L70 42 L132 52 L200 36 L268 50 L332 40 L390 48 L390 78 L0 78 Z" fill={YASIL[300]} opacity="0.45" />
+      <path d="M0 66 L84 58 L158 68 L238 54 L312 66 L390 60 L390 86 L0 86 Z" fill={YASIL[400]} opacity="0.4" />
 
-      {/* Zolaqlanmış tarlalar — perspektivdə genişlənən lentlər */}
-      <path d="M0 132 L390 122 L390 158 L0 172 Z" fill={YASIL[200]} />
-      <path d="M0 172 L390 158 L390 196 L0 216 Z" fill={YASIL[400]} opacity="0.85" />
-      <path d="M0 216 L390 196 L390 236 L0 262 Z" fill={YASIL[500]} />
-      <path d="M0 262 L390 236 L390 300 L0 300 Z" fill={YASIL[600]} />
+      {/* Parsel zolaqları: eyni enli deyil — real tarlalar da eyni deyil */}
+      <path d="M0 82 L390 76 L390 100 L0 108 Z" fill={YASIL[200]} />
+      <path d="M0 108 L390 100 L390 132 L0 144 Z" fill={YASIL[400]} opacity="0.75" />
+      <path d="M0 144 L390 132 L390 152 L0 166 Z" fill={YASIL[100]} />
+      <path d="M0 166 L390 152 L390 196 L0 216 Z" fill={YASIL[500]} />
+      <path d="M0 216 L390 196 L390 224 L0 248 Z" fill={YASIL[300]} opacity="0.9" />
+      <path d="M0 248 L390 224 L390 300 L0 300 Z" fill={YASIL[600]} />
 
-      {/* Şumlanmış cizgilər: sahənin işlənmiş olduğunu bir cizgi deyir */}
-      <g stroke={YASIL[100]} strokeOpacity="0.28" strokeWidth="1">
-        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-          <line key={i} x1={i * 56} y1="300" x2={i * 44 + 40} y2="124" />
+      {/* Şumlanmış cizgilər: sahənin işlənmiş olduğunu bir cizgi deyir.
+          Perspektivdə üfüqə doğru yığılır. */}
+      <g stroke={YASIL[100]} strokeOpacity="0.22" strokeWidth="1">
+        {[-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+          <line key={i} x1={i * 72 - 40} y1="300" x2={i * 26 + 120} y2="80" />
         ))}
       </g>
 
-      {/* Sahələri ayıran yol */}
-      <path d="M148 300 L196 128 L210 128 L186 300 Z" fill="#E7EDE2" opacity="0.7" />
+      {/* Parselləri ayıran torpaq yol — perspektivdə daralır */}
+      <path d="M96 300 L188 84 L198 84 L150 300 Z" fill="#EDF0E7" opacity="0.55" />
 
       <rect width="390" height="300" fill="url(#hero-perde)" />
     </svg>

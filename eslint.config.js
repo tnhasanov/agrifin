@@ -37,6 +37,11 @@ export default [
     languageOptions: { globals: { ...globals.node, ...globals.vitest } },
   },
   {
+    // Brauzer testləri Node-da işləyir və Buffer/process istifadə edir
+    files: ["e2e/**", "playwright.config.js"],
+    languageOptions: { globals: { ...globals.node } },
+  },
+  {
     files: ["scripts/**", "api/**", "lib/**"],
     languageOptions: { globals: globals.node },
   },

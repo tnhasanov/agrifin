@@ -97,12 +97,15 @@ export function OnboardingShell({
             onClick={cta.onClick}
             disabled={cta.disabled}
             className="basilir w-full font-bold"
+            // Sönük hal DOLU yaşıl deyil: şəffaflaşdırılmış marka rəngi
+            // "basmaq olar, sadəcə solğundur" kimi oxunurdu. Neytral səth
+            // fermerin gözündə "hələ hazır deyil" deməkdir.
             style={{
-              backgroundColor: C.pine,
-              color: "#FFFFFF",
+              backgroundColor: cta.disabled ? C.mist : C.pine,
+              color: cta.disabled ? C.muted : "#FFFFFF",
+              border: `1px solid ${cta.disabled ? C.line : C.pine}`,
               borderRadius: RADIUS.idare,
               minHeight: 52,
-              opacity: cta.disabled ? 0.45 : 1,
               ...TIPO.duyme,
             }}
           >

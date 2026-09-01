@@ -532,6 +532,7 @@ export default {
   "onb.rayon.gpsTekrar": "Yenidən cəhd et",
   "onb.rayon.axtar": "Rayon seçin və ya axtarın",
   "onb.rayon.tezTez": "Tez-tez seçilənlər",
+  "onb.rayon.qeyd": "Rayon hava və mövsüm kontekstidir. Sahənizin dəqiq sərhədi xəritədə çəkiləndə müəyyən olunur.",
   "onb.rayon.vereqBasliq": "Rayon seçin",
   "onb.rayon.sonSecilenler": "Son seçilənlər",
   "onb.rayon.butunRayonlar": "Bütün rayonlar",

@@ -520,6 +520,7 @@ export default {
   "onb.rayon.gpsTekrar": "Try again",
   "onb.rayon.axtar": "Select or search a district",
   "onb.rayon.tezTez": "Frequently selected",
+  "onb.rayon.qeyd": "The district gives weather and season context. Your field's exact boundary is set when you draw it on the map.",
   "onb.rayon.vereqBasliq": "Select a district",
   "onb.rayon.sonSecilenler": "Recently selected",
   "onb.rayon.butunRayonlar": "All districts",
