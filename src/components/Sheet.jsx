@@ -32,7 +32,15 @@ const azHereket = () =>
   typeof window !== "undefined" &&
   window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
 
-export function Sheet({ acilib, onBagla, baslik, altYazi, children, etiket }) {
+/**
+ * @param {object} p
+ * @param {React.ReactNode} [p.sabitUst]  Başlıqla siyahı arasında SÜRÜŞMƏYƏN
+ *   zolaq (axtarış xanası kimi). Adi `children` sürüşür; axtarış sürüşsə
+ *   fermer yazdığı sözü görmür.
+ * @param {"uygun"|"tam"} [p.boy]  "tam" paneli sabit hündürlükdə saxlayır —
+ *   uzun siyahılarda panelin boyu axtarışla dəyişib "sıçramır".
+ */
+export function Sheet({ acilib, onBagla, baslik, altYazi, children, etiket, sabitUst, boy = "uygun" }) {
   const { t } = useI18n();
   const panelRef = useRef(null);
   const acanRef = useRef(null);
@@ -170,6 +178,7 @@ export function Sheet({ acilib, onBagla, baslik, altYazi, children, etiket }) {
         style={{
           backgroundColor: C.card,
           maxHeight: "85%",
+          ...(boy === "tam" ? { height: "82%" } : null),
           // Ekranın alt kənarındakı jest zolağı düymələri örtməsin
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
           animation: sakit ? "none" : `panel-qalx ${ACILMA_MS}ms cubic-bezier(0.22, 0.9, 0.35, 1)`,
@@ -214,6 +223,9 @@ export function Sheet({ acilib, onBagla, baslik, altYazi, children, etiket }) {
             <Icon name="X" size={16} color={C.muted} />
           </button>
         </div>
+
+        {/* Sürüşməyən zolaq: klaviatura qalxanda da yerində qalır */}
+        {sabitUst && <div className="shrink-0 px-4 pb-2">{sabitUst}</div>}
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">{children}</div>
       </div>

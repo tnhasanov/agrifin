@@ -1,8 +1,7 @@
 import { Sheet } from "../../components/Sheet.jsx";
-import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { useStore } from "../../state/store.jsx";
-import { CROP_KEYS } from "../../services/crops.js";
+import { BitkiSebekesi } from "./BitkiSebekesi.jsx";
 
 /**
  * BİTKİ SEÇİCİSİ — qeydiyyatdan sonra bitkini dəyişmək/seçmək üçün panel.
@@ -12,8 +11,9 @@ import { CROP_KEYS } from "../../services/crops.js";
  * yalnız qeydiyyatda və çatın içindəki çiplərdə seçilirdi — qeydiyyatı
  * keçmiş fermer üçün bu, dalan idi.
  *
- * Siyahı qeydiyyatdakı ilə eyni mənbədəndir (services/crops.js) — iki yerdə
- * iki fərqli bitki dəsti olmasın.
+ * Siyahı qeydiyyatdakı ilə EYNİ KOMPONENTDƏNDİR (BitkiSebekesi) — iki yerdə
+ * iki fərqli bitki dəsti, iki fərqli kart görünüşü olmasın. Fermer eyni
+ * məhsulu iki cür görəndə "bu başqa siyahıdır?" sualı yaranır.
  */
 export function BitkiSheet({ acilib, onBagla }) {
   const { t } = useI18n();
@@ -23,34 +23,17 @@ export function BitkiSheet({ acilib, onBagla }) {
     <Sheet
       acilib={acilib}
       onBagla={onBagla}
-      baslik={t("onb.crop.title")}
+      baslik={t("onb.bitki.basliq")}
       altYazi={t("bitki.altYazi")}
     >
-      <div className="flex flex-wrap gap-2 pb-2">
-        {CROP_KEYS.map((key) => {
-          const secilib = state.chat.crop === key;
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => {
-                actions.chatSetCrop(key);
-                onBagla();
-              }}
-              aria-pressed={secilib}
-              className="rounded-2xl px-3.5 text-sm font-semibold"
-              style={{
-                backgroundColor: secilib ? C.fieldSoft : C.card,
-                border: `1px solid ${secilib ? C.field : C.line}`,
-                color: secilib ? C.field : C.ink,
-                fontFamily: font.body,
-                minHeight: 44,
-              }}
-            >
-              {t(`kbcrop.${key}`)}
-            </button>
-          );
-        })}
+      <div className="pb-2">
+        <BitkiSebekesi
+          secilen={state.chat.crop}
+          onSec={(kod) => {
+            actions.chatSetCrop(kod);
+            onBagla();
+          }}
+        />
       </div>
     </Sheet>
   );

@@ -147,7 +147,10 @@ export default function App() {
             sorğusu göndərmək mənasızdır və ekran oxuyucu iki dəfə eyni
             düymələri görür. */}
         {!state.onboarded ? (
-          <Onboarding onDrawField={() => setFieldOpen(true)} />
+          <Onboarding
+            onDrawField={() => setFieldOpen(true)}
+            onOpenHesab={() => setHesabOpen(true)}
+          />
         ) : (
           <>
             <AppHeader
@@ -219,8 +222,6 @@ export default function App() {
 
             <BitkiSheet acilib={bitkiOpen} onBagla={closeBitki} />
 
-            <HesabSheet acilib={hesabOpen} onBagla={closeHesab} />
-
             {locationOpen && (
               <LocationSheet
                 current={state.location}
@@ -230,6 +231,12 @@ export default function App() {
             )}
           </>
         )}
+
+        {/* GİRİŞ VƏRƏQİ də şərtdən kənardadır: xoş gəldiniz ekranındakı
+            "Hesaba daxil ol" mövcud OTP axınını açır (auth yenidən
+            yazılmır), sahəsi olan istifadəçi isə girişdən sonra axını
+            keçir (bax: aşağıdakı serverProfiliUstundur effekti). */}
+        <HesabSheet acilib={hesabOpen} onBagla={closeHesab} />
 
         {/* SAHƏ ÇƏKMƏ ONBOARDING-İN ÜÇÜNCÜ ADDIMIDIR, ona görə şərtin
             ikinci qolundan çıxarılıb: axının ən çətin işi elə buradadır və

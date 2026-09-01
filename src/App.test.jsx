@@ -145,7 +145,7 @@ describe("AgriFin tətbiqi", () => {
 
     await user.click(screen.getByRole("button", { name: /Kredit üçün növbəti addım|Əlavə vəsait lazımdır/ }));
     // Bitki seçici açılır — kredit paneli yox
-    expect(await screen.findByRole("dialog", { name: "Nə əkirsiniz?" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Əsas məhsulunuz hansıdır?" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Pomidor" }));
 
     // Seçimdən sonra növbəti addım təklif yoxlamasıdır

@@ -1,385 +1,184 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Icon } from "../../components/Icon.jsx";
-import { Aqronom } from "../../components/Aqronom.jsx";
-import { C, font } from "../../theme/tokens.js";
+import { C, ARA, RADIUS, TIPO } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
-import { useStore } from "../../state/store.jsx";
-import { searchDistricts } from "../../services/location.js";
-import { bitkiIkonu, bitkileriSirala } from "../../services/bitkiGorunus.js";
+import { useStore, ONBOARDING_ADDIMLARI } from "../../state/store.jsx";
+import { RayonSecici } from "../location/RayonSecici.jsx";
+import { BitkiSebekesi } from "../crop/BitkiSebekesi.jsx";
 import { SaheIllustrasiyasi } from "../pano/SaheIllustrasiyasi.jsx";
-import { useGps } from "../location/useGps.js";
 import { track } from "../../lib/analytics.js";
+import { OnboardingShell } from "./OnboardingShell.jsx";
+import { XosGelmisiniz } from "./XosGelmisiniz.jsx";
 
 /**
- * SAHƏ ÇƏKMƏK ONBOARDING-İN BİR HİSSƏSİDİR.
+ * İLK AÇILIŞ AXINI — dəyər, sonra bir ekranda bir qərar.
  *
- * Əvvəl iki addım vardı və sayğac "Addım 2 / 2"-də bitirdi — fermer
- * "qurtardım" hissi ilə çıxırdı, halbuki ƏSL İŞ (sahəni xəritədə çəkmək)
- * elə ondan sonra başlayırdı. Axının ən çox tərk edilən yeri də oradır.
- * İndi sayğac həqiqəti deyir: üç addım, sonuncusu sahədir.
- */
-const ADDIMLAR = ["yer", "bitki", "sahe"];
-
-// Bitki seçiləndən axının bağlanmasına qədər fasilə: personajın seçilən
-// bitkini "geyinib" tullanması görünsün (tullanma 1.1s-dir, yarısı bəsdir —
-// fermer nəticəni gözləyir, tamaşanı yox)
-const SEVINC_MS = 850;
-
-/** Personajın danışıq qabarcığı — sual başlığı personajın SÖZÜDÜR */
-function AqroSual({ hal, bitki, basliq, izah }) {
-  return (
-    <div className="giris mb-2 flex items-end gap-2" style={{ "--i": 0 }}>
-      <Aqronom hal={hal} bitki={bitki} olcu={116} gorunus="tam" className="shrink-0" />
-      <div
-        className="mb-2 flex-1 rounded-2xl rounded-bl-sm p-3"
-        style={{ backgroundColor: "#EAF4EC", border: "1px solid #CFE6D7" }}
-      >
-        <h2 className="text-base font-bold" style={{ color: "#1C5733", fontFamily: font.display }}>
-          {basliq}
-        </h2>
-        {izah && (
-          <p className="mt-0.5 text-xs leading-relaxed" style={{ color: "#256B41" }}>
-            {izah}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/**
- * İlk açılış axını — anonim və qısa.
+ * ═══ QURULUŞ ══════════════════════════════════════════════════════════
+ *   xosgeldin → rayon (1/3) → bitki (2/3) → sahə (3/3)
+ * Xoş gəldiniz sayğaca daxil deyil (bax: XosGelmisiniz.jsx).
  *
- * Quruluşun səbəbi ölçülərdir: fermerlərin böyük hissəsi 3 dəqiqədən uzun
- * qeydiyyatı yarımçıq atır. Ona görə burada nə hesab, nə nömrə, nə də
- * şəxsiyyət soruşulur — iki toxunuş və fermer tətbiqin içindədir.
- * Hər addım keçilə bilir: rayon seçilməsə standart rayon işlədilir.
+ * ═══ DAVAM ETMƏ ═══════════════════════════════════════════════════════
+ * Yarımçıq qalan fermer BAŞDAN BAŞLAMIR: mağazadakı `onboarding
+ * .tamamlananAddim` son bitmiş addımı saxlayır və axın ondan sonrakından
+ * açılır. Verdiyi cavablar (rayon, bitki) yerində qalır və görünür.
+ *
+ * ═══ HEÇ NƏ MƏCBURİ DEYİL ═════════════════════════════════════════════
+ * Rayon keçilsə `location` null qalır, bitki keçilsə `chat.crop` null
+ * qalır. NULL DƏYƏR SÜNİ DOLDURULMUR: standart rayon "seçilmiş" kimi
+ * göstərilmir və heç bir tövsiyə boş bitkiyə görə qurulmur.
  */
-export function Onboarding({ onDrawField }) {
+export function Onboarding({ onDrawField, onOpenHesab }) {
   const { t } = useI18n();
   const { state, actions } = useStore();
-  const [addim, setAddim] = useState(0);
-  const [query, setQuery] = useState("");
-  // Seçilən bitki: personaj onu dərhal "geyinir" — seçimin təsdiqi
-  // mətnlə yox, üzlə verilir
-  const [secilen, setSecilen] = useState(null);
-  const sevincTimer = useRef(null);
 
-  useEffect(() => () => clearTimeout(sevincTimer.current), []);
+  // Davam etmə: son bitmiş addımdan SONRAKI addım açılır
+  const [addim, setAddim] = useState(() => {
+    const bitmis = state.onboarding?.tamamlananAddim ?? null;
+    if (!bitmis) return "xosgeldin";
+    const sira = ONBOARDING_ADDIMLARI.indexOf(bitmis);
+    return ONBOARDING_ADDIMLARI[sira + 1] ?? "sahe";
+  });
 
-  const indiki = ADDIMLAR[addim];
+  const sira = ONBOARDING_ADDIMLARI.indexOf(addim);
+  const cemi = ONBOARDING_ADDIMLARI.length;
 
   const irele = (haradan) => {
     track("onb.step.done", { addim: haradan });
-    if (addim + 1 >= ADDIMLAR.length) {
+    actions.onboardingAddim(haradan);
+    const novbeti = ONBOARDING_ADDIMLARI[ONBOARDING_ADDIMLARI.indexOf(haradan) + 1];
+    if (!novbeti) {
       actions.finishOnboarding();
       return;
     }
-    setAddim((n) => n + 1);
+    setAddim(novbeti);
   };
 
-  const { gps, requestGps, busy } = useGps({
-    adYarat: (district) => t("location.gpsName", { district }),
-    onSelect: (location) => {
-      actions.setLocation(location);
-      irele("yer");
-    },
-  });
-
-  const yerSec = (district) => {
-    actions.setLocation({ ...district, gps: false });
-    irele("yer");
+  const geri = () => {
+    if (sira <= 0) {
+      setAddim("xosgeldin");
+      return;
+    }
+    setAddim(ONBOARDING_ADDIMLARI[sira - 1]);
   };
 
-  const bitkiSec = (key) => {
-    actions.chatSetCrop(key);
-    setSecilen(key);
-    // Dərhal bağlamırıq: personaj seçilən bitkini geyinib tullanır, sonra
-    // axın bitir. Təkrar toxunuş sayğacı sıfırlayır — son seçim qalır.
-    clearTimeout(sevincTimer.current);
-    sevincTimer.current = setTimeout(() => irele("bitki"), SEVINC_MS);
-  };
+  if (addim === "xosgeldin") {
+    return (
+      <XosGelmisiniz
+        onBasla={() => {
+          track("onb.step.done", { addim: "xosgeldin" });
+          setAddim("rayon");
+        }}
+        onGiris={() => onOpenHesab?.()}
+      />
+    );
+  }
 
-  const districts = searchDistricts(query);
-  // Mövsümdə olan bitkilər əvvələ keçir — sıra hər render-də sabitdir
-  const bitkiSirasi = bitkileriSirala();
+  // ── 1 / 3 — rayon ────────────────────────────────────────────────
+  if (addim === "rayon") {
+    return (
+      <OnboardingShell
+        etiket={t("onb.title")}
+        addim={1}
+        cemi={cemi}
+        onGeri={geri}
+        basliq={t("onb.rayon.basliq")}
+        altYazi={t("onb.rayon.izah")}
+        cta={{
+          label: t("onb.rayon.davam"),
+          disabled: !state.location,
+          onClick: () => irele("rayon"),
+        }}
+        ikinci={{ label: t("onb.rayon.indiYox"), onClick: () => irele("rayon") }}
+      >
+        <RayonSecici
+          secilen={state.location}
+          sonKodlar={state.sonRayonlar}
+          onSec={(rayon) => actions.setLocation(rayon)}
+        />
+      </OnboardingShell>
+    );
+  }
 
+  // ── 2 / 3 — bitki ────────────────────────────────────────────────
+  if (addim === "bitki") {
+    return (
+      <OnboardingShell
+        etiket={t("onb.title")}
+        addim={2}
+        cemi={cemi}
+        onGeri={geri}
+        basliq={t("onb.bitki.basliq")}
+        altYazi={t("onb.bitki.izah")}
+        cta={{
+          label: t("onb.bitki.davam"),
+          disabled: !state.chat.crop,
+          onClick: () => irele("bitki"),
+        }}
+        ikinci={{
+          label: t("onb.bitki.qerarsiz"),
+          onClick: () => {
+            // "Hələ qərar verməmişəm" BOŞ DƏYƏRDİR, ehtimal deyil: heç bir
+            // bitkiyə xas tövsiyə bu haldan qurulmur
+            actions.chatSetCrop(null);
+            irele("bitki");
+          },
+        }}
+      >
+        <BitkiSebekesi
+          secilen={state.chat.crop}
+          onSec={(kod) => actions.chatSetCrop(state.chat.crop === kod ? null : kod)}
+        />
+      </OnboardingShell>
+    );
+  }
+
+  // ── 3 / 3 — ilk sahə ─────────────────────────────────────────────
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={t("onb.title")}
-      className="absolute inset-0 z-50 flex flex-col"
-      style={{ backgroundColor: C.mist, fontFamily: font.body }}
+    <OnboardingShell
+      etiket={t("onb.title")}
+      addim={3}
+      cemi={cemi}
+      onGeri={geri}
+      basliq={t("onb.sahe.basliq")}
+      altYazi={t("onb.sahe.izah")}
+      cta={{
+        label: t("onb.sahe.cek"),
+        onClick: () => {
+          track("onb.step.done", { addim: "sahe" });
+          onDrawField?.();
+        },
+      }}
+      ctaSonek={t("onb.sahe.muddet")}
+      ikinci={{ label: t("onb.sahe.kec"), onClick: () => irele("sahe") }}
     >
-      {/* Başlıq: geri + irəliləyiş */}
-      <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-        {addim > 0 ? (
-          <button
-            type="button"
-            onClick={() => {
-              // Sevinc fasiləsində geri qayıdılsa taymer axını bağlamasın
-              clearTimeout(sevincTimer.current);
-              setSecilen(null);
-              setAddim((n) => n - 1);
+      <SaheIllustrasiyasi className="mx-auto" />
+
+      <ul style={{ marginTop: ARA.kart, display: "grid", gap: ARA.yaxin }}>
+        {[
+          { ikon: "Sprout", acar: "onb.sahe.fayda1" },
+          { ikon: "CloudRain", acar: "onb.sahe.fayda2" },
+          { ikon: "BarChart3", acar: "onb.sahe.fayda3" },
+        ].map(({ ikon, acar }, index) => (
+          <li
+            key={acar}
+            className="giris flex items-center gap-3 px-3 py-2.5"
+            style={{
+              "--i": index + 1,
+              backgroundColor: C.card,
+              borderRadius: RADIUS.kart,
+              border: `1px solid ${C.line}`,
             }}
-            aria-label={t("onb.back")}
-            className="rounded-full p-1.5"
-            style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}
           >
-            <Icon name="ChevronLeft" size={16} color={C.ink} />
-          </button>
-        ) : (
-          <div className="flex items-center gap-2">
-            <div className="rounded-xl p-1.5" style={{ backgroundColor: C.pine }}>
-              <Icon name="Leaf" size={16} color={C.gold} />
-            </div>
             <span
-              className="text-sm font-extrabold"
-              style={{ color: C.pine, fontFamily: font.display }}
+              className="flex shrink-0 items-center justify-center rounded-full"
+              style={{ backgroundColor: C.fieldSoft, width: 32, height: 32 }}
             >
-              {t("app.name")}
+              <Icon name={ikon} size={16} color={C.field} />
             </span>
-          </div>
-        )}
-
-        <div className="ml-auto flex items-center gap-1.5" aria-hidden="true">
-          {ADDIMLAR.map((key, index) => (
-            <span
-              key={key}
-              className="h-1.5 rounded-full"
-              style={{
-                width: index === addim ? 18 : 6,
-                backgroundColor: index <= addim ? C.field : C.line,
-              }}
-            />
-          ))}
-        </div>
-      </div>
-      <p className="px-4 pb-2 text-xs" style={{ color: C.muted }}>
-        {t("onb.step", { current: addim + 1, total: ADDIMLAR.length })}
-      </p>
-
-      {indiki === "yer" && (
-        <div className="flex flex-1 flex-col overflow-hidden px-4">
-          {/* Sualı personaj verir: quru forma başlığı əvəzinə qapıda
-              qarşılayan aqronom. GPS axtarışı gedərkən düşünür — fikir
-              nöqtələri "işləyirəm" deyir, ayrıca spinner lazım olmur. */}
-          <AqroSual
-            hal={busy ? "dusunur" : "danisir"}
-            basliq={t("onb.location.title")}
-            izah={t("onb.location.subtitle")}
-          />
-
-          {/* DƏYƏR VƏDİ SUALDAN ƏVVƏL VERİLİR. Əvvəl ilk ekran birbaşa
-              məlumat istəyirdi: fermer nə alacağını bilmədən cavab verirdi.
-              Ayrıca "xoş gəldiniz" ekranı əlavə etmirik (addım artardı) —
-              vəd elə birinci sualın yanındadır. */}
-          <div
-            className="mt-1 flex items-center gap-2 rounded-xl px-3 py-2.5"
-            style={{ backgroundColor: C.fieldSoft }}
-          >
-            <Icon name="Satellite" size={16} color={C.field} />
-            <p className="text-xs leading-relaxed" style={{ color: C.pine }}>
-              {t("onb.vaad")}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={requestGps}
-            disabled={busy}
-            className="basilir mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold"
-            style={{ backgroundColor: C.pine, color: "#FFFFFF", opacity: busy ? 0.65 : 1 }}
-          >
-            <Icon name={busy ? "LoaderCircle" : "Crosshair"} size={16} color={C.gold} />
-            {busy ? t("location.gpsBusy") : t("location.gpsCta")}
-          </button>
-
-          {gps.status === "error" && (
-            <p
-              role="alert"
-              className="mt-2 flex items-center gap-1.5 text-xs"
-              style={{ color: C.danger }}
-            >
-              <Icon name="AlertCircle" size={16} color={C.danger} /> {t(gps.errorKey)}
-            </p>
-          )}
-
-          <div
-            className="mt-3 flex items-center gap-2 rounded-xl px-3 py-2"
-            style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}
-          >
-            <Icon name="Search" size={16} color={C.muted} />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={t("location.searchPlaceholder")}
-              aria-label={t("location.searchPlaceholder")}
-              className="w-full bg-transparent text-sm outline-none"
-              style={{ color: C.ink }}
-            />
-          </div>
-
-          <div className="mt-1 flex-1 overflow-y-auto py-1">
-            {districts.length === 0 && (
-              <p className="py-6 text-center text-xs" style={{ color: C.muted }}>
-                {t("location.notFound")}
-              </p>
-            )}
-            {districts.map((district) => (
-              <button
-                key={district.name}
-                type="button"
-                onClick={() => yerSec(district)}
-                className="flex w-full items-center justify-between rounded-xl px-3 py-3"
-              >
-                <span className="text-sm font-semibold" style={{ color: C.ink }}>
-                  {district.name}
-                </span>
-                <Icon name="ChevronRight" size={16} color={C.muted} />
-              </button>
-            ))}
-          </div>
-
-          {/* Heç bir addım məcburi deyil — rayon seçilməsə standart rayon işlədilir */}
-          <button
-            type="button"
-            onClick={() => irele("yer")}
-            className="py-3 text-xs font-semibold"
-            style={{ color: C.muted }}
-          >
-            {t("location.later")}
-          </button>
-        </div>
-      )}
-
-      {indiki === "bitki" && (
-        <div className="flex flex-1 flex-col overflow-hidden px-4">
-          {/* Seçim personajın özündə təsdiqlənir: bitkiyə toxunan kimi onu
-              "geyinir" və sevincdən tullanır — mətn təsdiqinə ehtiyac yoxdur,
-              qabarcıq da alqışa keçir. Sonra axın öz-özünə bağlanır. */}
-          <AqroSual
-            hal={secilen ? "sevincli" : "danisir"}
-            bitki={secilen}
-            basliq={
-              secilen
-                ? t("onb.crop.alqis", { bitki: t(`kbcrop.${secilen}`) })
-                : t("onb.crop.title")
-            }
-            izah={secilen ? null : t("onb.crop.subtitle", { district: state.location?.name ?? "" })}
-          />
-
-          {/* İKON + MÖVSÜM SIRASI. On eyni ağ düymə oxunmurdu; forma
-              tanınması oxumaqdan sürətlidir. Sıra da uydurulmur — mövsüm
-              cədvəli məhsulun öz məlumatıdır (bax: services/bitkiGorunus.js). */}
-          <div className="mt-2 flex-1 overflow-y-auto">
-            <div className="grid grid-cols-2 gap-2">
-              {bitkiSirasi.map((key, index) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => bitkiSec(key)}
-                  className="giris basilir flex items-center gap-2 rounded-2xl px-3 py-3 text-sm font-semibold"
-                  style={{
-                    "--i": index + 1,
-                    backgroundColor: C.card,
-                    border: `1px solid ${state.chat.crop === key ? C.field : C.line}`,
-                    color: C.ink,
-                    minHeight: 52,
-                  }}
-                >
-                  <span className="rounded-xl p-1.5" style={{ backgroundColor: C.fieldSoft }}>
-                    <Icon name={bitkiIkonu(key)} size={16} color={C.field} />
-                  </span>
-                  <span className="flex-1 text-left">{t(`kbcrop.${key}`)}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Keçidin NƏTİCƏSİ deyilir: "sonra da olar" sözü boş qalmasın */}
-          <div className="pt-2 text-center">
-            <button
-              type="button"
-              onClick={() => {
-                clearTimeout(sevincTimer.current);
-                irele("bitki");
-              }}
-              className="text-xs font-semibold"
-              style={{ color: C.muted, minHeight: 44 }}
-            >
-              {t("onb.crop.skip")}
-            </button>
-            <p className="-mt-1 pb-1" style={{ color: C.muted, fontSize: 10 }}>
-              {t("onb.crop.skipIzah")}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* ÜÇÜNCÜ ADDIM — axının əsl işi. Fermer buradan xəritəyə keçir;
-          sahə saxlananda quraşdırma bitir (bax: App.jsx → FieldDraw.onSave).
-          "Sonra çəkəcəyəm" də var: heç bir addım məcburi deyil, amma
-          keçidin nəyi təxirə saldığı açıq yazılır. */}
-      {indiki === "sahe" && (
-        <div className="flex flex-1 flex-col overflow-y-auto px-4">
-          <AqroSual
-            hal="danisir"
-            bitki={state.chat.crop}
-            basliq={t("onb.sahe.title")}
-            izah={t("onb.sahe.subtitle")}
-          />
-
-          <SaheIllustrasiyasi className="mx-auto mt-1" />
-
-          <ol className="mt-2 space-y-2">
-            {["onb.sahe.addim1", "onb.sahe.addim2", "onb.sahe.addim3"].map((acar, sira) => (
-              <li
-                key={acar}
-                className="giris flex items-start gap-2.5 rounded-2xl px-3 py-2.5"
-                style={{ "--i": sira + 1, backgroundColor: C.card, border: `1px solid ${C.line}` }}
-              >
-                <span
-                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold"
-                  style={{ backgroundColor: C.fieldSoft, color: C.field }}
-                >
-                  {sira + 1}
-                </span>
-                <span className="text-xs leading-relaxed" style={{ color: C.ink }}>
-                  {t(acar)}
-                </span>
-              </li>
-            ))}
-          </ol>
-
-          <button
-            type="button"
-            onClick={() => {
-              track("onb.step.done", { addim: "sahe" });
-              onDrawField?.();
-            }}
-            className="basilir mt-4 w-full rounded-xl py-3.5 text-sm font-bold"
-            style={{ backgroundColor: C.pine, color: "#fff", minHeight: 48 }}
-          >
-            {t("onb.sahe.cta")}
-          </button>
-
-          <div className="pt-2 pb-1 text-center">
-            <button
-              type="button"
-              onClick={() => irele("sahe")}
-              className="text-xs font-semibold"
-              style={{ color: C.muted, minHeight: 44 }}
-            >
-              {t("onb.sahe.skip")}
-            </button>
-            <p className="-mt-1" style={{ color: C.muted, fontSize: 10 }}>
-              {t("onb.sahe.skipIzah")}
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
+            <span style={{ color: C.ink, ...TIPO.qeyd }}>{t(acar)}</span>
+          </li>
+        ))}
+      </ul>
+    </OnboardingShell>
   );
 }
