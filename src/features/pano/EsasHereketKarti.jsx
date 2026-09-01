@@ -81,13 +81,13 @@ export function EsasHereketKarti({ hereket, onHereket }) {
                   style={{ color: C.field, minHeight: 44 }}
                 >
                   {t(hereket.ctaKey)}
-                  <Icon name="ChevronRight" size={15} color={C.field} />
+                  <Icon name="ChevronRight" size={16} color={C.field} />
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={() => onHereket?.(hereket)}
-                  className="mt-2.5 w-full rounded-xl py-2.5 text-sm font-bold"
+                  className="basilir mt-2.5 w-full rounded-xl py-2.5 text-sm font-bold"
                   style={{
                     backgroundColor: hereket.tip === "gecikme" ? C.danger : C.pine,
                     color: "#fff",

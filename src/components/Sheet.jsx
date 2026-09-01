@@ -211,7 +211,7 @@ export function Sheet({ acilib, onBagla, baslik, altYazi, children, etiket }) {
             className="-mt-1 -mr-1 flex shrink-0 items-center justify-center rounded-full"
             style={{ backgroundColor: C.mist, minWidth: 40, minHeight: 40 }}
           >
-            <Icon name="X" size={15} color={C.muted} />
+            <Icon name="X" size={16} color={C.muted} />
           </button>
         </div>
 

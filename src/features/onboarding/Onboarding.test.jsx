@@ -20,7 +20,7 @@ afterEach(() => {
 });
 
 describe("ilk açılış axını", () => {
-  it("yeni fermerə göstərilir, rayon və bitki soruşur", async () => {
+  it("yeni fermerə göstərilir: rayon, bitki, sonra SAHƏ soruşur", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
 
@@ -32,9 +32,15 @@ describe("ilk açılış axını", () => {
     expect(screen.getByText("Nə əkirsiniz?")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Kartof" }));
 
-    // İki toxunuşdan sonra fermer tətbiqin içindədir — bağlanma personajın
-    // sevinc fasiləsindən (SEVINC_MS) sonra gəlir
-    await waitFor(() => expect(dialoq()).not.toBeInTheDocument(), { timeout: 2500 });
+    // ÜÇÜNCÜ ADDIM: axının əsl işi. Əvvəl bura "bitdi" sayılırdı və fermer
+    // ən çətin işə sayğacdan kənarda düşürdü.
+    await waitFor(() => expect(screen.getByText("İndi sahənizi çəkək")).toBeInTheDocument(), {
+      timeout: 2500,
+    });
+    expect(screen.getByRole("button", { name: "Xəritədə çək" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Sonra çəkəcəyəm" }));
+    expect(dialoq()).not.toBeInTheDocument();
   });
 
   // Əsas qərar: qeydiyyatda şəxsiyyət soruşulmur. Ölçülərə görə uzun və
@@ -61,7 +67,9 @@ describe("ilk açılış axını", () => {
 
     await user.click(screen.getByRole("button", { name: /Şəki/ }));
     await user.click(screen.getByRole("button", { name: "Üzüm" }));
-    await waitFor(() => expect(dialoq()).not.toBeInTheDocument(), { timeout: 2500 });
+    await waitFor(() => screen.getByRole("button", { name: "Sonra çəkəcəyəm" }), { timeout: 2500 });
+    await user.click(screen.getByRole("button", { name: "Sonra çəkəcəyəm" }));
+    await waitFor(() => expect(dialoq()).not.toBeInTheDocument());
 
     const saxlanan = JSON.parse(window.localStorage.getItem("agrifin:state"));
     expect(saxlanan.state.location.name).toBe("Şəki");
@@ -78,12 +86,13 @@ describe("ilk açılış axını", () => {
     expect(screen.queryByRole("button", { name: /^Bərdə/ })).not.toBeInTheDocument();
   });
 
-  it("hər iki addım keçilə bilir", async () => {
+  it("hər üç addım keçilə bilir", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
 
     await user.click(screen.getByRole("button", { name: "Sonra seçəcəyəm" }));
     await user.click(screen.getByRole("button", { name: "Hələ qərar verməmişəm" }));
+    await user.click(screen.getByRole("button", { name: "Sonra çəkəcəyəm" }));
 
     expect(dialoq()).not.toBeInTheDocument();
     // Rayon seçilməyib, amma tətbiq işləyir — standart rayon işlədilir
@@ -107,7 +116,10 @@ describe("ilk açılış axını", () => {
     expect(fermer.querySelector("img").getAttribute("src")).toContain("kartof-sevincli");
     expect(screen.getByText(/Əla — Kartof!/)).toBeInTheDocument();
 
-    await waitFor(() => expect(dialoq()).not.toBeInTheDocument(), { timeout: 2500 });
+    // Sevincdən sonra axın bağlanmır, sahə addımına keçir
+    await waitFor(() => expect(screen.getByText("İndi sahənizi çəkək")).toBeInTheDocument(), {
+      timeout: 2500,
+    });
   });
 
   it("geri düyməsi əvvəlki addıma qaytarır", async () => {

@@ -16,6 +16,21 @@
   --color-score-card: #245b3a;
   --color-warn-soft: #fdf2ea;
   --color-warn-ink: #9a3f1e;
+  /* Yaşıl şkala — JS qarşılığı: theme/tokens.js → YASIL */
+  --color-yasil-50: #f1f8f3;
+  --color-yasil-100: #e9f5ee;
+  --color-yasil-200: #cfe6d7;
+  --color-yasil-300: #a8ddbc;
+  --color-yasil-400: #5fae7e;
+  --color-yasil-500: #2e7d4f;
+  --color-yasil-600: #256b41;
+  --color-yasil-700: #245b3a;
+  --color-yasil-800: #193f27;
+  --color-yasil-900: #14351f;
+
+  /* MAVİ AİLƏ SİLİNDİ: bir ekranda yaşıl, bənövşəyi, qızılı, qırmızı və
+     mavi yanaşı dururdu — beş ailə heç vaxt sakit görünmür. Siqnal
+     kartları indi qızılı "diqqət" cütündən istifadə edir. */
   --color-blue: #3e7bfa;
   --color-blue-soft: #eaf1fd;
   --color-mist: #eff2ec;
@@ -633,5 +648,24 @@ button:active {
        "peyda olma" qalırdı, istifadəçi məhz ondan imtina edib */
     animation-delay: 0s !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Toxunuş cavabı ───────────────────────────────────────────────────
+   Mobil tətbiqdə hover yoxdur: düymənin basıldığını yalnız hərəkət
+   göstərir. `basilir` sinfi 150 ms-lik kiçilmə verir — hiss olunur,
+   amma gözə çarpmır. Hərəkəti azaldılmış rejimdə söndürülür. */
+.basilir {
+  transition: transform 150ms ease-out;
+}
+.basilir:active {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .basilir {
+    transition: none;
+  }
+  .basilir:active {
+    transform: none;
   }
 }

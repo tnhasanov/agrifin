@@ -46,7 +46,7 @@ export function BosSahe({ onDrawField, onNece }) {
         {t("pano.bosNece")}
       </button>
       <p className="mt-3 flex items-center justify-center gap-1.5 text-xs" style={{ color: C.muted }}>
-        <Icon name="Clock" size={13} color={C.muted} />
+        <Icon name="Clock" size={16} color={C.muted} />
         {t("pano.bosVaxt")}
       </p>
     </div>

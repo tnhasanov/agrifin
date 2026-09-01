@@ -93,7 +93,7 @@ export function AdvisorScreen({
                 <span
                   className="flex items-center gap-1 rounded-full px-1.5 py-0.5 font-bold"
                   style={{
-                    fontSize: 9,
+                    fontSize: 10,
                     letterSpacing: "0.06em",
                     color: C.gold,
                     border: "1px solid rgba(233,181,74,0.45)",
@@ -113,7 +113,7 @@ export function AdvisorScreen({
                 {saheVar ? t("chat.openDesc") : t("chat.openDescRayon", { rayon })}
               </p>
             </div>
-            <Icon name="ChevronRight" size={18} color="rgba(255,255,255,0.5)" />
+            <Icon name="ChevronRight" size={20} color="rgba(255,255,255,0.5)" />
           </div>
         </button>
       </div>
@@ -131,14 +131,14 @@ export function AdvisorScreen({
             <span className="rounded-xl bg-white p-2">
               <Icon
                 name={sira === 0 ? "Calendar" : sira === 1 ? "Leaf" : "CreditCard"}
-                size={15}
+                size={16}
                 color={C.field}
               />
             </span>
             <span className="flex-1 text-sm font-semibold" style={{ color: C.ink }}>
               {t(acar)}
             </span>
-            <Icon name="ChevronRight" size={15} color={C.muted} />
+            <Icon name="ChevronRight" size={16} color={C.muted} />
           </button>
         ))}
       </div>
@@ -157,12 +157,12 @@ export function AdvisorScreen({
               style={{ backgroundColor: C.card, border: `1px solid ${C.line}`, "--i": sira, minHeight: 48 }}
             >
               <span className="rounded-xl p-2" style={{ backgroundColor: C.mist }}>
-                <Icon name={tapsiriq.ikon} size={15} color={C.pine} />
+                <Icon name={tapsiriq.ikon} size={16} color={C.pine} />
               </span>
               <span className="flex-1 text-sm font-semibold" style={{ color: C.ink }}>
                 {tapsiriq.metn}
               </span>
-              <Icon name="ChevronRight" size={15} color={C.muted} />
+              <Icon name="ChevronRight" size={16} color={C.muted} />
             </button>
           ))}
         </>

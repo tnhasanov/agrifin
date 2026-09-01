@@ -149,7 +149,11 @@ describe("sahə çəkmə", () => {
 
     xeriteyeToxun(40.4, 47.1);
     xeriteyeToxun(40.402, 47.1);
-    expect(screen.getByRole("button", { name: /Sahəni saxla/ })).toBeDisabled();
+    // Düymə həm sönükdür, həm də NƏYİN çatmadığını deyir — sönük "Sahəni
+    // saxla" fermerə sistemin sındığını düşündürürdü
+    const saxla = screen.getByRole("button", { name: "Daha 1 künc lazımdır" });
+    expect(saxla).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /Sahəni saxla/ })).not.toBeInTheDocument();
   });
 
   it("geri al son küncü silir", async () => {

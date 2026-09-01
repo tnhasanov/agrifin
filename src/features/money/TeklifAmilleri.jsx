@@ -62,7 +62,7 @@ export function TeklifAmilleri({ hektar = null, bitkiKey = null, movsumSayi = 0 
             style={{ borderColor: C.line }}
           >
             <span className="flex items-center gap-2 text-xs" style={{ color: C.muted }}>
-              <Icon name={setir.ikon} size={14} color={C.field} />
+              <Icon name={setir.ikon} size={16} color={C.field} />
               {setir.etiket}
             </span>
             <span

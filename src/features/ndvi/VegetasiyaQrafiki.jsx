@@ -101,10 +101,10 @@ export function VegetasiyaQrafiki({ peyk = { hal: "yoxdur", seriya: [] }, muqayi
         })}
       >
         {/* Şaquli ox: yalnız iki dəyər — miqyas gizli qalmasın */}
-        <text x="0" y={y(enCox) + 4} style={{ fontSize: 9, fill: C.muted }}>
+        <text x="0" y={y(enCox) + 4} style={{ fontSize: 10, fill: C.muted }}>
           {enCox}%
         </text>
-        <text x="0" y={y(enAz) + 4} style={{ fontSize: 9, fill: C.muted }}>
+        <text x="0" y={y(enAz) + 4} style={{ fontSize: 10, fill: C.muted }}>
           {enAz}%
         </text>
 
@@ -142,7 +142,7 @@ export function VegetasiyaQrafiki({ peyk = { hal: "yoxdur", seriya: [] }, muqayi
             x={tekAy ? SOL + (EN - SOL - 4) / 2 : x(i)}
             y={HUND - 3}
             textAnchor={tekAy || sira === 1 ? "middle" : sira === 0 ? "start" : "end"}
-            style={{ fontSize: 9, fill: C.muted }}
+            style={{ fontSize: 10, fill: C.muted }}
           >
             {ad}
           </text>

@@ -95,7 +95,7 @@ export function SaheScreen({
           className="flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-bold"
           style={{ backgroundColor: C.card, color: C.pine, border: `1px solid ${C.line}`, minHeight: 44 }}
         >
-          <Icon name="MapPin" size={13} color={C.pine} />
+          <Icon name="MapPin" size={16} color={C.pine} />
           {t("sahe.deyis")}
         </button>
       </div>
@@ -124,7 +124,7 @@ export function SaheScreen({
         >
           <Icon
             name={peyk.hal === "yuklenir" ? "LoaderCircle" : "Satellite"}
-            size={13}
+            size={16}
             color={peyk.hal === "hazir" ? C.field : C.muted}
           />
           <span className="flex-1 text-xs" style={{ color: C.muted }}>
@@ -153,7 +153,7 @@ export function SaheScreen({
         >
           <Icon
             name={radar.hal === "yuklenir" ? "LoaderCircle" : "Radar"}
-            size={13}
+            size={16}
             color={radar.hal === "hazir" ? "#4A90E2" : C.muted}
           />
           <div className="flex-1">
@@ -187,7 +187,7 @@ export function SaheScreen({
         >
           <Icon
             name="Droplets"
-            size={13}
+            size={16}
             color={xulase.suSeviyyesi === "az" ? C.goldInk : C.field}
           />
           <span className="flex-1 text-xs" style={{ color: C.muted }}>
@@ -201,7 +201,7 @@ export function SaheScreen({
         <Card className="giris" style={{ marginTop: 12, marginBottom: 12 }}>
           <div className="flex items-center gap-2">
             <div className="rounded-full p-1.5" style={{ backgroundColor: C.fieldSoft }}>
-              <Icon name="Check" size={14} color={C.field} />
+              <Icon name="Check" size={16} color={C.field} />
             </div>
             <p className="text-sm font-bold" style={{ color: C.ink }}>
               {t("pano.saheYaxsi")}
@@ -276,7 +276,7 @@ export function SaheScreen({
             </div>
           </div>
           <p className="mt-2 flex items-center gap-1.5 text-xs" style={{ color: C.muted }}>
-            <Icon name="Info" size={12} color={C.muted} />
+            <Icon name="Info" size={16} color={C.muted} />
             {t("pano.tarixceXeber")}
           </p>
         </Card>

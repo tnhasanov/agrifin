@@ -41,7 +41,10 @@ export function XeriteQati({ konturRengi = "#FFD264",
   etiket,
   // Tam ekranda: sürüşdürmə, zoom düymələri, iki barmaqla yaxınlaşdırma
   hereketli = false,
-  hundurluk = 260,
+  // PEYK GÖRÜNTÜSÜ TƏTBİQİN ƏN GÖZƏL ELEMENTİDİR və kiçik kartda
+  // sıxılmışdı. 300 piksel telefon ekranının təxminən üçdə birini tutur:
+  // sahə tanınacaq qədər böyük, qalan məzmunu itirməyəcək qədər ölçülü.
+  hundurluk = 300,
 }) {
   const divRef = useRef(null);
   const mapRef = useRef(null);

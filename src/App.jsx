@@ -147,7 +147,7 @@ export default function App() {
             sorğusu göndərmək mənasızdır və ekran oxuyucu iki dəfə eyni
             düymələri görür. */}
         {!state.onboarded ? (
-          <Onboarding />
+          <Onboarding onDrawField={() => setFieldOpen(true)} />
         ) : (
           <>
             <AppHeader
@@ -221,21 +221,6 @@ export default function App() {
 
             <HesabSheet acilib={hesabOpen} onBagla={closeHesab} />
 
-            {fieldOpen && (
-              <Suspense fallback={null}>
-                <FieldDraw
-                  location={state.location}
-                  existing={state.sahe}
-                  onSave={(sahe, xeberdarlıqAcari) => {
-                    actions.setSahe(sahe);
-                    if (xeberdarlıqAcari) actions.showToast(xeberdarlıqAcari);
-                    setFieldOpen(false);
-                  }}
-                  onClose={closeField}
-                />
-              </Suspense>
-            )}
-
             {locationOpen && (
               <LocationSheet
                 current={state.location}
@@ -244,6 +229,26 @@ export default function App() {
               />
             )}
           </>
+        )}
+
+        {/* SAHƏ ÇƏKMƏ ONBOARDING-İN ÜÇÜNCÜ ADDIMIDIR, ona görə şərtin
+            ikinci qolundan çıxarılıb: axının ən çətin işi elə buradadır və
+            fermer onu "quraşdırma bitdi" hissindən əvvəl görməlidir. */}
+        {fieldOpen && (
+          <Suspense fallback={null}>
+            <FieldDraw
+              location={state.location}
+              existing={state.sahe}
+              onSave={(sahe, xeberdarlıqAcari) => {
+                actions.setSahe(sahe);
+                if (xeberdarlıqAcari) actions.showToast(xeberdarlıqAcari);
+                setFieldOpen(false);
+                // Onboarding-in son addımı budur: sahə saxlananda quraşdırma bitir
+                if (!state.onboarded) actions.finishOnboarding();
+              }}
+              onClose={closeField}
+            />
+          </Suspense>
         )}
       </div>
     </div>

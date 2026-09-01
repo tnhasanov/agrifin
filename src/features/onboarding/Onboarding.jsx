@@ -5,11 +5,20 @@ import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { useStore } from "../../state/store.jsx";
 import { searchDistricts } from "../../services/location.js";
-import { CROP_KEYS } from "../../services/crops.js";
+import { bitkiIkonu, bitkileriSirala } from "../../services/bitkiGorunus.js";
+import { SaheIllustrasiyasi } from "../pano/SaheIllustrasiyasi.jsx";
 import { useGps } from "../location/useGps.js";
 import { track } from "../../lib/analytics.js";
 
-const ADDIMLAR = ["yer", "bitki"];
+/**
+ * SAHƏ ÇƏKMƏK ONBOARDING-İN BİR HİSSƏSİDİR.
+ *
+ * Əvvəl iki addım vardı və sayğac "Addım 2 / 2"-də bitirdi — fermer
+ * "qurtardım" hissi ilə çıxırdı, halbuki ƏSL İŞ (sahəni xəritədə çəkmək)
+ * elə ondan sonra başlayırdı. Axının ən çox tərk edilən yeri də oradır.
+ * İndi sayğac həqiqəti deyir: üç addım, sonuncusu sahədir.
+ */
+const ADDIMLAR = ["yer", "bitki", "sahe"];
 
 // Bitki seçiləndən axının bağlanmasına qədər fasilə: personajın seçilən
 // bitkini "geyinib" tullanması görünsün (tullanma 1.1s-dir, yarısı bəsdir —
@@ -46,7 +55,7 @@ function AqroSual({ hal, bitki, basliq, izah }) {
  * şəxsiyyət soruşulur — iki toxunuş və fermer tətbiqin içindədir.
  * Hər addım keçilə bilir: rayon seçilməsə standart rayon işlədilir.
  */
-export function Onboarding() {
+export function Onboarding({ onDrawField }) {
   const { t } = useI18n();
   const { state, actions } = useStore();
   const [addim, setAddim] = useState(0);
@@ -92,6 +101,8 @@ export function Onboarding() {
   };
 
   const districts = searchDistricts(query);
+  // Mövsümdə olan bitkilər əvvələ keçir — sıra hər render-də sabitdir
+  const bitkiSirasi = bitkileriSirala();
 
   return (
     <div
@@ -121,7 +132,7 @@ export function Onboarding() {
         ) : (
           <div className="flex items-center gap-2">
             <div className="rounded-xl p-1.5" style={{ backgroundColor: C.pine }}>
-              <Icon name="Leaf" size={13} color={C.gold} />
+              <Icon name="Leaf" size={16} color={C.gold} />
             </div>
             <span
               className="text-sm font-extrabold"
@@ -160,11 +171,25 @@ export function Onboarding() {
             izah={t("onb.location.subtitle")}
           />
 
+          {/* DƏYƏR VƏDİ SUALDAN ƏVVƏL VERİLİR. Əvvəl ilk ekran birbaşa
+              məlumat istəyirdi: fermer nə alacağını bilmədən cavab verirdi.
+              Ayrıca "xoş gəldiniz" ekranı əlavə etmirik (addım artardı) —
+              vəd elə birinci sualın yanındadır. */}
+          <div
+            className="mt-1 flex items-center gap-2 rounded-xl px-3 py-2.5"
+            style={{ backgroundColor: C.fieldSoft }}
+          >
+            <Icon name="Satellite" size={16} color={C.field} />
+            <p className="text-xs leading-relaxed" style={{ color: C.pine }}>
+              {t("onb.vaad")}
+            </p>
+          </div>
+
           <button
             type="button"
             onClick={requestGps}
             disabled={busy}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold"
+            className="basilir mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold"
             style={{ backgroundColor: C.pine, color: "#FFFFFF", opacity: busy ? 0.65 : 1 }}
           >
             <Icon name={busy ? "LoaderCircle" : "Crosshair"} size={16} color={C.gold} />
@@ -177,7 +202,7 @@ export function Onboarding() {
               className="mt-2 flex items-center gap-1.5 text-xs"
               style={{ color: C.danger }}
             >
-              <Icon name="AlertCircle" size={13} color={C.danger} /> {t(gps.errorKey)}
+              <Icon name="AlertCircle" size={16} color={C.danger} /> {t(gps.errorKey)}
             </p>
           )}
 
@@ -185,7 +210,7 @@ export function Onboarding() {
             className="mt-3 flex items-center gap-2 rounded-xl px-3 py-2"
             style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}
           >
-            <Icon name="Search" size={15} color={C.muted} />
+            <Icon name="Search" size={16} color={C.muted} />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -212,7 +237,7 @@ export function Onboarding() {
                 <span className="text-sm font-semibold" style={{ color: C.ink }}>
                   {district.name}
                 </span>
-                <Icon name="ChevronRight" size={15} color={C.muted} />
+                <Icon name="ChevronRight" size={16} color={C.muted} />
               </button>
             ))}
           </div>
@@ -245,41 +270,116 @@ export function Onboarding() {
             izah={secilen ? null : t("onb.crop.subtitle", { district: state.location?.name ?? "" })}
           />
 
+          {/* İKON + MÖVSÜM SIRASI. On eyni ağ düymə oxunmurdu; forma
+              tanınması oxumaqdan sürətlidir. Sıra da uydurulmur — mövsüm
+              cədvəli məhsulun öz məlumatıdır (bax: services/bitkiGorunus.js). */}
           <div className="mt-2 flex-1 overflow-y-auto">
             <div className="grid grid-cols-2 gap-2">
-              {CROP_KEYS.map((key, index) => (
+              {bitkiSirasi.map((key, index) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => bitkiSec(key)}
-                  className="giris rounded-xl px-3 py-3 text-sm font-semibold"
+                  className="giris basilir flex items-center gap-2 rounded-2xl px-3 py-3 text-sm font-semibold"
                   style={{
                     "--i": index + 1,
                     backgroundColor: C.card,
                     border: `1px solid ${state.chat.crop === key ? C.field : C.line}`,
                     color: C.ink,
+                    minHeight: 52,
                   }}
                 >
-                  {t(`kbcrop.${key}`)}
+                  <span className="rounded-xl p-1.5" style={{ backgroundColor: C.fieldSoft }}>
+                    <Icon name={bitkiIkonu(key)} size={16} color={C.field} />
+                  </span>
+                  <span className="flex-1 text-left">{t(`kbcrop.${key}`)}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              clearTimeout(sevincTimer.current);
-              irele("bitki");
-            }}
-            className="py-3 text-xs font-semibold"
-            style={{ color: C.muted }}
-          >
-            {t("onb.crop.skip")}
-          </button>
+          {/* Keçidin NƏTİCƏSİ deyilir: "sonra da olar" sözü boş qalmasın */}
+          <div className="pt-2 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                clearTimeout(sevincTimer.current);
+                irele("bitki");
+              }}
+              className="text-xs font-semibold"
+              style={{ color: C.muted, minHeight: 44 }}
+            >
+              {t("onb.crop.skip")}
+            </button>
+            <p className="-mt-1 pb-1" style={{ color: C.muted, fontSize: 10 }}>
+              {t("onb.crop.skipIzah")}
+            </p>
+          </div>
         </div>
       )}
 
+      {/* ÜÇÜNCÜ ADDIM — axının əsl işi. Fermer buradan xəritəyə keçir;
+          sahə saxlananda quraşdırma bitir (bax: App.jsx → FieldDraw.onSave).
+          "Sonra çəkəcəyəm" də var: heç bir addım məcburi deyil, amma
+          keçidin nəyi təxirə saldığı açıq yazılır. */}
+      {indiki === "sahe" && (
+        <div className="flex flex-1 flex-col overflow-y-auto px-4">
+          <AqroSual
+            hal="danisir"
+            bitki={state.chat.crop}
+            basliq={t("onb.sahe.title")}
+            izah={t("onb.sahe.subtitle")}
+          />
+
+          <SaheIllustrasiyasi className="mx-auto mt-1" />
+
+          <ol className="mt-2 space-y-2">
+            {["onb.sahe.addim1", "onb.sahe.addim2", "onb.sahe.addim3"].map((acar, sira) => (
+              <li
+                key={acar}
+                className="giris flex items-start gap-2.5 rounded-2xl px-3 py-2.5"
+                style={{ "--i": sira + 1, backgroundColor: C.card, border: `1px solid ${C.line}` }}
+              >
+                <span
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                  style={{ backgroundColor: C.fieldSoft, color: C.field }}
+                >
+                  {sira + 1}
+                </span>
+                <span className="text-xs leading-relaxed" style={{ color: C.ink }}>
+                  {t(acar)}
+                </span>
+              </li>
+            ))}
+          </ol>
+
+          <button
+            type="button"
+            onClick={() => {
+              track("onb.step.done", { addim: "sahe" });
+              onDrawField?.();
+            }}
+            className="basilir mt-4 w-full rounded-xl py-3.5 text-sm font-bold"
+            style={{ backgroundColor: C.pine, color: "#fff", minHeight: 48 }}
+          >
+            {t("onb.sahe.cta")}
+          </button>
+
+          <div className="pt-2 pb-1 text-center">
+            <button
+              type="button"
+              onClick={() => irele("sahe")}
+              className="text-xs font-semibold"
+              style={{ color: C.muted, minHeight: 44 }}
+            >
+              {t("onb.sahe.skip")}
+            </button>
+            <p className="-mt-1" style={{ color: C.muted, fontSize: 10 }}>
+              {t("onb.sahe.skipIzah")}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

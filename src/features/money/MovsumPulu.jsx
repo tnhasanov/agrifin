@@ -166,7 +166,7 @@ export function MovsumPulu({ indeksHali = null, kreditHali = null }) {
         {borc != null && (
           <div className="flex items-baseline justify-between gap-2 py-1.5">
             <span className="flex items-center gap-1.5 text-xs" style={{ color: C.muted }}>
-              <Icon name="Clock" size={12} color={C.goldDeep} />
+              <Icon name="Clock" size={16} color={C.goldDeep} />
               {t(kreditVar ? "movsumPulu.borcKredit" : "movsumPulu.borc")}
             </span>
             <span

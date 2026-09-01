@@ -13,7 +13,10 @@ const PEYK_URL =
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
 const PEYK_ATRIBUT = "Esri, Maxar, Earthstar Geographics";
 
-const BASLANGIC_ZOOM = 15;
+// Rayon mərkəzində 15-ci yaxınlıqda tarla sərhədləri seçilmir: fermer öz
+// sahəsini tanıya bilmir və əl ilə böyütməli olur. 16 kəndin içindəki
+// sahələri ayırd etməyə imkan verir (peyk qatının maksimumu 19-dur).
+const BASLANGIC_ZOOM = 16;
 
 /**
  * Sahə çəkmə ekranı. Fermer peyk şəklinə toxunaraq künc qoyur, küncləri
@@ -186,7 +189,7 @@ export function FieldDraw({ location, existing, onSave, onClose }) {
           className="rounded-full p-1.5"
           style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
         >
-          <Icon name="ChevronLeft" size={18} color="#fff" />
+          <Icon name="ChevronLeft" size={20} color="#fff" />
         </button>
         <div className="flex-1">
           <h2 className="text-sm font-bold text-white" style={{ fontFamily: font.display }}>
@@ -204,7 +207,7 @@ export function FieldDraw({ location, existing, onSave, onClose }) {
             className="rounded-full p-1.5"
             style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
           >
-            <Icon name="Trash2" size={15} color="rgba(255,255,255,0.8)" />
+            <Icon name="Trash2" size={16} color="rgba(255,255,255,0.8)" />
           </button>
         )}
       </div>
@@ -216,7 +219,7 @@ export function FieldDraw({ location, existing, onSave, onClose }) {
         {!hazir && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="flex items-center gap-2 rounded-xl px-4 py-2.5" style={{ backgroundColor: C.card }}>
-              <Icon name="LoaderCircle" size={14} color={C.muted} />
+              <Icon name="LoaderCircle" size={16} color={C.muted} />
               <span className="text-xs" style={{ color: C.muted }}>
                 {t("field.loading")}
               </span>
@@ -242,7 +245,7 @@ export function FieldDraw({ location, existing, onSave, onClose }) {
       <div className="px-4 py-3" style={{ backgroundColor: C.card }}>
         {xetaAcari && (
           <p role="alert" className="mb-2 flex items-start gap-1.5 text-xs" style={{ color: C.danger }}>
-            <Icon name="AlertCircle" size={13} color={C.danger} /> {t(xetaAcari)}
+            <Icon name="AlertCircle" size={16} color={C.danger} /> {t(xetaAcari)}
           </p>
         )}
         <div className="flex items-center gap-2">
@@ -264,13 +267,29 @@ export function FieldDraw({ location, existing, onSave, onClose }) {
             type="button"
             onClick={saxla}
             disabled={!kifayetdir}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold"
+            className="basilir flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold"
             style={{ backgroundColor: C.pine, color: "#fff", opacity: kifayetdir ? 1 : 0.45 }}
           >
             <Icon name="Check" size={16} color={C.gold} />
-            {t("field.save")}
+            {/* SÖNÜK DÜYMƏ SINIQ GÖRÜNÜR. Əvvəl 45% şəffaflıqda "Sahəni
+                saxla" yazırdı və fermer nəyin çatmadığını bilmirdi —
+                indi düymənin özü qalan işi deyir. */}
+            {kifayetdir ? t("field.save") : t("field.lazimKunc", { say: 3 - noqteSayi })}
           </button>
         </div>
+
+        {/* Sahəsini tapa bilməyən fermer ilişib qalmamalıdır: çəkmə həmişə
+            sonraya qoyula bilər (onboarding-də üçüncü addım keçilir). */}
+        {noqteSayi === 0 && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="mt-2 w-full text-center text-xs font-semibold"
+            style={{ color: C.muted, minHeight: 44 }}
+          >
+            {t("field.sonra")}
+          </button>
+        )}
       </div>
     </div>
   );

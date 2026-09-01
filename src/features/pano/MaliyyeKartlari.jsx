@@ -93,7 +93,7 @@ export function AktivKreditXulasesi({ kredit, odenisler = [], onOdenis, onQrafik
         </p>
         {vaxtinda && (
           <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: C.field }}>
-            <Icon name="Check" size={12} color={C.field} />
+            <Icon name="Check" size={16} color={C.field} />
             {t("maliyye.vaxtinda")}
           </span>
         )}
@@ -109,7 +109,7 @@ export function AktivKreditXulasesi({ kredit, odenisler = [], onOdenis, onQrafik
           <button
             type="button"
             onClick={onOdenis}
-            className="flex-1 rounded-xl py-2.5 text-sm font-bold"
+            className="basilir flex-1 rounded-xl py-2.5 text-sm font-bold"
             style={{ backgroundColor: C.mal, color: "#fff", minHeight: 44 }}
           >
             {t("maliyye.odenisEt")}
@@ -118,7 +118,7 @@ export function AktivKreditXulasesi({ kredit, odenisler = [], onOdenis, onQrafik
         <button
           type="button"
           onClick={onQrafik}
-          className="flex-1 rounded-xl py-2.5 text-sm font-bold"
+          className="basilir flex-1 rounded-xl py-2.5 text-sm font-bold"
           style={
             gecikib
               ? { backgroundColor: C.mal, color: "#fff", minHeight: 44 }
@@ -214,7 +214,7 @@ export function GecikmeKarti({ kredit, onOdenis, onDestek, onEtrafli }) {
         <button
           type="button"
           onClick={onOdenis}
-          className="flex-1 rounded-xl py-2.5 text-sm font-bold"
+          className="basilir flex-1 rounded-xl py-2.5 text-sm font-bold"
           style={{ backgroundColor: C.danger, color: "#fff", minHeight: 44 }}
         >
           {t("gecikmeKart.odeCta")}
@@ -222,7 +222,7 @@ export function GecikmeKarti({ kredit, onOdenis, onDestek, onEtrafli }) {
         <button
           type="button"
           onClick={onDestek}
-          className="flex-1 rounded-xl py-2.5 text-sm font-bold"
+          className="basilir flex-1 rounded-xl py-2.5 text-sm font-bold"
           style={{ backgroundColor: C.mist, color: C.pine, minHeight: 44 }}
         >
           {t("gecikmeKart.destek")}
@@ -235,11 +235,11 @@ export function GecikmeKarti({ kredit, onOdenis, onDestek, onEtrafli }) {
         </p>
         <ul className="mt-1 space-y-1">
           <li className="flex items-start gap-1.5 text-xs" style={{ color: C.muted }}>
-            <Icon name="Check" size={12} color={C.field} />
+            <Icon name="Check" size={16} color={C.field} />
             {t("gecikmeKart.tarixce")}
           </li>
           <li className="flex items-start gap-1.5 text-xs" style={{ color: C.muted }}>
-            <Icon name="Info" size={12} color={C.goldDeep} />
+            <Icon name="Info" size={16} color={C.goldDeep} />
             {t("gecikmeKart.faizDavam")}
           </li>
         </ul>
@@ -286,7 +286,7 @@ export function TeklifKarti({ teklif, ayliqFaizTexmini = null, azaldilib = false
       {/* Təklifin özü LAVANDA kartda — maliyyə bənövşəyidir (PDF dizaynı) */}
       <div className="mt-2.5 rounded-2xl px-3.5 py-3" style={{ backgroundColor: C.malSoft }}>
         <p className="flex items-center gap-1.5 text-xs font-bold" style={{ color: C.mal }}>
-          <Icon name="Wallet" size={14} color={C.mal} />
+          <Icon name="Wallet" size={16} color={C.mal} />
           {t("teklifKart.adi")}
         </p>
         <p
@@ -349,7 +349,7 @@ export function TeklifKarti({ teklif, ayliqFaizTexmini = null, azaldilib = false
         className="mt-2 flex items-start gap-1.5 rounded-lg px-2.5 py-2 text-xs leading-relaxed"
         style={{ backgroundColor: C.malSoft, color: C.mal }}
       >
-        <Icon name="ShieldCheck" size={13} color={C.mal} />
+        <Icon name="ShieldCheck" size={16} color={C.mal} />
         {t("teklifKart.qeyd")}
       </p>
 
@@ -403,7 +403,7 @@ export function KreditMiniKarti({ kredit, onBax }) {
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="rounded-xl p-2" style={{ backgroundColor: "#fff" }}>
-            <Icon name="CreditCard" size={14} color={C.mal} />
+            <Icon name="CreditCard" size={16} color={C.mal} />
           </div>
           <p className="text-sm font-bold" style={{ color: C.mal, fontFamily: font.display }}>
             {t("maliyye.aktiv")}
@@ -447,7 +447,7 @@ export function KreditMiniKarti({ kredit, onBax }) {
         style={{ backgroundColor: C.mal, color: "#fff" }}
       >
         {t("pano.etrafliBax")}
-        <Icon name="ChevronRight" size={14} color="#fff" />
+        <Icon name="ChevronRight" size={16} color="#fff" />
       </p>
     </Card>
   );

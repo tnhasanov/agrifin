@@ -75,7 +75,7 @@ export function SaheLenti({ peyk = { hal: "yoxdur", seriya: [] }, radar = { hal:
             style={{ borderBottom: `1px solid ${C.line}` }}
           >
             <div className="rounded-full p-2" style={{ backgroundColor: "rgba(74,144,226,0.12)" }}>
-              <Icon name="Radar" size={14} color="#4A90E2" />
+              <Icon name="Radar" size={16} color="#4A90E2" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold" style={{ color: C.ink }}>
@@ -115,7 +115,7 @@ export function SaheLenti({ peyk = { hal: "yoxdur", seriya: [] }, radar = { hal:
             }}
           >
             <div className="rounded-full p-2" style={{ backgroundColor: C.fieldSoft }}>
-              <Icon name="Satellite" size={14} color={C.field} />
+              <Icon name="Satellite" size={16} color={C.field} />
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold" style={{ color: C.ink }}>
@@ -125,7 +125,7 @@ export function SaheLenti({ peyk = { hal: "yoxdur", seriya: [] }, radar = { hal:
                 {tarixYaz(s.gun)} · Sentinel-2
                 {/* Su işarəsi yalnız quraqlıqda: hər sətirdə təkrarlanan
                     "hər şey qaydasındadır" nişanı heç nə demir */}
-                {s.suAz && <Icon name="Droplets" size={11} color={C.goldDeep} />}
+                {s.suAz && <Icon name="Droplets" size={16} color={C.goldDeep} />}
               </p>
             </div>
             <div className="text-right">

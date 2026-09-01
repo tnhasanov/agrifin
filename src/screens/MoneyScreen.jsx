@@ -97,7 +97,7 @@ export function MoneyScreen({
       {hal === "yuklenir" && (
         <Card style={{ marginBottom: 12 }}>
           <div className="flex items-center gap-2" aria-live="polite">
-            <Icon name="LoaderCircle" size={14} color={C.muted} />
+            <Icon name="LoaderCircle" size={16} color={C.muted} />
             <p className="text-xs" style={{ color: C.muted }}>
               {t("maliyye.yuklenir")}
             </p>
@@ -222,7 +222,7 @@ export function MoneyScreen({
             style={{ backgroundColor: C.pine, color: "#fff" }}
           >
             {t(sert.ctaKey)}
-            <Icon name="ChevronRight" size={14} color="#fff" />
+            <Icon name="ChevronRight" size={16} color="#fff" />
           </p>
         </Card>
       )}

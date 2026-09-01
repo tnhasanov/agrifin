@@ -203,7 +203,7 @@ export function AgronomChat({
           className="rounded-full p-1.5"
           style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
         >
-          <Icon name="ChevronLeft" size={18} color="#fff" />
+          <Icon name="ChevronLeft" size={20} color="#fff" />
         </button>
         <div className="flex-1">
           <h2 className="text-sm font-bold text-white" style={{ fontFamily: font.display }}>
@@ -221,7 +221,7 @@ export function AgronomChat({
             className="rounded-full p-1.5"
             style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
           >
-            <Icon name="Trash2" size={15} color="rgba(255,255,255,0.8)" />
+            <Icon name="Trash2" size={16} color="rgba(255,255,255,0.8)" />
           </button>
         )}
         {/* Personaj başlıqda vəziyyəti daşıyır: fermer cavabın gəldiyini
@@ -302,7 +302,7 @@ export function AgronomChat({
                 className="rounded-2xl px-3 py-2 leading-relaxed"
                 style={{
                   maxWidth: "85%",
-                  fontSize: 13,
+                  fontSize: 12,
                   // Fermerin öz yazısı hərfi qalır — sətir sonları da onundur.
                   // Aqronomun cavabı bloklara bölünür, ona görə pre-wrap
                   // orada ikiqat boşluq yaradardı.
@@ -333,7 +333,7 @@ export function AgronomChat({
                 className="rounded-2xl px-3 py-2 leading-relaxed"
                 style={{
                   maxWidth: "85%",
-                  fontSize: 13,
+                  fontSize: 12,
                   backgroundColor: C.card,
                   color: C.ink,
                   border: `1px solid ${C.line}`,
@@ -377,7 +377,7 @@ export function AgronomChat({
             className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold"
             style={{ backgroundColor: C.gold, color: C.pine }}
           >
-            <Icon name="UserCheck" size={14} color={C.pine} /> {t("chat.referral")}
+            <Icon name="UserCheck" size={16} color={C.pine} /> {t("chat.referral")}
           </button>
         )}
         {paylasHali && (
@@ -393,7 +393,7 @@ export function AgronomChat({
       <div className="px-3 py-2" style={{ backgroundColor: C.card, borderTop: `1px solid ${C.line}` }}>
         {sekilXetasi && (
           <p role="alert" className="mb-1.5 flex items-center gap-1.5 text-xs" style={{ color: C.danger }}>
-            <Icon name="AlertCircle" size={13} color={C.danger} /> {t(sekilXetasi)}
+            <Icon name="AlertCircle" size={16} color={C.danger} /> {t(sekilXetasi)}
           </p>
         )}
 
@@ -415,7 +415,7 @@ export function AgronomChat({
               className="rounded-full p-1.5"
               style={{ backgroundColor: "#F1F4EF" }}
             >
-              <Icon name="X" size={14} color={C.muted} />
+              <Icon name="X" size={16} color={C.muted} />
             </button>
           </div>
         )}
@@ -467,7 +467,7 @@ export function AgronomChat({
               opacity: busy || (!input.trim() && !sekil) ? 0.45 : 1,
             }}
           >
-            <Icon name="Send" size={15} color={C.gold} />
+            <Icon name="Send" size={16} color={C.gold} />
           </button>
         </div>
         <p className="mt-1.5 px-1 text-xs" style={{ color: C.muted, fontSize: 10 }}>
