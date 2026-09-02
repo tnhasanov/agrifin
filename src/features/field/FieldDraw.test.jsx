@@ -28,6 +28,7 @@ const { leafletMock } = vi.hoisted(() => {
       remove: vi.fn(),
       removeLayer: vi.fn(),
       fitBounds: vi.fn(),
+      setView: vi.fn(),
       addLayer: vi.fn(),
     }),
     tileLayer: () => ({ addTo: vi.fn() }),
@@ -62,7 +63,8 @@ const KUNCLER = [
 ];
 
 async function acFieldDraw(user) {
-  await user.click(screen.getByRole("button", { name: /Sahəmi xəritədə çək/ }));
+  // Hal A dəvəti: "Sahə əlavə et" (köhnə hero sətri PDF dizaynı ilə getdi)
+  await user.click(screen.getByRole("button", { name: "Sahə əlavə et" }));
   await waitFor(() =>
     expect(screen.getByRole("dialog", { name: "Sahənizi çəkin" })).toBeInTheDocument(),
   );
@@ -87,7 +89,8 @@ describe("sahə çəkmə", () => {
     renderApp(<App />);
     await acFieldDraw(user);
 
-    await waitFor(() => expect(screen.getByText(/Künclərə toxunun/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Ən azı 3 künc seçin/)).toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "Seçilmiş yerə qayıt" })).toBeInTheDocument();
   });
 
   it("künclər qoyulduqca sahə hektarla canlı görünür", async () => {
@@ -111,9 +114,12 @@ describe("sahə çəkmə", () => {
     for (const [lat, lng] of KUNCLER) xeriteyeToxun(lat, lng);
     await user.click(screen.getByRole("button", { name: /Sahəni saxla/ }));
 
-    // Dialoq bağlanır, əsas ekranda həqiqi hektar
+    // Dialoq bağlanır, tətbiq sübut ekranına keçir və növbəti mərhələni deyir
     expect(screen.queryByRole("dialog", { name: "Sahənizi çəkin" })).not.toBeInTheDocument();
-    expect(screen.getByText(/Sahəm: 6[.,]\d+ ha/)).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/fields");
+    expect(await screen.findByText("Sahə saxlanıldı")).toBeInTheDocument();
+    expect(screen.getByText("Peyk məlumatı toplanır")).toBeInTheDocument();
+    expect(screen.getAllByText(/6[.,]\d+ ha/).length).toBeGreaterThan(0);
 
     const saxlanan = JSON.parse(window.localStorage.getItem("agrifin:state")).state;
     expect(saxlanan.sahe.noqteler).toHaveLength(4);
@@ -148,7 +154,11 @@ describe("sahə çəkmə", () => {
 
     xeriteyeToxun(40.4, 47.1);
     xeriteyeToxun(40.402, 47.1);
-    expect(screen.getByRole("button", { name: /Sahəni saxla/ })).toBeDisabled();
+    // Düymə həm sönükdür, həm də NƏYİN çatmadığını deyir — sönük "Sahəni
+    // saxla" fermerə sistemin sındığını düşündürürdü
+    const saxla = screen.getByRole("button", { name: "Daha 1 künc lazımdır" });
+    expect(saxla).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /Sahəni saxla/ })).not.toBeInTheDocument();
   });
 
   it("geri al son küncü silir", async () => {
@@ -164,7 +174,7 @@ describe("sahə çəkmə", () => {
     // 3 künc qalıb — hələ də sahə var, amma fərqli
     await user.click(screen.getByRole("button", { name: "Geri al" }));
     // 2 künc — sahə yox, yenidən göstəriş
-    expect(screen.getByText(/Künclərə toxunun \(2\/3\+\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Ən azı 3 künc seçin — 2\/3/)).toBeInTheDocument();
   });
 
   it("rayondan uzaq sahə xəbərdarlıqla saxlanılır", async () => {
@@ -192,8 +202,9 @@ describe("sahə çəkmə", () => {
     for (const [lat, lng] of KUNCLER) xeriteyeToxun(lat, lng);
     await user.click(screen.getByRole("button", { name: /Sahəni saxla/ }));
 
-    // Yenidən açılır — künclər yerindədir
-    await user.click(screen.getByRole("button", { name: /Sahəm: .* ha — dəyiş/ }));
+    // Yenidən açılır — redaktə keçidi artıq Sahələr ekranındadır
+    await user.click(screen.getByRole("button", { name: "Sahələr" }));
+    await user.click(screen.getByRole("button", { name: "Dəyiş" }));
     await waitFor(() => expect(screen.getByText(/6[.,]\d+ hektar/)).toBeInTheDocument());
   });
 });
@@ -211,8 +222,9 @@ describe("saxlanan sahənin yüklənməsi", () => {
       }),
     );
     renderApp(<App />);
-    expect(screen.getByText(/Gəncə/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Sahəmi xəritədə çək/ })).toBeInTheDocument();
+    // Rayon adı bir neçə yerdə görünür (yer seçicisi + rayon üzrə hava başlığı)
+    expect(screen.getAllByText(/Gəncə/).length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Sahə əlavə et" })).toBeInTheDocument();
   });
 
   it("zədələnmiş sahə konturu səssizcə atılır", () => {
@@ -229,6 +241,6 @@ describe("saxlanan sahənin yüklənməsi", () => {
     );
     renderApp(<App />);
     // Tətbiq çökmür, sahə çəkilməmiş sayılır
-    expect(screen.getByRole("button", { name: /Sahəmi xəritədə çək/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sahə əlavə et" })).toBeInTheDocument();
   });
 });

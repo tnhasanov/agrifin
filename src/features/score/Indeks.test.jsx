@@ -5,7 +5,7 @@ import App from "../../App.jsx";
 import { renderApp, seedState } from "../../test/render.jsx";
 
 const bugun = new Date().toISOString().slice(0, 10);
-const BASLIQ = "Aqronomik performans indeksi";
+const BASLIQ = "FarmScore";
 
 /** 2017-dən bu ilə: hər il əkilmiş, ətrafdan yuxarı sahə */
 function movsumler({ bosIl = null, etrafsiz = false, sayi = null } = {}) {
@@ -132,8 +132,9 @@ describe("aqronomik performans indeksi — əsas ekran", () => {
     stubApi();
     renderApp(<App />);
 
+    // Sahəsiz açılışda dəvət artıq pano kartıdır (hal A): bal/limit YOXDUR
     await waitFor(() =>
-      expect(screen.getByText(/Sahənizi çəkin — aqronomik performans indeksiniz/)).toBeInTheDocument(),
+      expect(screen.getAllByText("İlk sahənizi əlavə edin").length).toBeGreaterThan(0),
     );
     // Bahalı tarixçə sorğusu sahəsiz getməməlidir
     expect(tarixceSorgusu).toBe(0);
@@ -146,9 +147,26 @@ describe("aqronomik performans indeksi — əsas ekran", () => {
     stubApi({ movsumSiyahisi: movsumler({ sayi: 2 }) });
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText("Tarixçə kifayət deyil")).toBeInTheDocument());
-    expect(screen.getByText(/minimum 3 ölçülə bilən mövsüm/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("Tarixçə yığılır")).toBeInTheDocument());
+    expect(screen.getByText(/ən azı 3 istifadə oluna bilən mövsüm/)).toBeInTheDocument();
+    // Gedişat və bildiriş vədi dəqiq mətnlərlə
+    expect(screen.getByText(/\/ 3 mövsüm/)).toBeInTheDocument();
+    expect(screen.getByText("Hələ qiymətləndirilməyib")).toBeInTheDocument();
+    expect(screen.getByText("Məlumat kifayət etdikdə sizə xəbər verəcəyik.")).toBeInTheDocument();
     expect(screen.queryByText("Yüksək")).not.toBeInTheDocument();
+  });
+
+  // PDF 14: hal B-nin əsas hərəkəti "Sahəyə bax"dır — bal yoxdursa fermerin
+  // görə biləcəyi yeganə dəlil sahə ekranındadır
+  it("tarixçə yığılan halda ana səhifədə 'Sahəyə bax' əsas hərəkətdir", async () => {
+    const user = userEvent.setup();
+    seed();
+    stubApi({ movsumSiyahisi: movsumler({ sayi: 2 }) });
+    renderApp(<App />);
+
+    await waitFor(() => expect(screen.getByText("Tarixçə yığılır")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Sahəyə bax" }));
+    expect(window.location.pathname).toBe("/fields");
   });
 
   // Fermer balın SƏBƏBİNİ görməlidir — gizli düstur etibar yaratmır
@@ -228,8 +246,8 @@ describe("aqronomik performans indeksi — əsas ekran", () => {
     renderApp(<App />);
 
     await waitFor(() => expect(screen.getByText(/Tarixçə alınmadı/)).toBeInTheDocument());
-    // Peyk zolağı yerindədir
-    expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument();
+    // Qalan ekran işləyir: hava zolağı yerindədir
+    expect(await screen.findByText(/Sahədə hava/)).toBeInTheDocument();
   });
 
   // ── CARİ MÖVSÜM QATI ────────────────────────────────────────────────

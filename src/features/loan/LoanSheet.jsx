@@ -495,7 +495,7 @@ export function LoanSheet({ onClose, indeksHali = null, kreditHali, onOpenHesab 
         {serverHal === "hazir" && acıqMuraciet && (
           <div className="py-2">
             <div className="flex items-center gap-2">
-              <Icon name="Clock" size={15} color={C.goldDeep} />
+              <Icon name="Clock" size={16} color={C.goldDeep} />
               <p className="text-sm font-bold" style={{ color: C.ink }}>
                 {t("kredit.movcudBasliq")}
               </p>
@@ -634,7 +634,7 @@ export function LoanSheet({ onClose, indeksHali = null, kreditHali, onOpenHesab 
               <span className="text-xs font-semibold" style={{ color: C.pine }}>
                 {t("kredit.niyeBuQeder", { max: { money: kredit.maxKredit } })}
               </span>
-              <Icon name={izahAcilib ? "ChevronDown" : "ChevronRight"} size={14} color={C.muted} />
+              <Icon name={izahAcilib ? "ChevronDown" : "ChevronRight"} size={16} color={C.muted} />
             </button>
             {izahAcilib && (
               <div className="mt-1 rounded-xl px-3 py-1" style={{ backgroundColor: C.mist }}>

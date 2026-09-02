@@ -55,7 +55,7 @@ export function HesabatPaylas({ hektar, bitkiKey, xulase, muqayise, siqnal }) {
         className="flex w-full items-center justify-center gap-2 rounded-2xl py-2.5 text-xs font-bold"
         style={{ backgroundColor: C.card, border: `1px solid ${C.line}`, color: C.pine }}
       >
-        <Icon name="Share2" size={14} color={C.pine} /> {t("paylas.duyme")}
+        <Icon name="Share2" size={16} color={C.pine} /> {t("paylas.duyme")}
       </button>
       {hal && (
         <p className="mt-1.5 text-center text-xs" role="status" style={{ color: C.muted }}>

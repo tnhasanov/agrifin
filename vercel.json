@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run vercel-build",
   "rewrites": [{ "source": "/((?!api|icons|manifest.webmanifest|sw.js|assets).*)", "destination": "/index.html" }],
   "functions": {
     "api/agronom.js": { "maxDuration": 30 }

@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "../../components/Icon.jsx";
 import { Aqronom } from "../../components/Aqronom.jsx";
+import { CavabMetni } from "./CavabMetni.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { useStore } from "../../state/store.jsx";
 import { askAgronomist } from "../../services/agronom.js";
 import { CROP_KEYS } from "../../services/crops.js";
-import { DEFAULT_LOCATION } from "../../services/location.js";
 import { sekliHazirla } from "../../lib/sekil.js";
 import { hesabatSetirleri, paylas } from "../../services/paylas.js";
 import { necheGunEvvel, ortukFaizi } from "../../services/ndvi.js";
@@ -41,6 +41,9 @@ function errorKeyFor(error) {
 
 export function AgronomChat({
   onClose,
+  // Kömək ekranındakı sürətli sualdan gəlir: sual giriş xanasına YAZILIR,
+  // amma GÖNDƏRİLMİR — göndərmək fermerin öz toxunuşudur
+  ilkSual = null,
   // Peyk ölçməsi və müqayisə App-də bir dəfə qurulur (bax: App.jsx) — burada
   // yenidən soruşsaq eyni Copernicus sorğusu ikinci dəfə gedərdi
   peyk = { xulase: null },
@@ -48,12 +51,12 @@ export function AgronomChat({
 }) {
   const { t, lang } = useI18n();
   const { state, actions } = useStore();
-  const location = state.location ?? DEFAULT_LOCATION;
+  const location = state.location;
   const { messages, crop, referral } = state.chat;
   const sahe = state.sahe;
   // Keşdən gəlir — əsas ekran onsuz da yükləyib
 
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(ilkSual ?? "");
   const [busy, setBusy] = useState(false);
   // Axın gedərkən yığılan mətn. Tamamlananda store-a bir dəfə yazılır —
   // hər parçada store-u yeniləsək, bütün tətbiq hər hərfdə render olunardı.
@@ -199,14 +202,14 @@ export function AgronomChat({
           className="rounded-full p-1.5"
           style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
         >
-          <Icon name="ChevronLeft" size={18} color="#fff" />
+          <Icon name="ChevronLeft" size={20} color="#fff" />
         </button>
         <div className="flex-1">
           <h2 className="text-sm font-bold text-white" style={{ fontFamily: font.display }}>
             {t("chat.title")}
           </h2>
           <p className="text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>
-            {location.name.replace(" (GPS)", "")} · {cropName}
+            {location?.name?.replace(" (GPS)", "") ?? t("location.notSelected")} · {cropName}
           </p>
         </div>
         {messages.length > 0 && (
@@ -217,7 +220,7 @@ export function AgronomChat({
             className="rounded-full p-1.5"
             style={{ backgroundColor: "rgba(255,255,255,0.12)" }}
           >
-            <Icon name="Trash2" size={15} color="rgba(255,255,255,0.8)" />
+            <Icon name="Trash2" size={16} color="rgba(255,255,255,0.8)" />
           </button>
         )}
         {/* Personaj başlıqda vəziyyəti daşıyır: fermer cavabın gəldiyini
@@ -295,16 +298,26 @@ export function AgronomChat({
               className={`mb-3 flex ${isUser ? "justify-end" : "justify-start"}`}
             >
               <div
-                className="rounded-2xl px-3 py-2 text-xs leading-relaxed"
+                className="rounded-2xl px-3 py-2 leading-relaxed"
                 style={{
                   maxWidth: "85%",
-                  whiteSpace: "pre-wrap",
+                  fontSize: 12,
+                  // Fermerin öz yazısı hərfi qalır — sətir sonları da onundur.
+                  // Aqronomun cavabı bloklara bölünür, ona görə pre-wrap
+                  // orada ikiqat boşluq yaradardı.
+                  whiteSpace: isUser || message.errorKey ? "pre-wrap" : undefined,
                   backgroundColor: isUser ? C.pine : C.card,
                   color: isUser ? "#fff" : message.errorKey ? C.danger : C.ink,
                   border: isUser ? "none" : `1px solid ${C.line}`,
                 }}
               >
-                {message.errorKey ? t(message.errorKey) : message.content}
+                {message.errorKey ? (
+                  t(message.errorKey)
+                ) : isUser ? (
+                  message.content
+                ) : (
+                  <CavabMetni metn={message.content} />
+                )}
               </div>
             </div>
           );
@@ -316,19 +329,26 @@ export function AgronomChat({
             {axanMetn ? (
               <div
                 aria-live="polite"
-                className="rounded-2xl px-3 py-2 text-xs leading-relaxed"
+                className="rounded-2xl px-3 py-2 leading-relaxed"
                 style={{
                   maxWidth: "85%",
-                  whiteSpace: "pre-wrap",
+                  fontSize: 12,
                   backgroundColor: C.card,
                   color: C.ink,
                   border: `1px solid ${C.line}`,
                 }}
               >
-                {axanMetn}
-                <span className="ml-0.5 animate-pulse" style={{ color: C.muted }}>
-                  ▍
-                </span>
+                {/* Axın da eyni formatlayıcıdan keçir: bağlanmamış ulduz cütü
+                    vurğu kimi göstərilir, ona görə mətn gələrkən ekranda
+                    çılpaq "**" görünmür (bax: lib/cavabMetni.js) */}
+                <CavabMetni
+                  metn={axanMetn}
+                  kursor={
+                    <span className="ml-0.5 animate-pulse" style={{ color: C.muted }}>
+                      ▍
+                    </span>
+                  }
+                />
               </div>
             ) : (
               <div
@@ -356,7 +376,7 @@ export function AgronomChat({
             className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold"
             style={{ backgroundColor: C.gold, color: C.pine }}
           >
-            <Icon name="UserCheck" size={14} color={C.pine} /> {t("chat.referral")}
+            <Icon name="UserCheck" size={16} color={C.pine} /> {t("chat.referral")}
           </button>
         )}
         {paylasHali && (
@@ -372,7 +392,7 @@ export function AgronomChat({
       <div className="px-3 py-2" style={{ backgroundColor: C.card, borderTop: `1px solid ${C.line}` }}>
         {sekilXetasi && (
           <p role="alert" className="mb-1.5 flex items-center gap-1.5 text-xs" style={{ color: C.danger }}>
-            <Icon name="AlertCircle" size={13} color={C.danger} /> {t(sekilXetasi)}
+            <Icon name="AlertCircle" size={16} color={C.danger} /> {t(sekilXetasi)}
           </p>
         )}
 
@@ -394,7 +414,7 @@ export function AgronomChat({
               className="rounded-full p-1.5"
               style={{ backgroundColor: "#F1F4EF" }}
             >
-              <Icon name="X" size={14} color={C.muted} />
+              <Icon name="X" size={16} color={C.muted} />
             </button>
           </div>
         )}
@@ -446,7 +466,7 @@ export function AgronomChat({
               opacity: busy || (!input.trim() && !sekil) ? 0.45 : 1,
             }}
           >
-            <Icon name="Send" size={15} color={C.gold} />
+            <Icon name="Send" size={16} color={C.gold} />
           </button>
         </div>
         <p className="mt-1.5 px-1 text-xs" style={{ color: C.muted, fontSize: 10 }}>

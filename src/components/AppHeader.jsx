@@ -15,7 +15,7 @@ export function AppHeader({ siqnalSayi = 0, onZeng, panelAcilib = false }) {
     <header className="flex items-center justify-between px-5 pt-5 pb-2">
       <div className="flex items-center gap-2">
         <div className="rounded-xl p-1.5" style={{ backgroundColor: C.pine }}>
-          <Icon name="Leaf" size={14} color={C.gold} />
+          <Icon name="Leaf" size={16} color={C.gold} />
         </div>
         <span className="text-sm font-extrabold" style={{ color: C.pine, fontFamily: font.display }}>
           {t("app.name")}
@@ -30,7 +30,7 @@ export function AppHeader({ siqnalSayi = 0, onZeng, panelAcilib = false }) {
           className="flex items-center gap-1 rounded-full px-2.5 py-2 text-xs font-bold"
           style={{ backgroundColor: C.card, border: `1px solid ${C.line}`, color: C.ink }}
         >
-          <Icon name="Languages" size={14} color={C.muted} />
+          <Icon name="Languages" size={16} color={C.muted} />
           {current.label}
         </button>
 
@@ -55,7 +55,7 @@ export function AppHeader({ siqnalSayi = 0, onZeng, panelAcilib = false }) {
           {/* key=say: yeni siqnal gələndə zəng yenidən yellənir. Yellənmə
               birdəfəlikdir — sonsuz yellənən zəng narahatlıq yaradır. */}
           <span key={gozleyen} className={gozleyen > 0 ? "zeng-yellen" : undefined}>
-            <Icon name="Bell" size={15} color={C.ink} />
+            <Icon name="Bell" size={16} color={C.ink} />
           </span>
           {gozleyen > 0 && (
             <span

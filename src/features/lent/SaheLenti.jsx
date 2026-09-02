@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card } from "../../components/Card.jsx";
 import { Icon } from "../../components/Icon.jsx";
 import { SectionTitle } from "../../components/SectionTitle.jsx";
@@ -10,14 +11,27 @@ import { necheGunEvvel, ortukFaizi } from "../../services/ndvi.js";
  *
  * Bankda hər əməliyyat lentə düşür; burada "əməliyyat" peykin sahədən
  * keçməsidir. Hər ölçmə bir sətirdir: nə vaxt, örtük neçə faiz, əvvəlkinə
- * görə hansı istiqamətdə. Fermer siyahını yuxarıdan aşağı oxuyub mövsümün
- * hekayəsini görür — sparkline bunu deyə bilmir, çünki rəqəmsiz və tarixsizdir.
+ * görə hansı istiqamətdə.
+ *
+ * ═══ QRAFİKLƏ MÜNASİBƏTİ ═════════════════════════════════════════════
+ * Vegetasiya qrafiki (bax: features/ndvi/VegetasiyaQrafiki.jsx) EYNİ NDVI
+ * seriyasını əyri kimi göstərir: forma, trend, rayonla müqayisə. Lentin
+ * işi başqadır — DƏQİQ RƏQƏMLƏR və tarixlər ("10 gün əvvəl neçə idi?").
+ *
+ * Qrafik gələndən sonra 10-30 sətir onun altında təkrar oxunurdu, ona görə
+ * ölçmə siyahısı YIĞILIB: "Bütün ölçmələr (N)" düyməsi ilə açılır. Məlumat
+ * itmir, sadəcə əsas cavab (əyri) qabaqda durur.
+ *
+ * RADAR SƏTRİ HƏMİŞƏ AÇIQDIR: o, Sentinel-1-dəndir və qrafikdə YOXDUR —
+ * optik ölçmə buludda qalanda lentin yeganə təzə xəbəri elə odur.
  *
  * Yalnız REAL ölçmələr: seriya boşdursa lent də yoxdur. Uydurma sətir,
  * nümunə tarix yoxdur.
  */
+
 export function SaheLenti({ peyk = { hal: "yoxdur", seriya: [] }, radar = { hal: "yoxdur" } }) {
   const { t } = useI18n();
+  const [aciq, setAciq] = useState(false);
 
   if (peyk.hal !== "hazir" || (peyk.seriya?.length ?? 0) === 0) return null;
 
@@ -61,7 +75,7 @@ export function SaheLenti({ peyk = { hal: "yoxdur", seriya: [] }, radar = { hal:
             style={{ borderBottom: `1px solid ${C.line}` }}
           >
             <div className="rounded-full p-2" style={{ backgroundColor: "rgba(74,144,226,0.12)" }}>
-              <Icon name="Radar" size={14} color="#4A90E2" />
+              <Icon name="Radar" size={16} color="#4A90E2" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold" style={{ color: C.ink }}>
@@ -76,17 +90,32 @@ export function SaheLenti({ peyk = { hal: "yoxdur", seriya: [] }, radar = { hal:
           </div>
         )}
 
+        {/* Ölçmə siyahısı yığılıb: əsas cavab qrafikdədir, dəqiq rəqəmlərə
+            isə fermer nadir hallarda baxır — amma bir toxunuşla açılır */}
+        <button
+          type="button"
+          onClick={() => setAciq((e) => !e)}
+          aria-expanded={aciq}
+          aria-controls="lent-olcmeler"
+          className="flex w-full items-center justify-between py-3 text-sm font-bold"
+          style={{ color: C.pine, minHeight: 44 }}
+        >
+          {aciq ? t("lent.gizle") : t("lent.hamisi", { say: setirler.length })}
+          <Icon name={aciq ? "ChevronUp" : "ChevronDown"} size={16} color={C.pine} />
+        </button>
+
+        <div id="lent-olcmeler" hidden={!aciq}>
         {setirler.map((s, index) => (
           <div
             key={s.acar}
             className="giris flex items-center gap-3 py-3"
             style={{
               "--i": index,
-              borderBottom: index < setirler.length - 1 ? `1px solid ${C.line}` : "none",
+              borderTop: `1px solid ${C.line}`,
             }}
           >
             <div className="rounded-full p-2" style={{ backgroundColor: C.fieldSoft }}>
-              <Icon name="Satellite" size={14} color={C.field} />
+              <Icon name="Satellite" size={16} color={C.field} />
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold" style={{ color: C.ink }}>
@@ -96,7 +125,7 @@ export function SaheLenti({ peyk = { hal: "yoxdur", seriya: [] }, radar = { hal:
                 {tarixYaz(s.gun)} · Sentinel-2
                 {/* Su işarəsi yalnız quraqlıqda: hər sətirdə təkrarlanan
                     "hər şey qaydasındadır" nişanı heç nə demir */}
-                {s.suAz && <Icon name="Droplets" size={11} color={C.goldDeep} />}
+                {s.suAz && <Icon name="Droplets" size={16} color={C.goldDeep} />}
               </p>
             </div>
             <div className="text-right">
@@ -117,6 +146,7 @@ export function SaheLenti({ peyk = { hal: "yoxdur", seriya: [] }, radar = { hal:
             </div>
           </div>
         ))}
+        </div>
       </Card>
     </>
   );

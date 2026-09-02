@@ -9,11 +9,47 @@ import {
 
 const BOS = { muraciet: null, qerar: null, teklif: null, kredit: null, hadiseler: [] };
 
+/**
+ * MODUL BU QURAŞDIRMADA YOXDUR — iki fərqli cavab, eyni məna:
+ *   501 — funksiya işləyir, amma baza/hesab mühiti qurulmayıb (api/kredit.js);
+ *   404 — marşrutun ÖZÜ yoxdur. `npm run dev` və `vite preview` /api/* vermir
+ *         (yalnız Vercel və `vercel dev` verir), ona görə lokal baxışda hər
+ *         kredit sorğusu 404-dür.
+ * Bunu "xəta" saymaq fermerə yanlış xəbərdir: sistem sınmayıb, sadəcə bu
+ * quraşdırmada kredit modulu yoxdur.
+ */
+const QURULMAYIB = new Set([404, 501]);
+
 /** Xəta → istifadəçiyə göstərilən hal */
 function xetaHali(xeta) {
   if (xeta?.status === 401) return "girisYox";
-  if (xeta?.status === 501) return "qurulmayib";
+  if (QURULMAYIB.has(xeta?.status)) return "qurulmayib";
   return "xeta";
+}
+
+/**
+ * Xətanın SƏBƏBİ — mətn seçmək üçün. Status varsa server cavab verib (məsələn
+ * 500) — "bağlantı kəsildi" demək yalan olardı; status yoxdursa fetch özü
+ * atıb, yəni şəbəkə getməyib.
+ */
+function xetaSebebi(xeta) {
+  // Server açıq deyir ki, bazada cədvəl yoxdur (503 sxemYoxdur) — bu, nə
+  // şəbəkə, nə də təsadüfi server xətasıdır: miqrasiya işlədilməyib
+  if (xeta?.acar === "sxemYoxdur") return "sxem";
+  return xeta?.status ? "server" : "sebeke";
+}
+
+/**
+ * Status BRAUZER KONSOLUNA yazılır: fermerin ekranında HTTP kodu görünməməli,
+ * amma quraşdırmanı yoxlayan adam səbəbi bir baxışda tapmalıdır
+ * (eyni üsul: features/agronom/AgronomChat.jsx).
+ */
+function xetaniQeydEt(xeta) {
+  // 401 gözlənilən məhsul halıdır: istifadəçi hələ hesab yaratmayıb.
+  // Onu warning kimi yazmaq real server xətalarını səs-küydə itirir.
+  if (xeta?.status === 401) return;
+  if (xeta?.status) console.warn(`[kredit] /api/kredit → HTTP ${xeta.status}`);
+  else console.warn("[kredit] /api/kredit — şəbəkə sorğusu alınmadı");
 }
 
 /**
@@ -31,6 +67,8 @@ export function useKreditVeziyyeti(telefon) {
   const [veziyyet, setVeziyyet] = useState(BOS);
   const [gedir, setGedir] = useState(false);
   const [xetaAcari, setXetaAcari] = useState(null);
+  // "sebeke" | "server" — yalnız hal === "xeta" olanda mənalıdır
+  const [xetaNovu, setXetaNovu] = useState(null);
   const abortRef = useRef(null);
 
   // Açılışda və giriş/çıxışda vəziyyət gətirilir. setState yalnız cavab
@@ -47,9 +85,12 @@ export function useKreditVeziyyeti(telefon) {
         setVeziyyet(cavab);
         setHal("hazir");
         setXetaAcari(null);
+        setXetaNovu(null);
       })
       .catch((xeta) => {
         if (atildi || xeta?.name === "AbortError") return;
+        xetaniQeydEt(xeta);
+        setXetaNovu(xetaSebebi(xeta));
         setHal(xetaHali(xeta));
       });
 
@@ -70,8 +111,11 @@ export function useKreditVeziyyeti(telefon) {
       setVeziyyet(cavab);
       setHal("hazir");
       setXetaAcari(null);
+      setXetaNovu(null);
     } catch (xeta) {
       if (xeta?.name === "AbortError") return;
+      xetaniQeydEt(xeta);
+      setXetaNovu(xetaSebebi(xeta));
       setHal(xetaHali(xeta));
     }
   }, []);
@@ -102,6 +146,7 @@ export function useKreditVeziyyeti(telefon) {
     hal,
     gedir,
     xetaAcari,
+    xetaNovu,
     ...veziyyet,
     yenile,
     // Yalnız MƏBLƏĞ göndərilir: müddət, dərəcə, limit və qərar serverdədir

@@ -8,7 +8,9 @@ export const KES_MS = 12 * 60 * 60 * 1000;
 // Ölçmə qaydası dəyişəndə artırılır — saxlanan nəticələr yeni qayda ilə
 // müqayisə oluna bilməz. v2: sahə və ətraf EYNİ maska ilə ölçülür
 // (bax: lib/copernicus.js, MUQAYISE_SERTI).
-export const KES_VERSIYASI = 2;
+// 2 → 3: ölçmə pəncərəsi 60 gündən 150 günə keçdi. Versiya artmasaydı
+// köhnə (qısa) seriya 12 saat ərzində yeni pəncərə kimi göstərilərdi.
+export const KES_VERSIYASI = 3;
 const KES_ACAR = "ndvi";
 const SEKIL_ACAR = "ndviSekil";
 const QONSU_ACAR = "ndviQonsu";

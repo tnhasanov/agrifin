@@ -2,6 +2,20 @@ import { useEffect, useState } from "react";
 import { fetchNdvi, illikMuqayise, xulase } from "../../services/ndvi.js";
 
 /**
+ * Ölçmə pəncərəsi — MÖVSÜM FORMASI GÖRÜNSÜN DEYƏ 150 gün.
+ *
+ * 60 gün "indi nə baş verir"i deyirdi, amma vegetasiya qrafikinin işi
+ * mövsümün ƏYRİSİNİ göstərməkdir: əkin, boy, zirvə, biçin. 60 gün onun
+ * yalnız quyruğunu tuturdu.
+ *
+ * XƏRC: Copernicus emal vahidi zaman aralığı ilə mütənasibdir, yəni bu
+ * sorğu ~2,5 dəfə bahalaşır. Sahə başına gündə BİR dəfə gedir (keş 12
+ * saatlıqdır, bax: services/ndvi.js KES_MS), ona görə artım məhduddur.
+ * Serverin yuxarı həddi 180 gündür (api/ndvi.js MAX_GUN).
+ */
+const PENCERE_GUN = 150;
+
+/**
  * Sahənin peyk ölçmələrini gətirir.
  *
  * Vəziyyətlər ayrıca lazımdır, çünki peyk məlumatı hava kimi "həmişə var"
@@ -35,7 +49,7 @@ export function useNdvi(sahe) {
     // Nəticə hansı sahəyə aid olduğunu özü ilə daşıyır — aşağıdaki müqayisə
     // həm "yüklənir" halını verir, həm də sahə dəyişəndə köhnə ölçmənin
     // bir an görünməsinin qarşısını alır.
-    fetchNdvi({ noqteler, signal: controller.signal })
+    fetchNdvi({ noqteler, gun: PENCERE_GUN, signal: controller.signal })
       .then(({ seriya, kohne, kecenIl }) => {
         const cari = xulase(seriya);
         setVeziyyet({

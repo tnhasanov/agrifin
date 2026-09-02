@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import App from "../../App.jsx";
 import { renderApp, seedState, WEATHER_FIXTURE } from "../../test/render.jsx";
 import { DEFAULT_LOCATION } from "../../services/location.js";
@@ -45,7 +46,7 @@ function seed() {
 }
 
 beforeEach(() => {
-  window.history.pushState({}, "", "/advisor");
+  window.history.pushState({}, "", "/fields");
   window.localStorage.clear();
   window.localStorage.setItem("agrifin:lang", JSON.stringify("az"));
 });
@@ -54,20 +55,35 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("sahə lenti — məsləhət ekranı", () => {
+describe("sahə lenti — Sahələr ekranı", () => {
   it("hər ölçmə tarixi və faizi ilə bir sətirdir, ən yenisi üstdə", async () => {
     seed();
     stubApi();
     renderApp(<App />);
 
+    const user = userEvent.setup();
     await waitFor(() => expect(screen.getByText("Sahə lenti")).toBeInTheDocument());
+
+    // Siyahı YIĞILIB: əsas cavab qrafikdədir (bax: VegetasiyaQrafiki)
+    expect(screen.getByRole("button", { name: /Bütün ölçmələr \(3\)/ })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(screen.getAllByText("Peyk ölçməsi")[0]).not.toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: /Bütün ölçmələr/ }));
     const setirler = screen.getAllByText("Peyk ölçməsi");
     expect(setirler).toHaveLength(3);
+    expect(setirler[0]).toBeVisible();
 
     // Ən yeni ölçmə (61%) siyahının başındadır
     const kart = setirler[0].closest("div.giris");
     expect(within(kart).getByText("61%")).toBeInTheDocument();
     expect(within(kart).getByText("Bu gün · Sentinel-2")).toBeInTheDocument();
+
+    // Təkrar toxunuş bağlayır
+    await user.click(screen.getByRole("button", { name: /Ölçmələri gizlət/ }));
+    expect(screen.getAllByText("Peyk ölçməsi")[0]).not.toBeVisible();
   });
 
   // Monzo lentindəki məbləğ dəyişməsi kimi: hər sətir əvvəlkinə görə fərqi deyir
@@ -97,7 +113,30 @@ describe("sahə lenti — məsləhət ekranı", () => {
     stubApi({ seriya: [] });
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText("Aqronom köməkçisi")).toBeInTheDocument());
+    // Sahələr ekranı açıqdır (başlıq bitki adıdır), amma lent bölməsi yoxdur
+    await waitFor(() => expect(screen.getByText("Sahənin peyk xəritəsi")).toBeInTheDocument());
     expect(screen.queryByText("Sahə lenti")).not.toBeInTheDocument();
+  });
+
+  // 150 günlük pəncərədə 30-a qədər ölçmə gəlir — düymə sayı özü deyir,
+  // yəni fermer açmadan da nə qədər sübut olduğunu bilir
+  it("düymə ölçmə sayını göstərir, siyahı açılanda hamısı gəlir", async () => {
+    const user = userEvent.setup();
+    seed();
+    const cox = Array.from({ length: 26 }, (_, i) => ({
+      baslangic: gunEvvel(150 - i * 5),
+      son: gunEvvel(145 - i * 5),
+      ndvi: 0.4 + i * 0.01,
+      nemlik: 0.25,
+    }));
+    stubApi({ seriya: cox });
+    renderApp(<App />);
+
+    await waitFor(() => expect(screen.getByText("Sahə lenti")).toBeInTheDocument());
+    expect(screen.getByRole("button", { name: /Bütün ölçmələr \(26\)/ })).toBeInTheDocument();
+
+    // Açılanda HAMISI gəlir — kəsilmiş siyahı deyil
+    await user.click(screen.getByRole("button", { name: /Bütün ölçmələr/ }));
+    expect(screen.getAllByText("Peyk ölçməsi")).toHaveLength(26);
   });
 });

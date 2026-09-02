@@ -2,24 +2,74 @@
 
 /* Dizayn tokenləri — JS tərəfdəki qarşılığı: src/theme/tokens.js */
 @theme {
-  --color-pine: #14351f;
-  --color-pine-deep: #0e2818;
-  --color-field: #2e7d4f;
-  --color-field-soft: #e9f5ee;
-  --color-gold: #e9b54a;
-  --color-gold-deep: #c9932b;
-  --color-gold-soft: #fbf1da;
-  --color-blue: #3e7bfa;
-  --color-blue-soft: #eaf1fd;
-  --color-mist: #eff2ec;
-  --color-card: #ffffff;
-  --color-ink: #1a211c;
-  --color-muted: #6b7568;
-  --color-line: #e3e8e0;
-  --color-danger: #c24a3f;
+  --color-pine: #123f2d; /* Brand Forest — dolu əsas CTA */
+  --color-pine-deep: #0d2e21;
+  --color-pine-pressed: #155c3a;
+  --color-field: #1f7a4d; /* Primary Emerald — aktiv/fokus */
+  --color-field-soft: #eaf4ec; /* Soft Mint — seçilmiş hal */
+  --color-fresh: #62b36f;
+  --color-gold: #d7a63c;
+  --color-gold-deep: #b8862a;
+  --color-gold-soft: #fdf6e7;
+  --color-gold-ink: #7a5410;
+  --color-mal: #4b2ca3;
+  --color-mal-soft: #f2eef5;
+  --color-mal-track: #e4dfee;
+  --color-score-card: #155c3a;
+  --color-warn: #a96516;
+  --color-warn-soft: #fff4de;
+  --color-warn-ink: #7a5410;
+  --color-success: #247a45;
+  --color-success-soft: #e7f5eb;
+  /* Yaşıl şkala — JS qarşılığı: theme/tokens.js → YASIL */
+  --color-yasil-50: #f4f9f6;
+  --color-yasil-100: #eaf4ec;
+  --color-yasil-200: #d3e9dc;
+  --color-yasil-300: #a9d6bb;
+  --color-yasil-400: #62b36f;
+  --color-yasil-500: #1f7a4d;
+  --color-yasil-600: #1a6b43;
+  --color-yasil-700: #155c3a;
+  --color-yasil-800: #134a31;
+  --color-yasil-900: #123f2d;
 
-  --font-display: "Sora", system-ui, sans-serif;
-  --font-body: "Inter", system-ui, sans-serif;
+  /* Mavi yalnız MƏLUMAT/su üçün qalır — beş rəng ailəsi bir ekranda
+     heç vaxt sakit görünmür. Siqnal kartları qızılı cütü işlədir. */
+  --color-info: #3d6fb6;
+  --color-info-soft: #eaf1fb;
+  --color-blue: #3d6fb6;
+  --color-blue-soft: #eaf1fb;
+  --color-ivory: #fbfaf6; /* Warm Ivory — editorial səth */
+  --color-mist: #f4f7f2;
+  --color-card: #ffffff;
+  --color-ink: #17231b;
+  --color-muted: #637066;
+  --color-line: #dce6dd;
+  --color-danger: #b33a3a;
+  --color-danger-soft: #fcebec;
+
+  /* MANAT ŞRİFTİ YIĞININ BAŞINDADIR — bax: aşağıdakı @font-face */
+  --font-display: "AgriFinManat", "Sora", system-ui, sans-serif;
+  --font-body: "AgriFinManat", "Inter", system-ui, sans-serif;
+}
+
+/**
+ * ₼ (U+20BC) üçün tək hərflik ehtiyat şrift.
+ *
+ * NİYƏ: Sora-da bu işarə ÜMUMİYYƏTLƏ yoxdur (ən iri məbləğ Sora ilə
+ * yazılır), Inter-də isə ayrıca `latin-ext` faylındadır və zəif şəbəkədə
+ * gec gəlir. Hər iki halda işarə cihazın öz şriftinə düşür: başqa
+ * qalınlıq, başqa hündürlük — rəqəmin yanında yad simvol kimi görünür.
+ *
+ * `unicode-range` yalnız bu bir hərfi tutur, ona görə mətnin qalanı
+ * toxunulmaz qalır. Fayl 552 baytdır və paketlə birlikdə gedir — əlavə
+ * şəbəkə sorğusu yoxdur. Qurmaq: scripts/manat-srifti.py
+ */
+@font-face {
+  font-family: "AgriFinManat";
+  src: url("./assets/fonts/manat.woff2") format("woff2");
+  unicode-range: U+20BC;
+  font-display: block;
 }
 
 @layer base {
@@ -30,7 +80,7 @@
   body {
     margin: 0;
     font-family: var(--font-body);
-    background-color: #dfe5db;
+    background-color: #e4ebe3;
     color: var(--color-ink);
     -webkit-font-smoothing: antialiased;
   }
@@ -51,7 +101,21 @@
   max-width: 402px;
   height: min(860px, 94vh);
   border-radius: 36px;
-  box-shadow: 0 24px 60px rgb(16 32 22 / 0.35);
+  box-shadow: 0 24px 60px rgb(18 63 45 / 0.30);
+}
+
+/* Toxunma ilə sürüşmə qalır, amma masaüstü preview-da telefonun içində
+   görünən boz brauzer zolaqları mobil məhsulun vizualına qarışmır. */
+.az-frame,
+.az-frame * {
+  scrollbar-width: none;
+}
+
+.az-frame::-webkit-scrollbar,
+.az-frame *::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 @media (max-width: 640px) {
@@ -170,11 +234,11 @@ button:active {
   /* @property dəstəklənməyəndə haşiyə sadəcə fırlanmır — qırılmır */
   background: conic-gradient(
     from var(--ai-bucaq, 0deg),
-    rgba(233, 181, 74, 0.95),
-    rgba(46, 125, 79, 0.55) 30%,
-    rgba(233, 181, 74, 0.1) 55%,
-    rgba(46, 125, 79, 0.55) 75%,
-    rgba(233, 181, 74, 0.95)
+    rgba(215, 166, 60, 0.95),
+    rgba(31, 122, 77, 0.55) 30%,
+    rgba(215, 166, 60, 0.1) 55%,
+    rgba(31, 122, 77, 0.55) 75%,
+    rgba(215, 166, 60, 0.95)
   );
   animation: ai-donen 7s linear infinite;
 }
@@ -191,8 +255,8 @@ button:active {
   border-radius: 1rem;
   /* Künc işığı: kartın sağ yuxarısında zəif qızıl şəfəq */
   background:
-    radial-gradient(120% 90% at 100% 0%, rgba(233, 181, 74, 0.22) 0%, transparent 45%),
-    linear-gradient(150deg, #14351f 0%, #123020 55%, #1b4a2b 100%);
+    radial-gradient(120% 90% at 100% 0%, rgba(215, 166, 60, 0.22) 0%, transparent 45%),
+    linear-gradient(150deg, #123f2d 0%, #0f3626 55%, #17553a 100%);
 }
 
 /* Süpürən parıltı: 6 saniyədə bir kartın üstündən keçir */
@@ -229,10 +293,10 @@ button:active {
 @keyframes ai-nefes {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(233, 181, 74, 0.35);
+    box-shadow: 0 0 0 0 rgba(215, 166, 60, 0.35);
   }
   50% {
-    box-shadow: 0 0 0 9px rgba(233, 181, 74, 0);
+    box-shadow: 0 0 0 9px rgba(215, 166, 60, 0);
   }
 }
 
@@ -433,9 +497,9 @@ button:active {
   background: linear-gradient(
     to bottom,
     transparent 44%,
-    rgba(233, 181, 74, 0.28) 49%,
+    rgba(215, 166, 60, 0.28) 49%,
     rgba(255, 255, 255, 0.55) 50%,
-    rgba(233, 181, 74, 0.28) 51%,
+    rgba(215, 166, 60, 0.28) 51%,
     transparent 56%
   );
   transform: translateY(-100%);
@@ -626,5 +690,24 @@ button:active {
        "peyda olma" qalırdı, istifadəçi məhz ondan imtina edib */
     animation-delay: 0s !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Toxunuş cavabı ───────────────────────────────────────────────────
+   Mobil tətbiqdə hover yoxdur: düymənin basıldığını yalnız hərəkət
+   göstərir. `basilir` sinfi 150 ms-lik kiçilmə verir — hiss olunur,
+   amma gözə çarpmır. Hərəkəti azaldılmış rejimdə söndürülür. */
+.basilir {
+  transition: transform 150ms ease-out;
+}
+.basilir:active {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .basilir {
+    transition: none;
+  }
+  .basilir:active {
+    transform: none;
   }
 }

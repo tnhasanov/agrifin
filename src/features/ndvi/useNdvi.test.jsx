@@ -73,7 +73,9 @@ function stubApi({ ok: uygun = true, status = 200, seriya = SERIYA } = {}) {
 }
 
 beforeEach(() => {
-  window.history.pushState({}, "", "/");
+  // Peyk statusu, su sətri və ölçmə izahları SAHƏLƏR ekranındadır
+  // (ana səhifə yalnız FarmScore lövhəsində yığcam faktları göstərir)
+  window.history.pushState({}, "", "/fields");
   window.localStorage.clear();
   window.localStorage.setItem("agrifin:lang", JSON.stringify("az"));
 });
@@ -84,6 +86,8 @@ afterEach(() => {
 
 describe("peyk ölçməsi — əsas ekran", () => {
   it("sahə çəkilibsə ölçülmüş örtük faizini və azalma oxunu göstərir", async () => {
+    // Faiz + trend oxu ana səhifədəki FarmScore lövhəsindədir
+    window.history.pushState({}, "", "/");
     seedSahe();
     stubApi();
     renderApp(<App />);
@@ -91,7 +95,6 @@ describe("peyk ölçməsi — əsas ekran", () => {
     // Nümunə 0,72 deyil, ölçülmüş 0,68 — ekranda tam faizlə: 68%
     await waitFor(() => expect(screen.getByText(/68%/)).toBeInTheDocument());
     expect(screen.getByText(/68%/).textContent).toContain("▼");
-    expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument();
   });
 
   // Bu sətir ölçməni deyir, qərarı yox: "suvar" və ya "saxla" qərarı yağışdan
@@ -150,7 +153,11 @@ describe("peyk ölçməsi — əsas ekran", () => {
     stubApi();
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText("Bitki örtüyü")).toBeInTheDocument());
+    // Sahəsiz açılışda KPI plitəsi yoxdur — dəvət kartı görünür
+    await waitFor(() =>
+      expect(screen.getAllByText("İlk sahənizi əlavə edin").length).toBeGreaterThan(0),
+    );
+    expect(screen.queryByText("Bitki örtüyü")).not.toBeInTheDocument();
     expect(fetch.mock.calls.some(([url]) => String(url).includes("/api/ndvi"))).toBe(false);
   });
 
@@ -181,7 +188,7 @@ describe("peyk ölçməsi — əsas ekran", () => {
     renderApp(<App />);
 
     await waitFor(() => expect(screen.getByText(/alınmadı/)).toBeInTheDocument());
-    expect(screen.getByRole("button", { name: "Əsas" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ana səhifə" })).toBeInTheDocument();
   });
 });
 
@@ -193,8 +200,9 @@ describe("peyk ölçməsi — aqronom çatı", () => {
     renderApp(<App />);
     await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());
 
-    await user.click(screen.getByRole("button", { name: "Məsləhət" }));
-    await user.click(screen.getByRole("button", { name: "Aqronoma sual verin" }));
+    await user.click(screen.getByRole("button", { name: "Kömək" }));
+    await user.click(await screen.findByRole("button", { name: "Aqronoma sual verin" }));
+    await screen.findByRole("dialog", { name: "Aqronom köməkçisi" });
     await user.click(screen.getByRole("button", { name: "Suvarmanı nə vaxt etməliyəm?" }));
 
     await waitFor(() =>

@@ -90,7 +90,7 @@ export function LocationSheet({ current, onSelect, onClose }) {
               style={{ color: C.danger }}
               role="alert"
             >
-              <Icon name="AlertCircle" size={13} color={C.danger} /> {t(gps.errorKey)}
+              <Icon name="AlertCircle" size={16} color={C.danger} /> {t(gps.errorKey)}
             </p>
           )}
 
@@ -98,7 +98,7 @@ export function LocationSheet({ current, onSelect, onClose }) {
             className="mt-3 flex items-center gap-2 rounded-xl px-3 py-2"
             style={{ backgroundColor: "#F4F7F2" }}
           >
-            <Icon name="Search" size={15} color={C.muted} />
+            <Icon name="Search" size={16} color={C.muted} />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}

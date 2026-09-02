@@ -13,10 +13,12 @@ import { siqnallariQur } from "../../services/siqnal.js";
  * zəifləmə) havadan asılı olmayan hissəsi ilə yenə hesablanır.
  */
 export function useSiqnallar({ lat, lon, xulase, muqayise, radar }) {
-  const acar = `${lat},${lon}`;
+  const koordinatVar = Number.isFinite(lat) && Number.isFinite(lon);
+  const acar = koordinatVar ? `${lat},${lon}` : null;
   const [proqnoz, setProqnoz] = useState(null);
 
   useEffect(() => {
+    if (!acar) return undefined;
     const controller = new AbortController();
 
     fetchForecast({ lat, lon, days: 7, signal: controller.signal })
@@ -32,7 +34,7 @@ export function useSiqnallar({ lat, lon, xulase, muqayise, radar }) {
 
   // Yer dəyişəndə köhnə proqnoz dərhal düşür — effektin içində vəziyyəti
   // sıfırlamaq əvəzinə açarla müqayisə edilir (bax: useNdvi)
-  const gecerli = proqnoz?.acar === acar ? proqnoz.data : null;
+  const gecerli = acar && proqnoz?.acar === acar ? proqnoz.data : null;
 
   return useMemo(
     () => siqnallariQur({ daily: gecerli?.daily, hourly: gecerli?.hourly, xulase, muqayise, radar }),

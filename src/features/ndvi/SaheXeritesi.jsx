@@ -28,7 +28,12 @@ const TamEkranXerite = lazy(() =>
  * kvotasını iki dəfə xərcləyər, halbuki fermerlərin çoxu birinə baxıb
  * keçəcək. Açılmış qat keşdə qalır — geri qayıdanda sorğu getmir.
  */
-export function SaheXeritesi({ sahe }) {
+/**
+ * @param {boolean} tamCta Xəritənin altında tam enli "Xəritədə bax" düyməsi.
+ *   Sahə ekranının əsas hərəkəti xəbərdarlıq yoxdursa budur (PDF 15) —
+ *   künçdəki kiçik "Böyüt" düyməsi əsas hərəkət kimi oxunmur.
+ */
+export function SaheXeritesi({ sahe, konturRengi, tamCta = false }) {
   const { t } = useI18n();
   // Qat başına ayrı nəticə və hal — keçid zamanı köhnə şəkil itməsin.
   // Sahə açarı vəziyyətin İÇİNDƏ saxlanılır: effektin içində sıfırlama
@@ -98,7 +103,7 @@ export function SaheXeritesi({ sahe }) {
         className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold"
         style={{ color: C.muted }}
       >
-        <Icon name="Satellite" size={13} color={C.field} />
+        <Icon name="Satellite" size={16} color={C.field} />
         {t("ndvi.mapTitle")}
       </p>
 
@@ -107,12 +112,13 @@ export function SaheXeritesi({ sahe }) {
         style={{ backgroundColor: "#EDF1EA", border: `1px solid ${C.line}` }}
       >
         {hal === "hazir" ? (
-          <Suspense fallback={<div style={{ height: 260 }} />}>
+          <Suspense fallback={<div style={{ height: 300 }} />}>
             <XeriteQati
               noqteler={noqteler}
               sekil={netice.sekil}
               sinirler={netice.sinirler}
               etiket={t(`ndvi.mapAlt.${aktiv}`)}
+              konturRengi={konturRengi}
             />
             {/* Peyk skanı: yeni şəkil gələndə üstündən bir dəfə skan xətti
                 keçir — "peyk sahəni indi oxudu" anı (bax: index.css).
@@ -127,7 +133,7 @@ export function SaheXeritesi({ sahe }) {
               className="absolute top-2 right-2 z-[500] flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold"
               style={{ backgroundColor: "rgba(20,53,31,0.82)", color: "#fff" }}
             >
-              <Icon name="Maximize2" size={13} color={C.gold} />
+              <Icon name="Maximize2" size={16} color={C.gold} />
               {t("ndvi.mapExpand")}
             </button>
           </Suspense>
@@ -135,7 +141,7 @@ export function SaheXeritesi({ sahe }) {
           <div className="flex h-40 items-center justify-center gap-2 px-4 text-center">
             <Icon
               name={hal === "yuklenir" ? "LoaderCircle" : "Info"}
-              size={14}
+              size={16}
               color={C.muted}
             />
             <span className="text-xs" style={{ color: C.muted }}>
@@ -162,6 +168,17 @@ export function SaheXeritesi({ sahe }) {
           >
             {t(`ndvi.mapNote.${aktiv}`)}
           </p>
+          {tamCta && (
+            <button
+              type="button"
+              onClick={() => setTamEkran(true)}
+              className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold"
+              style={{ backgroundColor: C.pine, color: "#fff", minHeight: 48 }}
+            >
+              <Icon name="Map" size={16} color="#fff" />
+              {t("ndvi.xeritedeBax")}
+            </button>
+          )}
         </>
       )}
 

@@ -128,6 +128,8 @@ export function kreditServeri({
             novbetiMebleg: 19,
             novbetiEsasDaxil: false,
             gecikmeGun,
+            gecikmisMebleg: gecikmeGun > 0 ? faizBorc : 0,
+            veziyyet: gecikmeGun > 0 ? "overdue" : "active",
           },
           hadiseler: [
             {
@@ -154,6 +156,9 @@ export function kreditServeri({
             faizBorc: yeniFaiz,
             faizOdenilen: kredit.faizOdenilen + faiz,
             gecikmeGun: yeniFaiz > 0 ? kredit.gecikmeGun : 0,
+            gecikmisMebleg: yeniFaiz > 0 ? yeniFaiz : 0,
+            veziyyet:
+              yeniEsas <= 0 && yeniFaiz <= 0 ? "closed" : yeniFaiz > 0 ? "overdue" : "active",
             hal: yeniEsas <= 0 && yeniFaiz <= 0 ? "repaid" : "active",
           },
           hadiseler: [

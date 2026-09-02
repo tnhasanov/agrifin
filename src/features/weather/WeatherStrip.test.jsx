@@ -139,8 +139,8 @@ describe("hava zolağı", () => {
     await waitFor(() =>
       expect(screen.getByText("Hava məlumatı hazırda əlçatan deyil.")).toBeInTheDocument(),
     );
-    // Ən vacibi: tətbiqin qalanı sağdır
-    expect(screen.getByRole("button", { name: "Əsas" })).toBeInTheDocument();
-    expect(screen.getByText("Məhsul dövrü krediti al")).toBeInTheDocument();
+    // Ən vacibi: tətbiqin qalanı sağdır (sahəsiz açılışda dəvət kartı durur)
+    expect(screen.getByRole("button", { name: "Ana səhifə" })).toBeInTheDocument();
+    expect(screen.getAllByText("İlk sahənizi əlavə edin").length).toBeGreaterThan(0);
   });
 });

@@ -1,6 +1,6 @@
 import { Icon } from "./Icon.jsx";
 import { C } from "../theme/tokens.js";
-import { ROUTES } from "../routes.js";
+import { NAV_ROUTES } from "../routes.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useRouter } from "../lib/router.jsx";
 
@@ -13,7 +13,7 @@ export function BottomNav() {
       className="az-safe-bottom flex items-center justify-around px-2 pt-2"
       style={{ backgroundColor: C.card, borderTop: `1px solid ${C.line}` }}
     >
-      {ROUTES.map((route) => {
+      {NAV_ROUTES.map((route) => {
         const active = route.path === path;
         return (
           <button
@@ -21,7 +21,7 @@ export function BottomNav() {
             type="button"
             onClick={() => navigate(route.path)}
             aria-current={active ? "page" : undefined}
-            className="flex flex-col items-center gap-1 rounded-xl px-3 py-1"
+            className="basilir flex flex-col items-center gap-1 rounded-xl px-3 py-1"
             style={{
               backgroundColor: active ? C.mist : "transparent",
               transition: "background-color 200ms ease",
@@ -31,7 +31,7 @@ export function BottomNav() {
             <span key={active ? "a" : "p"} className={active ? "nav-pop" : undefined}>
               <Icon
                 name={route.icon}
-                size={18}
+                size={20}
                 color={active ? C.pine : C.muted}
                 strokeWidth={active ? 2.4 : 2}
               />

@@ -115,8 +115,11 @@ export function HesabSheet({ acilib, onBagla }) {
     <Sheet
       acilib={acilib}
       onBagla={bagla}
-      baslik={t("hesab.basliq")}
-      altYazi={daxildir ? null : t("hesab.altyazi")}
+      baslik={daxildir ? t("hesab.tesdiqlendi") : t("hesab.basliq")}
+      // NİYƏ SAHƏYƏ GÖRƏ FƏRQLİ CÜMLƏ: hesab təbliği yalnız dəyər görünəndən
+      // sonra mənalıdır. Sahə varsa qorunacaq konkret bir şey var və cümlə
+      // onu adlandırır; sahəsiz halda ümumi izah qalır (bax: PDF 22).
+      altYazi={daxildir ? null : state.sahe ? t("hesab.saheIzah") : t("hesab.altyazi")}
     >
       {daxildir ? (
         <div className="pb-2">

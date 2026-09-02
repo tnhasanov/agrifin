@@ -94,9 +94,9 @@ export function WeatherStrip({
       action={
         onPickLocation ? (
           <>
-            <Icon name="MapPin" size={12} color={C.field} />
+            <Icon name="MapPin" size={16} color={C.field} />
             {locationName || t("location.pick")}
-            <Icon name="ChevronDown" size={12} color={C.field} />
+            <Icon name="ChevronDown" size={16} color={C.field} />
           </>
         ) : (
           t("common.days7")
@@ -104,7 +104,10 @@ export function WeatherStrip({
       }
       onAction={onPickLocation}
     >
-      {t("weather.title")}
+      {/* Sahə çəkilməyibsə proqnoz rayon mərkəzinindir — başlıq da bunu
+          deməlidir. "Sahədə hava" sahəsiz fermerə uydurma dəqiqlik vəd edir
+          (bax: services/saheYeri.js — deqiq bayrağı). */}
+      {deqiq ? t("weather.title") : t("weather.titleRayon", { rayon: locationName ?? "" })}
     </SectionTitle>
   );
 
@@ -160,7 +163,7 @@ export function WeatherStrip({
                 <span className="text-xs font-semibold" style={{ color: C.muted }}>
                   {label}
                 </span>
-                <Icon name={name} size={18} color={wet ? C.blue : C.goldDeep} />
+                <Icon name={name} size={20} color={wet ? C.blue : C.goldDeep} />
                 <span className="text-xs font-bold" style={{ color: C.ink, fontFamily: font.body }}>
                   {Math.round(daily.temperature_2m_max[index])}°
                 </span>
@@ -168,7 +171,7 @@ export function WeatherStrip({
                     işlədir), sadəcə göstərilmirdi. Fermer üçün gecə gündüzdən
                     vacibdir: şaxta gecə vurur, meyvə gecə-gündüz fərqi ilə
                     şirinləşir. Əlavə sorğu getmir. */}
-                <span style={{ color: C.muted, fontSize: 11, fontFamily: font.body }}>
+                <span style={{ color: C.muted, fontSize: 12, fontFamily: font.body }}>
                   {Math.round(daily.temperature_2m_min[index])}°
                 </span>
                 {/* Yağışsız günlərdə də yer saxlanılır ki, sütunlar sürüşməsin */}
@@ -189,7 +192,7 @@ export function WeatherStrip({
             className="mt-3 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium"
             style={{ backgroundColor: tone.bg, color: tone.fg }}
           >
-            <Icon name={tone.icon} size={14} color={tone.fg} />
+            <Icon name={tone.icon} size={16} color={tone.fg} />
             {t(advisory.key, advisory.vars)}
           </div>
         )}
@@ -216,7 +219,7 @@ export function WeatherStrip({
 
         {stale && (
           <div className="mt-2 flex items-center gap-1.5 px-1 text-xs" style={{ color: C.muted }}>
-            <Icon name="WifiOff" size={12} color={C.muted} />
+            <Icon name="WifiOff" size={16} color={C.muted} />
             {t("weather.cached")}
           </div>
         )}

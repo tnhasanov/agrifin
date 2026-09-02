@@ -94,8 +94,9 @@ describe("yer seçimi", () => {
     await user.click(screen.getByRole("button", { name: "Sonra seçəcəyəm" }));
 
     expect(screen.queryByRole("dialog", { name: "Sahənizin yeri" })).not.toBeInTheDocument();
-    // Default rayonun proqnozu göstərilir
-    expect(screen.getByRole("button", { name: /Bərdə/ })).toBeInTheDocument();
+    // Seçilməyən rayon üçün uydurma Bərdə proqnozu göstərilmir
+    expect(await screen.findByText("Hava üçün yer seçin")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Bərdə/ })).not.toBeInTheDocument();
   });
 
   it("Escape ilə bağlanır", async () => {
@@ -148,7 +149,7 @@ describe("yer seçimi — GPS", () => {
     await acPanel(user);
 
     await user.click(screen.getByRole("button", { name: "Sahəmin yerini təyin et" }));
-    expect(screen.getByRole("alert")).toHaveTextContent("İcazə verilmədi");
+    expect(screen.getByRole("alert")).toHaveTextContent("Məkan icazəsi verilmədi");
   });
 
   it("siqnal tapılmadıqda ayrı mesaj göstərir", async () => {

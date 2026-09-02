@@ -6,15 +6,47 @@ import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
 import { SiqnalKarti } from "../features/signals/SiqnalKarti.jsx";
 import { TovsiyeKarti } from "../features/tovsiye/TovsiyeKarti.jsx";
-import { SaheLenti } from "../features/lent/SaheLenti.jsx";
+import { useRouter } from "../lib/router.jsx";
+import { pathFor } from "../routes.js";
 
-export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [], peyk, radar }) {
+export function AdvisorScreen({ onOpenChat, onOpenHesab, onPickLocation, siqnallar = [], tovsiyeler = [], indeksHali = null }) {
   const { t } = useI18n();
   const { state, actions } = useStore();
+  const { navigate } = useRouter();
+
+  // Sürətli suallar (PDF mockup) — hərəsi çatı HƏMİN SUALLA açır:
+  // sual giriş xanasına yazılır, göndərməyi fermer özü təsdiqləyir
+  const suallar = ["komek.sual1", "komek.sual2", "komek.sual3"];
+
+  const saheVar = Boolean(state.sahe);
+  const rayon = state.location?.name ?? null;
+  const yerVar = Boolean(state.location || state.sahe);
+
+  // "Açıq tapşırıqlar" — yalnız HƏQİQİ işlər: uydurma tapşırıq siyahısı yox.
+  //
+  // HESAB TƏBLİĞİ YALNIZ DƏYƏR GÖRÜNƏNDƏN SONRA: sahəsi olmayan fermerə
+  // "hesab yarat" demək onun heç bir sualına cavab vermir — qorunacaq bir şey
+  // yoxdur. Sahə çəkiləndən sonra cümlə də kontekstlidir: qoruduğumuz şey
+  // sahədir (bax: PDF 22 — "Sahəni hesabında qoruyun").
+  const tecili = siqnallar.find((s) => s.ciddilik === "tecili");
+  const tapsiriqlar = [
+    saheVar && !state.hesab.telefon && {
+      acar: "hesab",
+      ikon: "ShieldCheck",
+      metn: t("hesab.cta"),
+      icra: onOpenHesab,
+    },
+    tecili && {
+      acar: "sahe",
+      ikon: "MapPin",
+      metn: t("komek.tapsiriqSahe"),
+      icra: () => navigate(pathFor("sahe")),
+    },
+  ].filter(Boolean);
 
   return (
     <div className="px-4 pb-4">
-      <SectionTitle>{t("chat.title")}</SectionTitle>
+      <SectionTitle level={1}>{t("chat.title")}</SectionTitle>
       {/* AI girişi: fırlanan haşiyə + parıltı (bax: index.css "AI kartı") */}
       <div className="ai-halqa giris">
         <button
@@ -34,7 +66,15 @@ export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [], pey
                 ai-ikon sinfi QƏSDƏN yoxdur: onun nəfəs animasiyası riqin
                 öz nəfəsi ilə üst-üstə düşüb ikiqat yellənmə verirdi. */}
             <Aqronom
-              hal={siqnallar.some((s) => s.ciddilik === "tecili") ? "narahat" : "sakit"}
+              /* Üz vəziyyəti daşıyır: təcili iş → narahat; iş yoxdur və
+                 indeks yüksəkdir → sevincli (əvvəl bu, ana səhifədə idi) */
+              hal={
+                siqnallar.some((s) => s.ciddilik === "tecili")
+                  ? "narahat"
+                  : siqnallar.length === 0 && indeksHali?.indeks?.bant === "yuksek"
+                    ? "sevincli"
+                    : "sakit"
+              }
               bitki={state.chat.crop}
               olcu={104}
               gorunus="tam"
@@ -48,7 +88,7 @@ export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [], pey
                 <span
                   className="flex items-center gap-1 rounded-full px-1.5 py-0.5 font-bold"
                   style={{
-                    fontSize: 9,
+                    fontSize: 10,
                     letterSpacing: "0.06em",
                     color: C.gold,
                     border: "1px solid rgba(233,181,74,0.45)",
@@ -62,24 +102,113 @@ export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [], pey
                   AI
                 </span>
               </div>
+              {/* Kartın altyazısı NƏYİN nəzərə alındığını vəd edir — sahəsiz
+                  halda peyk göstəricisi yoxdur, ona görə vəd də rayon üzrədir */}
               <p className="mt-0.5 text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>
-                {t("chat.openDesc")}
+                {saheVar
+                  ? t("chat.openDesc")
+                  : rayon
+                    ? t("chat.openDescRayon", { rayon })
+                    : t("chat.openDescLocationMissing")}
               </p>
             </div>
-            <Icon name="ChevronRight" size={18} color="rgba(255,255,255,0.5)" />
+            <Icon name="ChevronRight" size={20} color="rgba(255,255,255,0.5)" />
           </div>
         </button>
       </div>
 
+      {/* Sürətli suallar — çatı hazır sualla açır (mock: 03 Visual ref) */}
+      <div className="mt-3 space-y-2">
+        {suallar.map((acar, sira) => (
+          <button
+            key={acar}
+            type="button"
+            onClick={() => onOpenChat?.(t(acar))}
+            className="giris flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left"
+            style={{ backgroundColor: C.fieldSoft, "--i": sira, minHeight: 48 }}
+          >
+            <span className="rounded-xl bg-white p-2">
+              <Icon
+                name={sira === 0 ? "Calendar" : sira === 1 ? "Leaf" : "CreditCard"}
+                size={16}
+                color={C.field}
+              />
+            </span>
+            <span className="flex-1 text-sm font-semibold" style={{ color: C.ink }}>
+              {t(acar)}
+            </span>
+            <Icon name="ChevronRight" size={16} color={C.muted} />
+          </button>
+        ))}
+      </div>
+
+      {/* Açıq tapşırıqlar — brief-in mandatoryTasks siyahısı. Yalnız həqiqi
+          işlər görünür; boşdursa bölmə də yoxdur (uydurma sıra qadağandır) */}
+      {tapsiriqlar.length > 0 && (
+        <>
+          <SectionTitle>{t("komek.tapsiriqlar")}</SectionTitle>
+          {tapsiriqlar.map((tapsiriq, sira) => (
+            <button
+              key={tapsiriq.acar}
+              type="button"
+              onClick={tapsiriq.icra}
+              className="giris mb-2 flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left"
+              style={{ backgroundColor: C.card, border: `1px solid ${C.line}`, "--i": sira, minHeight: 48 }}
+            >
+              <span className="rounded-xl p-2" style={{ backgroundColor: C.mist }}>
+                <Icon name={tapsiriq.ikon} size={16} color={C.pine} />
+              </span>
+              <span className="flex-1 text-sm font-semibold" style={{ color: C.ink }}>
+                {tapsiriq.metn}
+              </span>
+              <Icon name="ChevronRight" size={16} color={C.muted} />
+            </button>
+          ))}
+        </>
+      )}
+
       {/* Bütün siyahı BU sahənin ölçmələrindən çıxır. Əvvəl burada nümunə
           tövsiyələr də vardı — uydurma rəqəmlərlə, üstəlik həqiqi siqnallarla
           eyni görkəmdə. Fermer hansının ölçülmüş olduğunu ayıra bilmirdi. */}
-      <SectionTitle>{t("siqnal.title")}</SectionTitle>
+      {/* SAHƏSİZ HALDA BAŞLIQ RAYON ÜZRƏDİR: peyk ölçməsi yoxdur, proqnoz
+          rayon mərkəzinin koordinatındandır. "Sahənizdən siqnallar" yazmaq
+          olmayan dəlilə istinad etmək olardı (bax: siqnalEhate.js). */}
+      <SectionTitle>
+        {saheVar
+          ? t("siqnal.title")
+          : rayon
+            ? t("siqnal.rayonTitle", { rayon })
+            : t("siqnal.locationMissingTitle")}
+      </SectionTitle>
       <p className="-mt-1 mb-3 px-1 text-xs" style={{ color: C.muted }}>
-        {t("siqnal.subtitle")}
+        {saheVar
+          ? t("siqnal.subtitle")
+          : rayon
+            ? t("siqnal.rayonSubtitle")
+            : t("siqnal.locationMissingText")}
       </p>
 
-      {siqnallar.length === 0 ? (
+      {!yerVar ? (
+        <button
+          type="button"
+          onClick={onPickLocation}
+          className="giris flex w-full items-center gap-3 rounded-2xl p-4 text-left"
+          style={{ backgroundColor: C.card, border: `1px solid ${C.line}`, minHeight: 64 }}
+        >
+          <span className="rounded-xl p-2" style={{ backgroundColor: C.fieldSoft }}>
+            <Icon name="MapPin" size={18} color={C.field} />
+          </span>
+          <span className="flex-1">
+            <span className="block text-sm font-bold" style={{ color: C.ink }}>
+              {t("location.pick")}
+            </span>
+            <span className="mt-0.5 block text-xs" style={{ color: C.muted }}>
+              {t("siqnal.locationMissingSubtitle")}
+            </span>
+          </span>
+          <Icon name="ChevronRight" size={16} color={C.muted} />
+        </button>
+      ) : siqnallar.length === 0 ? (
         <div
           className="giris rounded-2xl p-4 text-center"
           style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}
@@ -91,10 +220,10 @@ export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [], pey
             <Aqronom hal="sevincli" bitki={state.chat.crop} olcu={110} gorunus="tam" />
           </div>
           <p className="mt-1.5 text-sm font-semibold" style={{ color: C.ink }}>
-            {t("siqnal.bosBasliq")}
+            {saheVar ? t("siqnal.bosBasliq") : t("siqnal.rayonBosBasliq", { rayon })}
           </p>
           <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
-            {t("siqnal.bosMetn")}
+            {saheVar ? t("siqnal.bosMetn") : t("siqnal.rayonBosMetn")}
           </p>
         </div>
       ) : (
@@ -102,16 +231,20 @@ export function AdvisorScreen({ onOpenChat, siqnallar = [], tovsiyeler = [], pey
           <SiqnalKarti
             key={siqnal.id}
             siqnal={siqnal}
+            saheVar={saheVar}
+            rayon={rayon}
             onBagla={actions.siqnaliBagla}
             onHereket={onOpenChat}
-            style={{ marginBottom: 10, "--i": index + 1 }}
+            style={{ marginBottom: 12, "--i": index + 1 }}
           />
         ))
       )}
 
-      {/* Lent siqnallardan sonra: siqnal bu gün görüləcək işdir, lent isə
-          tarixçədir — iş həmişə xronologiyadan öndə gəlir. */}
-      <SaheLenti peyk={peyk} radar={radar} />
+      {/* SAHƏ LENTİ BURADAN GETDİ: eyni ölçmə siyahısı Sahələr ekranında da
+          vardı. Bir məzmunun iki evi olanda fermer hansına baxacağını
+          bilmir — ölçmələrin evi Sahələrdir (xəritə, qrafik və müqayisə
+          orada, yanaşı durur). Kömək ekranı indi yalnız SORĞU və İŞ
+          ekranıdır: sual ver, siqnala bax, bu mərhələdə nə etməli. */}
 
       {/* Tövsiyələr siqnallardan SONRA gəlir: siqnal bu gün görülməli işdir,
           tövsiyə isə mövsümün bu mərhələsinin planıdır. */}

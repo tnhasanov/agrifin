@@ -9,4 +9,6 @@
 
 # Yerli quraşdırma qalıqları — deploy üçün lazım deyil
 dist
-scripts
+scripts/*
+!scripts/vercel-build.mjs
+!scripts/miqrasiya-yoxla.mjs

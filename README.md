@@ -44,8 +44,8 @@ src/
   main.jsx            provayderlər + servis işçisi
   App.jsx             qabıq: başlıq, naviqasiya, aktiv ekran
   routes.js           yolların vahid siyahısı
-  screens/            beş ekran — yalnız göstərmə məntiqi
-  features/           ilk açılış, sahə çəkmə, kredit paneli, yer, hava, çat
+  screens/            altı ekran — yalnız göstərmə məntiqi
+  features/           ilk açılış, sahə çəkmə, kredit paneli, pano, yer, hava, çat
   components/         Icon, Card, Chip, Sparkline, Sheet, ...
   state/store.jsx     reducer + localStorage-da saxlanma
   services/           məlumat mənbələri (hava və aqronom realdır, qalanı nümunə)
@@ -551,3 +551,30 @@ obyektləri bazaya KÖÇÜRÜLMÜR (store v8→v9 onları silir). Onlar sahibsiz
 heç bir anderraytinqdən keçməyib və brauzerdə dəyişilə bilən dəyərlərdir —
 belə rəqəmləri maliyyə qeydi kimi yazmaq uydurma borc yaratmaq olardı.
 Fermer müraciəti server axını ilə yenidən göndərir; sahə, rayon, söhbət qalır.
+
+## Faza 3 — fermer panosu (altı hal)
+
+Ana ekran qərar səthinə çevrildi: hər açılış "Sahəm necədir? Pulum necədir?
+İndi nə etməliyəm?" suallarına cavab verir. Naviqasiya dörd tabdır — Ana
+səhifə / Sahələr / Maliyyə / Kömək; bazar və karbon əsas naviqasiyadan
+çıxıb, amma köhnə keçidlər (`/market`, `/carbon`) işləyir.
+
+- **Altı hal** bir-birindən triggerlə ayrılır: A — sahə yoxdur (bir dəvət,
+  uydurma göstərici yox); B — tarixçə yığılır (3 istifadə oluna bilən
+  mövsümdən az → RƏQƏMLİ BAL YOXDUR, yalnız {n}/3 irəliləyiş və olan
+  faktlar); C — server təklifi (səbəblər + "yekun qərar" qeydi, ümumi
+  yekun məbləğ QADAĞANDIR); D — aktiv kredit (server dəyərləri); E —
+  gecikmə (hörmətli mətn, cərimə vədi yox — backend-də cərimə dərəcəsi
+  yoxdur); F — sahə xəbərdarlığı (dəlil + addımlar).
+- **"Bu gün nə etməli?"** kartını saf, determinist həlledici seçir
+  (`features/pano/esasHereket.js`): gecikmə → təcili siqnal → bloklayan
+  giriş → təklif → 7 gün içində ödəniş → adi tövsiyə → kömək. Siqnal
+  ciddiliyi mühərrikdən (services/siqnal.js) gəlir, pano onu yenidən
+  yazmır. Sahəsiz fermerə siqnal pillələri işləmir — hal A-da BİR dəvət.
+- **Etibar nişanı** (`EtibarNisani`): 3-4 mövsüm → İlkin, 5-7 → Orta,
+  8+ → Yüksək — `lib/mehsuldarliq.js`-dəki mövcud qapı ilə birəbir.
+- **Sahələr ekranı** (`screens/SaheScreen.jsx`) sübut səhifəsidir: xəritə,
+  ölçmə statusu (köhnə/oflayn açıq deyilir), xəbərdarlıq kartı, qonşu
+  müqayisəsi, lent, paylaşma.
+- Aktiv borcluya nə "Əlavə vəsait" kartı, nə "Kredit imkanı" təxmini
+  göstərilir — imkanın yerində real qalıq durur (server dəyəri).

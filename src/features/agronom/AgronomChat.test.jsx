@@ -56,8 +56,9 @@ function stubApi({
 }
 
 async function openChat(user) {
-  await user.click(screen.getByRole("button", { name: "Məsləhət" }));
-  await user.click(screen.getByRole("button", { name: "Aqronoma sual verin" }));
+  await user.click(screen.getByRole("button", { name: "Kömək" }));
+  await user.click(await screen.findByRole("button", { name: "Aqronoma sual verin" }));
+  await screen.findByRole("dialog", { name: "Aqronom köməkçisi" });
 }
 
 beforeEach(() => {
@@ -264,6 +265,29 @@ describe("Aqronom çatı", () => {
     expect(history.some((m) => String(m.content).includes("Cavab alınmadı"))).toBe(false);
   });
 
+  // Cavab telefonda kiçik şriftlə oxunur: vacib ifadə qalın, addımlar
+  // nişanlı sətirdə olmalıdır — və ulduzlar EKRANDA GÖRÜNMƏMƏLİDİR
+  it("vacib ifadəni qalın yazır, addımları maddələrə bölür", async () => {
+    stubApi({
+      cavab: "Bu, **sarı pas** ola bilər.\n- Yarpağın altına baxın\n2) Suvarmanı azaldın",
+    });
+    const user = userEvent.setup();
+    renderApp(<App />);
+    await openChat(user);
+
+    await user.click(screen.getByRole("button", { name: "Suvarmanı nə vaxt etməliyəm?" }));
+
+    const vurgu = await screen.findByText("sarı pas");
+    expect(vurgu.tagName).toBe("STRONG");
+    // Fermerin gördüyü mətndə markdown işarəsi qalmır
+    expect(screen.queryByText(/\*\*/)).not.toBeInTheDocument();
+
+    expect(screen.getByText("Yarpağın altına baxın")).toBeInTheDocument();
+    expect(screen.getByText("Suvarmanı azaldın")).toBeInTheDocument();
+    // Nömrəli addım öz sırasını saxlayır
+    expect(screen.getByText("2.")).toBeInTheDocument();
+  });
+
   it("yönləndirmə bayrağı 'Aqronoma göndər' düyməsini göstərir", async () => {
     stubApi({ cavab: "Sahədə baxış lazımdır.", aqronomTeklif: true });
     const user = userEvent.setup();
@@ -317,7 +341,7 @@ describe("Aqronom çatı", () => {
     await user.click(screen.getByRole("button", { name: "Geri" }));
     expect(screen.queryByRole("dialog", { name: "Aqronom köməkçisi" })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Aqronoma sual verin" }));
+    await user.click(await screen.findByRole("button", { name: "Aqronoma sual verin" }));
     expect(screen.getByText("Bu, sarı pas ola bilər.")).toBeInTheDocument();
   });
 

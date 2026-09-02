@@ -60,16 +60,18 @@ export async function askAgronomist({
   const noqte = havaNoqtesi({ location, sahe });
 
   let hava = null;
-  try {
-    const { data } = await fetchForecast({
-      lat: noqte.lat,
-      lon: noqte.lon,
-      days: 7,
-      signal,
-    });
-    hava = summarizeForecast(data.daily);
-  } catch {
-    // hava olmadan davam edirik
+  if (Number.isFinite(noqte.lat) && Number.isFinite(noqte.lon)) {
+    try {
+      const { data } = await fetchForecast({
+        lat: noqte.lat,
+        lon: noqte.lon,
+        days: 7,
+        signal,
+      });
+      hava = summarizeForecast(data.daily);
+    } catch {
+      // hava olmadan davam edirik
+    }
   }
 
   const response = await fetch("/api/agronom", {
@@ -79,7 +81,7 @@ export async function askAgronomist({
     body: JSON.stringify({
       messages,
       bitkiKey: bitkiKey || undefined,
-      rayon: location.name,
+      rayon: location?.name || undefined,
       ay: new Date().getMonth() + 1,
       hava,
       // Modelə sahənin ölçüsü lazımdır: 0.5 ha ilə 12 ha üçün "sahəni yoxlayın"

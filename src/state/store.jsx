@@ -9,14 +9,23 @@ import {
 } from "react";
 import * as storage from "../lib/storage.js";
 import { FARM } from "../services/farm.js";
-import { CARBON, carbonPayout } from "../services/carbon.js";
-import { isValidLocation, readLegacyLocation } from "../services/location.js";
+import { districtByName, isValidLocation, nearestDistrict, readLegacyLocation } from "../services/location.js";
 import { duzgunSahe } from "../services/geo.js";
 
 export const PERSIST_KEY = "state";
 // Saxlanan formanı dəyişəndə bu rəqəmi artırın və MIQRASIYALAR-a keçid yazın.
 // Keçid yoxdursa köhnə məlumat səssizcə atılır.
-export const PERSIST_VERSION = 9;
+export const PERSIST_VERSION = 10;
+
+/**
+ * İlk açılış axınının versiyası. Axının addımları dəyişəndə bu artır —
+ * yarımçıq qalmış KÖHNƏ axını yeni addımlara sürükləmək olmaz, çünki
+ * "2/3"-də dayanmış fermer yeni axında başqa yerdədir.
+ */
+export const ONBOARDING_VERSIYA = "2.1";
+
+/** Axının addımları — sıra buradadır, komponent onu təkrar yazmır */
+export const ONBOARDING_ADDIMLARI = ["rayon", "bitki", "sahe"];
 
 /**
  * Köhnə versiyadan yeniyə keçid. Fermerdən onsuz da bildiyimiz şeyi
@@ -56,6 +65,32 @@ const MIQRASIYALAR = {
     delete yeni.loan;
     return yeni;
   },
+  // 9 → 10: premium onboarding v2.1.
+  //
+  //  • Rayon artıq KODLA saxlanılır. Köhnə qeyddə yalnız göstərilən ad var
+  //    ("Bərdə", bəzən "Bərdə (GPS)") — kod addan, alınmasa koordinatdan
+  //    tapılır. Fermerdən rayonu yenidən soruşmuruq.
+  //  • Axının hansı addımında qaldığı yazılır ki, yarımçıq qalan fermer
+  //    başdan başlamasın. Quraşdırmanı bitirmiş fermer sonuncu addımda
+  //    sayılır — ona axın bir daha açılmır.
+  9: (state) => ({
+    ...state,
+    location: state.location
+      ? {
+          ...state.location,
+          kod:
+            state.location.kod ??
+            districtByName(state.location.name)?.kod ??
+            (isValidLocation(state.location)
+              ? nearestDistrict(state.location.lat, state.location.lon).kod
+              : null),
+        }
+      : state.location,
+    onboarding: {
+      versiya: ONBOARDING_VERSIYA,
+      tamamlananAddim: state.onboarded ? "sahe" : null,
+    },
+  }),
 };
 
 function miqrasiyaEt(saved) {
@@ -92,16 +127,39 @@ const INITIAL_TXNS = [
 const CHAT_LIMIT = 40;
 
 export const initialState = {
-  // ═══ DEMO PUL — REAL DEYİL ══════════════════════════════════════════
-  // wallet, txns və karbon satışı PROTOTİP NÜMUNƏLƏRİDİR: heç bir server
-  // hesabına bağlı deyil, heç bir kredit axını onları oxumur və ya yazmır
-  // (yoxlanılıb: api/kredit.js bu sahələrə toxunmur). Real pul hərəkəti
-  // gələndə bunlar da server hesabına köçəcək — o vaxta qədər bu blok
-  // yalnız vitrin məlumatıdır və real balansla QARIŞDIRILMAMALIDIR.
+  // ═══ DEMO PUL — REAL DEYİL, DAHA DƏYİŞMİR ══════════════════════════
+  // wallet və txns PROTOTİP VİTRİNİDİR: heç bir server hesabına bağlı deyil,
+  // heç bir kredit axını onları oxumur və ya yazmır (yoxlanılıb: api/kredit.js
+  // bu sahələrə toxunmur) və HEÇ BİR EKRAN ONLARI GÖSTƏRMİR.
+  //
+  // ARTIQ HEÇ BİR HƏRƏKƏT ONLARI DƏYİŞMİR: karbon "sat" düyməsi əvvəl
+  // görünməyən pulqabı 360 ₼ artırır və nümunə əməliyyat sətri yazırdı —
+  // istifadəçinin görmədiyi balansı dəyişən düymə audit olunmayan pul
+  // hərəkətidir. Karbon ekranı indi yalnız oxunur (bax: CarbonScreen.jsx).
+  // Sahələr yalnız köhnə yaddaşın miqrasiyası üçün qalır.
   wallet: 7280,
   // false olduqda ilk açılışda qeydiyyat axını göstərilir
   onboarded: false,
+  /**
+   * İlk açılış axınının gedişi.
+   *
+   * `tamamlananAddim` SON BİTMİŞ addımdır (null = heç nə). Axın ondan
+   * sonrakı addımdan davam edir — "başdan başla" ekranı fermerin artıq
+   * verdiyi cavabı ikinci dəfə soruşurdu.
+   *
+   * ƏSAS BİTKİ AYRICA SAXLANMIR: o, `chat.crop`-dur. İkinci mağaza
+   * yaratmaq iki həqiqət mənbəyi deməkdir.
+   */
+  onboarding: { versiya: ONBOARDING_VERSIYA, tamamlananAddim: null },
   location: null,
+  /**
+   * Son seçilmiş rayonların KODLARI, ən yenisi əvvəldə.
+   *
+   * "Ən çox əkilən rayon" kimi bir sıra uydurmuruq — əlimizdə belə məlumat
+   * yoxdur. Bu siyahı fermerin ÖZ tarixçəsidir: bir neçə sahəsi olan fermer
+   * eyni iki-üç rayon arasında gedib-gəlir.
+   */
+  sonRayonlar: [],
   // Fermerin peyk şəklində çəkdiyi sahə: {noqteler: [[lat,lon],...], hektar}
   sahe: null,
   // Telefon hesabı (Faza 1). telefon burada görüntü üçündür; giriş özü
@@ -128,27 +186,6 @@ export function reducer(state, action) {
       // Siyahı sonsuz böyüməsin: id-lər tarixlidir, köhnələr bir daha
       // qurulmur, ona görə saxlamağın mənası yoxdur
       return { ...state, bagliSiqnallar: [...state.bagliSiqnallar, action.id].slice(-40) };
-    }
-
-    case "carbon/sell": {
-      if (state.creditsSold) return state;
-      const amount = carbonPayout();
-      return {
-        ...state,
-        creditsSold: true,
-        wallet: state.wallet + amount,
-        nextTxnId: state.nextTxnId + 1,
-        txns: [
-          {
-            id: `t${state.nextTxnId}`,
-            nameKey: "txn.carbon.name",
-            metaKey: "txn.carbon.meta",
-            metaVars: { count: CARBON.creditsReady },
-            amount,
-          },
-          ...state.txns,
-        ],
-      };
     }
 
     case "chat/user": {
@@ -199,11 +236,31 @@ export function reducer(state, action) {
 
     case "location/set": {
       if (!isValidLocation(action.location)) return state;
-      return { ...state, location: action.location };
+      const kod = action.location.kod ?? null;
+      return {
+        ...state,
+        location: action.location,
+        // Ən çox üç çip göstərilir, ona görə dördüncüsünü saxlamağın mənası yoxdur
+        sonRayonlar: kod
+          ? [kod, ...state.sonRayonlar.filter((k) => k !== kod)].slice(0, 3)
+          : state.sonRayonlar,
+      };
+    }
+
+    case "onboarding/addim": {
+      if (!ONBOARDING_ADDIMLARI.includes(action.addim)) return state;
+      return {
+        ...state,
+        onboarding: { versiya: ONBOARDING_VERSIYA, tamamlananAddim: action.addim },
+      };
     }
 
     case "onboarding/finish":
-      return { ...state, onboarded: true };
+      return {
+        ...state,
+        onboarded: true,
+        onboarding: { versiya: ONBOARDING_VERSIYA, tamamlananAddim: "sahe" },
+      };
 
     case "sahe/set":
       if (!duzgunSahe(action.sahe)) return state;
@@ -213,10 +270,20 @@ export function reducer(state, action) {
       return { ...state, sahe: null };
 
     // Serverdən qayıdan sahə toast-sız qəbul edilir: fermer heç nə etməyib,
-    // sadəcə köhnə cihazdakı konturu geri alır — "yadda saxlandı" demək yalandır
+    // sadəcə köhnə cihazdakı konturu geri alır — "yadda saxlandı" demək yalandır.
+    //
+    // SERVER PROFİLİ KÖHNƏ YERLİ VƏZİYYƏTİ ÜSTƏLƏYİR: hesabında sahəsi olan
+    // fermer bu cihazda quraşdırmanı KEÇİR. Əks halda köhnə telefonundakı
+    // sahəsi olan fermer yeni cihazda "ilk sahənizi əlavə edin" ekranını
+    // görürdü — halbuki sahəsi var və serverdən elə indicə gəldi.
     case "sahe/qebul":
       if (!duzgunSahe(action.sahe)) return state;
-      return { ...state, sahe: action.sahe };
+      return {
+        ...state,
+        sahe: action.sahe,
+        onboarded: true,
+        onboarding: { versiya: ONBOARDING_VERSIYA, tamamlananAddim: "sahe" },
+      };
 
     case "hesab/set":
       return { ...state, hesab: { telefon: action.telefon ?? null } };
@@ -251,7 +318,18 @@ function loadPersisted() {
   // Zədələnmiş sahə konturunu (əl ilə pozulmuş localStorage) yükləmirik
   if (base.sahe && !duzgunSahe(base.sahe)) base.sahe = null;
   if (!Array.isArray(base.bagliSiqnallar)) base.bagliSiqnallar = [];
+  if (!Array.isArray(base.sonRayonlar)) base.sonRayonlar = [];
   if (typeof base.hesab?.telefon !== "string") base.hesab = { telefon: null };
+
+  // Başqa versiyanın yarımçıq axını yeni addımlara sürüklənmir: sayğac
+  // uyğun gəlmirsə gediş sıfırlanır, verilmiş cavablar (rayon, bitki) qalır
+  const gedis = base.onboarding;
+  if (gedis?.versiya !== ONBOARDING_VERSIYA || !ONBOARDING_ADDIMLARI.includes(gedis?.tamamlananAddim)) {
+    base.onboarding = {
+      versiya: ONBOARDING_VERSIYA,
+      tamamlananAddim: base.onboarded ? "sahe" : null,
+    };
+  }
 
   // Köhnə prototipdə yer ayrı açarda saxlanılırdı — yenidən soruşmuruq
   if (!isValidLocation(base.location)) {
@@ -285,10 +363,6 @@ export function StoreProvider({ children }) {
     () => ({
       showToast,
       clearToast: () => dispatch({ type: "toast/clear" }),
-      sellCredits: () => {
-        dispatch({ type: "carbon/sell" });
-        showToast("toast.creditsSold", { amount: { money: carbonPayout() } });
-      },
       siqnaliBagla: (id) => dispatch({ type: "siqnal/bagla", id }),
       setLocation: (location) => {
         dispatch({ type: "location/set", location });
@@ -300,6 +374,7 @@ export function StoreProvider({ children }) {
       chatError: (errorKey) => dispatch({ type: "chat/error", errorKey }),
       chatSetCrop: (crop) => dispatch({ type: "chat/crop", crop }),
       chatClear: () => dispatch({ type: "chat/clear" }),
+      onboardingAddim: (addim) => dispatch({ type: "onboarding/addim", addim }),
       finishOnboarding: () => dispatch({ type: "onboarding/finish" }),
       setSahe: (sahe) => {
         dispatch({ type: "sahe/set", sahe });

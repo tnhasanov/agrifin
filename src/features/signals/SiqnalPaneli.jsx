@@ -14,21 +14,54 @@ import { SiqnalKarti } from "./SiqnalKarti.jsx";
  * Kartlar burada da iş görür: bağlamaq və çata keçmək panelin içindən
  * mümkündür. Yalnız oxumaq üçün açılan panel bir addım artıq deməkdir.
  */
-export function SiqnalPaneli({ acilib, siqnallar = [], onBagla, onSiqnaliBagla, onHereket, onHamisi }) {
+export function SiqnalPaneli({
+  acilib,
+  siqnallar = [],
+  onBagla,
+  onSiqnaliBagla,
+  onHereket,
+  onHamisi,
+  // Sahə yoxdursa panel "Sahənizdən" demir — xəbərdarlıqlar rayon üzrədir
+  saheVar = true,
+  yerVar = true,
+  rayon = null,
+  onYerSec,
+}) {
   const { t } = useI18n();
 
+  const altYazi = !yerVar
+    ? t("siqnal.locationMissingSubtitle")
+    : siqnallar.length > 0
+    ? saheVar
+      ? t("siqnal.panelAltYazi", { count: siqnallar.length })
+      : t("siqnal.panelRayonAltYazi", { count: siqnallar.length, rayon })
+    : saheVar
+      ? t("siqnal.panelBosAltYazi")
+      : t("siqnal.panelRayonBosAltYazi", { rayon });
+
   return (
-    <Sheet
-      acilib={acilib}
-      onBagla={onBagla}
-      baslik={t("siqnal.panelBasliq")}
-      altYazi={
-        siqnallar.length > 0
-          ? t("siqnal.panelAltYazi", { count: siqnallar.length })
-          : t("siqnal.panelBosAltYazi")
-      }
-    >
-      {siqnallar.length === 0 ? (
+    <Sheet acilib={acilib} onBagla={onBagla} baslik={t("siqnal.panelBasliq")} altYazi={altYazi}>
+      {!yerVar ? (
+        <div className="flex flex-col items-center px-6 py-8 text-center">
+          <div className="rounded-2xl p-3" style={{ backgroundColor: C.mist }}>
+            <Icon name="MapPin" size={22} color={C.field} />
+          </div>
+          <p className="mt-3 text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
+            {t("siqnal.locationMissingTitle")}
+          </p>
+          <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
+            {t("siqnal.locationMissingText")}
+          </p>
+          <button
+            type="button"
+            onClick={onYerSec}
+            className="mt-4 w-full rounded-xl py-3 text-sm font-bold"
+            style={{ backgroundColor: C.pine, color: "#fff", minHeight: 44 }}
+          >
+            {t("location.pick")}
+          </button>
+        </div>
+      ) : siqnallar.length === 0 ? (
         // Boş vəziyyət susqun deyil: "siqnal yoxdur" özü də xəbərdir —
         // sahədə problem görünmür deməkdir
         <div className="flex flex-col items-center px-6 py-8 text-center">
@@ -36,10 +69,10 @@ export function SiqnalPaneli({ acilib, siqnallar = [], onBagla, onSiqnaliBagla, 
             <Icon name="ShieldCheck" size={22} color={C.field} />
           </div>
           <p className="mt-3 text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
-            {t("siqnal.bosBasliq")}
+            {saheVar ? t("siqnal.bosBasliq") : t("siqnal.rayonBosBasliq", { rayon })}
           </p>
           <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
-            {t("siqnal.bosMetn")}
+            {saheVar ? t("siqnal.bosMetn") : t("siqnal.rayonBosMetn")}
           </p>
         </div>
       ) : (
@@ -48,13 +81,15 @@ export function SiqnalPaneli({ acilib, siqnallar = [], onBagla, onSiqnaliBagla, 
             <SiqnalKarti
               key={siqnal.id}
               siqnal={siqnal}
+              saheVar={saheVar}
+              rayon={rayon}
               onBagla={onSiqnaliBagla}
               onHereket={() => {
                 // Çat panelin altında qalmasın deyə əvvəl panel bağlanır
                 onBagla();
                 onHereket();
               }}
-              style={{ "--i": index, marginBottom: 8 }}
+              style={{ "--i": index, marginBottom: 12 }}
             />
           ))}
 

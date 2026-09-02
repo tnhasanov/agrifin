@@ -23,7 +23,7 @@ export function Toast() {
             boxShadow: "0 8px 24px rgba(16,32,22,0.3)",
           }}
         >
-          <Icon name="Check" size={13} color={C.gold} />
+          <Icon name="Check" size={16} color={C.gold} />
           {t(state.toast.key, state.toast.vars ?? undefined)}
         </div>
       )}

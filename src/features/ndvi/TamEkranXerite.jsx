@@ -44,7 +44,7 @@ export function TamEkranXerite({ noqteler, netice, aktiv, onQat, onBagla }) {
           className="flex items-center gap-1.5 text-sm font-bold text-white"
           style={{ fontFamily: font.display }}
         >
-          <Icon name="Satellite" size={14} color={C.gold} />
+          <Icon name="Satellite" size={16} color={C.gold} />
           {t("ndvi.mapTitle")}
         </p>
         <button

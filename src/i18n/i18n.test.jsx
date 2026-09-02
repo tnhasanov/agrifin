@@ -59,7 +59,7 @@ describe("standart dil", () => {
       </I18nProvider>,
     );
     expect(screen.getByTestId("lang")).toHaveTextContent("az");
-    expect(screen.getByTestId("nav")).toHaveTextContent("Əsas");
+    expect(screen.getByTestId("nav")).toHaveTextContent("Ana səhifə");
     unmount();
   });
 

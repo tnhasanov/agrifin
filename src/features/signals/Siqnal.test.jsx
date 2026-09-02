@@ -110,10 +110,15 @@ describe("sahə siqnalları — əsas ekran", () => {
     renderApp(<App />);
 
     await siqnalHazir();
-    expect(screen.queryByText("Suvarma vaxtıdır")).not.toBeInTheDocument();
-    expect(screen.queryByText(/3 gündə yağış gözlənmir/)).not.toBeInTheDocument();
-    // Yuxarıda fermerin öz sahəsi dayanır, xəbərdarlıq yox
-    expect(screen.getByRole("button", { name: "Məhsul dövrü krediti al" })).toBeInTheDocument();
+    // Siqnal kartı (mənbə + bağla düyməsi ilə) əsas ekranda YOXDUR — siqnal
+    // yalnız "Bu gün nə etməli?" kartının içində BİR yerdə görünür
+    expect(screen.getAllByText("Suvarma vaxtıdır")).toHaveLength(1);
+    expect(screen.getByText("Bu gün nə etməli?")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Siqnalı bağla" })).not.toBeInTheDocument();
+    // Yuxarıda fermerin öz sahəsi dayanır (FarmScore lövhəsi); kredit CTA
+    // artıq ana səhifədə DEYİL — yeni müraciət yolu Maliyyədədir
+    expect(screen.getByText("Bitki örtüyü")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Məhsul dövrü krediti al" })).not.toBeInTheDocument();
   });
 
   it("zəngə basanda tam siqnal mənbəyi ilə birlikdə açılır", async () => {
@@ -151,7 +156,10 @@ describe("sahə siqnalları — əsas ekran", () => {
     renderApp(<App />);
 
     await siqnalHazir();
-    await waitFor(() => expect(screen.getByText(/16 mm yağış gözlənilir/)).toBeInTheDocument());
+    // Eyni cümlə iki yerdə çıxa bilər (hava zolağı + "nə etməli" kartı)
+    await waitFor(() =>
+      expect(screen.getAllByText(/16 mm yağış gözlənilir/).length).toBeGreaterThan(0),
+    );
   });
 
   it("siqnal yoxdursa hava zolağı öz məsləhətini göstərir", async () => {
@@ -178,7 +186,7 @@ describe("sahə siqnalları — əsas ekran", () => {
     stubApi({ seriya: SAKIT });
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/70%/)).toBeInTheDocument());
     expect(screen.queryByText("Suvarma vaxtıdır")).not.toBeInTheDocument();
     expect(screen.queryByText("Şaxta riski")).not.toBeInTheDocument();
   });
@@ -205,14 +213,15 @@ describe("sahə siqnalları — əsas ekran", () => {
 describe("Aqronun ifadəsi", () => {
   const uz = () => document.querySelector(".fermer").className;
 
-  it("əsas ekranda təcili siqnal olsa da kədərlənmir", async () => {
+  // Personaj artıq ana səhifədə YOXDUR (PDF dizaynı: salamlama sadə mətndir,
+  // personajın evi Kömək ekranıdır) — təcili siqnal da onu evə gətirmir
+  it("əsas ekranda personaj yoxdur — təcili siqnal olsa belə", async () => {
     seed();
     stubApi(); // quraq sahə → "Suvarma vaxtıdır", ciddilik: tecili
     renderApp(<App />);
 
     await siqnalHazir();
-    expect(uz()).not.toContain("fermer--narahat");
-    expect(uz()).toContain("fermer--sakit");
+    expect(document.querySelector(".fermer")).toBeNull();
   });
 
   it("məsləhət ekranında narahatdır — orada kartlar səbəbi izah edir", async () => {
@@ -222,7 +231,7 @@ describe("Aqronun ifadəsi", () => {
     renderApp(<App />);
     await siqnalHazir();
 
-    await user.click(screen.getByRole("button", { name: "Məsləhət" }));
+    await user.click(screen.getByRole("button", { name: "Kömək" }));
 
     await waitFor(() => expect(uz()).toContain("fermer--narahat"));
     // İzah üzün yanındadır, uzaqda deyil
@@ -232,15 +241,17 @@ describe("Aqronun ifadəsi", () => {
     expect(uz()).toContain("fermer--tam");
   });
 
-  it("iş yoxdursa və indeks yüksəkdirsə sevinir", async () => {
+  it("iş yoxdursa Kömək ekranında narahat deyil", async () => {
+    const user = userEvent.setup();
     seed();
     stubApi({ seriya: SAKIT });
     renderApp(<App />);
 
-    await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/70%/)).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Kömək" }));
     // Bu quruluşda tarixçə sorğusu 501 verir, yəni indeks yoxdur → sakit,
     // amma ƏSAS olan budur: narahat deyil
-    expect(uz()).not.toContain("fermer--narahat");
+    await waitFor(() => expect(uz()).not.toContain("fermer--narahat"));
   });
 });
 
@@ -308,7 +319,7 @@ describe("sahə siqnalları — bildiriş mərkəzi", () => {
 
     // Panelin içindəki düymə çatı açır və paneli bağlayır
     await user.click(within(panel).getByRole("button", { name: "Şəkil çək" }));
-    expect(screen.getByRole("button", { name: "Şəkil çək və ya seç" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Şəkil çək və ya seç" })).toBeInTheDocument();
   });
 });
 
@@ -349,6 +360,6 @@ describe("siqnal kartı", () => {
     const panel = await paneliAc(user);
     const kart = within(panel).getByText("Şaxta riski").closest("div.rounded-2xl");
     expect(within(kart).getByText(/Həssas əkinləri örtün/)).toBeInTheDocument();
-    expect(kart).toHaveStyle({ backgroundColor: "rgb(251, 234, 231)" });
+    expect(kart).toHaveStyle({ backgroundColor: "rgb(252, 235, 236)" });
   });
 });

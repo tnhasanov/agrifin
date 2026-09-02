@@ -36,7 +36,7 @@ function seed(sahe = { hektar: 6.5, noqteler: [[40.4, 47.1], [40.4023, 47.1], [4
 }
 
 beforeEach(() => {
-  window.history.pushState({}, "", "/");
+  window.history.pushState({}, "", "/fields");
   window.localStorage.clear();
   window.localStorage.setItem("agrifin:lang", JSON.stringify("az"));
 });

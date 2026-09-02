@@ -28,7 +28,7 @@
 //   • `status` klientdən qəbul edilmir; keçidlər vəziyyət maşınındadır.
 //   • Vaxt damğaları serverdədir (now()) — klient tarixi yazmır.
 //   • Xəta mətnləri daxili detal sızdırmır; stack yalnız server logundadır.
-import { sorgu, dbQurulub } from "../lib/db.js";
+import { sorgu, baglantiAcari, baglantiKimliyi, dbQurulub } from "../lib/db.js";
 import { cookieToken, hesabQurulub, sessiyaOxu } from "../lib/hesab.js";
 import {
   ACIQ_HALLAR,
@@ -329,7 +329,101 @@ async function halDeyis(muracietId, haradan, haraya, hadise, detay = null) {
   );
 }
 
+/**
+ * SXEM YOXDUR — baza var, cədvəl yoxdur (Postgres 42P01 "undefined_table").
+ *
+ * Bu, "gözlənilməz xəta" DEYİL, quraşdırma vəziyyətidir: miqrasiyalar həmin
+ * bazada işlədilməyib. Vercel preview deployment-lərində Neon hər branch üçün
+ * AYRI baza yaradır — kredit cədvəlləri gələnə qədər açılmış branch-ın
+ * bazasında `credit_applications` yoxdur, halbuki kod onu gözləyir.
+ * 500 qaytarsaq ekran "server sındı" deyir və axtarış səhv yerdə başlayır;
+ * ayrıca kod isə cavabın özündə "npm run db:migrate işlədilməyib" deməkdir.
+ */
+function sxemYoxdur(error) {
+  return (
+    error?.code === "42P01" ||
+    /relation ".*" does not exist/i.test(String(error?.message ?? ""))
+  );
+}
+
+function sxemCavabi(res, error) {
+  // Hansı bazaya bağlandığımız da yazılır: "miqrasiyanı işlətdim, amma xəta
+  // qalır" halının səbəbi adətən başqa branch-ın bazasıdır. Parol və
+  // istifadəçi adı YOX — yalnız host + baza adı (bax: lib/db.js).
+  console.error(
+    JSON.stringify({
+      hadise: "kreditSxemYoxdur",
+      baza: baglantiKimliyi(),
+      sebeb: error?.message,
+      hell: "npm run db:migrate — həmin bazanın bağlantı sətri ilə",
+    }),
+  );
+  return res.status(503).json({ error: "sxemYoxdur" });
+}
+
+/**
+ * Sxem diaqnostikası üçün baxılan cədvəllər. Siyahı SABİTDİR — adlar
+ * sorğuya birbaşa yazılır, ona görə klientdən ad qəbul etmək olmaz.
+ */
+const IZLENEN_CEDVELLER = [
+  "istifadeciler",
+  "saheler",
+  "sxem_miqrasiyalari",
+  "credit_applications",
+  "credit_offers",
+  "loans",
+  "loan_events",
+];
+
+/**
+ * GET ?diaqnostika=1 — "miqrasiyanı işlətdim, amma xəta qalır" sualının
+ * cavabı. Vercel preview-lərində Neon hər git branch üçün ayrı baza yaradır,
+ * ona görə miqrasiya asanlıqla BAŞQA bazaya düşür. Bu uc tətbiqin
+ * HƏQİQƏTƏN bağlandığı bazada hansı cədvəllərin olduğunu deyir — log
+ * axtarmadan, brauzerdən.
+ *
+ * SIZMA YOXDUR: host, bağlantı sətri, sətir sayı və istifadəçi məlumatı
+ * qaytarılmır — yalnız var/yoxdur bayraqları və tətbiq olunmuş miqrasiya
+ * adları (api/hesab.js-dəki diaqnostika ilə eyni prinsip).
+ */
+async function sxemDiaqnostikasi() {
+  const cavab = {
+    dbQurulub: dbQurulub(),
+    hesabQurulub: hesabQurulub(),
+    muhit: process.env.VERCEL_ENV ?? null,
+    acar: baglantiAcari(),
+    // HANSI BURAXILIŞA BAXIRIQ: hər push yeni deployment yaradır və köhnə
+    // URL heç vaxt yenilənmir. "Kod düzəldilib, amma davranış köhnədir"
+    // sualı yalnız bununla bir baxışda bağlanır. Commit sha-sı sirr deyil.
+    buraxilis: (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7) || null,
+  };
+  if (!cavab.dbQurulub) return cavab;
+
+  try {
+    const secim = IZLENEN_CEDVELLER.map(
+      (ad) => `to_regclass('public.${ad}') IS NOT NULL AS "${ad}"`,
+    ).join(", ");
+    const [setir] = await sorgu(`SELECT ${secim}`);
+    cavab.cedveller = setir;
+    // Kreditin işləməsi üçün lazım olan minimum
+    cavab.kreditHazir = Boolean(setir.credit_applications && setir.loans);
+    cavab.miqrasiyalar = setir.sxem_miqrasiyalari
+      ? (await sorgu("SELECT ad FROM sxem_miqrasiyalari ORDER BY ad")).map((s) => s.ad)
+      : [];
+  } catch (error) {
+    console.error("kredit diaqnostika:", error?.message);
+    cavab.dbXeta = true;
+  }
+  return cavab;
+}
+
 export default async function handler(req, res) {
+  // Diaqnostika 501-dən ƏVVƏLdir: "qurulmayıb" cavabının səbəbini məhz bu
+  // uc izah edir, ona görə o halda da işləməlidir
+  if (req.method === "GET" && req.query?.diaqnostika) {
+    return res.status(200).json(await sxemDiaqnostikasi());
+  }
+
   if (!dbQurulub() || !hesabQurulub()) {
     return res.status(501).json({ error: "Kredit sistemi hələ qurulmayıb." });
   }
@@ -338,6 +432,9 @@ export default async function handler(req, res) {
   try {
     istifadeci = await sessiyaOxu(cookieToken(req));
   } catch (error) {
+    // Sessiya cədvəli də sxemin bir hissəsidir — miqrasiya işlədilməyibsə
+    // səbəb eynidir, cavab da eyni olmalıdır
+    if (sxemYoxdur(error)) return sxemCavabi(res, error);
     console.error("kredit sessiya:", error?.message);
     return res.status(500).json({ error: "Gözlənilməz xəta." });
   }
@@ -813,6 +910,7 @@ export default async function handler(req, res) {
     if (error?.kod === "kecidYanlis") {
       return res.status(409).json({ error: "kecidYanlis" });
     }
+    if (sxemYoxdur(error)) return sxemCavabi(res, error);
     // Daxili detal klientə getmir — yalnız server logunda
     console.error("kredit error:", error?.message);
     return res.status(500).json({ error: "Gözlənilməz xəta." });

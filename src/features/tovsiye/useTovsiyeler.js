@@ -24,7 +24,8 @@ export function useTovsiyeler({ sahe, bitki, lat, lon, ay }) {
 
   const saheAcarı = sahe?.noqteler ? saheAcari(sahe.noqteler) : null;
   const teqvimAcarı = bitki ? `${bitki}:${ay}` : null;
-  const havaAcarı = `${lat},${lon}`;
+  const koordinatVar = Number.isFinite(lat) && Number.isFinite(lon);
+  const havaAcarı = koordinatVar ? `${lat},${lon}` : null;
 
   useEffect(() => {
     if (!teqvimAcarı) return undefined;
@@ -47,6 +48,7 @@ export function useTovsiyeler({ sahe, bitki, lat, lon, ay }) {
   }, [saheAcarı]);
 
   useEffect(() => {
+    if (!havaAcarı) return undefined;
     const controller = new AbortController();
     fetchForecast({ lat, lon, days: 7, signal: controller.signal })
       .then((cavab) => {
@@ -83,7 +85,7 @@ export function useTovsiyeler({ sahe, bitki, lat, lon, ay }) {
   // Açar dəyişəndə köhnə nəticə dərhal düşür (bax: useNdvi)
   const teqvimNetice = teqvimNeticesi;
   const zonaNetice = zona?.acar === saheAcarı ? zona.netice : null;
-  const havaNetice = proqnoz?.acar === havaAcarı ? proqnoz.data : null;
+  const havaNetice = havaAcarı && proqnoz?.acar === havaAcarı ? proqnoz.data : null;
 
   return useMemo(() => {
     if (!teqvimNetice && !sahe) return BOS;
