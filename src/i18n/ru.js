@@ -415,6 +415,8 @@ export default {
   "movsumPulu.basliq": "Сезон: {bitki}",
   "movsumPulu.qalan": "До уборки {ay} мес.",
   "movsumPulu.bicinAyi": "Месяц уборки",
+  "movsumPulu.novbetiMovsum": "Следующий сезон: {ay}",
+  "movsumPulu.gelirNovbeti": "Ожидаемый чистый доход в следующем сезоне",
   "movsumPulu.sepin": "начало",
   "movsumPulu.bicin": "уборка",
   "movsumPulu.movsumBagli": "Сезон закрыт — идёт подготовка к следующему циклу.",

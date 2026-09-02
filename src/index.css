@@ -48,8 +48,28 @@
   --color-danger: #b33a3a;
   --color-danger-soft: #fcebec;
 
-  --font-display: "Sora", system-ui, sans-serif;
-  --font-body: "Inter", system-ui, sans-serif;
+  /* MANAT ŞRİFTİ YIĞININ BAŞINDADIR — bax: aşağıdakı @font-face */
+  --font-display: "AgriFinManat", "Sora", system-ui, sans-serif;
+  --font-body: "AgriFinManat", "Inter", system-ui, sans-serif;
+}
+
+/**
+ * ₼ (U+20BC) üçün tək hərflik ehtiyat şrift.
+ *
+ * NİYƏ: Sora-da bu işarə ÜMUMİYYƏTLƏ yoxdur (ən iri məbləğ Sora ilə
+ * yazılır), Inter-də isə ayrıca `latin-ext` faylındadır və zəif şəbəkədə
+ * gec gəlir. Hər iki halda işarə cihazın öz şriftinə düşür: başqa
+ * qalınlıq, başqa hündürlük — rəqəmin yanında yad simvol kimi görünür.
+ *
+ * `unicode-range` yalnız bu bir hərfi tutur, ona görə mətnin qalanı
+ * toxunulmaz qalır. Fayl 552 baytdır və paketlə birlikdə gedir — əlavə
+ * şəbəkə sorğusu yoxdur. Qurmaq: scripts/manat-srifti.py
+ */
+@font-face {
+  font-family: "AgriFinManat";
+  src: url("./assets/fonts/manat.woff2") format("woff2");
+  unicode-range: U+20BC;
+  font-display: block;
 }
 
 @layer base {

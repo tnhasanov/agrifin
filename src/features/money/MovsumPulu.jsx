@@ -69,10 +69,23 @@ export function MovsumPulu({ indeksHali = null, kreditHali = null }) {
         <h3 className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
           {t("movsumPulu.basliq", { bitki: t(`kbcrop.${bitki}`) })}
         </h3>
-        <span className="text-xs font-semibold" style={{ color: C.field }}>
+        <span
+          className="text-xs font-semibold"
+          style={{ color: gedis == null ? C.muted : C.field }}
+        >
           {/* Biçin ayında "biçinə 12 ay" yazmaq olmaz — o, kredit müddətinin
-              semantikasıdır (növbəti mövsüm). Mövsüm kartı bu ayı deyir. */}
-          {gedis === 1 ? t("movsumPulu.bicinAyi") : t("movsumPulu.qalan", { ay: qalanAy })}
+              semantikasıdır (növbəti mövsüm). Mövsüm kartı bu ayı deyir.
+
+              MÖVSÜMDƏN KƏNARDA GERİ SAYIM DA YAZILMIR: sentyabrda "Biçinə
+              11 ay" yaşıl vurğu ilə yazmaq elə bil nəsə yaxınlaşır demək
+              idi, halbuki elə altındakı sətir "mövsüm bağlıdır" deyirdi.
+              İki cümlə bir-birini təkzib edirdi. İndi kart növbəti
+              mövsümün BAŞLADIĞI ayı deyir — fermerin gözlədiyi tarix odur. */}
+          {gedis == null
+            ? t("movsumPulu.novbetiMovsum", { ay: ayAdi(MOVSUM[bitki].basla) })
+            : gedis === 1
+              ? t("movsumPulu.bicinAyi")
+              : t("movsumPulu.qalan", { ay: qalanAy })}
         </span>
       </div>
 
@@ -111,8 +124,12 @@ export function MovsumPulu({ indeksHali = null, kreditHali = null }) {
             yəni fermer həm gözləntini, həm qeyri-müəyyənliyi görür. */}
         <div className="py-1.5">
           <div className="flex items-baseline justify-between gap-2">
+            {/* MÖVSÜMDƏN KƏNARDA RƏQƏMİN VAXTI DEYİLİR. Bağlı mövsümün
+                üstündə vaxtı göstərilməyən "gözlənilən xalis gəlir" fermerə
+                "bu pul indi gəlir" kimi oxunurdu — halbuki hesablama
+                NÖVBƏTİ mövsüm üçündür. */}
             <span className="text-xs" style={{ color: C.muted }}>
-              {t("movsumPulu.gelir")}
+              {t(gedis == null ? "movsumPulu.gelirNovbeti" : "movsumPulu.gelir")}
             </span>
             <span
               className="text-xs font-bold whitespace-nowrap"

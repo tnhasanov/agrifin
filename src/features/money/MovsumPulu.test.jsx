@@ -66,11 +66,15 @@ describe("mövsüm pulu — Pul ekranı", () => {
     renderApp(<App />);
 
     expect(screen.getByText("Pomidor mövsümü")).toBeInTheDocument();
-    // Avqust pomidorun biçin ayıdır — test hansı ayda işləsə də sağ küncdə
-    // ya "Biçinə N ay", ya "Biçin ayıdır" dayanır
-    expect(screen.getByText(/Biçinə \d+ ay|Biçin ayıdır/)).toBeInTheDocument();
+    // Sağ küncdə üç haldan biri dayanır: mövsüm gedir, biçin ayıdır,
+    // ya da mövsüm bağlıdır (o zaman NÖVBƏTİ mövsüm deyilir)
+    expect(
+      screen.getByText(/Biçinə \d+ ay|Biçin ayıdır|Növbəti mövsüm: /),
+    ).toBeInTheDocument();
     // Gəlir TƏK RƏQƏM DEYİL: kalibrlənməmiş modeldən aralıq göstərilir
-    expect(screen.getByText("Gözlənilən xalis gəlir")).toBeInTheDocument();
+    expect(
+      screen.getByText(/^(Gözlənilən xalis gəlir|Növbəti mövsümün gözlənilən xalis gəliri)$/),
+    ).toBeInTheDocument();
     // Aralıq indi zolaqdır: uc rəqəmləri ayrı-ayrı sətirlərdədir, tam
     // aralıq isə zolağın əlçatan adındadır (ekran oxuyucu da eşidir)
     expect(
@@ -140,5 +144,45 @@ describe("mövsüm pulu — Pul ekranı", () => {
     await waitFor(() =>
       expect(screen.queryByText(/Kredit müraciəti —/)).not.toBeInTheDocument(),
     );
+  });
+});
+
+/**
+ * MÖVSÜM BAĞLI OLANDA rəqəmlərin VAXTI deyilməlidir.
+ *
+ * Reqressiya: sentyabrda kart eyni anda "Biçinə 11 ay" (yaşıl vurğu) və
+ * "Mövsüm bağlıdır" yazırdı — iki cümlə bir-birini təkzib edirdi. Üstəlik
+ * "Gözlənilən xalis gəlir" vaxtsız verilirdi və bağlı mövsümün üstündə
+ * "bu pul indi gəlir" kimi oxunurdu.
+ */
+describe("mövsümdən kənar hal", () => {
+  const SENTYABR = new Date("2026-09-02T09:00:00.000Z");
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(SENTYABR);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("geri sayım əvəzinə növbəti mövsümün ayını deyir", () => {
+    seed();
+    renderApp(<App />);
+
+    // Pomidor: fevral → avqust. Sentyabrda mövsüm bağlıdır.
+    expect(screen.getByText("Mövsüm bağlıdır — növbəti dövrə hazırlıq gedir.")).toBeInTheDocument();
+    expect(screen.getByText("Növbəti mövsüm: fev")).toBeInTheDocument();
+    expect(screen.queryByText(/Biçinə \d+ ay/)).not.toBeInTheDocument();
+  });
+
+  it("gəlir sətri hansı mövsümə aid olduğunu yazır", () => {
+    seed();
+    renderApp(<App />);
+
+    expect(screen.getByText("Növbəti mövsümün gözlənilən xalis gəliri")).toBeInTheDocument();
+    // Vaxtsız variant qalmır
+    expect(screen.queryByText("Gözlənilən xalis gəlir")).not.toBeInTheDocument();
   });
 });
