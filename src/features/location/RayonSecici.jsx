@@ -18,6 +18,9 @@ import { RayonVereqi } from "./RayonVereqi.jsx";
  * poliqondur.
  */
 
+/** Pilotun başladığı rayonlar — ilk açılışda qısa yol kimi göstərilir */
+const PILOT_RAYONLARI = ["berde", "quba", "xacmaz"];
+
 /** GPS xətası hansı ikinci addımı təklif edir */
 const XETA_IKONU = { redd: "MapPin", vaxt: "RotateCcw", oflayn: "WifiOff", siqnal: "RotateCcw" };
 
@@ -31,17 +34,19 @@ export function RayonSecici({ secilen, sonKodlar = [], onSec, avtoFokus = false 
   });
 
   /**
-   * Çiplər FERMERİN ÖZ TARİXÇƏSİDİR, ən çox üç.
+   * Çiplər: fermerin ÖZ TARİXÇƏSİ, ən çox üç.
    *
-   * İlk açılışda tarixçə yoxdur və çip də göstərilmir. "Ən çox seçilən üç
-   * rayon" siyahısı düzəltmək üçün əlimizdə istifadə statistikası yoxdur —
-   * üç rayon adı seçib "tez-tez seçilənlər" yazmaq uydurma məlumatdır.
-   * Boş halda ekran bir sual azaldır, artırmır.
+   * İlk açılışda tarixçə yoxdur, ona görə pilotun başladığı üç rayon qısa
+   * yol kimi göstərilir (maketdə də bunlardır). Bunlar bir SIRALAMA
+   * İDDİASI DAŞIMIR — «ən çox əkilən» və ya «ən populyar» demirlər; sadəcə
+   * pilotun ilk rayonlarıdır. Fermer bir dəfə seçən kimi siyahı onun öz
+   * tarixçəsi ilə əvəzlənir.
    */
-  const cipler = useMemo(
-    () => sonKodlar.map(districtByKod).filter(Boolean).slice(0, 3),
-    [sonKodlar],
-  );
+  const cipler = useMemo(() => {
+    const tarixce = sonKodlar.map(districtByKod).filter(Boolean);
+    if (tarixce.length > 0) return tarixce.slice(0, 3);
+    return PILOT_RAYONLARI.map(districtByKod).filter(Boolean);
+  }, [sonKodlar]);
 
   const secilenAd = secilen?.name ?? null;
 
@@ -55,17 +60,17 @@ export function RayonSecici({ secilen, sonKodlar = [], onSec, avtoFokus = false 
         onClick={busy ? legvEt : requestGps}
         className="basilir flex w-full items-center gap-3 px-3 text-left"
         style={{
-          backgroundColor: C.card,
-          border: `1px solid ${C.line}`,
-          borderRadius: RADIUS.idare,
-          minHeight: 56,
+          backgroundColor: C.fieldSoft,
+          borderRadius: 16,
+          minHeight: 64,
+          paddingBlock: 10,
         }}
       >
         <span
           className="flex shrink-0 items-center justify-center rounded-full"
-          style={{ backgroundColor: C.fieldSoft, width: 34, height: 34 }}
+          style={{ border: `1.5px solid ${C.ink}`, width: 38, height: 38 }}
         >
-          <Icon name={busy ? "LoaderCircle" : "Crosshair"} size={16} color={C.field} />
+          <Icon name={busy ? "LoaderCircle" : "Crosshair"} size={20} color={C.ink} />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block font-bold" style={{ color: C.ink, ...TIPO.duyme }}>
@@ -111,8 +116,8 @@ export function RayonSecici({ secilen, sonKodlar = [], onSec, avtoFokus = false 
         style={{
           backgroundColor: C.card,
           border: `1px solid ${secilenAd ? C.field : C.line}`,
-          borderRadius: RADIUS.idare,
-          minHeight: TOXUNMA + 6,
+          borderRadius: 16,
+          minHeight: 54,
         }}
       >
         <Icon name="Search" size={16} color={C.muted} />
@@ -127,7 +132,7 @@ export function RayonSecici({ secilen, sonKodlar = [], onSec, avtoFokus = false 
       </button>
 
       {cipler.length > 0 && (
-        <p className="mt-3 mb-1.5" style={{ color: C.muted, ...TIPO.qeyd, fontWeight: 700 }}>
+        <p className="mt-4 mb-2" style={{ color: C.ink, ...TIPO.qeyd, fontWeight: 700 }}>
           {t("onb.rayon.tezTez")}
         </p>
       )}
@@ -154,18 +159,6 @@ export function RayonSecici({ secilen, sonKodlar = [], onSec, avtoFokus = false 
             </button>
           );
         })}
-      </div>
-
-      {/* RAYONUN NƏ OLDUĞU VƏ NƏ OLMADIĞI. Bu qeyd bəzək deyil: rayon
-          seçimindən sonra fermer "deməli sahəmi tanıdınız" nəticəsi
-          çıxarırdı. Sahəyə aid iddia (suvarma, peyk ölçməsi) yalnız
-          çəkilmiş konturdan gəlir. */}
-      <div
-        className="mt-4 flex items-start gap-2 px-3 py-2.5"
-        style={{ backgroundColor: C.infoSoft, borderRadius: RADIUS.idare }}
-      >
-        <Icon name="Info" size={16} color={C.info} />
-        <p style={{ color: C.info, ...TIPO.qeyd }}>{t("onb.rayon.qeyd")}</p>
       </div>
 
       <RayonVereqi

@@ -18,7 +18,7 @@ import { bitkiIkonu } from "../../services/bitkiGorunus.js";
  * ekran oxuyucusu üçün adı iki dəfə demək səs-küydür. Şəkil bəzəkdir,
  * məlumat deyil, ona görə `aria-hidden`.
  */
-export function BitkiSekli({ kod, olcu = 52 }) {
+export function BitkiSekli({ kod, en = 48, hund = 58 }) {
   const { t } = useI18n();
   const [dusdu, setDusdu] = useState(false);
   const sekil = bitkiSekli(kod);
@@ -29,9 +29,9 @@ export function BitkiSekli({ kod, olcu = 52 }) {
       aria-hidden="true"
       className="flex shrink-0 items-center justify-center overflow-hidden"
       style={{
-        width: olcu,
-        height: olcu,
-        borderRadius: 12,
+        width: en,
+        height: hund,
+        borderRadius: 11,
         backgroundColor: C.fieldSoft,
       }}
       title={gosterilir ? undefined : t(`kbcrop.${kod}`)}
@@ -43,16 +43,16 @@ export function BitkiSekli({ kod, olcu = 52 }) {
           <img
             src={sekil.webp ?? sekil.avif}
             alt=""
-            width={olcu}
-            height={olcu}
+            width={en}
+            height={hund}
             loading="lazy"
             decoding="async"
             onError={() => setDusdu(true)}
-            style={{ width: olcu, height: olcu, objectFit: "cover", display: "block" }}
+            style={{ width: en, height: hund, objectFit: "cover", display: "block" }}
           />
         </picture>
       ) : (
-        <Icon name={bitkiIkonu(kod)} size={20} color={C.field} />
+        <Icon name={bitkiIkonu(kod)} size={20} color={C.fresh} />
       )}
     </span>
   );

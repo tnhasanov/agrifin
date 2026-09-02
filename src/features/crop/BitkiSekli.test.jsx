@@ -46,8 +46,8 @@ describe("bitki şəkli", () => {
   });
 
   it("asset yoxdursa ölçü SAXLANILIR — düzülüş sıçramır", () => {
-    const { container } = renderApp(<BitkiSekli kod="pomidor" olcu={52} />);
-    expect(container.firstChild).toHaveStyle({ width: "52px", height: "52px" });
+    const { container } = renderApp(<BitkiSekli kod="pomidor" en={48} hund={58} />);
+    expect(container.firstChild).toHaveStyle({ width: "48px", height: "58px" });
     expect(container.querySelector("img")).toBeNull();
   });
 

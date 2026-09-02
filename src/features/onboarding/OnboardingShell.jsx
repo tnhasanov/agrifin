@@ -42,30 +42,35 @@ export function OnboardingShell({
         paddingTop: "env(safe-area-inset-top, 0px)",
       }}
     >
+      {/* Geri oxu və sayğac AYRI SƏTİRDƏDİR: irəliləyiş zolağı tam eni
+          tutanda "nə qədər qaldı" bir baxışda oxunur — ox ilə yanaşı
+          sıxılanda zolaq qısalır və pillələr bir-birinə yaxınlaşır */}
       <header
-        className="flex shrink-0 items-center gap-3"
-        style={{ paddingInline: ARA.kenar, paddingTop: 12, paddingBottom: 8 }}
+        className="shrink-0"
+        style={{ paddingInline: ARA.kenar, paddingTop: 10, paddingBottom: 10 }}
       >
-        {onGeri ? (
-          <button
-            type="button"
-            onClick={onGeri}
-            aria-label={t("onb.back")}
-            className="basilir flex items-center justify-center rounded-full"
-            style={{
-              backgroundColor: C.card,
-              border: `1px solid ${C.line}`,
-              minWidth: TOXUNMA,
-              minHeight: TOXUNMA,
-            }}
-          >
-            <Icon name="ChevronLeft" size={20} color={C.ink} />
-          </button>
-        ) : (
-          <span style={{ minWidth: TOXUNMA }} />
-        )}
+        <div className="flex items-center justify-between" style={{ minHeight: TOXUNMA }}>
+          {onGeri ? (
+            <button
+              type="button"
+              onClick={onGeri}
+              aria-label={t("onb.back")}
+              className="basilir -ml-2 flex items-center justify-center"
+              style={{ minWidth: TOXUNMA, minHeight: TOXUNMA }}
+            >
+              <Icon name="ChevronLeft" size={20} color={C.ink} strokeWidth={2.4} />
+            </button>
+          ) : (
+            <span style={{ minWidth: TOXUNMA }} />
+          )}
+          {addim && (
+            <span style={{ color: C.muted, ...TIPO.qeyd, fontWeight: 700 }}>
+              {addim} / {cemi}
+            </span>
+          )}
+        </div>
 
-        {addim ? <StepProgress addim={addim} cemi={cemi} /> : <span className="flex-1" />}
+        {addim ? <StepProgress addim={addim} cemi={cemi} /> : null}
       </header>
 
       <div
@@ -141,26 +146,23 @@ export function OnboardingShell({
 export function StepProgress({ addim, cemi }) {
   const { t } = useI18n();
   return (
-    <div className="flex flex-1 items-center gap-3">
-      <div
-        className="flex flex-1 items-center gap-1.5"
-        role="progressbar"
-        aria-valuenow={addim}
-        aria-valuemin={1}
-        aria-valuemax={cemi}
-        aria-label={t("onb.step", { current: addim, total: cemi })}
-      >
-        {Array.from({ length: cemi }, (_, index) => (
-          <span
-            key={index}
-            className="h-1 flex-1 rounded-full"
-            style={{ backgroundColor: index < addim ? C.field : C.line }}
-          />
-        ))}
-      </div>
-      <span aria-hidden="true" style={{ color: C.muted, ...TIPO.qeyd, fontWeight: 700 }}>
-        {addim} / {cemi}
-      </span>
+    <div
+      className="flex items-center gap-2"
+      role="progressbar"
+      aria-valuenow={addim}
+      aria-valuemin={1}
+      aria-valuemax={cemi}
+      aria-label={t("onb.step", { current: addim, total: cemi })}
+    >
+      {Array.from({ length: cemi }, (_, index) => (
+        <span
+          key={index}
+          className="flex-1 rounded-full"
+          // 4 px: nazik saç xətti ekranda "boş qutu" kimi oxunurdu;
+          // dolu pillə uzaqdan da görünməlidir
+          style={{ height: 4, backgroundColor: index < addim ? C.field : C.line }}
+        />
+      ))}
     </div>
   );
 }

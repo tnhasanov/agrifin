@@ -522,7 +522,6 @@ export default {
   "onb.rayon.gpsTekrar": "Повторить попытку",
   "onb.rayon.axtar": "Выберите или найдите район",
   "onb.rayon.tezTez": "Часто выбираемые",
-  "onb.rayon.qeyd": "Район задаёт контекст погоды и сезона. Точная граница поля определяется, когда вы обведёте его на карте.",
   "onb.rayon.vereqBasliq": "Выберите район",
   "onb.rayon.sonSecilenler": "Недавно выбранные",
   "onb.rayon.butunRayonlar": "Все районы",

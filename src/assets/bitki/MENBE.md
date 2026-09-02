@@ -57,3 +57,19 @@ Yalnız bir format olsa da işləyir.
 
 Master fayllar (1024×1024) bu paketin İÇİNDƏ saxlanılmır — onlar dizayn
 arxivində qalır, buraya yalnız optimallaşdırılmış nəticə düşür.
+
+---
+
+## İlk açılış ekranının fonu
+
+`src/assets/hero/sahe.webp` — eyni məntiq: lisenziyalı aerofoto gələnə qədər
+`scripts/hero-render.py` ilə qurulmuş **çəkilmiş** kompozisiya dayanır. O,
+heç yerdə foto kimi təqdim olunmur. Real şəkil gələndə həmin faylı əvəz
+etmək kifayətdir — komponentdə (`XosGelmisiniz.jsx`) dəyişiklik lazım deyil.
+
+| | |
+|---|---|
+| Ölçü | 1170×1500 (3× → 390×500 CSS px) |
+| Format | WebP, ~14 KB |
+| Kadr | Alçaq üfüq, terraslanmış yamaclar, isti səhər işığı |
+| Vacib | Alt hissə **açıq** olmalıdır: başlıq şəklin üstündə deyil, onun işığında oturur |

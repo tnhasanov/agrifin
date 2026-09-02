@@ -1,21 +1,25 @@
 import { Icon } from "../../components/Icon.jsx";
 import { C, ARA, RADIUS, TIPO, TOXUNMA, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
-import { SaheHero } from "./SaheHero.jsx";
+import heroSekli from "../../assets/hero/sahe.webp";
 
 /**
  * EKRAN 0 — XOŞ GƏLDİNİZ.
  *
+ * ═══ KOMPOZİSİYA ══════════════════════════════════════════════════════
+ * Şəkil TAM ENDƏDİR (kart deyil) və aşağıya doğru fona qarışır; başlıq
+ * şəklin ÜSTÜNDƏ deyil, o işığın içində, TÜND rənglə oturur. Əvvəl tünd
+ * pərdə üzərində ağ mətn vardı — o, reklam banneri kimi görünürdü;
+ * jurnal qapağının yetkinliyi kontrastdan yox, işıqdan gəlir.
+ *
+ * ═══ ŞƏKİL YUVASI ═════════════════════════════════════════════════════
+ * Fon `src/assets/hero/sahe.webp` faylıdır. Lisenziyalı aerofoto gələndə
+ * yalnız həmin fayl əvəz olunur — burada heç nə dəyişmir (bax:
+ * scripts/hero-render.py).
+ *
  * Bu ekran SAYĞACIN İÇİNDƏ DEYİL: "1 / 3" fermerin görəcəyi işi sayır,
- * xoş gəldiniz isə iş deyil. Sayğaca salsaq üç addım dörd görünür və axın
- * uzun hiss olunur.
- *
- * DƏYƏR İCAZƏDƏN ƏVVƏLDİR: burada nə rayon, nə nömrə, nə də icazə
- * soruşulur — fermer nə alacağını bilir, sonra ilk sualı görür.
- *
- * Bir mobil viewport-a sığır: media kartı ekranın yarısı, mətn və iki
- * hərəkət altında. Karusel yoxdur — üç slaydlı "tanıtım" fermerin
- * qabağına üç ekran qoyub bir dənə də məlumat vermir.
+ * xoş gəldiniz isə iş deyil. Karusel yoxdur — üç slaydlı "tanıtım"
+ * fermerin qabağına üç ekran qoyub bir dənə də məlumat vermir.
  */
 export function XosGelmisiniz({ onBasla, onGiris }) {
   const { t } = useI18n();
@@ -25,7 +29,7 @@ export function XosGelmisiniz({ onBasla, onGiris }) {
       role="dialog"
       aria-modal="true"
       aria-label={t("onb.title")}
-      className="absolute inset-0 z-50 flex flex-col"
+      className="absolute inset-0 flex flex-col overflow-hidden"
       style={{
         backgroundColor: C.ivory,
         fontFamily: font.body,
@@ -33,62 +37,69 @@ export function XosGelmisiniz({ onBasla, onGiris }) {
       }}
     >
       <div
-        className="flex shrink-0 items-center gap-2"
+        className="relative z-10 flex shrink-0 items-center gap-2"
         style={{ paddingInline: ARA.kenar, paddingTop: 12, paddingBottom: 10 }}
       >
-        <span className="rounded-xl p-1.5" style={{ backgroundColor: C.pine }}>
+        <span
+          className="flex items-center justify-center rounded-full"
+          style={{ backgroundColor: C.pine, width: 30, height: 30 }}
+        >
           <Icon name="Leaf" size={16} color={C.gold} />
         </span>
-        <span className="font-extrabold" style={{ color: C.pine, fontFamily: font.display, ...TIPO.duyme }}>
+        <span
+          className="font-extrabold"
+          style={{ color: C.ink, fontFamily: font.display, fontSize: 17 }}
+        >
           {t("app.name")}
         </span>
       </div>
 
-      {/* Media kartı: künclər yumşaq, kənarları ivory fonda «nəfəs alır» */}
-      <div
-        className="relative min-h-0 flex-1 overflow-hidden"
-        style={{ marginInline: ARA.kenar, borderRadius: 24 }}
-      >
-        <SaheHero />
+      {/* Şəkil sənədin fonudur: mətn onun ardınca gəlir, üstündə yox */}
+      <img
+        src={heroSekli}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 select-none"
+        style={{ top: 52, height: "62%", width: "100%", objectFit: "cover", objectPosition: "center top" }}
+      />
 
-        {/* Başlıq şəklin ÜSTÜNDƏ, pərdənin içində — jurnal qapağı kimi */}
-        <div className="absolute right-0 bottom-0 left-0" style={{ padding: ARA.kart + 2 }}>
-          <h1
-            style={{
-              color: "#FFFFFF",
-              fontFamily: font.display,
-              fontSize: 26,
-              lineHeight: "32px",
-              fontWeight: 800,
-            }}
-          >
-            {t("onb.xos.basliq1")}
-            <br />
-            <span style={{ color: C.gold }}>{t("onb.xos.basliq2")}</span>
-          </h1>
-          <p className="mt-2" style={{ color: "rgba(255,255,255,0.88)", ...TIPO.metn }}>
-            {t("onb.xos.izah")}
-          </p>
-        </div>
-      </div>
+      <div className="min-h-0 flex-1" />
 
       <div
-        className="shrink-0"
+        className="relative z-10 shrink-0"
         style={{
           paddingInline: ARA.kenar,
-          paddingTop: 16,
-          paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))",
+          paddingBottom: "max(14px, env(safe-area-inset-bottom, 0px))",
         }}
       >
+        <h1
+          style={{
+            fontFamily: font.display,
+            fontSize: 30,
+            lineHeight: "37px",
+            fontWeight: 800,
+            letterSpacing: "-0.02em",
+            margin: 0,
+          }}
+        >
+          <span style={{ color: C.pine }}>{t("onb.xos.basliq1")}</span>
+          <br />
+          <span style={{ color: C.goldDeep }}>{t("onb.xos.basliq2")}</span>
+        </h1>
+
+        <p className="mt-3" style={{ color: C.muted, ...TIPO.metn, maxWidth: "31ch" }}>
+          {t("onb.xos.izah")}
+        </p>
+
         <button
           type="button"
           onClick={onBasla}
-          className="basilir w-full font-bold"
+          className="basilir mt-5 w-full font-bold"
           style={{
             backgroundColor: C.pine,
             color: "#FFFFFF",
             borderRadius: RADIUS.idare,
-            minHeight: 52,
+            minHeight: 54,
             ...TIPO.duyme,
           }}
         >
@@ -101,9 +112,9 @@ export function XosGelmisiniz({ onBasla, onGiris }) {
           type="button"
           onClick={onGiris}
           className="mt-1 flex w-full items-center justify-center gap-2 font-semibold"
-          style={{ color: C.field, minHeight: TOXUNMA, ...TIPO.duyme }}
+          style={{ color: C.ink, minHeight: TOXUNMA, ...TIPO.duyme }}
         >
-          <Icon name="User" size={16} color={C.field} />
+          <Icon name="User" size={16} color={C.muted} />
           {t("onb.xos.giris")}
         </button>
       </div>

@@ -50,9 +50,19 @@ describe("bağlı hal", () => {
     expect(screen.getByRole("button", { name: /Cari yerimi istifadə et/ })).toBeInTheDocument();
   });
 
-  it("tarixçə yoxdursa çip GÖSTƏRİLMİR — uydurma «tez-tez seçilənlər» olmur", () => {
+  it("tarixçə yoxdursa pilot rayonları qısa yol kimi görünür", () => {
     ciz();
-    expect(screen.queryByText("Tez-tez seçilənlər")).not.toBeInTheDocument();
+    expect(screen.getByText("Tez-tez seçilənlər")).toBeInTheDocument();
+    for (const ad of ["Bərdə", "Quba", "Xaçmaz"]) {
+      expect(screen.getByRole("button", { name: ad })).toBeInTheDocument();
+    }
+  });
+
+  it("tarixçə çipləri pilot siyahısını ƏVƏZ EDİR", () => {
+    ciz({ sonKodlar: ["seki", "gence"] });
+    expect(screen.getByRole("button", { name: "Şəki" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Gəncə" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Xaçmaz" })).not.toBeInTheDocument();
   });
 
   it("tarixçə varsa ən çox üç çip göstərilir", () => {
