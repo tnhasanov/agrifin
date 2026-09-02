@@ -78,7 +78,7 @@ export function MarketScreen() {
 
       <SectionTitle>{t("market.buyers")}</SectionTitle>
       {BUYER_OFFERS.map((offer, index) => (
-        <Card key={offer.id} className="giris" style={{ "--i": index, marginBottom: 8 }}>
+        <Card key={offer.id} className="giris" style={{ "--i": index, marginBottom: 12 }}>
           <div className="flex items-center gap-3">
             <div className="rounded-xl p-2" style={{ backgroundColor: C.mist }}>
               <Icon name="MapPin" size={16} color={C.pine} />

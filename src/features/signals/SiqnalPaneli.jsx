@@ -89,7 +89,7 @@ export function SiqnalPaneli({
                 onBagla();
                 onHereket();
               }}
-              style={{ "--i": index, marginBottom: 8 }}
+              style={{ "--i": index, marginBottom: 12 }}
             />
           ))}
 

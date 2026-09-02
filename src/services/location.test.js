@@ -4,8 +4,12 @@ import {
   DISTRICTS,
   isValidLocation,
   nearestDistrict,
+  districtByKod,
+  districtByName,
+  normalizeAz,
   readLegacyLocation,
   searchDistricts,
+  vurguParcasi,
 } from "./location.js";
 
 describe("DISTRICTS", () => {
@@ -98,6 +102,7 @@ describe("readLegacyLocation", () => {
       JSON.stringify({ ad: "Gəncə", lat: 40.6828, lon: 46.3606, gps: false }),
     );
     expect(readLegacyLocation()).toEqual({
+      kod: "gence",
       name: "Gəncə",
       lat: 40.6828,
       lon: 46.3606,
@@ -117,5 +122,90 @@ describe("readLegacyLocation", () => {
   it("koordinatı olmayan köhnə qeydi rədd edir", () => {
     window.localStorage.setItem("agrifin.yer", JSON.stringify({ ad: "Gəncə" }));
     expect(readLegacyLocation()).toBeNull();
+  });
+});
+
+describe("rayon kodları", () => {
+  it("hər rayonun kodu var və kodlar TƏKRARSIZDIR", () => {
+    const kodlar = DISTRICTS.map((d) => d.kod);
+    expect(kodlar.every(Boolean)).toBe(true);
+    expect(new Set(kodlar).size).toBe(kodlar.length);
+  });
+
+  it("kodlar ASCII-dir — URL və analitikada təhrif olunmur", () => {
+    for (const { kod } of DISTRICTS) expect(kod).toMatch(/^[a-z0-9]+$/);
+  });
+
+  it("koda görə rayon tapılır", () => {
+    expect(districtByKod("berde")?.name).toBe("Bərdə");
+    expect(districtByKod("yoxdur")).toBeNull();
+  });
+
+  it("köhnə qeyddəki «(GPS)» sonluğu adı tapmağa mane olmur", () => {
+    expect(districtByName("Bərdə (GPS)")?.kod).toBe("berde");
+    expect(districtByName("Gence")?.kod).toBe("gence");
+    expect(districtByName("")).toBeNull();
+  });
+});
+
+describe("AZ normalizasiyası", () => {
+  it("aksentləri qatlayır və hərf sayını dəyişmir", () => {
+    expect(normalizeAz("Gəncə")).toBe("gence");
+    expect(normalizeAz("Şəki")).toBe("seki");
+    expect(normalizeAz("İsmayıllı")).toBe("ismayilli");
+    expect(normalizeAz("Ağdaş")).toHaveLength("Ağdaş".length);
+  });
+
+  it("böyük/kiçik hərfə həssas deyil", () => {
+    expect(normalizeAz("BƏRDƏ")).toBe(normalizeAz("bərdə"));
+  });
+});
+
+describe("rayon axtarışı", () => {
+  it("iki hərfdən az yazılıbsa süzgəc işləmir", () => {
+    expect(searchDistricts("")).toHaveLength(DISTRICTS.length);
+    expect(searchDistricts("b")).toHaveLength(DISTRICTS.length);
+  });
+
+  it("aksentsiz yazılış da tapır — fermerin klaviaturasında ə olmaya bilər", () => {
+    expect(searchDistricts("gence")[0].kod).toBe("gence");
+    expect(searchDistricts("seki")[0].kod).toBe("seki");
+    expect(searchDistricts("berde")[0].kod).toBe("berde");
+  });
+
+  it("«başlayır» nəticələri «içində» olanlardan əvvəl gəlir", () => {
+    const netice = searchDistricts("ba");
+    expect(netice[0].kod).toBe("balaken");
+    // Sabirabad da "ba" saxlayır, amma sonra gəlir
+    expect(netice.map((d) => d.kod)).toContain("sabirabad");
+    expect(netice.findIndex((d) => d.kod === "balaken")).toBeLessThan(
+      netice.findIndex((d) => d.kod === "sabirabad"),
+    );
+  });
+
+  it("ingilis transliterasiyası da tanınır", () => {
+    expect(searchDistricts("ganja")[0].kod).toBe("gence");
+    expect(searchDistricts("sheki")[0].kod).toBe("seki");
+    expect(searchDistricts("nakhchivan")[0].kod).toBe("naxcivan");
+  });
+
+  it("uyğun gəlməyən sorğu BOŞ nəticə verir — uydurma rayon təklif olunmur", () => {
+    expect(searchDistricts("zzzz")).toEqual([]);
+  });
+
+  it("seçim SEÇİLƏN adı dəyişmir: yazılış üsulu göstərilən adı təhrif etmir", () => {
+    expect(searchDistricts("gence")[0].name).toBe("Gəncə");
+  });
+});
+
+describe("uyğunluğun vurğulanması", () => {
+  it("aksentsiz sorğuda da düzgün hissəni işarələyir", () => {
+    expect(vurguParcasi("Gəncə", "gen")).toEqual(["", "Gən", "cə"]);
+    expect(vurguParcasi("Bərdə", "rd")).toEqual(["Bə", "rd", "ə"]);
+  });
+
+  it("qısa və uyğunsuz sorğuda heç nə vurğulanmır", () => {
+    expect(vurguParcasi("Bərdə", "b")).toEqual(["Bərdə", "", ""]);
+    expect(vurguParcasi("Bərdə", "zzz")).toEqual(["Bərdə", "", ""]);
   });
 });

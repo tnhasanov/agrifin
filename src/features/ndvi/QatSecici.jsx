@@ -41,7 +41,7 @@ export function QatSecici({ aktiv, onSec, aciq = false }) {
           >
             <Icon
               name={qat.ikon}
-              size={13}
+              size={16}
               color={secili ? (aciq ? C.pine : C.gold) : aciq ? "rgba(255,255,255,0.7)" : C.muted}
             />
             {t(qat.etiket)}

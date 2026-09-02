@@ -9,6 +9,7 @@ import { useRouter } from "../lib/router.jsx";
 import { pathFor } from "../routes.js";
 import { MovsumPulu } from "../features/money/MovsumPulu.jsx";
 import { novbetiSert } from "../features/money/sertler.js";
+import { TeklifAmilleri } from "../features/money/TeklifAmilleri.jsx";
 import { ayliqFaiz } from "../../lib/kreditOdenis.js";
 import {
   AktivKreditXulasesi,
@@ -94,9 +95,9 @@ export function MoneyScreen({
 
       {/* Yüklənmə: uydurma rəqəm yox, sadəcə gözləmə sətri */}
       {hal === "yuklenir" && (
-        <Card style={{ marginBottom: 8 }}>
+        <Card style={{ marginBottom: 12 }}>
           <div className="flex items-center gap-2" aria-live="polite">
-            <Icon name="LoaderCircle" size={14} color={C.muted} />
+            <Icon name="LoaderCircle" size={16} color={C.muted} />
             <p className="text-xs" style={{ color: C.muted }}>
               {t("maliyye.yuklenir")}
             </p>
@@ -107,7 +108,7 @@ export function MoneyScreen({
       {/* Xəta: SÜKUT YALANDIR — borcalan ekranı boş görüb "borcum yoxdur"
           nəticəsi çıxarmamalıdır. Açıq deyilir və təkrar cəhd verilir. */}
       {hal === "xeta" && (
-        <Card style={{ marginBottom: 8, borderColor: C.danger }} role="alert">
+        <Card style={{ marginBottom: 12, borderColor: C.danger }} role="alert">
           <div className="flex items-center gap-2">
             <Icon name="AlertCircle" size={16} color={C.danger} />
             <p className="text-sm font-bold" style={{ color: C.ink }}>
@@ -166,7 +167,7 @@ export function MoneyScreen({
       {/* Baxılan müraciət: dərhal pul yoxdur, qərar serverdə veriləcək */}
       {baxilir && (
         <Card
-          style={{ marginBottom: 8 }}
+          style={{ marginBottom: 12 }}
           onClick={onOpenLoan}
           ariaLabel={t("kredit.movcudBasliq")}
         >
@@ -196,7 +197,7 @@ export function MoneyScreen({
           yoxla". Panelin içində "əvvəl sahə çək" demək dalandır. */}
       {yeniMuracietOlar && (
         <Card
-          style={{ marginTop: 8, backgroundColor: C.fieldSoft, border: "none" }}
+          style={{ marginTop: 12, backgroundColor: C.fieldSoft, border: "none" }}
           onClick={sertIcra}
           // Kart özü düymədir, ona görə aria-label MƏTNİ ƏVƏZ EDİR: başlıq,
           // növbəti addımın izahı və CTA — üçü də oxunmalıdır
@@ -221,9 +222,23 @@ export function MoneyScreen({
             style={{ backgroundColor: C.pine, color: "#fff" }}
           >
             {t(sert.ctaKey)}
-            <Icon name="ChevronRight" size={14} color="#fff" />
+            <Icon name="ChevronRight" size={16} color="#fff" />
           </p>
         </Card>
+      )}
+
+      {/* Şərtlər tamamlanandan sonra ekranda bir düymə və çoxlu boşluq
+          qalırdı. Boşluq "yüklənməyib" kimi oxunur, üstəlik ən çox verilən
+          sual cavabsız idi: "niyə bu qədər?" Kart serverin HƏQİQƏTƏN
+          baxdığı girişləri sadalayır — məbləğ vəd etmədən. */}
+      {yeniMuracietOlar && sert.tip === "hazir" && (
+        <TeklifAmilleri
+          hektar={state.sahe?.hektar ?? null}
+          bitkiKey={state.chat.crop}
+          movsumSayi={
+            indeksHali?.movsumler?.filter((m) => Number.isFinite(m.zirve)).length ?? 0
+          }
+        />
       )}
     </div>
   );

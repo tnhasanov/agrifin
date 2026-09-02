@@ -32,7 +32,7 @@ export function SaheXebardarligi({ siqnal, etibar = null, movsumSayi = null, qon
     <Card
       className="giris"
       style={{
-        marginBottom: 8,
+        marginBottom: 12,
         backgroundColor: C.warnSoft,
         borderColor: tecilidir ? C.danger : C.goldDeep,
       }}

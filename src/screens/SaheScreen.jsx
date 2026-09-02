@@ -13,6 +13,7 @@ import { QonsuMuqayisesi } from "../features/ndvi/QonsuMuqayisesi.jsx";
 import { VegetasiyaQrafiki } from "../features/ndvi/VegetasiyaQrafiki.jsx";
 import { SaheLenti } from "../features/lent/SaheLenti.jsx";
 import { HesabatPaylas } from "../features/share/HesabatPaylas.jsx";
+import { HesabatDuymesi } from "../features/hesabat/HesabatDuymesi.jsx";
 import { BosSahe } from "../features/pano/BosSahe.jsx";
 import { SaheXebardarligi } from "../features/pano/SaheXebardarligi.jsx";
 import { EtibarNisani } from "../features/pano/EtibarNisani.jsx";
@@ -34,6 +35,7 @@ export function SaheScreen({
   qonsu = { hal: "yoxdur", muqayise: null },
   radar = { hal: "yoxdur", xulase: null },
   indeksHali = { hal: "yoxdur", indeks: null, movsumler: [] },
+  kreditHali = null,
   siqnallar = [],
   onDrawField,
   onOpenChat,
@@ -83,7 +85,7 @@ export function SaheScreen({
         </button>
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-base font-bold" style={{ color: C.ink, fontFamily: font.display }}>
-            {t(state.chat.crop ? `kbcrop.${state.chat.crop}` : "farm.name")}
+            {t(state.chat.crop ? `kbcrop.${state.chat.crop}` : "sahe.adsiz")}
           </h1>
           <p className="text-xs" style={{ color: C.muted }}>
             {t("sahe.altSetir", {
@@ -98,7 +100,7 @@ export function SaheScreen({
           className="flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-bold"
           style={{ backgroundColor: C.card, color: C.pine, border: `1px solid ${C.line}`, minHeight: 44 }}
         >
-          <Icon name="MapPin" size={13} color={C.pine} />
+          <Icon name="MapPin" size={16} color={C.pine} />
           {t("sahe.deyis")}
         </button>
       </div>
@@ -129,7 +131,7 @@ export function SaheScreen({
         >
           <Icon
             name={peyk.hal === "yuklenir" ? "LoaderCircle" : "Satellite"}
-            size={13}
+            size={16}
             color={peyk.hal === "hazir" ? C.field : C.muted}
           />
           <span className="flex-1 text-xs" style={{ color: C.muted }}>
@@ -158,7 +160,7 @@ export function SaheScreen({
         >
           <Icon
             name={radar.hal === "yuklenir" ? "LoaderCircle" : "Radar"}
-            size={13}
+            size={16}
             color={radar.hal === "hazir" ? "#4A90E2" : C.muted}
           />
           <div className="flex-1">
@@ -192,7 +194,7 @@ export function SaheScreen({
         >
           <Icon
             name="Droplets"
-            size={13}
+            size={16}
             color={xulase.suSeviyyesi === "az" ? C.goldInk : C.field}
           />
           <span className="flex-1 text-xs" style={{ color: C.muted }}>
@@ -203,10 +205,10 @@ export function SaheScreen({
 
       {/* Vəziyyət sətri: xəbərdarlıq yoxdursa yaxşı xəbər açıq deyilir */}
       {!saheSiqnali && peyk.hal === "hazir" && (
-        <Card className="giris" style={{ marginTop: 12, marginBottom: 8 }}>
+        <Card className="giris" style={{ marginTop: 12, marginBottom: 12 }}>
           <div className="flex items-center gap-2">
             <div className="rounded-full p-1.5" style={{ backgroundColor: C.fieldSoft }}>
-              <Icon name="Check" size={14} color={C.field} />
+              <Icon name="Check" size={16} color={C.field} />
             </div>
             <p className="text-sm font-bold" style={{ color: C.ink }}>
               {t("pano.saheYaxsi")}
@@ -230,7 +232,7 @@ export function SaheScreen({
 
       {/* Hal B: tarixçə yığılır — bal YOXDUR, olan faktlar dürüst göstərilir */}
       {tarixceYigilir && (
-        <Card className="giris" style={{ marginBottom: 8 }}>
+        <Card className="giris" style={{ marginBottom: 12 }}>
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
               {t("indeks.tarixceAz")}
@@ -281,7 +283,7 @@ export function SaheScreen({
             </div>
           </div>
           <p className="mt-2 flex items-center gap-1.5 text-xs" style={{ color: C.muted }}>
-            <Icon name="Info" size={12} color={C.muted} />
+            <Icon name="Info" size={16} color={C.muted} />
             {t("pano.tarixceXeber")}
           </p>
         </Card>
@@ -305,7 +307,15 @@ export function SaheScreen({
       {/* Ölçmə xronologiyası — sahənin "bank çıxarışı" */}
       <SaheLenti peyk={peyk} radar={radar} />
 
-      {/* Hesabatı WhatsApp-a çıxar — aqronomla söhbət orada gedir */}
+      {/* Sahə pasportu: sübutu sənəd kimi binadan çıxarır (bank, alıcı) */}
+      <HesabatDuymesi
+        peyk={peyk}
+        qonsu={qonsu}
+        indeksHali={indeksHali}
+        kreditHali={kreditHali}
+      />
+
+      {/* Qısa mətn — aqronomla söhbət WhatsApp-dadır, orada PDF ağırdır */}
       <HesabatPaylas
         hektar={state.sahe?.hektar}
         bitkiKey={state.chat.crop ? `kbcrop.${state.chat.crop}` : null}

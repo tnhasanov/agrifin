@@ -360,6 +360,6 @@ describe("siqnal kartı", () => {
     const panel = await paneliAc(user);
     const kart = within(panel).getByText("Şaxta riski").closest("div.rounded-2xl");
     expect(within(kart).getByText(/Həssas əkinləri örtün/)).toBeInTheDocument();
-    expect(kart).toHaveStyle({ backgroundColor: "rgb(251, 234, 231)" });
+    expect(kart).toHaveStyle({ backgroundColor: "rgb(252, 235, 236)" });
   });
 });

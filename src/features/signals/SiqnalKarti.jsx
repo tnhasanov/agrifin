@@ -10,7 +10,10 @@ import { menbeSetri } from "./siqnalEhate.js";
 const CIDDILIK_RENGI = {
   tecili: { fg: C.danger, bg: C.dangerSoft, kenar: "rgba(194,74,63,0.28)" },
   diqqet: { fg: C.goldDeep, bg: C.goldSoft, kenar: "rgba(201,147,43,0.3)" },
-  melumat: { fg: "#2C5BC7", bg: C.blueSoft, kenar: "rgba(62,123,250,0.22)" },
+  // "Məlumat" səviyyəsi NEYTRALDIR: əvvəl mavi idi və ekranda beşinci rəng
+  // ailəsi yaradırdı. Mavi indi yalnız SU/yağış üçün qalır — orada rəng
+  // məna daşıyır, burada isə sadəcə bəzək idi.
+  melumat: { fg: C.ink, bg: C.mist, kenar: C.line },
 };
 
 /**
@@ -62,7 +65,7 @@ export function SiqnalKarti({
                 className="-mt-2.5 -mr-2.5 flex items-center justify-center rounded-full"
                 style={{ minWidth: 40, minHeight: 40 }}
               >
-                <Icon name="X" size={13} color={reng.fg} />
+                <Icon name="X" size={16} color={reng.fg} />
               </button>
             )}
           </div>

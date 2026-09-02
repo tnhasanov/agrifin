@@ -1,7 +1,7 @@
 export default {
   "app.name": "AgriFin",
   "app.tagline": "Smart finance for farmers",
-  "farm.name": "Green Valley Farm",
+  "sahe.adsiz": "Your field",
   "demo.banner": "Demo prototype — all data is sample data",
 
   "common.today": "Today",
@@ -51,8 +51,10 @@ export default {
   "location.gpsCta": "Detect my field's location",
   "location.gpsBusy": "Detecting location…",
   "location.gpsUnsupported": "This device does not support location detection.",
-  "location.gpsDenied": "Permission denied. You can pick a district below.",
-  "location.gpsNoSignal": "No signal found. Pick a district below.",
+  "location.gpsDenied": "Location permission denied. Pick your district from the list.",
+  "location.gpsNoSignal": "No signal found. Pick your district from the list.",
+  "location.gpsOffline": "No internet connection. Pick your district from the list.",
+  "location.gpsTimeout": "Location was not determined in time.",
   "location.gpsName": "{district} (GPS)",
   "location.searchPlaceholder": "Search for a district",
   "location.notFound": "No district found.",
@@ -351,6 +353,13 @@ export default {
   "hereket.xeta.metn": "The connection dropped, so we cannot show your loan status. An overdue payment would not appear here.",
   "hereket.xeta.cta": "Try again",
   "maliyye.yuklenir": "Loading loan status…",
+  "maliyye.amillerBasliq": "What the offer depends on",
+  "maliyye.amilSahe": "Field size",
+  "maliyye.amilBitki": "Crop",
+  "maliyye.amilTarixce": "Satellite history",
+  "maliyye.amilMovsum": "{say} seasons",
+  "maliyye.amilTarixceYox": "building",
+  "maliyye.amillerQeyd": "The final amount and decision come from the bank system — this only shows what is taken into account.",
   "maliyye.xetaBasliq": "Could not load loan data",
   "maliyye.xetaIzah": "The connection dropped. If you have an active loan, this screen is not showing it — please try again.",
   "maliyye.xetaIzahServer": "The server did not respond. If you have an active loan, this screen is not showing it — please try again shortly.",
@@ -411,6 +420,7 @@ export default {
   "movsumPulu.bicin": "harvest",
   "movsumPulu.movsumBagli": "Season closed — preparing for the next cycle.",
   "movsumPulu.gelir": "Expected net income",
+  "movsumPulu.aralikEtiket": "Expected net income range: {asagi} – {yuxari}, mid scenario {orta}",
   "movsumPulu.xerc": "Season costs",
   "movsumPulu.borc": "Principal to repay (application)",
   "movsumPulu.borcKredit": "Principal to repay",
@@ -494,15 +504,45 @@ export default {
   "date.aug15.long": "15 August",
 
   "onb.title": "Getting started",
-  "onb.step": "Step {current} of {total}",
+  "onb.step": "Step {current} / {total}",
   "onb.back": "Back",
-  "onb.location.title": "Where is your field?",
-  "onb.location.subtitle": "Weather and irrigation advice are calculated from this.",
-  "onb.crop.title": "What are you growing?",
-  "onb.crop.subtitle": "We will tailor advice for {district} to it.",
-  "onb.crop.subtitleNoLocation": "We will tailor advice to the crop you choose. You can select a district later.",
-  "onb.crop.skip": "I have not decided yet",
-  "onb.crop.alqis": "Great — {bitki}! Tuning myself to it.",
+
+  "onb.xos.basliq1": "Know your field.",
+  "onb.xos.basliq2": "Plan your finances.",
+  "onb.xos.izah": "Weather, satellite analysis and financing steps in one place.",
+  "onb.xos.basla": "Get started",
+  "onb.xos.giris": "Sign in",
+
+  "onb.rayon.basliq": "Which district is your field in?",
+  "onb.rayon.izah": "We use the district to match weather and season data.",
+  "onb.rayon.gpsCta": "Use my current location",
+  "onb.rayon.gpsIzah": "Detect the district via GPS",
+  "onb.rayon.gpsGedir": "Detecting your location…",
+  "onb.rayon.gpsLegv": "Tap to cancel",
+  "onb.rayon.gpsTekrar": "Try again",
+  "onb.rayon.axtar": "Select or search a district",
+  "onb.rayon.tezTez": "Frequently selected",
+  "onb.rayon.vereqBasliq": "Select a district",
+  "onb.rayon.sonSecilenler": "Recently selected",
+  "onb.rayon.butunRayonlar": "All districts",
+  "onb.rayon.neticeYox": "No results found",
+  "onb.rayon.neticeYoxIzah": "Check the district name",
+  "onb.rayon.davam": "Continue",
+  "onb.rayon.indiYox": "Not now",
+
+  "onb.bitki.basliq": "What is your main crop?",
+  "onb.bitki.izah": "Pick one for now. You can add other crops to fields later.",
+  "onb.bitki.davam": "Continue",
+  "onb.bitki.qerarsiz": "I haven't decided yet",
+
+  "onb.sahe.basliq": "Add your first field",
+  "onb.sahe.izah": "Draw the boundary on the map. Vegetation, weather and history are calculated for this location.",
+  "onb.sahe.fayda1": "Accurate area and field analysis",
+  "onb.sahe.fayda2": "Weather and risk alerts",
+  "onb.sahe.fayda3": "Advice matched to your finances",
+  "onb.sahe.cek": "Draw the field on the map",
+  "onb.sahe.muddet": "Takes about 2 minutes",
+  "onb.sahe.kec": "Go to the home screen",
 
   "home.fieldCta": "Draw my field on the map",
   "home.fieldDrawn": "My field: {hektar} ha — edit",
@@ -530,6 +570,8 @@ export default {
   "field.undo": "Undo",
   "field.clear": "Clear all",
   "field.save": "Save field",
+  "field.lazimKunc": "{say} more corners needed",
+  "field.sonra": "I will draw my field later",
   "field.errorTooFewPoints": "At least 3 corners are needed.",
   "field.errorSelfCrossing": "The outline crosses itself. Adjust the corners.",
   "field.errorTooSmall": "The area is too small. Zoom in and draw again.",
@@ -673,6 +715,66 @@ export default {
     "Your field and the land within 5 km are measured the SAME way: cloud, shadow and water are excluded, while harvested and bare ground counts on both sides. Same satellite pass, same day.",
 
   "paylas.duyme": "Share the report",
+
+  "pdf.duyme": "Field passport (PDF)",
+
+  "pdf.izah": "For the bank, agronomist and buyer — satellite measurements, score and income estimate in one document.",
+
+  "pdf.qurulur": "Preparing document…",
+
+  "pdf.xeta": "The document could not be created. Please try again shortly.",
+
+  "pdf.basliq": "Field passport",
+
+  "pdf.basliq2": "Field passport — assessment",
+
+  "pdf.altyazi": "Satellite measurements and assessment",
+
+  "pdf.yaradilib": "Generated",
+
+  "pdf.fermer": "Farmer",
+
+  "pdf.telefon": "Phone",
+
+  "pdf.koordinat": "Field centre",
+
+  "pdf.bitkiYox": "No crop selected",
+
+  "pdf.sekilAlt": "Satellite image · crop cover · 10×10 m pixels",
+
+  "pdf.cariVeziyyet": "Current condition",
+
+  "pdf.muqayise": "Comparison with the district",
+
+  "pdf.sizinSahe": "Your field",
+
+  "pdf.rayonMedyani": "District median",
+
+  "pdf.movsumTarixcesi": "Seasonal peaks",
+
+  "pdf.movsumYoxdur": "Season history is still building",
+
+  "pdf.mehsuldarliq": "Yield and income",
+
+  "pdf.gozlenilenMehsul": "Expected yield",
+
+  "pdf.qiymet": "Price used",
+
+  "pdf.ortaSsenari": "mid scenario",
+
+  "pdf.modelQeydi": "These figures are NOT MEASURED; they are computed from expert norms (uncalibrated model). The satellite measurements are in the sections above.",
+
+  "pdf.gelirYoxdur": "A crop and a field are needed for the income estimate.",
+
+  "pdf.balYoxdur": "At least 3 usable seasons are needed for a score.",
+
+  "pdf.menbe": "Measurement source",
+
+  "pdf.olcmeSayi": "Measurements (150 days)",
+
+  "pdf.sonOlcme": "Last measurement",
+
+  "pdf.altQeyd": "AgriFin · Not an official certificate or valuation report. Satellite measurements are based on Copernicus Sentinel data.",
   "paylas.basliq": "AgriFin — field report",
   "paylas.sahe": "Field: {hektar} ha",
   "paylas.saheBitki": "Field: {hektar} ha · {bitki}",
@@ -735,7 +837,7 @@ export default {
   "siqnal.panelAltYazi": "{count} open signals from your field",
   "siqnal.panelBosAltYazi": "No open signals from your field",
   "siqnal.panelHamisi": "See everything on the advisor screen",
-  "indeks.basliq": "Agronomic performance index",
+  "indeks.basliq": "FarmScore",
   "indeks.yuklenir": "Loading the field's multi-season history…",
   "indeks.olcmeYox": "Not enough history for the index.",
   "indeks.xeta": "History unavailable — the index will be computed later.",

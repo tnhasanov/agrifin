@@ -63,7 +63,7 @@ export function SaatlarPaneli({ hourly, gunISO }) {
               </span>
               {/* Vahid mütləq yazılır: yağış mm-nin altında tək "16" rəqəmi
                   nəyin 16-sı olduğunu demirdi (ekranda yoxlanılıb) */}
-              <span style={{ color: C.muted, fontSize: 9, minHeight: 12 }}>
+              <span style={{ color: C.muted, fontSize: 10, minHeight: 12 }}>
                 {Number.isFinite(s.kulek) && s.kulek >= KULEK_HEDDI
                   ? t("weather.kmS", { kulek: s.kulek })
                   : ""}
@@ -75,12 +75,12 @@ export function SaatlarPaneli({ hourly, gunISO }) {
 
       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 px-0.5 pb-0.5">
         <span className="flex items-center gap-1" style={{ color: C.muted, fontSize: 10 }}>
-          <Icon name="Wind" size={11} color={C.muted} />
+          <Icon name="Wind" size={16} color={C.muted} />
           {t("weather.windNote")}
         </span>
         {torpaq != null && (
           <span className="flex items-center gap-1" style={{ color: C.muted, fontSize: 10 }}>
-            <Icon name="Sprout" size={11} color={C.field} />
+            <Icon name="Sprout" size={16} color={C.field} />
             {t("weather.soilTemp", { derece: { number: torpaq, options: { maximumFractionDigits: 1 } } })}
           </span>
         )}

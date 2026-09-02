@@ -149,7 +149,7 @@ describe("yer seçimi — GPS", () => {
     await acPanel(user);
 
     await user.click(screen.getByRole("button", { name: "Sahəmin yerini təyin et" }));
-    expect(screen.getByRole("alert")).toHaveTextContent("İcazə verilmədi");
+    expect(screen.getByRole("alert")).toHaveTextContent("Məkan icazəsi verilmədi");
   });
 
   it("siqnal tapılmadıqda ayrı mesaj göstərir", async () => {

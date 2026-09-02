@@ -1,7 +1,9 @@
 export default {
   "app.name": "AgriFin",
   "app.tagline": "Fermerlər üçün ağıllı maliyyə",
-  "farm.name": "Yaşıl Vadi Təsərrüfatı",
+  // Uydurma təsərrüfat adı yoxdur: başlıq fermerin SEÇDİYİ bitkidən çıxır,
+  // bitki seçilməyibsə neytral sözlə qalır (bax: HomeScreen, SaheScreen)
+  "sahe.adsiz": "Sahəniz",
   "demo.banner": "Demo prototip — bütün məlumatlar nümunədir",
 
   "common.today": "Bu gün",
@@ -51,8 +53,10 @@ export default {
   "location.gpsCta": "Sahəmin yerini təyin et",
   "location.gpsBusy": "Yer təyin edilir…",
   "location.gpsUnsupported": "Bu cihaz yer təyinini dəstəkləmir.",
-  "location.gpsDenied": "İcazə verilmədi. Rayonu aşağıdan seçə bilərsiniz.",
-  "location.gpsNoSignal": "Siqnal tapılmadı. Rayonu aşağıdan seçin.",
+  "location.gpsDenied": "Məkan icazəsi verilmədi. Rayonu siyahıdan seçin.",
+  "location.gpsNoSignal": "Siqnal tapılmadı. Rayonu siyahıdan seçin.",
+  "location.gpsOffline": "İnternet yoxdur. Rayonu siyahıdan seçin.",
+  "location.gpsTimeout": "Məkan vaxtında müəyyən edilmədi.",
   "location.gpsName": "{district} (GPS)",
   "location.searchPlaceholder": "Rayon axtarın",
   "location.notFound": "Rayon tapılmadı.",
@@ -353,6 +357,13 @@ export default {
   "hereket.xeta.metn": "Bağlantı kəsildi deyə kredit vəziyyətini göstərə bilmirik. Gecikmiş ödənişiniz varsa burada görünməyəcək.",
   "hereket.xeta.cta": "Yenidən cəhd et",
   "maliyye.yuklenir": "Kredit vəziyyəti yüklənir…",
+  "maliyye.amillerBasliq": "Təklif nədən asılıdır?",
+  "maliyye.amilSahe": "Sahənin ölçüsü",
+  "maliyye.amilBitki": "Bitki",
+  "maliyye.amilTarixce": "Peyk tarixçəsi",
+  "maliyye.amilMovsum": "{say} mövsüm",
+  "maliyye.amilTarixceYox": "yığılır",
+  "maliyye.amillerQeyd": "Yekun məbləği və qərarı bank sistemi verir — burada yalnız nəyə baxıldığı göstərilir.",
   "maliyye.xetaBasliq": "Kredit məlumatı gətirilmədi",
   "maliyye.xetaIzah": "Bağlantı kəsildi. Aktiv kreditiniz varsa, bu ekran onu göstərmir — yenidən cəhd edin.",
   "maliyye.xetaIzahServer": "Server cavab vermədi. Aktiv kreditiniz varsa, bu ekran onu göstərmir — bir azdan yenidən cəhd edin.",
@@ -418,6 +429,7 @@ export default {
   "movsumPulu.bicin": "biçin",
   "movsumPulu.movsumBagli": "Mövsüm bağlıdır — növbəti dövrə hazırlıq gedir.",
   "movsumPulu.gelir": "Gözlənilən xalis gəlir",
+  "movsumPulu.aralikEtiket": "Gözlənilən xalis gəlir aralığı: {asagi} – {yuxari}, orta ssenari {orta}",
   "movsumPulu.xerc": "Mövsümün xərci",
   "movsumPulu.borc": "Bağlanmalı əsas borc (müraciət)",
   "movsumPulu.borcKredit": "Bağlanmalı əsas borc",
@@ -506,13 +518,43 @@ export default {
   "onb.title": "Başlanğıc",
   "onb.step": "Addım {current} / {total}",
   "onb.back": "Geri",
-  "onb.location.title": "Sahəniz haradadır?",
-  "onb.location.subtitle": "Hava proqnozu və suvarma tövsiyələri buna görə hesablanır.",
-  "onb.crop.title": "Nə əkirsiniz?",
-  "onb.crop.subtitle": "{district} üçün tövsiyələri buna uyğunlaşdıracağıq.",
-  "onb.crop.subtitleNoLocation": "Tövsiyələri seçdiyiniz bitkiyə uyğunlaşdıracağıq. Rayonu sonra seçə bilərsiniz.",
-  "onb.crop.skip": "Hələ qərar verməmişəm",
-  "onb.crop.alqis": "Əla — {bitki}! Özümü ona kökləyirəm.",
+
+  "onb.xos.basliq1": "Sahənizi tanıyın.",
+  "onb.xos.basliq2": "Maliyyənizi planlayın.",
+  "onb.xos.izah": "Hava, peyk təhlili və maliyyələşmə addımları bir yerdə.",
+  "onb.xos.basla": "Başlayaq",
+  "onb.xos.giris": "Hesaba daxil ol",
+
+  "onb.rayon.basliq": "Sahəniz hansı rayondadır?",
+  "onb.rayon.izah": "Rayonu hava və mövsüm məlumatlarını uyğunlaşdırmaq üçün istifadə edirik.",
+  "onb.rayon.gpsCta": "Cari yerimi istifadə et",
+  "onb.rayon.gpsIzah": "GPS vasitəsilə rayonu müəyyən et",
+  "onb.rayon.gpsGedir": "Məkanınız müəyyən edilir…",
+  "onb.rayon.gpsLegv": "Ləğv etmək üçün toxunun",
+  "onb.rayon.gpsTekrar": "Yenidən cəhd et",
+  "onb.rayon.axtar": "Rayon seçin və ya axtarın",
+  "onb.rayon.tezTez": "Tez-tez seçilənlər",
+  "onb.rayon.vereqBasliq": "Rayon seçin",
+  "onb.rayon.sonSecilenler": "Son seçilənlər",
+  "onb.rayon.butunRayonlar": "Bütün rayonlar",
+  "onb.rayon.neticeYox": "Nəticə tapılmadı",
+  "onb.rayon.neticeYoxIzah": "Rayon adını yoxlayın",
+  "onb.rayon.davam": "Davam et",
+  "onb.rayon.indiYox": "İndi yox",
+
+  "onb.bitki.basliq": "Əsas məhsulunuz hansıdır?",
+  "onb.bitki.izah": "Əvvəl birini seçin. Digər məhsulları sonra sahələrə əlavə edə bilərsiniz.",
+  "onb.bitki.davam": "Davam et",
+  "onb.bitki.qerarsiz": "Hələ qərar verməmişəm",
+
+  "onb.sahe.basliq": "İlk sahənizi əlavə edin",
+  "onb.sahe.izah": "Xəritədə sərhədi çəkin. Vegetasiya, hava və tarixçə bu nöqtəyə görə hesablanacaq.",
+  "onb.sahe.fayda1": "Dəqiq ölçü və sahə analizi",
+  "onb.sahe.fayda2": "Hava və risk xəbərdarlıqları",
+  "onb.sahe.fayda3": "Maliyyə hallarına uyğun tövsiyələr",
+  "onb.sahe.cek": "Sahəni xəritədə çək",
+  "onb.sahe.muddet": "Təxminən 2 dəqiqə çəkir",
+  "onb.sahe.kec": "Əsas səhifəyə keç",
 
   "home.fieldCta": "Sahəmi xəritədə çək",
   "home.fieldDrawn": "Sahəm: {hektar} ha — dəyiş",
@@ -540,6 +582,8 @@ export default {
   "field.undo": "Geri al",
   "field.clear": "Hamısını sil",
   "field.save": "Sahəni saxla",
+  "field.lazimKunc": "Daha {say} künc lazımdır",
+  "field.sonra": "Sahəmi sonra çəkəcəyəm",
   "field.errorTooFewPoints": "Ən azı 3 künc lazımdır.",
   "field.errorSelfCrossing": "Kontur öz-özünü kəsir. Küncləri düzəldin.",
   "field.errorTooSmall": "Sahə çox kiçikdir. Yaxınlaşdırıb yenidən çəkin.",
@@ -683,6 +727,66 @@ export default {
     "Sahəniz və 5 km radiusdakı torpaq EYNİ qayda ilə ölçülür: bulud, kölgə və su çıxarılır, biçilmiş və çılpaq sahələr hər iki tərəfdə sayılır. Eyni peyk keçidi, eyni gün.",
 
   "paylas.duyme": "Hesabatı paylaş",
+
+  "pdf.duyme": "Sahə pasportu (PDF)",
+
+  "pdf.izah": "Bank, aqronom və alıcı üçün — peyk ölçmələri, bal və gəlir hesablaması bir sənəddə.",
+
+  "pdf.qurulur": "Sənəd hazırlanır…",
+
+  "pdf.xeta": "Sənəd yaradıla bilmədi. Bir azdan yenidən cəhd edin.",
+
+  "pdf.basliq": "Sahə pasportu",
+
+  "pdf.basliq2": "Sahə pasportu — qiymətləndirmə",
+
+  "pdf.altyazi": "Peyk ölçmələri və qiymətləndirmə",
+
+  "pdf.yaradilib": "Yaradılıb",
+
+  "pdf.fermer": "Fermer",
+
+  "pdf.telefon": "Telefon",
+
+  "pdf.koordinat": "Sahənin mərkəzi",
+
+  "pdf.bitkiYox": "Bitki seçilməyib",
+
+  "pdf.sekilAlt": "Peyk görüntüsü · bitki örtüyü · 10×10 m piksel",
+
+  "pdf.cariVeziyyet": "Cari vəziyyət",
+
+  "pdf.muqayise": "Rayonla müqayisə",
+
+  "pdf.sizinSahe": "Sizin sahə",
+
+  "pdf.rayonMedyani": "Rayon medianı",
+
+  "pdf.movsumTarixcesi": "Mövsümlər üzrə zirvə",
+
+  "pdf.movsumYoxdur": "Mövsüm tarixçəsi hələ yığılır",
+
+  "pdf.mehsuldarliq": "Məhsuldarlıq və gəlir",
+
+  "pdf.gozlenilenMehsul": "Gözlənilən məhsuldarlıq",
+
+  "pdf.qiymet": "Hesablamada qiymət",
+
+  "pdf.ortaSsenari": "orta ssenari",
+
+  "pdf.modelQeydi": "Bu rəqəmlər ÖLÇÜLMƏYİB, ekspert normaları ilə hesablanıb (kalibrlənməmiş model). Peyk ölçmələri isə yuxarıdakı bölmələrdədir.",
+
+  "pdf.gelirYoxdur": "Gəlir hesablaması üçün bitki və sahə lazımdır.",
+
+  "pdf.balYoxdur": "Bal üçün ən azı 3 istifadə oluna bilən mövsüm lazımdır.",
+
+  "pdf.menbe": "Ölçmə mənbəyi",
+
+  "pdf.olcmeSayi": "Ölçmə sayı (150 gün)",
+
+  "pdf.sonOlcme": "Son ölçmə",
+
+  "pdf.altQeyd": "AgriFin · Rəsmi arayış və ya qiymətləndirmə hesabatı deyil. Peyk ölçmələri Copernicus Sentinel məlumatlarına əsaslanır.",
   "paylas.basliq": "AgriFin — sahə hesabatı",
   "paylas.sahe": "Sahə: {hektar} ha",
   "paylas.saheBitki": "Sahə: {hektar} ha · {bitki}",
@@ -745,7 +849,10 @@ export default {
   "siqnal.panelAltYazi": "Sahənizdən {count} açıq siqnal",
   "siqnal.panelBosAltYazi": "Sahənizdən açıq siqnal yoxdur",
   "siqnal.panelHamisi": "Məsləhət ekranında hamısına bax",
-  "indeks.basliq": "Aqronomik performans indeksi",
+  // Məhsulun adı brief-dəki kimi "FarmScore"dur. Nə olduğu (aqronomik
+  // göstərici, kredit balı DEYİL) açılan hissədəki izahda qalır —
+  // ad qısa olmalıdır, izah isə itməməlidir (bax: indeks.izah)
+  "indeks.basliq": "FarmScore",
   "indeks.yuklenir": "Sahənin çoxillik tarixçəsi yüklənir…",
   "indeks.olcmeYox": "İndeks üçün kifayət qədər tarixçə yoxdur.",
   "indeks.xeta": "Tarixçə alınmadı — indeks sonra hesablanacaq.",

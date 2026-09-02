@@ -1,7 +1,7 @@
 export default {
   "app.name": "AgriFin",
   "app.tagline": "Умные финансы для фермеров",
-  "farm.name": "Хозяйство «Зелёная долина»",
+  "sahe.adsiz": "Ваш участок",
   "demo.banner": "Демо-прототип — все данные примерные",
 
   "common.today": "Сегодня",
@@ -51,8 +51,10 @@ export default {
   "location.gpsCta": "Определить расположение поля",
   "location.gpsBusy": "Определяем расположение…",
   "location.gpsUnsupported": "Это устройство не поддерживает определение места.",
-  "location.gpsDenied": "Доступ запрещён. Выберите район ниже.",
-  "location.gpsNoSignal": "Сигнал не найден. Выберите район ниже.",
+  "location.gpsDenied": "Доступ к местоположению запрещён. Выберите район из списка.",
+  "location.gpsNoSignal": "Сигнал не найден. Выберите район из списка.",
+  "location.gpsOffline": "Нет интернета. Выберите район из списка.",
+  "location.gpsTimeout": "Местоположение не удалось определить вовремя.",
   "location.gpsName": "{district} (GPS)",
   "location.searchPlaceholder": "Поиск района",
   "location.notFound": "Район не найден.",
@@ -352,6 +354,13 @@ export default {
   "hereket.xeta.metn": "Связь прервалась, поэтому статус кредита не показан. Просроченный платёж здесь не отобразится.",
   "hereket.xeta.cta": "Повторить",
   "maliyye.yuklenir": "Загружается статус кредита…",
+  "maliyye.amillerBasliq": "От чего зависит предложение",
+  "maliyye.amilSahe": "Размер участка",
+  "maliyye.amilBitki": "Культура",
+  "maliyye.amilTarixce": "Спутниковая история",
+  "maliyye.amilMovsum": "{say} сезонов",
+  "maliyye.amilTarixceYox": "накапливается",
+  "maliyye.amillerQeyd": "Итоговую сумму и решение выдаёт банковская система — здесь показано только то, что учитывается.",
   "maliyye.xetaBasliq": "Не удалось загрузить данные по кредиту",
   "maliyye.xetaIzah": "Связь прервалась. Если у вас есть активный кредит, этот экран его не показывает — повторите попытку.",
   "maliyye.xetaIzahServer": "Сервер не ответил. Если у вас есть активный кредит, этот экран его не показывает — повторите попытку чуть позже.",
@@ -412,6 +421,7 @@ export default {
   "movsumPulu.bicin": "уборка",
   "movsumPulu.movsumBagli": "Сезон закрыт — идёт подготовка к следующему циклу.",
   "movsumPulu.gelir": "Ожидаемый чистый доход",
+  "movsumPulu.aralikEtiket": "Диапазон ожидаемого чистого дохода: {asagi} – {yuxari}, средний сценарий {orta}",
   "movsumPulu.xerc": "Затраты сезона",
   "movsumPulu.borc": "Основной долг к погашению (заявка)",
   "movsumPulu.borcKredit": "Основной долг к погашению",
@@ -495,16 +505,46 @@ export default {
   "date.aug15.short": "15 авг",
   "date.aug15.long": "15 августа",
 
-  "onb.title": "Начало работы",
-  "onb.step": "Шаг {current} из {total}",
+  "onb.title": "Начало",
+  "onb.step": "Шаг {current} / {total}",
   "onb.back": "Назад",
-  "onb.location.title": "Где находится ваше поле?",
-  "onb.location.subtitle": "По нему рассчитываются прогноз погоды и советы по поливу.",
-  "onb.crop.title": "Что вы выращиваете?",
-  "onb.crop.subtitle": "Мы подстроим советы для {district} под эту культуру.",
-  "onb.crop.subtitleNoLocation": "Мы подстроим советы под выбранную культуру. Район можно выбрать позже.",
-  "onb.crop.skip": "Ещё не решил",
-  "onb.crop.alqis": "Отлично — {bitki}! Настраиваюсь на неё.",
+
+  "onb.xos.basliq1": "Узнайте своё поле.",
+  "onb.xos.basliq2": "Планируйте финансы.",
+  "onb.xos.izah": "Погода, спутниковый анализ и шаги финансирования в одном месте.",
+  "onb.xos.basla": "Начнём",
+  "onb.xos.giris": "Войти в аккаунт",
+
+  "onb.rayon.basliq": "В каком районе ваше поле?",
+  "onb.rayon.izah": "Район нужен, чтобы подобрать данные о погоде и сезоне.",
+  "onb.rayon.gpsCta": "Использовать моё местоположение",
+  "onb.rayon.gpsIzah": "Определить район по GPS",
+  "onb.rayon.gpsGedir": "Определяем ваше местоположение…",
+  "onb.rayon.gpsLegv": "Нажмите, чтобы отменить",
+  "onb.rayon.gpsTekrar": "Повторить попытку",
+  "onb.rayon.axtar": "Выберите или найдите район",
+  "onb.rayon.tezTez": "Часто выбираемые",
+  "onb.rayon.vereqBasliq": "Выберите район",
+  "onb.rayon.sonSecilenler": "Недавно выбранные",
+  "onb.rayon.butunRayonlar": "Все районы",
+  "onb.rayon.neticeYox": "Ничего не найдено",
+  "onb.rayon.neticeYoxIzah": "Проверьте название района",
+  "onb.rayon.davam": "Продолжить",
+  "onb.rayon.indiYox": "Не сейчас",
+
+  "onb.bitki.basliq": "Какая у вас основная культура?",
+  "onb.bitki.izah": "Сначала выберите одну. Другие культуры можно добавить к полям позже.",
+  "onb.bitki.davam": "Продолжить",
+  "onb.bitki.qerarsiz": "Ещё не решил",
+
+  "onb.sahe.basliq": "Добавьте первое поле",
+  "onb.sahe.izah": "Обведите границу на карте. Вегетация, погода и история рассчитываются по этой точке.",
+  "onb.sahe.fayda1": "Точная площадь и анализ поля",
+  "onb.sahe.fayda2": "Предупреждения о погоде и рисках",
+  "onb.sahe.fayda3": "Советы с учётом ваших финансов",
+  "onb.sahe.cek": "Обвести поле на карте",
+  "onb.sahe.muddet": "Занимает около 2 минут",
+  "onb.sahe.kec": "Перейти на главную",
 
   "home.fieldCta": "Обвести моё поле на карте",
   "home.fieldDrawn": "Моё поле: {hektar} га — изменить",
@@ -532,6 +572,8 @@ export default {
   "field.undo": "Отменить",
   "field.clear": "Стереть всё",
   "field.save": "Сохранить поле",
+  "field.lazimKunc": "Нужно ещё углов: {say}",
+  "field.sonra": "Нарисую участок позже",
   "field.errorTooFewPoints": "Нужно минимум 3 угла.",
   "field.errorSelfCrossing": "Контур пересекает сам себя. Поправьте углы.",
   "field.errorTooSmall": "Площадь слишком мала. Приблизьте и обведите заново.",
@@ -675,6 +717,66 @@ export default {
     "Ваше поле и земля в радиусе 5 км измеряются ОДИНАКОВО: облака, тени и вода исключены, а убранные и голые участки учитываются с обеих сторон. Тот же пролёт спутника, тот же день.",
 
   "paylas.duyme": "Поделиться отчётом",
+
+  "pdf.duyme": "Паспорт участка (PDF)",
+
+  "pdf.izah": "Для банка, агронома и покупателя — спутниковые измерения, балл и расчёт дохода в одном документе.",
+
+  "pdf.qurulur": "Документ готовится…",
+
+  "pdf.xeta": "Не удалось создать документ. Повторите попытку чуть позже.",
+
+  "pdf.basliq": "Паспорт участка",
+
+  "pdf.basliq2": "Паспорт участка — оценка",
+
+  "pdf.altyazi": "Спутниковые измерения и оценка",
+
+  "pdf.yaradilib": "Создан",
+
+  "pdf.fermer": "Фермер",
+
+  "pdf.telefon": "Телефон",
+
+  "pdf.koordinat": "Центр участка",
+
+  "pdf.bitkiYox": "Культура не выбрана",
+
+  "pdf.sekilAlt": "Спутниковый снимок · растительный покров · пиксель 10×10 м",
+
+  "pdf.cariVeziyyet": "Текущее состояние",
+
+  "pdf.muqayise": "Сравнение с районом",
+
+  "pdf.sizinSahe": "Ваш участок",
+
+  "pdf.rayonMedyani": "Медиана района",
+
+  "pdf.movsumTarixcesi": "Пики по сезонам",
+
+  "pdf.movsumYoxdur": "История сезонов ещё накапливается",
+
+  "pdf.mehsuldarliq": "Урожайность и доход",
+
+  "pdf.gozlenilenMehsul": "Ожидаемая урожайность",
+
+  "pdf.qiymet": "Цена в расчёте",
+
+  "pdf.ortaSsenari": "средний сценарий",
+
+  "pdf.modelQeydi": "Эти цифры НЕ ИЗМЕРЕНЫ, а рассчитаны по экспертным нормам (модель не откалибрована). Спутниковые измерения — в разделах выше.",
+
+  "pdf.gelirYoxdur": "Для расчёта дохода нужны культура и участок.",
+
+  "pdf.balYoxdur": "Для балла нужно минимум 3 пригодных сезона.",
+
+  "pdf.menbe": "Источник измерений",
+
+  "pdf.olcmeSayi": "Измерений (150 дней)",
+
+  "pdf.sonOlcme": "Последнее измерение",
+
+  "pdf.altQeyd": "AgriFin · Не является официальной справкой или отчётом об оценке. Спутниковые измерения основаны на данных Copernicus Sentinel.",
   "paylas.basliq": "AgriFin — отчёт по полю",
   "paylas.sahe": "Поле: {hektar} га",
   "paylas.saheBitki": "Поле: {hektar} га · {bitki}",
@@ -737,7 +839,7 @@ export default {
   "siqnal.panelAltYazi": "{count} открытых сигналов с вашего поля",
   "siqnal.panelBosAltYazi": "Открытых сигналов с вашего поля нет",
   "siqnal.panelHamisi": "Посмотреть всё на экране советов",
-  "indeks.basliq": "Индекс агрономической эффективности",
+  "indeks.basliq": "FarmScore",
   "indeks.yuklenir": "Загружается многолетняя история поля…",
   "indeks.olcmeYox": "Недостаточно истории для индекса.",
   "indeks.xeta": "История недоступна — индекс будет рассчитан позже.",

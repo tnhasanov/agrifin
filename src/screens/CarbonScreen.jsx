@@ -130,7 +130,7 @@ export function CarbonScreen() {
             >
               <Icon
                 name={practice.verified ? "Check" : "Info"}
-                size={13}
+                size={16}
                 color={practice.verified ? C.field : C.muted}
               />
             </div>
@@ -165,7 +165,7 @@ export function CarbonScreen() {
           className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold"
           style={{ backgroundColor: C.pine, color: "#fff" }}
         >
-          <Icon name="FileText" size={15} color="#fff" />
+          <Icon name="FileText" size={16} color="#fff" />
           {t("carbon.esgCta")}
         </button>
       </Card>

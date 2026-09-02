@@ -87,7 +87,7 @@ function FaktSutunu({ ikon, etiket, orta = false, children }) {
       style={orta ? { borderLeft: `1px solid ${C.line}`, borderRight: `1px solid ${C.line}` } : undefined}
     >
       <span className="flex items-center gap-1" style={{ color: C.muted, fontSize: 10 }}>
-        <Icon name={ikon} size={11} color={C.muted} />
+        <Icon name={ikon} size={16} color={C.muted} />
         {etiket}
       </span>
       <span className="text-sm font-bold" style={{ color: C.ink, fontVariantNumeric: "tabular-nums" }}>

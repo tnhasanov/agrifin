@@ -20,7 +20,7 @@ export function TovsiyeKarti({ tovsiye, style }) {
   const metn = tovsiye.metn ?? t(tovsiye.metnKey, tovsiye.vars);
 
   return (
-    <Card className="giris" style={{ marginBottom: 10, ...style }}>
+    <Card className="giris" style={{ marginBottom: 12, ...style }}>
       <div className="flex items-start gap-3">
         <div className="mt-0.5 rounded-xl p-2" style={{ backgroundColor: C.fieldSoft }}>
           <Icon name={tovsiye.icon} size={16} color={C.field} />

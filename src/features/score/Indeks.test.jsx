@@ -5,7 +5,7 @@ import App from "../../App.jsx";
 import { renderApp, seedState } from "../../test/render.jsx";
 
 const bugun = new Date().toISOString().slice(0, 10);
-const BASLIQ = "Aqronomik performans indeksi";
+const BASLIQ = "FarmScore";
 
 /** 2017-dən bu ilə: hər il əkilmiş, ətrafdan yuxarı sahə */
 function movsumler({ bosIl = null, etrafsiz = false, sayi = null } = {}) {

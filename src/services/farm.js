@@ -5,7 +5,6 @@ import { KREDIT_SERTLERI } from "../../lib/kreditSertler.js";
 export const FARM = {
   farmerName: "Samir",
   cardHolder: "SAMİR ƏLİYEV",
-  farmNameKey: "farm.name",
   hectares: 6.5,
   ndvi: 0.72,
   creditLimit: 12000,

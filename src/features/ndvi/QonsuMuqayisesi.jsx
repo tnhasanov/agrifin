@@ -89,7 +89,7 @@ export function QonsuMuqayisesi({ qonsu, ndvi, illik }) {
       style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}
     >
       <div className="flex items-center gap-2">
-        <Icon name="BarChart3" size={15} color={reng} />
+        <Icon name="BarChart3" size={16} color={reng} />
         <h3 className="flex-1 text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
           {t(`qonsu.pille.${pille}`)}
         </h3>
@@ -111,7 +111,7 @@ export function QonsuMuqayisesi({ qonsu, ndvi, illik }) {
         >
           <Icon
             name={illik.istiqamet === "pis" ? "ArrowDownLeft" : "ArrowUpRight"}
-            size={13}
+            size={16}
             color={illik.istiqamet === "pis" ? C.danger : C.field}
           />
           <span className="flex-1 text-xs" style={{ color: C.ink }}>

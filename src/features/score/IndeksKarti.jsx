@@ -107,7 +107,7 @@ function AmilSetri({ setir, sira, t }) {
       </div>
 
       <div className="mt-0.5 flex items-baseline gap-1.5">
-        <span style={{ color: "rgba(255,255,255,0.62)", fontSize: 10.5, lineHeight: 1.4 }}>
+        <span style={{ color: "rgba(255,255,255,0.62)", fontSize: 12, lineHeight: 1.4 }}>
           {setir.sebeb ? t(`indeks.sebeb.${setir.sebeb}`) : t("indeks.olculmeyib")}
           {/* NİSBİ PERFORMANS SƏS SAYIDIR, FƏRQİN BÖYÜKLÜYÜ DEYİL.
               "30/30" tək başına "xeyli yaxşıdır" kimi oxunur — halbuki
@@ -128,7 +128,7 @@ function AmilSetri({ setir, sira, t }) {
         {texmini && (
           <span
             className="shrink-0 rounded px-1"
-            style={{ color: C.gold, backgroundColor: "rgba(233,181,74,0.14)", fontSize: 9 }}
+            style={{ color: C.gold, backgroundColor: "rgba(233,181,74,0.14)", fontSize: 10 }}
             title={t(`indeks.metod.${setir.metodologiya}`)}
           >
             {t("indeks.texmini")}
@@ -204,7 +204,7 @@ function MovsumQrafiki({ movsumler, t }) {
                         : "rgba(96,190,134,0.55)",
               }}
             />
-            <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 9 }}>
+            <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 10 }}>
               {String(m.il).slice(2)}
             </span>
           </div>
@@ -240,14 +240,13 @@ export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
   if (hal === "hazir" && indeks?.hal === "kifayetsiz") {
     return (
       <div
-        className="mt-2 rounded-2xl px-3.5 py-3"
-        style={{
-          background: "linear-gradient(150deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.05) 100%)",
-          border: "1px solid rgba(255,255,255,0.13)",
-        }}
+        /* KART İÇİNDƏ KART YOXDUR: bu blok onsuz da yaşıl kartın
+           içindədir (bax: features/pano/FarmScoreKarti.jsx). Ayrıca fon və
+           çərçivə üçüncü qat yaradırdı — məzmun eynidir, çərçivə artıqdır. */
+        className="mt-3"
       >
         <div className="flex items-start gap-2.5">
-          <Icon name="Info" size={15} color={C.gold} />
+          <Icon name="Info" size={16} color={C.gold} />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <p
@@ -315,8 +314,7 @@ export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
   if (hal === "yuklenir") {
     return (
       <div
-        className="mt-2 flex items-center gap-3.5 rounded-2xl px-3.5 py-3"
-        style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+        className="mt-3 flex items-center gap-3.5"
         role="status"
         aria-label={t("indeks.yuklenir")}
       >
@@ -333,10 +331,9 @@ export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
   if (hal !== "hazir" || !indeks) {
     return (
       <div
-        className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2"
-        style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+        className="mt-3 flex items-center gap-2"
       >
-        <Icon name="Info" size={13} color="rgba(255,255,255,0.6)" />
+        <Icon name="Info" size={16} color="rgba(255,255,255,0.6)" />
         <span className="text-xs" style={{ color: "rgba(255,255,255,0.72)" }}>
           {hal === "olcmeYox" && t("indeks.olcmeYox")}
           {hal === "qurulmayib" && t("ndvi.notConfigured")}
@@ -362,11 +359,7 @@ export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
 
   return (
     <div
-      className="mt-2 rounded-2xl px-3.5 py-3"
-      style={{
-        background: "linear-gradient(150deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.05) 100%)",
-        border: "1px solid rgba(255,255,255,0.13)",
-      }}
+      className="mt-3"
     >
       <button
         type="button"
@@ -446,12 +439,12 @@ export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
               className="mt-1.5 rounded-lg px-2 py-1.5"
               style={{ backgroundColor: "rgba(224,128,118,0.14)" }}
             >
-              <p style={{ color: "rgba(255,255,255,0.9)", fontSize: 10.5, lineHeight: 1.5 }}>
+              <p style={{ color: "rgba(255,255,255,0.9)", fontSize: 12, lineHeight: 1.5 }}>
                 {t("indeks.tarixiSetir", {
                   bant: indeks.bant ? t(`indeks.bant.${indeks.bant}`) : t("indeks.bantYoxdur"),
                 })}
               </p>
-              <p style={{ color: "#F0A0A0", fontSize: 10.5, lineHeight: 1.5, fontWeight: 600 }}>
+              <p style={{ color: "#F0A0A0", fontSize: 12, lineHeight: 1.5, fontWeight: 600 }}>
                 {t("indeks.cariSetir", {
                   hal: t(`indeks.cariHal.${cariHal.hal}`),
                   sizin: faiz(indeksHali.cari?.ndvi ?? 0),
@@ -472,7 +465,7 @@ export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
 
         <Icon
           name={acilib ? "ChevronDown" : "ChevronRight"}
-          size={15}
+          size={16}
           color="rgba(255,255,255,0.55)"
         />
       </button>
@@ -490,7 +483,7 @@ export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
               style={{
                 backgroundColor: "rgba(233,181,74,0.12)",
                 color: "rgba(255,255,255,0.82)",
-                fontSize: 10.5,
+                fontSize: 12,
                 lineHeight: 1.45,
               }}
             >

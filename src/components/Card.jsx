@@ -1,13 +1,19 @@
-import { C } from "../theme/tokens.js";
+import { C, KOLGE } from "../theme/tokens.js";
 
 /**
  * onClick verilibsə həqiqi <button> kimi render olunur — klaviatura və
  * ekran oxuyucusu ilə işləməsi üçün div-ə onClick qoymaq kifayət etmir.
+ *
+ * SƏTHLƏRİ KÖLGƏ AYIRIR, HAŞİYƏ YOX. Əvvəl hər kartın 1 piksellik boz
+ * haşiyəsi vardı və ekran vayrfreym kimi görünürdü. İndi standart kart
+ * yumşaq kölgə ilə qalxır; haşiyə YALNIZ çağıran onu açıq verəndə qalır
+ * (gecikmə, xəbərdarlıq — orada rəngli kənar məna daşıyır).
  */
 export function Card({ children, style, onClick, ariaLabel, role, className = "" }) {
+  const kenarVar = style?.border || style?.borderColor;
   const base = {
     backgroundColor: C.card,
-    border: `1px solid ${C.line}`,
+    ...(kenarVar ? { border: `1px solid ${C.line}` } : { boxShadow: KOLGE.kart }),
     ...style,
   };
 
@@ -17,7 +23,7 @@ export function Card({ children, style, onClick, ariaLabel, role, className = ""
         type="button"
         onClick={onClick}
         aria-label={ariaLabel}
-        className={`w-full rounded-2xl p-4 text-left ${className}`}
+        className={`basilir w-full rounded-2xl p-4 text-left ${className}`}
         style={base}
       >
         {children}

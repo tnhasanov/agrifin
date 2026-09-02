@@ -98,8 +98,13 @@ export function HomeScreen({
       {/* Sahə varsa: yaşıl FarmScore kartı (bal və ya hal B qapısı içindədir) */}
       {state.sahe && (
         <FarmScoreKarti
+          /* Başlıq UYDURMA TƏSƏRRÜFAT ADI DAŞIMIR. Əvvəl "Yaşıl Vadi
+             Təsərrüfatı" yazılırdı — heç kimin qoymadığı ad, prototip
+             qalığı. İndi fermerin ÖZ SEÇDİYİ bitki yazılır (mock-dakı
+             "Alma bağı · 4.2 ha" quruluşu), bitki seçilməyibsə neytral
+             "Sahəniz" qalır. */
           farmLine={t("home.farmLine", {
-            farm: { key: FARM.farmNameKey },
+            farm: { key: state.chat.crop ? `kbcrop.${state.chat.crop}` : "sahe.adsiz" },
             ha: { number: state.sahe.hektar },
           })}
           indeksHali={indeksHali}
@@ -115,38 +120,40 @@ export function HomeScreen({
       {state.sahe && <EsasHereketKarti hereket={hereket} onHereket={hereketIcra} />}
 
       {/* Maliyyə xülasəsi: aktiv kredit varsa qalıq + növbəti ödəniş */}
-      <KreditMiniKarti kredit={aktivKredit} onBax={() => navigate(pathFor("money"))} />
+      {state.sahe && <KreditMiniKarti kredit={aktivKredit} onBax={() => navigate(pathFor("money"))} />}
 
       {/* Rayon seçilməyibsə standart rayon uydurmuruq. Sahə konturu da
           yoxdursa hava üçün həqiqi koordinat yoxdur — CTA göstərilir. */}
-      {havaYeriVar ? (
-        <WeatherStrip
-          key={`${noqte.lat},${noqte.lon}`}
-          lat={noqte.lat}
-          lon={noqte.lon}
-          locationName={location?.name}
-          onPickLocation={onPickLocation}
-          onDrawField={onDrawField}
-          deqiq={noqte.deqiq}
-        />
-      ) : (
-        <section className="mt-5 rounded-2xl p-4" style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}>
-          <h2 className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
-            {t("weather.locationMissingTitle")}
-          </h2>
-          <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
-            {t("weather.locationMissingText")}
-          </p>
-          <button
-            type="button"
-            onClick={onPickLocation}
-            className="mt-3 w-full rounded-xl py-3 text-sm font-bold"
-            style={{ backgroundColor: C.pine, color: "#fff", minHeight: 44 }}
-          >
-            {t("location.pick")}
-          </button>
-        </section>
-      )}
+      <div className={state.sahe ? undefined : "mt-10"}>
+        {havaYeriVar ? (
+          <WeatherStrip
+            key={`${noqte.lat},${noqte.lon}`}
+            lat={noqte.lat}
+            lon={noqte.lon}
+            locationName={location?.name}
+            onPickLocation={onPickLocation}
+            onDrawField={onDrawField}
+            deqiq={noqte.deqiq}
+          />
+        ) : (
+          <section className="mt-5 rounded-2xl p-4" style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}>
+            <h2 className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
+              {t("weather.locationMissingTitle")}
+            </h2>
+            <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
+              {t("weather.locationMissingText")}
+            </p>
+            <button
+              type="button"
+              onClick={onPickLocation}
+              className="mt-3 w-full rounded-xl py-3 text-sm font-bold"
+              style={{ backgroundColor: C.pine, color: "#fff", minHeight: 44 }}
+            >
+              {t("location.pick")}
+            </button>
+          </section>
+        )}
+      </div>
     </div>
   );
 }

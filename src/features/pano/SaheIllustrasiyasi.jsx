@@ -1,4 +1,5 @@
 import { C } from "../../theme/tokens.js";
+import { Aqronom } from "../../components/Aqronom.jsx";
 
 /**
  * İLK SAHƏ İLLÜSTRASİYASI — "sahə çəkmək nədir"i sözsüz göstərən cizgi.
@@ -10,15 +11,15 @@ import { C } from "../../theme/tokens.js";
  *
  * Bəzəkdir, məlumat deyil: aria-hidden, mətn hamısı yanındakı başlıqdadır.
  */
-export function SaheIllustrasiyasi() {
+export function SaheIllustrasiyasi({ className = "" }) {
   return (
-    <svg
-      viewBox="0 0 320 190"
-      width="100%"
-      height="auto"
-      aria-hidden="true"
-      style={{ display: "block", maxHeight: 200 }}
-    >
+    <div className={`relative ${className}`} aria-hidden="true" style={{ width: "100%", maxWidth: 340 }}>
+      <svg
+        viewBox="0 0 320 205"
+        width="100%"
+        height="auto"
+        style={{ display: "block", maxHeight: 215 }}
+      >
       {/* Buludlar */}
       <g fill="none" stroke={C.line} strokeWidth="2" strokeLinecap="round">
         <path d="M40 28 q8 -12 20 -8 q6 -8 16 -4 q10 -2 12 8" />
@@ -72,6 +73,13 @@ export function SaheIllustrasiyasi() {
         />
         <circle cx="152" cy="116" r="8" fill="#fff" />
       </g>
-    </svg>
+      </svg>
+      <span
+        className="pointer-events-none absolute"
+        style={{ left: "50%", bottom: 25, transform: "translateX(-50%)" }}
+      >
+        <Aqronom hal="sevincli" olcu={132} gorunus="tam" />
+      </span>
+    </div>
   );
 }

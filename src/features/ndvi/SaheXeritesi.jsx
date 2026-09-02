@@ -103,7 +103,7 @@ export function SaheXeritesi({ sahe, konturRengi, tamCta = false }) {
         className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold"
         style={{ color: C.muted }}
       >
-        <Icon name="Satellite" size={13} color={C.field} />
+        <Icon name="Satellite" size={16} color={C.field} />
         {t("ndvi.mapTitle")}
       </p>
 
@@ -112,7 +112,7 @@ export function SaheXeritesi({ sahe, konturRengi, tamCta = false }) {
         style={{ backgroundColor: "#EDF1EA", border: `1px solid ${C.line}` }}
       >
         {hal === "hazir" ? (
-          <Suspense fallback={<div style={{ height: 260 }} />}>
+          <Suspense fallback={<div style={{ height: 300 }} />}>
             <XeriteQati
               noqteler={noqteler}
               sekil={netice.sekil}
@@ -133,7 +133,7 @@ export function SaheXeritesi({ sahe, konturRengi, tamCta = false }) {
               className="absolute top-2 right-2 z-[500] flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold"
               style={{ backgroundColor: "rgba(20,53,31,0.82)", color: "#fff" }}
             >
-              <Icon name="Maximize2" size={13} color={C.gold} />
+              <Icon name="Maximize2" size={16} color={C.gold} />
               {t("ndvi.mapExpand")}
             </button>
           </Suspense>
@@ -141,7 +141,7 @@ export function SaheXeritesi({ sahe, konturRengi, tamCta = false }) {
           <div className="flex h-40 items-center justify-center gap-2 px-4 text-center">
             <Icon
               name={hal === "yuklenir" ? "LoaderCircle" : "Info"}
-              size={14}
+              size={16}
               color={C.muted}
             />
             <span className="text-xs" style={{ color: C.muted }}>

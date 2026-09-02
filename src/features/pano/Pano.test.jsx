@@ -100,7 +100,9 @@ describe("hal C — server təklifi Maliyyə ekranında", () => {
     expect(screen.getByRole("button", { name: "Sonra" })).toBeInTheDocument();
 
     // Aylıq faiz TƏXMİNDİR (~) və ümumi yekun məbləğ heç yerdə yoxdur
-    expect(screen.getByText(/~\d/)).toBeInTheDocument();
+    // Mövsüm kartı da orta ssenarini "~" ilə yazır, ona görə say bir
+    // deyil — vacib olan təxmin nişanının VARLIĞIDIR
+    expect(screen.getAllByText(/~\d/).length).toBeGreaterThan(0);
     expect(screen.queryByText(/[Üü]mumi/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Faizlə birlikdə/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Bir ödəniş/)).not.toBeInTheDocument();

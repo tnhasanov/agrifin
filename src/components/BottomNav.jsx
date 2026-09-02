@@ -21,7 +21,7 @@ export function BottomNav() {
             type="button"
             onClick={() => navigate(route.path)}
             aria-current={active ? "page" : undefined}
-            className="flex flex-col items-center gap-1 rounded-xl px-3 py-1"
+            className="basilir flex flex-col items-center gap-1 rounded-xl px-3 py-1"
             style={{
               backgroundColor: active ? C.mist : "transparent",
               transition: "background-color 200ms ease",
@@ -31,7 +31,7 @@ export function BottomNav() {
             <span key={active ? "a" : "p"} className={active ? "nav-pop" : undefined}>
               <Icon
                 name={route.icon}
-                size={18}
+                size={20}
                 color={active ? C.pine : C.muted}
                 strokeWidth={active ? 2.4 : 2}
               />

@@ -36,6 +36,14 @@ export function MovsumPulu({ indeksHali = null, kreditHali = null }) {
   const qalanAy = bicineQalanAy(bitki);
   const { pessimist, optimist, baza } = kredit.gelir;
 
+  // Aralığın ucları və orta ssenari. Orta HƏMİŞƏ uclar arasında saxlanılır:
+  // model kənar dəyər versə nişan zolağın çölünə çıxardı.
+  const asagiGelir = Math.max(0, pessimist.xalisGelir);
+  const yuxariGelir = Math.max(asagiGelir, optimist.xalisGelir);
+  const ortaGelir = Math.min(Math.max(baza.xalisGelir, asagiGelir), yuxariGelir);
+  const ortaNisbet =
+    yuxariGelir > asagiGelir ? (ortaGelir - asagiGelir) / (yuxariGelir - asagiGelir) : 0.5;
+
   // Intl deyil, i18n: bəzi brauzerlərdə az lokalı yoxdur (bax: LoanSheet)
   const ayAdi = (ay) => t(`ayQ.${ay}`);
 
@@ -96,16 +104,53 @@ export function MovsumPulu({ indeksHali = null, kreditHali = null }) {
 
       {/* Pul sətirləri: gözlənilən gəlir ARALIQDIR, tək rəqəm deyil */}
       <div className="mt-3 border-t pt-1" style={{ borderColor: C.line }}>
-        <div className="flex items-baseline justify-between gap-2 py-1.5">
-          <span className="text-xs" style={{ color: C.muted }}>
-            {t("movsumPulu.gelir")}
-          </span>
-          <span
-            className="text-xs font-bold whitespace-nowrap"
-            style={{ color: C.field, fontVariantNumeric: "tabular-nums" }}
+        {/* GƏLİR ARALIĞI ZOLAQDIR, QALIN RƏQƏM DEYİL.
+            Aralıq üç dəfədən çox fərqlənə bilər; onu ekranın ən güclü
+            elementi kimi (qalın yaşıl) yazmaq modeli olduğundan dəqiq
+            göstərirdi. İndi: sakit uc rəqəmləri + orta ssenarinin nişanı,
+            yəni fermer həm gözləntini, həm qeyri-müəyyənliyi görür. */}
+        <div className="py-1.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-xs" style={{ color: C.muted }}>
+              {t("movsumPulu.gelir")}
+            </span>
+            <span
+              className="text-xs font-bold whitespace-nowrap"
+              style={{ color: C.ink, fontVariantNumeric: "tabular-nums" }}
+            >
+              ~{money(ortaGelir)}
+            </span>
+          </div>
+          <div
+            className="mt-1.5"
+            role="img"
+            aria-label={t("movsumPulu.aralikEtiket", {
+              asagi: { money: asagiGelir },
+              yuxari: { money: yuxariGelir },
+              orta: { money: ortaGelir },
+            })}
           >
-            {money(Math.max(0, pessimist.xalisGelir))} – {money(Math.max(0, optimist.xalisGelir))}
-          </span>
+            <div
+              className="relative h-1.5 rounded-full"
+              style={{ backgroundColor: C.fieldSoft }}
+            >
+              <div
+                className="absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full"
+                style={{
+                  left: `calc(${Math.round(ortaNisbet * 100)}% - 6px)`,
+                  backgroundColor: C.field,
+                  border: "2px solid #fff",
+                }}
+              />
+            </div>
+            <div
+              className="mt-1 flex justify-between"
+              style={{ color: C.muted, fontSize: 10, fontVariantNumeric: "tabular-nums" }}
+            >
+              <span>{money(asagiGelir)}</span>
+              <span>{money(yuxariGelir)}</span>
+            </div>
+          </div>
         </div>
         <div className="flex items-baseline justify-between gap-2 py-1.5">
           <span className="text-xs" style={{ color: C.muted }}>
@@ -121,7 +166,7 @@ export function MovsumPulu({ indeksHali = null, kreditHali = null }) {
         {borc != null && (
           <div className="flex items-baseline justify-between gap-2 py-1.5">
             <span className="flex items-center gap-1.5 text-xs" style={{ color: C.muted }}>
-              <Icon name="Clock" size={12} color={C.goldDeep} />
+              <Icon name="Clock" size={16} color={C.goldDeep} />
               {t(kreditVar ? "movsumPulu.borcKredit" : "movsumPulu.borc")}
             </span>
             <span
