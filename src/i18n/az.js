@@ -425,6 +425,8 @@ export default {
   "movsumPulu.basliq": "{bitki} mövsümü",
   "movsumPulu.qalan": "Biçinə {ay} ay",
   "movsumPulu.bicinAyi": "Biçin ayıdır",
+  "movsumPulu.novbetiMovsum": "Növbəti mövsüm: {ay}",
+  "movsumPulu.gelirNovbeti": "Növbəti mövsümün gözlənilən xalis gəliri",
   "movsumPulu.sepin": "başlanğıc",
   "movsumPulu.bicin": "biçin",
   "movsumPulu.movsumBagli": "Mövsüm bağlıdır — növbəti dövrə hazırlıq gedir.",
