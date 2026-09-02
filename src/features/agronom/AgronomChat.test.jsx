@@ -57,7 +57,8 @@ function stubApi({
 
 async function openChat(user) {
   await user.click(screen.getByRole("button", { name: "Kömək" }));
-  await user.click(screen.getByRole("button", { name: "Aqronoma sual verin" }));
+  await user.click(await screen.findByRole("button", { name: "Aqronoma sual verin" }));
+  await screen.findByRole("dialog", { name: "Aqronom köməkçisi" });
 }
 
 beforeEach(() => {
@@ -340,7 +341,7 @@ describe("Aqronom çatı", () => {
     await user.click(screen.getByRole("button", { name: "Geri" }));
     expect(screen.queryByRole("dialog", { name: "Aqronom köməkçisi" })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Aqronoma sual verin" }));
+    await user.click(await screen.findByRole("button", { name: "Aqronoma sual verin" }));
     expect(screen.getByText("Bu, sarı pas ola bilər.")).toBeInTheDocument();
   });
 

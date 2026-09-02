@@ -7,7 +7,6 @@ import { useI18n } from "../../i18n/index.jsx";
 import { useStore } from "../../state/store.jsx";
 import { askAgronomist } from "../../services/agronom.js";
 import { CROP_KEYS } from "../../services/crops.js";
-import { DEFAULT_LOCATION } from "../../services/location.js";
 import { sekliHazirla } from "../../lib/sekil.js";
 import { hesabatSetirleri, paylas } from "../../services/paylas.js";
 import { necheGunEvvel, ortukFaizi } from "../../services/ndvi.js";
@@ -52,7 +51,7 @@ export function AgronomChat({
 }) {
   const { t, lang } = useI18n();
   const { state, actions } = useStore();
-  const location = state.location ?? DEFAULT_LOCATION;
+  const location = state.location;
   const { messages, crop, referral } = state.chat;
   const sahe = state.sahe;
   // Keşdən gəlir — əsas ekran onsuz da yükləyib
@@ -210,7 +209,7 @@ export function AgronomChat({
             {t("chat.title")}
           </h2>
           <p className="text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>
-            {location.name.replace(" (GPS)", "")} · {cropName}
+            {location?.name?.replace(" (GPS)", "") ?? t("location.notSelected")} · {cropName}
           </p>
         </div>
         {messages.length > 0 && (

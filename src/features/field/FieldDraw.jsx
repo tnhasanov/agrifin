@@ -99,6 +99,16 @@ export function FieldDraw({ location, existing, onSave, onClose }) {
     yenile();
   };
 
+  const merkezeQayit = () => {
+    const hedef =
+      Number.isFinite(location?.lat) && Number.isFinite(location?.lon)
+        ? [location.lat, location.lon]
+        : existing?.noqteler?.length
+          ? merkez(existing.noqteler)
+          : null;
+    if (hedef) mapRef.current?.setView(hedef, BASLANGIC_ZOOM);
+  };
+
   const saxla = () => {
     const nq = noqteler();
     const netice = sahəniYoxla(nq, { yer: location });
@@ -226,15 +236,26 @@ export function FieldDraw({ location, existing, onSave, onClose }) {
 
         {/* Canlı ölçü */}
         {hazir && (
-          <div
-            className="absolute top-3 left-1/2 z-[1000] -translate-x-1/2 rounded-full px-4 py-1.5 text-xs font-bold"
-            style={{ backgroundColor: "rgba(14,40,24,0.85)", color: "#fff" }}
-            aria-live="polite"
-          >
-            {kifayetdir
-              ? t("field.area", { hektar: { number: hektar } })
-              : t("field.tapHint", { count: noqteSayi })}
-          </div>
+          <>
+            <div
+              className="absolute top-3 left-1/2 z-[1000] -translate-x-1/2 rounded-full px-4 py-1.5 text-xs font-bold whitespace-nowrap"
+              style={{ backgroundColor: "rgba(14,40,24,0.85)", color: "#fff" }}
+              aria-live="polite"
+            >
+              {kifayetdir
+                ? t("field.area", { hektar: { number: hektar } })
+                : t("field.tapHint", { count: noqteSayi })}
+            </div>
+            <button
+              type="button"
+              onClick={merkezeQayit}
+              className="absolute top-14 left-3 z-[1000] flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold shadow-sm"
+              style={{ backgroundColor: "rgba(255,255,255,0.94)", color: C.pine, minHeight: 40 }}
+            >
+              <Icon name="Crosshair" size={14} color={C.pine} />
+              {t("field.recenter")}
+            </button>
+          </>
         )}
       </div>
 

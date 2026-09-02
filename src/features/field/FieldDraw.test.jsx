@@ -28,6 +28,7 @@ const { leafletMock } = vi.hoisted(() => {
       remove: vi.fn(),
       removeLayer: vi.fn(),
       fitBounds: vi.fn(),
+      setView: vi.fn(),
       addLayer: vi.fn(),
     }),
     tileLayer: () => ({ addTo: vi.fn() }),
@@ -88,7 +89,8 @@ describe("sahə çəkmə", () => {
     renderApp(<App />);
     await acFieldDraw(user);
 
-    await waitFor(() => expect(screen.getByText(/Künclərə toxunun/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Ən azı 3 künc seçin/)).toBeInTheDocument());
+    expect(screen.getByRole("button", { name: "Seçilmiş yerə qayıt" })).toBeInTheDocument();
   });
 
   it("künclər qoyulduqca sahə hektarla canlı görünür", async () => {
@@ -112,8 +114,11 @@ describe("sahə çəkmə", () => {
     for (const [lat, lng] of KUNCLER) xeriteyeToxun(lat, lng);
     await user.click(screen.getByRole("button", { name: /Sahəni saxla/ }));
 
-    // Dialoq bağlanır, FarmScore lövhəsində həqiqi hektar (farmLine)
+    // Dialoq bağlanır, tətbiq sübut ekranına keçir və növbəti mərhələni deyir
     expect(screen.queryByRole("dialog", { name: "Sahənizi çəkin" })).not.toBeInTheDocument();
+    expect(window.location.pathname).toBe("/fields");
+    expect(await screen.findByText("Sahə saxlanıldı")).toBeInTheDocument();
+    expect(screen.getByText("Peyk məlumatı toplanır")).toBeInTheDocument();
     expect(screen.getAllByText(/6[.,]\d+ ha/).length).toBeGreaterThan(0);
 
     const saxlanan = JSON.parse(window.localStorage.getItem("agrifin:state")).state;
@@ -165,7 +170,7 @@ describe("sahə çəkmə", () => {
     // 3 künc qalıb — hələ də sahə var, amma fərqli
     await user.click(screen.getByRole("button", { name: "Geri al" }));
     // 2 künc — sahə yox, yenidən göstəriş
-    expect(screen.getByText(/Künclərə toxunun \(2\/3\+\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Ən azı 3 künc seçin — 2\/3/)).toBeInTheDocument();
   });
 
   it("rayondan uzaq sahə xəbərdarlıqla saxlanılır", async () => {

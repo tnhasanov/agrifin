@@ -201,7 +201,8 @@ describe("peyk ölçməsi — aqronom çatı", () => {
     await waitFor(() => expect(screen.getByText(/Peyk ölçməsi ·/)).toBeInTheDocument());
 
     await user.click(screen.getByRole("button", { name: "Kömək" }));
-    await user.click(screen.getByRole("button", { name: "Aqronoma sual verin" }));
+    await user.click(await screen.findByRole("button", { name: "Aqronoma sual verin" }));
+    await screen.findByRole("dialog", { name: "Aqronom köməkçisi" });
     await user.click(screen.getByRole("button", { name: "Suvarmanı nə vaxt etməliyəm?" }));
 
     await waitFor(() =>

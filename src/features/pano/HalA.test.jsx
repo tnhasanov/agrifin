@@ -83,7 +83,7 @@ describe("hal A — 'Necə işləyir?' ayrıca izahdır", () => {
     renderApp(<App />);
 
     await user.click(screen.getByRole("button", { name: "Sahələr" }));
-    await user.click(screen.getByRole("button", { name: "Necə işləyir?" }));
+    await user.click(await screen.findByRole("button", { name: "Necə işləyir?" }));
 
     expect(await screen.findByRole("dialog", { name: "Necə işləyir?" })).toBeInTheDocument();
   });

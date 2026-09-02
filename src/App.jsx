@@ -2,27 +2,16 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { AppHeader } from "./components/AppHeader.jsx";
 import { BottomNav } from "./components/BottomNav.jsx";
 import { Toast } from "./components/Toast.jsx";
-import { LoanSheet } from "./features/loan/LoanSheet.jsx";
 import { LocationSheet } from "./features/location/LocationSheet.jsx";
 import { Onboarding } from "./features/onboarding/Onboarding.jsx";
-
-// Xəritə (Leaflet) yalnız sahə çəkiləndə yüklənir — əsas paketə düşmür
-const FieldDraw = lazy(() =>
-  import("./features/field/FieldDraw.jsx").then((m) => ({ default: m.FieldDraw })),
-);
-import { AgronomChat } from "./features/agronom/AgronomChat.jsx";
 import { SiqnalPaneli } from "./features/signals/SiqnalPaneli.jsx";
 import { NeceIsleyir } from "./features/pano/NeceIsleyir.jsx";
 import { BitkiSheet } from "./features/crop/BitkiSheet.jsx";
 import { HesabSheet } from "./features/hesab/HesabSheet.jsx";
 import { useHesab } from "./features/hesab/useHesab.js";
 import { HomeScreen } from "./screens/HomeScreen.jsx";
-import { SaheScreen } from "./screens/SaheScreen.jsx";
-import { AdvisorScreen } from "./screens/AdvisorScreen.jsx";
-import { MoneyScreen } from "./screens/MoneyScreen.jsx";
-import { MarketScreen } from "./screens/MarketScreen.jsx";
-import { CarbonScreen } from "./screens/CarbonScreen.jsx";
 import { useRouter } from "./lib/router.jsx";
+import { useI18n } from "./i18n/index.jsx";
 import { useStore } from "./state/store.jsx";
 import { ROUTES, pathFor, routeForPath } from "./routes.js";
 import { C, font } from "./theme/tokens.js";
@@ -36,7 +25,33 @@ import { useTovsiyeler } from "./features/tovsiye/useTovsiyeler.js";
 import { acigSiqnallar } from "./services/siqnal.js";
 import { ehateliSiqnallar } from "./features/signals/siqnalEhate.js";
 import { havaNoqtesi } from "./services/saheYeri.js";
-import { DEFAULT_LOCATION } from "./services/location.js";
+
+// Ağır ekranlar və panellər yalnız istifadəçi onları açanda yüklənir.
+// Fermer ilk açılışda xəritə, qrafik, kredit və çat kodunu daşımır.
+const FieldDraw = lazy(() =>
+  import("./features/field/FieldDraw.jsx").then((m) => ({ default: m.FieldDraw })),
+);
+const LoanSheet = lazy(() =>
+  import("./features/loan/LoanSheet.jsx").then((m) => ({ default: m.LoanSheet })),
+);
+const AgronomChat = lazy(() =>
+  import("./features/agronom/AgronomChat.jsx").then((m) => ({ default: m.AgronomChat })),
+);
+const SaheScreen = lazy(() =>
+  import("./screens/SaheScreen.jsx").then((m) => ({ default: m.SaheScreen })),
+);
+const AdvisorScreen = lazy(() =>
+  import("./screens/AdvisorScreen.jsx").then((m) => ({ default: m.AdvisorScreen })),
+);
+const MoneyScreen = lazy(() =>
+  import("./screens/MoneyScreen.jsx").then((m) => ({ default: m.MoneyScreen })),
+);
+const MarketScreen = lazy(() =>
+  import("./screens/MarketScreen.jsx").then((m) => ({ default: m.MarketScreen })),
+);
+const CarbonScreen = lazy(() =>
+  import("./screens/CarbonScreen.jsx").then((m) => ({ default: m.CarbonScreen })),
+);
 
 const SCREENS = {
   home: HomeScreen,
@@ -47,6 +62,16 @@ const SCREENS = {
   carbon: CarbonScreen,
 };
 
+function ScreenFallback() {
+  const { t } = useI18n();
+
+  return (
+    <div className="flex min-h-48 items-center justify-center" role="status" aria-label={t("common.loading")}>
+      <div className="h-7 w-7 animate-spin rounded-full border-2 border-transparent border-t-current" style={{ color: C.field }} />
+    </div>
+  );
+}
+
 export default function App() {
   const { path, navigate } = useRouter();
   const { state, actions } = useStore();
@@ -54,6 +79,7 @@ export default function App() {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatSual, setChatSual] = useState(null);
   const [fieldOpen, setFieldOpen] = useState(false);
+  const [yeniSahe, setYeniSahe] = useState(false);
   // "Necə işləyir?" — hal A-nın üç addımlıq izahı (ümumi çat DEYİL)
   const [neceOpen, setNeceOpen] = useState(false);
   // Bitki seçimi — Maliyyədəki şərt zəncirinin ikinci addımı
@@ -63,6 +89,9 @@ export default function App() {
   // Yer seçimi paneli sonradan rayonu dəyişmək üçündür; ilk açılışda
   // qeydiyyat axını bu işi görür
   const [locationOpen, setLocationOpen] = useState(false);
+  // Sahə çəkməyə rayon seçmədən gələn istifadəçi yer seçəndən sonra
+  // avtomatik xəritəyə keçir — eyni CTA-ya ikinci dəfə toxunmur.
+  const [fieldAfterLocation, setFieldAfterLocation] = useState(false);
   const [hesabOpen, setHesabOpen] = useState(false);
   const scrollRef = useRef(null);
 
@@ -95,7 +124,7 @@ export default function App() {
   // SERVER kredit vəziyyəti — bir yerdə gətirilir, ekranlara prop kimi gedir
   // (peyk/radar/indeks ilə eyni naxış). Giriş dəyişəndə yenidən yüklənir.
   const kreditHali = useKreditVeziyyeti(state.hesab.telefon);
-  const noqte = havaNoqtesi({ location: state.location ?? DEFAULT_LOCATION, sahe: state.sahe });
+  const noqte = havaNoqtesi({ location: state.location, sahe: state.sahe });
   const butunSiqnallar = useSiqnallar({
     lat: noqte.lat,
     lon: noqte.lon,
@@ -128,6 +157,14 @@ export default function App() {
   const closeLoan = useCallback(() => setLoanOpen(false), []);
   const closeLocation = useCallback(() => setLocationOpen(false), []);
   const closeHesab = useCallback(() => setHesabOpen(false), []);
+  const openField = useCallback(() => {
+    if (!state.location && !state.sahe) {
+      setFieldAfterLocation(true);
+      setLocationOpen(true);
+      return;
+    }
+    setFieldOpen(true);
+  }, [state.location, state.sahe]);
 
   // Ekran dəyişəndə əvvəlki sürüşdürmə mövqeyində qalmaq çaşdırıcıdır
   useEffect(() => {
@@ -159,26 +196,30 @@ export default function App() {
             <main ref={scrollRef} className="flex-1 overflow-y-auto">
               {/* key ekran dəyişəndə remount edir — giriş animasiyası hər dəfə oynayır */}
               <div key={route.id} className="ekran-giris" style={{ "--dir": istiqamet }}>
-                <Screen
-                peyk={peyk}
-                qonsu={qonsu}
-                radar={radar}
-                indeksHali={indeks}
-                kreditHali={kreditHali}
-                siqnallar={siqnallar}
-                tovsiyeler={tovsiyeler}
-                onOpenLoan={() => setLoanOpen(true)}
-                onPickLocation={() => setLocationOpen(true)}
-                onOpenChat={(sual) => {
-                  // onClick-dən çağırılanda arqument hadisə obyektidir — sual deyil
-                  setChatSual(typeof sual === "string" ? sual : null);
-                  setChatOpen(true);
-                }}
-                onDrawField={() => setFieldOpen(true)}
-                onOpenHesab={() => setHesabOpen(true)}
-                onOpenNece={() => setNeceOpen(true)}
-                onOpenBitki={() => setBitkiOpen(true)}
-                />
+                <Suspense fallback={<ScreenFallback />}>
+                  <Screen
+                    peyk={peyk}
+                    qonsu={qonsu}
+                    radar={radar}
+                    indeksHali={indeks}
+                    kreditHali={kreditHali}
+                    siqnallar={siqnallar}
+                    tovsiyeler={tovsiyeler}
+                    onOpenLoan={() => setLoanOpen(true)}
+                    onPickLocation={() => setLocationOpen(true)}
+                    onOpenChat={(sual) => {
+                      // onClick-dən çağırılanda arqument hadisə obyektidir — sual deyil
+                      setChatSual(typeof sual === "string" ? sual : null);
+                      setChatOpen(true);
+                    }}
+                    onDrawField={openField}
+                    onOpenHesab={() => setHesabOpen(true)}
+                    onOpenNece={() => setNeceOpen(true)}
+                    onOpenBitki={() => setBitkiOpen(true)}
+                    yeniSahe={yeniSahe}
+                    onHazirliqBagla={() => setYeniSahe(false)}
+                  />
+                </Suspense>
               </div>
             </main>
 
@@ -186,19 +227,22 @@ export default function App() {
             <BottomNav />
 
             {loanOpen && (
-              <LoanSheet
-                onClose={closeLoan}
-                indeksHali={indeks}
-                kreditHali={kreditHali}
-                onOpenHesab={() => setHesabOpen(true)}
-              />
+              <Suspense fallback={null}>
+                <LoanSheet
+                  onClose={closeLoan}
+                  indeksHali={indeks}
+                  kreditHali={kreditHali}
+                  onOpenHesab={() => setHesabOpen(true)}
+                />
+              </Suspense>
             )}
 
             <SiqnalPaneli
               acilib={siqnalOpen}
               siqnallar={siqnallar}
               saheVar={Boolean(state.sahe)}
-              rayon={(state.location ?? DEFAULT_LOCATION).name}
+              yerVar={Boolean(state.location || state.sahe)}
+              rayon={state.location?.name ?? null}
               onBagla={closeSiqnal}
               onSiqnaliBagla={actions.siqnaliBagla}
               onHereket={() => setChatOpen(true)}
@@ -206,15 +250,23 @@ export default function App() {
                 setSiqnalOpen(false);
                 navigate(pathFor("advisor"));
               }}
+              onYerSec={() => {
+                setSiqnalOpen(false);
+                setLocationOpen(true);
+              }}
             />
 
-            {chatOpen && <AgronomChat peyk={peyk} qonsu={qonsu} ilkSual={chatSual} onClose={closeChat} />}
+            {chatOpen && (
+              <Suspense fallback={null}>
+                <AgronomChat peyk={peyk} qonsu={qonsu} ilkSual={chatSual} onClose={closeChat} />
+              </Suspense>
+            )}
 
             {/* Hal A izahı: üç addım + elə oradan sahə çəkməyə keçid */}
             <NeceIsleyir
               acilib={neceOpen}
               onBagla={closeNece}
-              onDrawField={() => setFieldOpen(true)}
+              onDrawField={openField}
             />
 
             <BitkiSheet acilib={bitkiOpen} onBagla={closeBitki} />
@@ -229,7 +281,9 @@ export default function App() {
                   onSave={(sahe, xeberdarlıqAcari) => {
                     actions.setSahe(sahe);
                     if (xeberdarlıqAcari) actions.showToast(xeberdarlıqAcari);
+                    setYeniSahe(true);
                     setFieldOpen(false);
+                    navigate(pathFor("sahe"));
                   }}
                   onClose={closeField}
                 />
@@ -239,8 +293,17 @@ export default function App() {
             {locationOpen && (
               <LocationSheet
                 current={state.location}
-                onSelect={actions.setLocation}
-                onClose={closeLocation}
+                onSelect={(location) => {
+                  actions.setLocation(location);
+                  if (fieldAfterLocation) {
+                    setFieldAfterLocation(false);
+                    setFieldOpen(true);
+                  }
+                }}
+                onClose={() => {
+                  setFieldAfterLocation(false);
+                  closeLocation();
+                }}
               />
             )}
           </>

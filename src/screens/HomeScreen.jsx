@@ -5,7 +5,6 @@ import { useStore } from "../state/store.jsx";
 import { useRouter } from "../lib/router.jsx";
 import { pathFor } from "../routes.js";
 import { FARM } from "../services/farm.js";
-import { DEFAULT_LOCATION } from "../services/location.js";
 import { havaNoqtesi } from "../services/saheYeri.js";
 import { necheGunEvvel, ortukFaizi } from "../services/ndvi.js";
 import { esasHereket } from "../features/pano/esasHereket.js";
@@ -43,8 +42,9 @@ export function HomeScreen({
   const { state } = useStore();
   const { navigate } = useRouter();
 
-  const location = state.location ?? DEFAULT_LOCATION;
+  const location = state.location;
   const noqte = havaNoqtesi({ location, sahe: state.sahe });
+  const havaYeriVar = Number.isFinite(noqte.lat) && Number.isFinite(noqte.lon);
 
   const olculen = peyk.xulase;
   // Sahə çəkilməyibsə NÜMUNƏ RƏQƏMİ YOXDUR (hal A: uydurma KPI qadağandır)
@@ -117,16 +117,36 @@ export function HomeScreen({
       {/* Maliyyə xülasəsi: aktiv kredit varsa qalıq + növbəti ödəniş */}
       <KreditMiniKarti kredit={aktivKredit} onBax={() => navigate(pathFor("money"))} />
 
-      {/* key yeri dəyişdikdə komponenti sıfırdan qurur — yeni proqnoz yüklənir */}
-      <WeatherStrip
-        key={`${noqte.lat},${noqte.lon}`}
-        lat={noqte.lat}
-        lon={noqte.lon}
-        locationName={location.name}
-        onPickLocation={onPickLocation}
-        onDrawField={onDrawField}
-        deqiq={noqte.deqiq}
-      />
+      {/* Rayon seçilməyibsə standart rayon uydurmuruq. Sahə konturu da
+          yoxdursa hava üçün həqiqi koordinat yoxdur — CTA göstərilir. */}
+      {havaYeriVar ? (
+        <WeatherStrip
+          key={`${noqte.lat},${noqte.lon}`}
+          lat={noqte.lat}
+          lon={noqte.lon}
+          locationName={location?.name}
+          onPickLocation={onPickLocation}
+          onDrawField={onDrawField}
+          deqiq={noqte.deqiq}
+        />
+      ) : (
+        <section className="mt-5 rounded-2xl p-4" style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}>
+          <h2 className="text-sm font-bold" style={{ color: C.ink, fontFamily: font.display }}>
+            {t("weather.locationMissingTitle")}
+          </h2>
+          <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
+            {t("weather.locationMissingText")}
+          </p>
+          <button
+            type="button"
+            onClick={onPickLocation}
+            className="mt-3 w-full rounded-xl py-3 text-sm font-bold"
+            style={{ backgroundColor: C.pine, color: "#fff", minHeight: 44 }}
+          >
+            {t("location.pick")}
+          </button>
+        </section>
+      )}
     </div>
   );
 }

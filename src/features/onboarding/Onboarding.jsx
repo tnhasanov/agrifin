@@ -44,7 +44,8 @@ function AqroSual({ hal, bitki, basliq, izah }) {
  * Quruluşun səbəbi ölçülərdir: fermerlərin böyük hissəsi 3 dəqiqədən uzun
  * qeydiyyatı yarımçıq atır. Ona görə burada nə hesab, nə nömrə, nə də
  * şəxsiyyət soruşulur — iki toxunuş və fermer tətbiqin içindədir.
- * Hər addım keçilə bilir: rayon seçilməsə standart rayon işlədilir.
+ * Hər addım keçilə bilir. Rayon seçilməsə tətbiq standart rayon uydurmur:
+ * yerə bağlı kartlar istifadəçidən sonradan yer seçməsini istəyir.
  */
 export function Onboarding() {
   const { t } = useI18n();
@@ -217,7 +218,8 @@ export function Onboarding() {
             ))}
           </div>
 
-          {/* Heç bir addım məcburi deyil — rayon seçilməsə standart rayon işlədilir */}
+          {/* Heç bir addım məcburi deyil — rayon seçilməsə yerə bağlı
+              iddialar göstərilmir, sonradan aydın CTA verilir. */}
           <button
             type="button"
             onClick={() => irele("yer")}
@@ -242,7 +244,13 @@ export function Onboarding() {
                 ? t("onb.crop.alqis", { bitki: t(`kbcrop.${secilen}`) })
                 : t("onb.crop.title")
             }
-            izah={secilen ? null : t("onb.crop.subtitle", { district: state.location?.name ?? "" })}
+            izah={
+              secilen
+                ? null
+                : state.location?.name
+                  ? t("onb.crop.subtitle", { district: state.location.name })
+                  : t("onb.crop.subtitleNoLocation")
+            }
           />
 
           <div className="mt-2 flex-1 overflow-y-auto">

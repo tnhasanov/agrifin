@@ -252,7 +252,8 @@ describe("aqronom çatı", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Kömək" }));
-    await user.click(screen.getByRole("button", { name: "Aqronoma sual verin" }));
+    await user.click(await screen.findByRole("button", { name: "Aqronoma sual verin" }));
+    await screen.findByRole("dialog", { name: "Aqronom köməkçisi" });
     await user.click(screen.getByRole("button", { name: "NDVI göstəricim nə deyir?" }));
 
     await waitFor(() =>

@@ -1,11 +1,12 @@
 import { C, font } from "../theme/tokens.js";
 
-export function SectionTitle({ children, action, onAction }) {
+export function SectionTitle({ children, action, onAction, level = 2 }) {
+  const Heading = level === 1 ? "h1" : "h2";
   return (
     <div className="mt-5 mb-2 flex items-center justify-between px-1">
-      <h2 className="text-sm font-bold tracking-wide" style={{ color: C.ink, fontFamily: font.display }}>
+      <Heading className="text-sm font-bold tracking-wide" style={{ color: C.ink, fontFamily: font.display }}>
         {children}
-      </h2>
+      </Heading>
       {action &&
         (onAction ? (
           <button

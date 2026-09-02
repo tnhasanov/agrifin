@@ -61,11 +61,11 @@ afterEach(() => {
 });
 
 describe("mövsüm pulu — Pul ekranı", () => {
-  it("mövsümün qövsünü və gəlir aralığını göstərir", () => {
+  it("mövsümün qövsünü və gəlir aralığını göstərir", async () => {
     seed();
     renderApp(<App />);
 
-    expect(screen.getByText("Pomidor mövsümü")).toBeInTheDocument();
+    expect(await screen.findByText("Pomidor mövsümü")).toBeInTheDocument();
     // Avqust pomidorun biçin ayıdır — test hansı ayda işləsə də sağ küncdə
     // ya "Biçinə N ay", ya "Biçin ayıdır" dayanır
     expect(screen.getByText(/Biçinə \d+ ay|Biçin ayıdır/)).toBeInTheDocument();

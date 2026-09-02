@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App.jsx";
-import { kreditServeri, renderApp, seedLocation, seedState, WEATHER_FIXTURE } from "./test/render.jsx";
+import { kreditServeri, renderApp, seedLocation, seedOnboarded, seedState, WEATHER_FIXTURE } from "./test/render.jsx";
 import { DEFAULT_LOCATION } from "./services/location.js";
 
 beforeEach(() => {
@@ -54,6 +54,19 @@ describe("AgriFin tətbiqi", () => {
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("api.open-meteo.com"));
   });
 
+  it("rayon seçilməyibsə Bərdəni uydurmur və sahədən əvvəl yer seçdirir", async () => {
+    const user = userEvent.setup();
+    seedOnboarded();
+    renderApp(<App />);
+
+    expect(screen.getByText("Hava üçün yer seçin")).toBeInTheDocument();
+    expect(screen.queryByText(/Bərdə/)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Sahə əlavə et" }));
+    expect(screen.getByRole("dialog", { name: "Sahənizin yeri" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Sahənizi çəkin" })).not.toBeInTheDocument();
+  });
+
   // Naviqasiya DÜZ DÖRD yerdir: Ana səhifə, Sahələr, Maliyyə, Kömək.
   // Bazar/karbon əsas naviqasiyada YOXDUR, amma dərin linkləri işləyir.
   it("aşağı naviqasiyada düz dörd yer var və URL-i dəyişir", async () => {
@@ -72,24 +85,24 @@ describe("AgriFin tətbiqi", () => {
 
     await user.click(screen.getByRole("button", { name: "Kömək" }));
     expect(window.location.pathname).toBe("/advisor");
-    expect(screen.getByText("Aqronom köməkçisi")).toBeInTheDocument();
+    expect(await screen.findByText("Aqronom köməkçisi")).toBeInTheDocument();
   });
 
-  it("dərin link birbaşa müvafiq ekranı açır — bazar/karbon linkləri qırılmır", () => {
+  it("dərin link birbaşa müvafiq ekranı açır — bazar/karbon linkləri qırılmır", async () => {
     window.history.pushState({}, "", "/carbon");
     renderApp(<App />);
     // Ekran açılır (link qırılmayıb), amma SAHƏSİZ istifadəçiyə ölçülmüş
     // iddia göstərilmir: "MRV təsdiqli" və tCO₂e rəqəmi arxasında heç nə yoxdur
-    expect(screen.getByText("Karbon üçün təsdiqlənmiş sahə lazımdır")).toBeInTheDocument();
+    expect(await screen.findByText("Karbon üçün təsdiqlənmiş sahə lazımdır")).toBeInTheDocument();
     expect(screen.queryByText("BU MÖVSÜM KARBON")).not.toBeInTheDocument();
     expect(screen.queryByText("MRV təsdiqli")).not.toBeInTheDocument();
     expect(screen.queryByText(/tCO/)).not.toBeInTheDocument();
   });
 
-  it("bazar dərin linki naviqasiyasız da işləyir", () => {
+  it("bazar dərin linki naviqasiyasız da işləyir", async () => {
     window.history.pushState({}, "", "/market");
     renderApp(<App />);
-    expect(screen.getByText("Məhsul qiymətləriniz")).toBeInTheDocument();
+    expect(await screen.findByText("Məhsul qiymətləriniz")).toBeInTheDocument();
   });
 
   // ── Dürüst kredit axını ────────────────────────────────────────────
@@ -105,7 +118,7 @@ describe("AgriFin tətbiqi", () => {
     expect(screen.queryByRole("button", { name: "Məhsul dövrü krediti al" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Maliyyə" }));
 
-    expect(screen.getByText("Maliyyələşmə")).toBeInTheDocument();
+    expect(await screen.findByText("Maliyyələşmə")).toBeInTheDocument();
     expect(
       screen.getByText("Kredit imkanını hesablamaq üçün sahənizi əlavə edin."),
     ).toBeInTheDocument();

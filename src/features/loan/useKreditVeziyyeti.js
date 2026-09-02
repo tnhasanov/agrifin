@@ -45,6 +45,9 @@ function xetaSebebi(xeta) {
  * (eyni üsul: features/agronom/AgronomChat.jsx).
  */
 function xetaniQeydEt(xeta) {
+  // 401 gözlənilən məhsul halıdır: istifadəçi hələ hesab yaratmayıb.
+  // Onu warning kimi yazmaq real server xətalarını səs-küydə itirir.
+  if (xeta?.status === 401) return;
   if (xeta?.status) console.warn(`[kredit] /api/kredit → HTTP ${xeta.status}`);
   else console.warn("[kredit] /api/kredit — şəbəkə sorğusu alınmadı");
 }

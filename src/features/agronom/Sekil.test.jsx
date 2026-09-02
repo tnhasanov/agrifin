@@ -53,7 +53,8 @@ const fayl = () => new File(["xxx"], "yarpaq.jpg", { type: "image/jpeg" });
 
 async function openChat(user) {
   await user.click(screen.getByRole("button", { name: "Kömək" }));
-  await user.click(screen.getByRole("button", { name: "Aqronoma sual verin" }));
+  await user.click(await screen.findByRole("button", { name: "Aqronoma sual verin" }));
+  await screen.findByRole("dialog", { name: "Aqronom köməkçisi" });
 }
 
 const kameraGirisi = () => document.querySelector('input[type="file"]');

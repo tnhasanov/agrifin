@@ -90,7 +90,7 @@ export function MoneyScreen({
 
   return (
     <div className="px-4 pb-4">
-      <SectionTitle>{t("money.financing")}</SectionTitle>
+      <SectionTitle level={1}>{t("money.financing")}</SectionTitle>
 
       {/* Yüklənmə: uydurma rəqəm yox, sadəcə gözləmə sətri */}
       {hal === "yuklenir" && (

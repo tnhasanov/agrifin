@@ -17,6 +17,7 @@ import { BosSahe } from "../features/pano/BosSahe.jsx";
 import { SaheXebardarligi } from "../features/pano/SaheXebardarligi.jsx";
 import { EtibarNisani } from "../features/pano/EtibarNisani.jsx";
 import { SAHE_SIQNALLARI } from "../features/pano/saheSiqnallari.js";
+import { SaheHazirliq } from "../features/field/SaheHazirliq.jsx";
 
 /**
  * SAHƏLƏR EKRANI — sahənin detal görünüşü: xəritə, xəbərdarlıq, tarixçə.
@@ -37,6 +38,8 @@ export function SaheScreen({
   onDrawField,
   onOpenChat,
   onOpenNece,
+  yeniSahe = false,
+  onHazirliqBagla,
 }) {
   const { t } = useI18n();
   const { state } = useStore();
@@ -79,9 +82,9 @@ export function SaheScreen({
           <Icon name="ChevronLeft" size={20} color={C.ink} />
         </button>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-base font-bold" style={{ color: C.ink, fontFamily: font.display }}>
+          <h1 className="truncate text-base font-bold" style={{ color: C.ink, fontFamily: font.display }}>
             {t(state.chat.crop ? `kbcrop.${state.chat.crop}` : "farm.name")}
-          </h2>
+          </h1>
           <p className="text-xs" style={{ color: C.muted }}>
             {t("sahe.altSetir", {
               ha: { number: state.sahe.hektar },
@@ -99,6 +102,8 @@ export function SaheScreen({
           {t("sahe.deyis")}
         </button>
       </div>
+
+      {yeniSahe && <SaheHazirliq peykHal={peyk.hal} onBagla={onHazirliqBagla} />}
 
       {/* Peyk xəritəsi: problemin HARADA olduğunu göstərir. Xəbərdarlıq
           aktivdirsə kontur narıncıdır (mock 04, hal F) */}

@@ -10,7 +10,7 @@ import { SaheLenti } from "../features/lent/SaheLenti.jsx";
 import { useRouter } from "../lib/router.jsx";
 import { pathFor } from "../routes.js";
 
-export function AdvisorScreen({ onOpenChat, onOpenHesab, siqnallar = [], tovsiyeler = [], peyk, radar, indeksHali = null }) {
+export function AdvisorScreen({ onOpenChat, onOpenHesab, onPickLocation, siqnallar = [], tovsiyeler = [], peyk, radar, indeksHali = null }) {
   const { t } = useI18n();
   const { state, actions } = useStore();
   const { navigate } = useRouter();
@@ -20,7 +20,8 @@ export function AdvisorScreen({ onOpenChat, onOpenHesab, siqnallar = [], tovsiye
   const suallar = ["komek.sual1", "komek.sual2", "komek.sual3"];
 
   const saheVar = Boolean(state.sahe);
-  const rayon = state.location?.name ?? "";
+  const rayon = state.location?.name ?? null;
+  const yerVar = Boolean(state.location || state.sahe);
 
   // "Açıq tapşırıqlar" — yalnız HƏQİQİ işlər: uydurma tapşırıq siyahısı yox.
   //
@@ -46,7 +47,7 @@ export function AdvisorScreen({ onOpenChat, onOpenHesab, siqnallar = [], tovsiye
 
   return (
     <div className="px-4 pb-4">
-      <SectionTitle>{t("chat.title")}</SectionTitle>
+      <SectionTitle level={1}>{t("chat.title")}</SectionTitle>
       {/* AI girişi: fırlanan haşiyə + parıltı (bax: index.css "AI kartı") */}
       <div className="ai-halqa giris">
         <button
@@ -105,7 +106,11 @@ export function AdvisorScreen({ onOpenChat, onOpenHesab, siqnallar = [], tovsiye
               {/* Kartın altyazısı NƏYİN nəzərə alındığını vəd edir — sahəsiz
                   halda peyk göstəricisi yoxdur, ona görə vəd də rayon üzrədir */}
               <p className="mt-0.5 text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>
-                {saheVar ? t("chat.openDesc") : t("chat.openDescRayon", { rayon })}
+                {saheVar
+                  ? t("chat.openDesc")
+                  : rayon
+                    ? t("chat.openDescRayon", { rayon })
+                    : t("chat.openDescLocationMissing")}
               </p>
             </div>
             <Icon name="ChevronRight" size={18} color="rgba(255,255,255,0.5)" />
@@ -170,13 +175,41 @@ export function AdvisorScreen({ onOpenChat, onOpenHesab, siqnallar = [], tovsiye
           rayon mərkəzinin koordinatındandır. "Sahənizdən siqnallar" yazmaq
           olmayan dəlilə istinad etmək olardı (bax: siqnalEhate.js). */}
       <SectionTitle>
-        {saheVar ? t("siqnal.title") : t("siqnal.rayonTitle", { rayon })}
+        {saheVar
+          ? t("siqnal.title")
+          : rayon
+            ? t("siqnal.rayonTitle", { rayon })
+            : t("siqnal.locationMissingTitle")}
       </SectionTitle>
       <p className="-mt-1 mb-3 px-1 text-xs" style={{ color: C.muted }}>
-        {saheVar ? t("siqnal.subtitle") : t("siqnal.rayonSubtitle")}
+        {saheVar
+          ? t("siqnal.subtitle")
+          : rayon
+            ? t("siqnal.rayonSubtitle")
+            : t("siqnal.locationMissingText")}
       </p>
 
-      {siqnallar.length === 0 ? (
+      {!yerVar ? (
+        <button
+          type="button"
+          onClick={onPickLocation}
+          className="giris flex w-full items-center gap-3 rounded-2xl p-4 text-left"
+          style={{ backgroundColor: C.card, border: `1px solid ${C.line}`, minHeight: 64 }}
+        >
+          <span className="rounded-xl p-2" style={{ backgroundColor: C.fieldSoft }}>
+            <Icon name="MapPin" size={18} color={C.field} />
+          </span>
+          <span className="flex-1">
+            <span className="block text-sm font-bold" style={{ color: C.ink }}>
+              {t("location.pick")}
+            </span>
+            <span className="mt-0.5 block text-xs" style={{ color: C.muted }}>
+              {t("siqnal.locationMissingSubtitle")}
+            </span>
+          </span>
+          <Icon name="ChevronRight" size={16} color={C.muted} />
+        </button>
+      ) : siqnallar.length === 0 ? (
         <div
           className="giris rounded-2xl p-4 text-center"
           style={{ backgroundColor: C.card, border: `1px solid ${C.line}` }}

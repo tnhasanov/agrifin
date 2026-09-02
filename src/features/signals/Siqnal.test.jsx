@@ -319,7 +319,7 @@ describe("sahə siqnalları — bildiriş mərkəzi", () => {
 
     // Panelin içindəki düymə çatı açır və paneli bağlayır
     await user.click(within(panel).getByRole("button", { name: "Şəkil çək" }));
-    expect(screen.getByRole("button", { name: "Şəkil çək və ya seç" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Şəkil çək və ya seç" })).toBeInTheDocument();
   });
 });
 

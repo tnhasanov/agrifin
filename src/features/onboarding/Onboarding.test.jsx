@@ -83,11 +83,18 @@ describe("ilk açılış axını", () => {
     renderApp(<App />);
 
     await user.click(screen.getByRole("button", { name: "Sonra seçəcəyəm" }));
+    expect(
+      screen.getByText("Tövsiyələri seçdiyiniz bitkiyə uyğunlaşdıracağıq. Rayonu sonra seçə bilərsiniz."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/^üçün tövsiyələri/)).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Hələ qərar verməmişəm" }));
 
     expect(dialoq()).not.toBeInTheDocument();
-    // Rayon seçilməyib, amma tətbiq işləyir — standart rayon işlədilir
+    // Rayon seçilməyib, amma tətbiq işləyir — standart rayon UYDURULMUR
     expect(screen.getByRole("button", { name: "Ana səhifə" })).toBeInTheDocument();
+    expect(screen.getByText("Hava üçün yer seçin")).toBeInTheDocument();
+    expect(screen.queryByText(/Bərdə üzrə hava/)).not.toBeInTheDocument();
+    expect(fetch.mock.calls.some(([url]) => String(url).includes("api.open-meteo.com"))).toBe(false);
   });
 
   // Personaj bələdçidir: sual qabarcıqda onun sözüdür, seçim isə üzündə
