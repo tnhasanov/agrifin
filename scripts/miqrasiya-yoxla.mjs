@@ -11,7 +11,7 @@
  * Uğursuzluqda çıxış kodu 1-dir.
  */
 import { neon } from "@neondatabase/serverless";
-import { BAGLANTI_ACARLARI } from "../lib/db.js";
+import { BAGLANTI_ACARLARI, baglantiKimliyi } from "../lib/db.js";
 import { miqrasiyaFayllari } from "../lib/miqrasiya.js";
 
 const acar = BAGLANTI_ACARLARI.find((ad) => process.env[ad]);
@@ -19,9 +19,23 @@ if (!acar) {
   console.error(`Bağlantı sətri yoxdur. Gözlənilən açarlardan biri: ${BAGLANTI_ACARLARI.join(", ")}`);
   process.exit(1);
 }
-console.log(`Baza açarı: ${acar}`);
+// HANSI bazaya baxdığımız da deyilir (host + baza adı, parolsuz): preview-da
+// Neon hər branch üçün ayrı baza yaradır, prod miqrasiyası isə ayrı sirrlə
+// gedir — "miqrasiyanı işlətdim, amma ✗ qalır" halının səbəbi adətən
+// yoxlamanın BAŞQA bazaya baxmasıdır.
+console.log(`Baza açarı: ${acar} → ${baglantiKimliyi()}`);
 
-const muster = neon(process.env[acar], { fullResults: true });
+// BAĞLANTI QURULMASI DA TUTULUR: `neon()` yararsız sətirdə atır və onun öz
+// xəta mətni BAĞLANTI SƏTRİNİ (deməli parolu) çap edə bilər. Bu faylın öz
+// qaydası isə "connection string heç vaxt loglanmır" — ona görə xəta
+// udulur və yerinə yalnız açarın adı deyilir.
+let muster;
+try {
+  muster = neon(process.env[acar], { fullResults: true });
+} catch {
+  console.error(`Bağlantı sətri oxunmadı (${acar}) — gözlənilən format: postgresql://…`);
+  process.exit(1);
+}
 const sorgu = async (metn, params = []) => {
   const netice = await muster.query(metn, params);
   return netice.rows ?? netice;

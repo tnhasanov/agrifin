@@ -1250,6 +1250,7 @@ export default {
   "bazar.sifarisler.mehsulSayi": "{say} məhsul",
   "bazar.sifarisler.yuklenir": "Sifarişlər yüklənir…",
   "bazar.sifarisler.xeta": "Sifarişlər yüklənmədi",
+  "bazar.sifarisler.sxemYoxdur": "Bazar cədvəlləri bu bazada hələ yaradılmayıb — miqrasiya işlədilməyib. Səbətiniz saxlanılır.",
   "bazar.hal.new": "Yeni",
   "bazar.hal.confirmed": "Təsdiqləndi",
   "bazar.hal.preparing": "Hazırlanır",

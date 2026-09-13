@@ -1233,6 +1233,7 @@ export default {
   "bazar.sifarisler.mehsulSayi": "{say} товаров",
   "bazar.sifarisler.yuklenir": "Загружаем заказы…",
   "bazar.sifarisler.xeta": "Не удалось загрузить заказы",
+  "bazar.sifarisler.sxemYoxdur": "Таблицы маркета в этой базе ещё не созданы — миграция не выполнена. Корзина сохраняется.",
   "bazar.hal.new": "Новый",
   "bazar.hal.confirmed": "Подтверждён",
   "bazar.hal.preparing": "Готовится",

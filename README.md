@@ -409,6 +409,45 @@ Vercel: repo qoşulduqda avtomatik build olunur (`npm run build` → `dist/`).
 `vercel.json` SPA yollarını `index.html`-ə yönləndirir və statik faylları keşləyir.
 Netlify və ya digər statik hostinq üçün eyni yönləndirmə qaydası lazımdır.
 
+### Preview deployment üçün TƏLƏBLƏR
+
+Vercel-də build əmri `npm run vercel-build`-dir (bax: `scripts/vercel-build.mjs`).
+Preview mühitində o, miqrasiyaları həmin branch-ın bazasına tətbiq edir və
+read-only yoxlamadan keçirir. Ona görə preview üçün üç şey lazımdır:
+
+1. **Neon inteqrasiyası Preview mühitinə bağlı olmalıdır.**
+   Vercel → Project → Storage (və ya Integrations) → Neon → mühitlər
+   siyahısında **Preview** işarələnməlidir. Neon hər git branch üçün
+   ayrıca baza (copy-on-write branch) yaradır və `DATABASE_URL`,
+   `DATABASE_URL_UNPOOLED`, `POSTGRES_URL` dəyişənlərini özü qoyur —
+   üçü də `lib/db.js` → `BAGLANTI_ACARLARI` siyahısındadır.
+   Qoşulmayıbsa build DAYANIR və logda nə etmək lazım olduğunu yazır
+   (səssiz "READY" yoxdur — miqrasiyasız preview yanlış təsəvvür yaradır).
+
+2. **`SESSION_SECRET` Preview üçün də qurulmalıdır**
+   (`openssl rand -hex 32`). Olmasa `/api/*` 501 qaytarır və Bazar,
+   Maliyyə, hesab bölmələri "bu quraşdırmada qurulmayıb" kimi görünür —
+   tətbiq sınmır, sadəcə server tərəfi bağlı qalır.
+
+3. **System Environment Variables açıq olmalıdır** (standart olaraq açıqdır).
+   `VERCEL_ENV` gəlmirsə qapı mühiti "lokal" sanıb yoxlamaları atlayardı —
+   bu hal indi açıq xəta ilə dayandırılır.
+
+Preview bazası prodakşn branch-ının klonudur, ona görə 001–004 artıq
+tətbiq olunmuş gəlir; build yalnız yeni faylı (məsələn `005_bazar.sql`)
+tətbiq edir. Eyni branch-a iki push paralel build yaradırsa jurnal sətri
+`ON CONFLICT DO NOTHING` ilə qorunur (test: `lib/miqrasiya.test.js`).
+
+⚠ **Tətbiq olunmuş miqrasiya faylını DƏYİŞMƏYİN.** Preview bazası onun
+hash-ını yadda saxlayır; fayl sonradan dəyişsə həmin branch-da hər build
+"Miqrasiya faylı dəyişib" xətası ilə dayanır. Düzəliş həmişə YENİ nömrəli
+fayldır (`006_*.sql`).
+
+**Yoxlama (preview deploy-dan sonra):** brauzerdən `/api/hesab` açın —
+`{"dbQurulub":true,"hesabQurulub":true,"muhit":"preview"}` qayıtmalıdır.
+Bazar üçün: `/api/kredit?diaqnostika=1` hansı cədvəllərin mövcud olduğunu
+sadalayır (sirr sızdırmır).
+
 ## Faza 1 — hesab və verilənlər bazası
 
 Tətbiq hesabsız tam işləyir (localStorage). Hesab İSTƏYƏ BAĞLI əlavədir:

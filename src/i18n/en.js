@@ -1231,6 +1231,7 @@ export default {
   "bazar.sifarisler.mehsulSayi": "{say} items",
   "bazar.sifarisler.yuklenir": "Loading orders…",
   "bazar.sifarisler.xeta": "Orders could not be loaded",
+  "bazar.sifarisler.sxemYoxdur": "The marketplace tables do not exist in this database yet — the migration has not been run. Your cart is kept.",
   "bazar.hal.new": "New",
   "bazar.hal.confirmed": "Confirmed",
   "bazar.hal.preparing": "Preparing",

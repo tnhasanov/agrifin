@@ -52,6 +52,14 @@ export function SifarislerEkrani({ get, geri, sifarisHali, onOpenHesab }) {
         </p>
       )}
 
+      {/* Sxem tətbiq olunmayıb: baza var, cədvəl yoxdur. Bu, "server sındı"
+          deyil — quraşdırma vəziyyətidir və belə də adlandırılır. */}
+      {hal === "sxemYoxdur" && (
+        <p className="mt-6 rounded-2xl p-4 text-sm leading-relaxed" style={{ backgroundColor: C.mist, color: C.muted }}>
+          {t("bazar.sifarisler.sxemYoxdur")}
+        </p>
+      )}
+
       {hal === "xeta" && (
         <div className="mt-6 rounded-2xl p-4" role="alert" style={{ backgroundColor: C.card, borderColor: C.danger, border: `1px solid ${C.danger}` }}>
           <p className="text-sm font-bold" style={{ color: C.ink }}>

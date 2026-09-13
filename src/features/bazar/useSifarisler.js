@@ -16,6 +16,11 @@ const QURULMAYIB = new Set([404, 501]);
 function xetaHali(xeta) {
   if (xeta?.status === 401) return "girisYox";
   if (QURULMAYIB.has(xeta?.status)) return "qurulmayib";
+  // 503 sxemYoxdur: baza var, cədvəl yoxdur — miqrasiya işlədilməyib
+  // (bax: api/bazar.js → sxemCavabi). Bunu ümumi "xəta" saymaq yanlış
+  // istiqamət verir: nə şəbəkə, nə server sınıb — sxem tətbiq olunmayıb.
+  // Kredit tərəfi eyni ayrımı edir (features/loan/useKreditVeziyyeti.js).
+  if (xeta?.acar === "sxemYoxdur") return "sxemYoxdur";
   return "xeta";
 }
 
