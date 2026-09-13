@@ -53,6 +53,11 @@ export async function sebekeniQur(page, { api = "501" } = {}) {
   await page.route("**open-meteo.com/**", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(HAVA()) }),
   );
+  // Google şriftləri: sandbox-da bu sorğu uzun müddət asılı qalıb `load`
+  // hadisəsini gecikdirirdi — çoxsəhifəli testlər vaxt həddini keçirdi.
+  // Dərhal kəsilir; tətbiq sistem şriftinə düşür (dizayn yoxlanmır, axın yoxlanır).
+  await page.route("**fonts.googleapis.com/**", (route) => route.abort());
+  await page.route("**fonts.gstatic.com/**", (route) => route.abort());
   await page.route("**arcgisonline.com/**", (route) =>
     route.fulfill({ status: 200, contentType: "image/png", body: BIR_PIKSEL }),
   );

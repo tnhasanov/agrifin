@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDelta, formatMoney, formatNumber, formatSignedMoney } from "./format.js";
+import { formatDelta, formatMoney, formatNumber, formatQiymet, formatSignedMoney } from "./format.js";
 
 describe("formatMoney", () => {
   it("azərbaycanca minlikləri nöqtə ilə ayırır", () => {
@@ -51,5 +51,20 @@ describe("formatSignedMoney", () => {
   it("gələn və gedən əməliyyatları ayırır", () => {
     expect(formatSignedMoney(3150, "az")).toBe("+3.150 ₼");
     expect(formatSignedMoney(-530, "az")).toBe("−530 ₼");
+  });
+});
+
+describe("formatQiymet", () => {
+  it("qəpikli qiyməti iki rəqəmlə, tam qiyməti quyruqsuz yazır", () => {
+    expect(formatQiymet(39.9, "az")).toBe("39,90 ₼");
+    expect(formatQiymet(798, "az")).toBe("798 ₼");
+    expect(formatQiymet(1018, "az")).toBe("1.018 ₼");
+    expect(formatQiymet(39.9, "en")).toBe("39.90 ₼");
+  });
+
+  it("üzən nöqtə zibilini qəpiyə yığır", () => {
+    // 3 × 39,90 = 119.70000000000002 → 119,70
+    expect(formatQiymet(3 * 39.9, "az")).toBe("119,70 ₼");
+    expect(formatQiymet(undefined)).toBe("—");
   });
 });

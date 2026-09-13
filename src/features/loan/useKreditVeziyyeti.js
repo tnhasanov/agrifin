@@ -128,7 +128,9 @@ export function useKreditVeziyyeti(telefon) {
       const cavab = await isle();
       setVeziyyet(cavab);
       setHal("hazir");
-      return { ok: true };
+      // Cavab da qaytarılır: bazar sifarişi yaranan müraciətin id-sinə
+      // bağlanmalıdır (bax: LoanSheet → onMuracietGonderildi)
+      return { ok: true, cavab };
     } catch (xeta) {
       if (xeta?.status === 401) {
         setHal("girisYox");

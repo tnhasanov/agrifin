@@ -11,11 +11,16 @@ import * as storage from "../lib/storage.js";
 import { FARM } from "../services/farm.js";
 import { districtByName, isValidLocation, nearestDistrict, readLegacyLocation } from "../services/location.js";
 import { duzgunSahe } from "../services/geo.js";
+import { mehsulTap } from "../../lib/bazar/kataloq.js";
+import { sayiSix } from "../../lib/bazar/sifaris.js";
 
 export const PERSIST_KEY = "state";
 // Saxlanan formanı dəyişəndə bu rəqəmi artırın və MIQRASIYALAR-a keçid yazın.
 // Keçid yoxdursa köhnə məlumat səssizcə atılır.
-export const PERSIST_VERSION = 10;
+export const PERSIST_VERSION = 11;
+
+/** Səbətdə ən çox bu qədər fərqli məhsul (server həddi ilə eyni: MAX_SETIR) */
+const SEBET_MAX_SETIR = 30;
 
 /**
  * İlk açılış axınının versiyası. Axının addımları dəyişəndə bu artır —
@@ -91,6 +96,9 @@ const MIQRASIYALAR = {
       tamamlananAddim: state.onboarded ? "sahe" : null,
     },
   }),
+  // 10 → 11: bazar. Səbət və son çatdırılma məlumatı boş başlayır —
+  // köhnə istifadəçidən heç nə itmir, yalnız iki yeni sahə əlavə olunur.
+  10: (state) => ({ ...state, sebet: [], catdirilma: null }),
 };
 
 function miqrasiyaEt(saved) {
@@ -176,8 +184,25 @@ export const initialState = {
   // KREDİT VƏZİYYƏTİ BURADA DEYİL. Müraciət, qərar, təklif və kredit
   // serverdədir (bax: api/kredit.js, features/loan/useKreditVeziyyeti.js):
   // brauzer maliyyə vəziyyətinin həqiqət mənbəyi ola bilməz.
+  //
+  // ═══ BAZAR ═══════════════════════════════════════════════════════════
+  // SƏBƏT YALNIZ {kod, say} SAXLAYIR — qiymət, təchizatçı, yekun yoxdur.
+  // Rəqəmlər hər dəfə kataloqdan hesablanır (lib/bazar/sifaris.js), bağlayıcı
+  // olanı isə sifariş anında server hesablayır. Yəni localStorage-da qiyməti
+  // dəyişmək heç nəyə təsir etmir. SİFARİŞLƏR BURADA DEYİL — serverdədir
+  // (api/bazar.js, features/bazar/useSifarisler.js), kredit kimi.
+  sebet: [],
+  // Son çatdırılma məlumatı (ad, telefon, ünvan) — növbəti sifarişdə
+  // fermerdən bir daha soruşulmasın. Rayon buraya yazılmır: o, `location`-dır.
+  catdirilma: null,
   toast: null,
 };
+
+/** Səbət sətri düzgündürmü — kataloqda var, sayı sərhəddədir */
+function sebetSetriDuzgun(setir) {
+  const mehsul = setir && typeof setir.kod === "string" ? mehsulTap(setir.kod) : null;
+  return Boolean(mehsul) && Number.isInteger(setir.say) && setir.say >= mehsul.minSay && setir.say <= mehsul.maxSay;
+}
 
 export function reducer(state, action) {
   switch (action.type) {
@@ -288,6 +313,52 @@ export function reducer(state, action) {
     case "hesab/set":
       return { ...state, hesab: { telefon: action.telefon ?? null } };
 
+    // ── Səbət ──────────────────────────────────────────────────────────
+    // Say HƏMİŞƏ məhsulun sərhədinə sıxılır (minSay..maxSay): "−" düyməsi
+    // minimumdan aşağı enə bilmir, "+" maksimumu keçə bilmir — server də
+    // eyni sərhədi yoxlayır, amma UI-da yararsız say heç yaranmır.
+    case "sebet/elave": {
+      const mehsul = mehsulTap(action.kod);
+      if (!mehsul) return state;
+      const movcud = state.sebet.find((s) => s.kod === action.kod);
+      const elave = Math.max(1, Math.round(Number(action.say) || 1));
+      if (movcud) {
+        const say = sayiSix(mehsul, movcud.say + elave);
+        return { ...state, sebet: state.sebet.map((s) => (s.kod === action.kod ? { kod: s.kod, say } : s)) };
+      }
+      if (state.sebet.length >= SEBET_MAX_SETIR) return state;
+      return { ...state, sebet: [...state.sebet, { kod: action.kod, say: sayiSix(mehsul, elave) }] };
+    }
+
+    case "sebet/say": {
+      const mehsul = mehsulTap(action.kod);
+      if (!mehsul || !state.sebet.some((s) => s.kod === action.kod)) return state;
+      const say = sayiSix(mehsul, action.say);
+      // Sıfır "sil" deməkdir — sətir səbətdən çıxır
+      if (say === 0) return { ...state, sebet: state.sebet.filter((s) => s.kod !== action.kod) };
+      return { ...state, sebet: state.sebet.map((s) => (s.kod === action.kod ? { kod: s.kod, say } : s)) };
+    }
+
+    case "sebet/sil":
+      if (!state.sebet.some((s) => s.kod === action.kod)) return state;
+      return { ...state, sebet: state.sebet.filter((s) => s.kod !== action.kod) };
+
+    case "sebet/temizle":
+      return state.sebet.length ? { ...state, sebet: [] } : state;
+
+    case "catdirilma/set": {
+      const c = action.catdirilma;
+      if (!c || typeof c !== "object") return state;
+      return {
+        ...state,
+        catdirilma: {
+          ad: String(c.ad ?? "").slice(0, 80),
+          telefon: String(c.telefon ?? "").slice(0, 20),
+          unvan: String(c.unvan ?? "").slice(0, 200),
+        },
+      };
+    }
+
     case "toast/show":
       return { ...state, toast: { key: action.key, vars: action.vars ?? null } };
 
@@ -320,6 +391,10 @@ function loadPersisted() {
   if (!Array.isArray(base.bagliSiqnallar)) base.bagliSiqnallar = [];
   if (!Array.isArray(base.sonRayonlar)) base.sonRayonlar = [];
   if (typeof base.hesab?.telefon !== "string") base.hesab = { telefon: null };
+  // Səbət: kataloqdan çıxmış məhsul və ya pozulmuş say səssizcə atılır —
+  // "yararsız sətir" sifarişə qədər gedə bilməz
+  base.sebet = Array.isArray(base.sebet) ? base.sebet.filter(sebetSetriDuzgun).slice(0, SEBET_MAX_SETIR) : [];
+  if (base.catdirilma && typeof base.catdirilma !== "object") base.catdirilma = null;
 
   // Başqa versiyanın yarımçıq axını yeni addımlara sürüklənmir: sayğac
   // uyğun gəlmirsə gediş sıfırlanır, verilmiş cavablar (rayon, bitki) qalır
@@ -384,6 +459,15 @@ export function StoreProvider({ children }) {
       saheQebulEt: (sahe) => dispatch({ type: "sahe/qebul", sahe }),
       hesabTelefon: (telefon) => dispatch({ type: "hesab/set", telefon }),
       hesabCixdi: () => dispatch({ type: "hesab/set", telefon: null }),
+      // Bazar səbəti
+      sebeteElave: (kod, say = 1) => {
+        dispatch({ type: "sebet/elave", kod, say });
+        showToast("bazar.toast.elave");
+      },
+      sebetSay: (kod, say) => dispatch({ type: "sebet/say", kod, say }),
+      sebetSil: (kod) => dispatch({ type: "sebet/sil", kod }),
+      sebetTemizle: () => dispatch({ type: "sebet/temizle" }),
+      catdirilmaSet: (catdirilma) => dispatch({ type: "catdirilma/set", catdirilma }),
       resetDemo: () => dispatch({ type: "demo/reset" }),
     }),
     [showToast],

@@ -22,6 +22,7 @@ import { useIndeks } from "./features/score/useIndeks.js";
 import { useKreditVeziyyeti } from "./features/loan/useKreditVeziyyeti.js";
 import { useSiqnallar } from "./features/signals/useSiqnallar.js";
 import { useTovsiyeler } from "./features/tovsiye/useTovsiyeler.js";
+import { useSifarisler } from "./features/bazar/useSifarisler.js";
 import { acigSiqnallar } from "./services/siqnal.js";
 import { ehateliSiqnallar } from "./features/signals/siqnalEhate.js";
 import { havaNoqtesi } from "./services/saheYeri.js";
@@ -49,6 +50,9 @@ const MoneyScreen = lazy(() =>
 const MarketScreen = lazy(() =>
   import("./screens/MarketScreen.jsx").then((m) => ({ default: m.MarketScreen })),
 );
+const BazarScreen = lazy(() =>
+  import("./screens/BazarScreen.jsx").then((m) => ({ default: m.BazarScreen })),
+);
 const CarbonScreen = lazy(() =>
   import("./screens/CarbonScreen.jsx").then((m) => ({ default: m.CarbonScreen })),
 );
@@ -58,6 +62,7 @@ const SCREENS = {
   sahe: SaheScreen,
   advisor: AdvisorScreen,
   money: MoneyScreen,
+  bazar: BazarScreen,
   market: MarketScreen,
   carbon: CarbonScreen,
 };
@@ -75,7 +80,10 @@ function ScreenFallback() {
 export default function App() {
   const { path, navigate } = useRouter();
   const { state, actions } = useStore();
-  const [loanOpen, setLoanOpen] = useState(false);
+  // Kredit paneli: null = bağlı; {} = adi açılış; {mebleg, sifarisId} = bazar
+  // sifarişindən gəliş (slayder məbləğdə açılır, müraciət sifarişə bağlanır)
+  const [loanAcilis, setLoanAcilis] = useState(null);
+  const loanOpen = loanAcilis !== null;
   const [chatOpen, setChatOpen] = useState(false);
   const [chatSual, setChatSual] = useState(null);
   const [fieldOpen, setFieldOpen] = useState(false);
@@ -124,6 +132,10 @@ export default function App() {
   // SERVER kredit vəziyyəti — bir yerdə gətirilir, ekranlara prop kimi gedir
   // (peyk/radar/indeks ilə eyni naxış). Giriş dəyişəndə yenidən yüklənir.
   const kreditHali = useKreditVeziyyeti(state.hesab.telefon);
+  // SERVER sifarişləri — yalnız Bazar tabı açılanda gətirilir (açılışa
+  // əlavə sorğu yox); burada qurulur ki, kredit paneli müraciəti sifarişə
+  // bağlayanda eyni siyahı yenilənsin
+  const sifarisHali = useSifarisler({ telefon: state.hesab.telefon, aktiv: route.id === "bazar" });
   const noqte = havaNoqtesi({ location: state.location, sahe: state.sahe });
   const butunSiqnallar = useSiqnallar({
     lat: noqte.lat,
@@ -154,7 +166,12 @@ export default function App() {
   const closeField = useCallback(() => setFieldOpen(false), []);
   const closeNece = useCallback(() => setNeceOpen(false), []);
   const closeBitki = useCallback(() => setBitkiOpen(false), []);
-  const closeLoan = useCallback(() => setLoanOpen(false), []);
+  const closeLoan = useCallback(() => setLoanAcilis(null), []);
+  // onClick-dən çağırılanda arqument hadisə obyektidir — məbləğ deyil.
+  // Yalnız {mebleg} formalı obyekt bazar gəlişi sayılır.
+  const openLoan = useCallback((secim) => {
+    setLoanAcilis(secim && typeof secim === "object" && Number.isFinite(secim.mebleg) ? secim : {});
+  }, []);
   const closeLocation = useCallback(() => setLocationOpen(false), []);
   const closeHesab = useCallback(() => setHesabOpen(false), []);
   const openField = useCallback(() => {
@@ -166,10 +183,11 @@ export default function App() {
     setFieldOpen(true);
   }, [state.location, state.sahe]);
 
-  // Ekran dəyişəndə əvvəlki sürüşdürmə mövqeyində qalmaq çaşdırıcıdır
+  // Ekran (və ya bazarın alt-səhifəsi) dəyişəndə əvvəlki sürüşdürmə
+  // mövqeyində qalmaq çaşdırıcıdır — yola görə sıfırlanır
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
-  }, [route.id]);
+  }, [path]);
 
   return (
     <div
@@ -206,9 +224,10 @@ export default function App() {
                     radar={radar}
                     indeksHali={indeks}
                     kreditHali={kreditHali}
+                    sifarisHali={sifarisHali}
                     siqnallar={siqnallar}
                     tovsiyeler={tovsiyeler}
-                    onOpenLoan={() => setLoanOpen(true)}
+                    onOpenLoan={openLoan}
                     onPickLocation={() => setLocationOpen(true)}
                     onOpenChat={(sual) => {
                       // onClick-dən çağırılanda arqument hadisə obyektidir — sual deyil
@@ -236,6 +255,14 @@ export default function App() {
                   indeksHali={indeks}
                   kreditHali={kreditHali}
                   onOpenHesab={() => setHesabOpen(true)}
+                  ilkMebleg={loanAcilis.mebleg ?? null}
+                  // Bazar sifarişindən gəlibsə yaranan müraciət sifarişə
+                  // bağlanır — sahiblik serverdə yoxlanılır (api/bazar.js)
+                  onMuracietGonderildi={
+                    loanAcilis.sifarisId != null
+                      ? (muracietId) => sifarisHali.maliyyeBagla(loanAcilis.sifarisId, muracietId)
+                      : undefined
+                  }
                 />
               </Suspense>
             )}

@@ -67,15 +67,16 @@ describe("AgriFin tətbiqi", () => {
     expect(screen.queryByRole("dialog", { name: "Sahənizi çəkin" })).not.toBeInTheDocument();
   });
 
-  // Naviqasiya DÜZ DÖRD yerdir: Ana səhifə, Sahələr, Maliyyə, Kömək.
-  // Bazar/karbon əsas naviqasiyada YOXDUR, amma dərin linkləri işləyir.
-  it("aşağı naviqasiyada düz dörd yer var və URL-i dəyişir", async () => {
+  // Naviqasiya DÜZ BEŞ yerdir: Ana səhifə, Sahələr, Bazar, Maliyyə, Kömək.
+  // Köhnə qiymət ekranı (/market) və karbon əsas naviqasiyada YOXDUR,
+  // amma dərin linkləri işləyir.
+  it("aşağı naviqasiyada düz beş yer var və URL-i dəyişir", async () => {
     const user = userEvent.setup();
     renderApp(<App />);
 
     const nav = screen.getByRole("navigation");
     const duymeler = Array.from(nav.querySelectorAll("button")).map((b) => b.textContent);
-    expect(duymeler).toEqual(["Ana səhifə", "Sahələr", "Maliyyə", "Kömək"]);
+    expect(duymeler).toEqual(["Ana səhifə", "Sahələr", "Bazar", "Maliyyə", "Kömək"]);
 
     await user.click(screen.getByRole("button", { name: "Sahələr" }));
     expect(window.location.pathname).toBe("/fields");

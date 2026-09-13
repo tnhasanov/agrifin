@@ -18,6 +18,24 @@ export function formatMoney(value, lang = "az") {
   return `${formatNumber(Math.round(Number(value) || 0), lang)} ₼`;
 }
 
+/**
+ * QİYMƏT — qəpiklə: "39,90 ₼", tam olanda "798 ₼".
+ *
+ * `formatMoney` kredit məbləğləri üçündür və tam ədədə yuvarlaqlayır
+ * (kredit qəpiklə verilmir). Bazar qiyməti isə qəpiklidir: 39,90-ı "40 ₼"
+ * göstərmək ekrandakı rəqəmlə çekdəki rəqəmi ayırardı. Tam qiymətdə
+ * ",00" quyruğu yoxdur — "798 ₼" daha təmiz oxunur.
+ */
+export function formatQiymet(value, lang = "az") {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "—";
+  const qepikli = Math.round(n * 100) % 100 !== 0;
+  return `${formatNumber(n, lang, {
+    minimumFractionDigits: qepikli ? 2 : 0,
+    maximumFractionDigits: qepikli ? 2 : 0,
+  })} ₼`;
+}
+
 /** İşarəli fərq, məsələn "+2.4%" / "−1.1%" (real minus işarəsi) */
 export function formatDelta(value, digits = 1) {
   const n = Number(value);

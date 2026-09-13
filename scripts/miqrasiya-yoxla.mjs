@@ -50,6 +50,10 @@ try {
     "credit_offers",
     "loans",
     "loan_events",
+    "marketplace_orders",
+    "marketplace_order_items",
+    "marketplace_order_events",
+    "marketplace_financing_requests",
   ];
   for (const cedvel of CEDVELLER) {
     const [setir] = await sorgu("SELECT to_regclass($1) AS movcud", [`public.${cedvel}`]);

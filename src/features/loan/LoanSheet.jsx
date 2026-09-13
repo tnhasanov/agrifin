@@ -25,8 +25,20 @@ import { kreditImkani } from "./useKredit.js";
  *
  * Sheet primitivində qurulub: sürüşdürüb bağlama, fokus tələsi, Escape —
  * hamısı ordan gəlir (əvvəl bunların heç biri yox idi).
+ *
+ * BAZARDAN GƏLİŞ: `ilkMebleg` slayderi sifarişin məbləğində açır (tavanın
+ * altında qalmaqla), `onMuracietGonderildi` isə yaranan müraciətin id-sini
+ * qaytarır ki, sifariş ona bağlansın. Kredit məntiqinin özü DƏYİŞMİR —
+ * eyni server, eyni anderraytinq, eyni slayder.
  */
-export function LoanSheet({ onClose, indeksHali = null, kreditHali, onOpenHesab }) {
+export function LoanSheet({
+  onClose,
+  indeksHali = null,
+  kreditHali,
+  onOpenHesab,
+  ilkMebleg = null,
+  onMuracietGonderildi,
+}) {
   const { t, money } = useI18n();
   const { state } = useStore();
   const [addim, setAddim] = useState(0);
@@ -64,10 +76,17 @@ export function LoanSheet({ onClose, indeksHali = null, kreditHali, onOpenHesab 
   });
 
   const hazir = kredit.hal === "hazir";
-  // Slayder tavana sıçramasın deyə başlanğıc tavanın yarısıdır
-  const [mebleg, setMebleg] = useState(() =>
-    hazir ? Math.max(kredit.minKredit, Math.round(kredit.maxKredit / 2 / 100) * 100) : 0,
-  );
+  // Slayder tavana sıçramasın deyə başlanğıc tavanın yarısıdır; bazardan
+  // gələn məbləğ varsa o — amma tavanı KEÇMİR (sifariş limitdən böyükdürsə
+  // slayder tavanda dayanır və fermer fərqi görür)
+  const [mebleg, setMebleg] = useState(() => {
+    if (!hazir) return 0;
+    if (Number.isFinite(ilkMebleg) && ilkMebleg > 0) {
+      const addimli = Math.ceil(ilkMebleg / kredit.addim) * kredit.addim;
+      return Math.min(kredit.maxKredit, Math.max(kredit.minKredit, addimli));
+    }
+    return Math.max(kredit.minKredit, Math.round(kredit.maxKredit / 2 / 100) * 100);
+  });
 
   // Intl işlədilmir: Chromium-un bir çox quruluşunda az lokalı yoxdur və
   // "İyun 2027" əvəzinə "M06 2027" çıxırdı — adlar i18n-dən gəlir
@@ -88,7 +107,11 @@ export function LoanSheet({ onClose, indeksHali = null, kreditHali, onOpenHesab 
   const gonder = async () => {
     acarRef.current ??= `m-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     const netice = await kreditHali.muracietEt(mebleg, acarRef.current);
-    if (netice.ok) setAddim(2);
+    if (netice.ok) {
+      setAddim(2);
+      const muracietId = netice.cavab?.muraciet?.id;
+      if (muracietId != null) onMuracietGonderildi?.(muracietId);
+    }
   };
 
   // Jurnal sətirləri: ödənişlər qruplaşdırılmış (serverdən `odenisler`),

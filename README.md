@@ -552,6 +552,72 @@ heç bir anderraytinqdən keçməyib və brauzerdə dəyişilə bilən dəyərl�
 belə rəqəmləri maliyyə qeydi kimi yazmaq uydurma borc yaratmaq olardı.
 Fermer müraciəti server axını ilə yenidən göndərir; sahə, rayon, söhbət qalır.
 
+## Faza 4 — Bazar (ticarət qatı)
+
+Bazar kataloq deyil, ekosistemin ticarət qatıdır:
+
+    Fermer → Sahə → Ehtiyac → Məhsul/xidmət → AgriFin maliyyəsi →
+    Sifariş → Sahə işi → Biçin → Satış → Kredit ödənişi
+
+Naviqasiya beş tabdır — Ana səhifə / Sahələr / **Bazar** / Maliyyə / Kömək.
+Bazar prefiks marşrutdur (`/bazar/...`): on alt-səhifə bir ekranda
+(`screens/BazarScreen.jsx`), hər biri dərin linklə açılır və "geri" işləyir.
+
+Hissələr:
+
+- `lib/bazar/kataloq.js` — kateqoriyalar, tədarükçülər, 45 məhsul. **NÜMUNƏ**
+  (`NUMUNE = true`, ekranda qeyd var). Server və klient EYNİ faylı gətirir:
+  server qiyməti YALNIZ buradan oxuyur, klientin göndərdiyi rəqəm heç vaxt
+  bağlayıcı deyil. Faza 2-də bu massiv `marketplace_products` cədvəlinə
+  köçür; `mehsulTap()` imzası dəyişmir.
+- `lib/bazar/sifaris.js` — səbətin hesablanması (qəpik dəqiqliyi, tədarükçü
+  başına çatdırılma haqqı, pulsuz hədd), giriş yoxlaması (say tam ədəd,
+  minSay..maxSay, stok), vəziyyət maşını (`new → confirmed → preparing →
+  delivering → completed`, fermer yalnız `new/confirmed`-də ləğv edə bilir).
+- `lib/bazar/axtaris.js` — aksentsiz axtarış (ad, brend, tədarükçü,
+  kateqoriya sözləri), süzgəc, sıralama ("tövsiyə olunan" = fermerin
+  bitkisinə uyğunluq > təsdiqli satıcı > populyarlıq).
+- `lib/bazar/tovsiye.js` — "Əkin planınız": bitki + hektar → kateqoriya
+  başına lazım olan məbləğ. Normalar nümunədir (`TESDIQ.aqronom = false`);
+  ƏHATƏ REALDIR — fermerin faktiki sifarişlərindən (son 12 ay, ləğv
+  olunmamış) hesablanır. Sifarişi olmayan fermer 0% görür.
+- `db/migrations/005_bazar.sql` — `marketplace_orders`,
+  `marketplace_order_items` (məhsulun SURƏTİ: ad, kateqoriya, tədarükçü,
+  qiymət — kataloq dəyişsə də sifariş izah olunur), `marketplace_order_events`
+  (**`actor` sütunu ilə**: fermer / sistem / operator), `marketplace_financing_requests`
+  (sifariş → `credit_applications`). Hər sifariş sahə/bitki/hektar
+  kontekstini daşıyır — bu, FarmScore-un növbəti girişidir.
+- `api/bazar.js` — 12-ci (sonuncu) Vercel funksiyası, `emel` ilə:
+  `sebet-hesabla` (sessiyasız, saf), `maliyye-yoxla` (**oxu-yalnız**: mövcud
+  `anderraytinq()` çağırılır, HEÇ NƏ YAZILMIR, təsdiq vəd edilmir),
+  `sifaris-yarat` (atomik CTE: sifariş + sətirlər + hadisə + maliyyə sorğusu;
+  idempotentlik açarı; bazada sürət həddi 10 dəq/5 sifariş), `sifaris-legv`,
+  `maliyye-bagla` (sifarişi kredit müraciətinə bağlayır — hər ikisi
+  istifadəçinin olmalıdır).
+- Klient: `src/features/bazar/` (komponentlər + `ekranlar/`), səbət
+  `store.jsx`-də yalnız `{kod, say}` kimi (v11), sifarişlər serverdə
+  (`useSifarisler`, kredit ilə eyni naxış).
+
+Maliyyələşdirmə axını kredit mühərrikini TƏKRARLAMIR: məhsul səhifəsindəki
+"Maliyyələşdirmə imkanını yoxla" serverdə oxu-yalnız yoxlamadır; sifariş
+"AgriFin ilə maliyyələşdir" ilə yaranır; sonra mövcud `LoanSheet` sifarişin
+məbləğində açılır (`ilkMebleg`) və yaranan müraciət sifarişə bağlanır
+(`onMuracietGonderildi` → `maliyye-bagla`). Qərar yenə `api/kredit.js`-dədir.
+
+Hazırda OLMAYANLAR (dürüstlük üçün): real tədarükçü və foto, ödəniş
+şlüzü ("çatdırılmada ödəniş" = tədarükçüyə nağd), status irəliləməsi
+(tədarükçü/operator paneli yoxdur — sifariş `new`-da qalır), bildirişlər.
+
+Brauzer testləri: `e2e/bazar.spec.js` (server `e2e/bazarKome.js`-də
+təqlid olunur, yekunlar real domen modulundan). Ekran görüntüləri:
+`BAZAR_SHOTS=./shots npx playwright test e2e/bazar.shots.spec.js --project=390x844`.
+
+⚠ **Deploy sırası:** `005_bazar.sql` prod bazasına tətbiq olunmalıdır —
+`scripts/miqrasiya-yoxla.mjs` bazar cədvəllərini də yoxlayır, ona görə
+prod build miqrasiyasız READY olmur (qəsdən: yarımçıq tətbiq yoxdur).
+Sıra əvvəlki kimidir: **miqrasiya → deploy → smoke test** (`GET /api/bazar`
+daxil olmuş istifadəçi ilə 200 qaytarmalıdır).
+
 ## Faza 3 — fermer panosu (altı hal)
 
 Ana ekran qərar səthinə çevrildi: hər açılış "Sahəm necədir? Pulum necədir?
