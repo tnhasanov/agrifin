@@ -34,9 +34,10 @@ export const YASIL = {
  * premium təəssüratı dərinlikdən yox, boşluqdan gəlir.
  */
 export const KOLGE = {
-  // Kart: Mist üzərində GÖRÜNƏN, amma ağır olmayan qalxma. Əvvəlki 0.05
-  // alfada kartlar fona qarışırdı və ekran yastı oxunurdu.
-  kart: "0 1px 2px rgba(18,63,45,0.06), 0 8px 24px rgba(18,63,45,0.08)",
+  // Kart: çox yüngül qalxma. Kölgə səthi fondan AYIRIR, dərinlik "satmır":
+  // fintech-də etibar sakitlikdən gəlir, kartlar üzməməlidir. Kart olmayan
+  // bölmələr boşluq və ayırıcı xətt işlədir (bax: components/Ayirici.jsx).
+  kart: "0 1px 2px rgba(18,63,45,0.04), 0 4px 14px rgba(18,63,45,0.05)",
   qalxan: "0 2px 4px rgba(18,63,45,0.06), 0 12px 28px rgba(18,63,45,0.10)",
   // Tünd hero kartları (FarmScore, aqronom): fona kölgə salır, çünki tünd
   // səthin özündə kölgə görünmür — dərinlik ətrafdan gəlir.

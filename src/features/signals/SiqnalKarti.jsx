@@ -1,4 +1,5 @@
 import { Icon } from "../../components/Icon.jsx";
+import { Button } from "../../components/Button.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { menbeSetri } from "./siqnalEhate.js";
@@ -81,14 +82,9 @@ export function SiqnalKarti({
             {/* Yalnız işi başqa ekranda görülən siqnalda düymə olur —
                 "OK" düyməsi fermerə heç nə vermir */}
             {siqnal.hereket === "chat" && onHereket && (
-              <button
-                type="button"
-                onClick={onHereket}
-                className="rounded-lg px-3 py-1.5 text-xs font-bold whitespace-nowrap"
-                style={{ backgroundColor: C.pine, color: "#fff" }}
-              >
+              <Button size="sm" onClick={onHereket} style={{ whiteSpace: "nowrap" }}>
                 {t("siqnal.sekilCek")}
-              </button>
+              </Button>
             )}
           </div>
         </div>

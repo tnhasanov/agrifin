@@ -69,6 +69,9 @@ export function useKreditVeziyyeti(telefon) {
   const [xetaAcari, setXetaAcari] = useState(null);
   // "sebeke" | "server" — yalnız hal === "xeta" olanda mənalıdır
   const [xetaNovu, setXetaNovu] = useState(null);
+  // Son uğurlu cavabın vaxtı: ekranda hər hesablanan rəqəmin yanında
+  // "Mənbə: server · yenilənib HH:MM" yazılır — rəqəm nə vaxtın həqiqətidir
+  const [yenilenib, setYenilenib] = useState(null);
   const abortRef = useRef(null);
 
   // Açılışda və giriş/çıxışda vəziyyət gətirilir. setState yalnız cavab
@@ -83,6 +86,7 @@ export function useKreditVeziyyeti(telefon) {
       .then((cavab) => {
         if (atildi) return;
         setVeziyyet(cavab);
+      setYenilenib(new Date());
         setHal("hazir");
         setXetaAcari(null);
         setXetaNovu(null);
@@ -109,6 +113,7 @@ export function useKreditVeziyyeti(telefon) {
     try {
       const cavab = await kreditVeziyyeti({ signal: controller.signal });
       setVeziyyet(cavab);
+      setYenilenib(new Date());
       setHal("hazir");
       setXetaAcari(null);
       setXetaNovu(null);
@@ -127,6 +132,7 @@ export function useKreditVeziyyeti(telefon) {
     try {
       const cavab = await isle();
       setVeziyyet(cavab);
+      setYenilenib(new Date());
       setHal("hazir");
       // Cavab da qaytarılır: bazar sifarişi yaranan müraciətin id-sinə
       // bağlanmalıdır (bax: LoanSheet → onMuracietGonderildi)
@@ -149,6 +155,7 @@ export function useKreditVeziyyeti(telefon) {
     gedir,
     xetaAcari,
     xetaNovu,
+    yenilenib,
     ...veziyyet,
     yenile,
     // Yalnız MƏBLƏĞ göndərilir: müddət, dərəcə, limit və qərar serverdədir

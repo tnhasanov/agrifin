@@ -1,4 +1,5 @@
 import { Icon } from "../../components/Icon.jsx";
+import { Button } from "../../components/Button.jsx";
 import { Sheet } from "../../components/Sheet.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
@@ -56,17 +57,16 @@ export function NeceIsleyir({ acilib, onBagla, onDrawField }) {
       </ol>
 
       {/* İzahın sonu boşluğa çıxmır: fermer elə buradan çəkməyə keçir */}
-      <button
-        type="button"
+      <Button
+        fullWidth
+        className="mt-1"
         onClick={() => {
           onBagla();
           onDrawField?.();
         }}
-        className="mt-1 w-full rounded-2xl py-3.5 text-sm font-bold"
-        style={{ backgroundColor: C.pine, color: "#fff", minHeight: 48 }}
       >
         {t("pano.bosCta")}
-      </button>
+      </Button>
       <p className="mt-2 flex items-center justify-center gap-1.5 pb-1 text-xs" style={{ color: C.muted }}>
         <Icon name="Clock" size={16} color={C.muted} />
         {t("pano.bosVaxt")}

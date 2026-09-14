@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { Button } from "../../components/Button.jsx";
 import { Icon } from "../../components/Icon.jsx";
 import { Sheet } from "../../components/Sheet.jsx";
 import { C, font } from "../../theme/tokens.js";
@@ -169,14 +170,9 @@ export function HesabSheet({ acilib, onBagla }) {
               {t(`hesab.xeta.${xeta}`)}
             </p>
           )}
-          <button
-            type="submit"
-            disabled={gedir || !telefon.trim()}
-            className={duyme}
-            style={{ backgroundColor: C.pine, color: "#fff", fontFamily: font.display }}
-          >
+          <Button type="submit" fullWidth className="mt-4" loading={gedir} disabled={!telefon.trim()}>
             {gedir ? t("hesab.gonderilir") : t("hesab.kodGonder")}
-          </button>
+          </Button>
         </form>
       ) : (
         <form onSubmit={tesdiqle} className="pb-2">
@@ -213,14 +209,9 @@ export function HesabSheet({ acilib, onBagla }) {
               {t(`hesab.xeta.${xeta}`)}
             </p>
           )}
-          <button
-            type="submit"
-            disabled={gedir || kod.length !== 6}
-            className={duyme}
-            style={{ backgroundColor: C.pine, color: "#fff", fontFamily: font.display }}
-          >
+          <Button type="submit" fullWidth className="mt-4" loading={gedir} disabled={kod.length !== 6}>
             {gedir ? t("hesab.gonderilir") : t("hesab.tesdiqle")}
-          </button>
+          </Button>
           <button
             type="button"
             onClick={sifirla}

@@ -1,6 +1,7 @@
 import { Card } from "../components/Card.jsx";
 import { Chip } from "../components/Chip.jsx";
 import { Icon } from "../components/Icon.jsx";
+import { Button } from "../components/Button.jsx";
 import { SectionTitle } from "../components/SectionTitle.jsx";
 import { C, font } from "../theme/tokens.js";
 import { useI18n } from "../i18n/index.jsx";
@@ -160,14 +161,9 @@ export function CarbonScreen() {
         <p className="text-xs leading-relaxed" style={{ color: C.muted }}>
           {t("carbon.esgBody")}
         </p>
-        <button
-          type="button"
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold"
-          style={{ backgroundColor: C.pine, color: "#fff" }}
-        >
-          <Icon name="FileText" size={16} color="#fff" />
+        <Button fullWidth className="mt-3" ikon="FileText">
           {t("carbon.esgCta")}
-        </button>
+        </Button>
       </Card>
     </div>
   );

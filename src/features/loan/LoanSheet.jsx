@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Chip } from "../../components/Chip.jsx";
 import { Icon } from "../../components/Icon.jsx";
-import { Aqronom } from "../../components/Aqronom.jsx";
+import { Button } from "../../components/Button.jsx";
 import { Sheet } from "../../components/Sheet.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
@@ -198,17 +198,16 @@ export function LoanSheet({
             <p className="mx-auto mt-1 max-w-[32ch] text-xs leading-relaxed" style={{ color: C.muted }}>
               {t("kredit.girisIzah")}
             </p>
-            <button
-              type="button"
+            <Button
+              fullWidth
+              className="mt-4"
               onClick={() => {
                 onClose();
                 onOpenHesab?.();
               }}
-              className="mt-4 w-full rounded-xl py-3 text-sm font-bold"
-              style={{ backgroundColor: C.pine, color: "#fff" }}
             >
               {t("hesab.cta")}
-            </button>
+            </Button>
           </div>
         )}
 
@@ -222,14 +221,9 @@ export function LoanSheet({
               {t("kredit.xetaIzah")}
             </p>
             {serverHal === "xeta" && (
-              <button
-                type="button"
-                onClick={() => kreditHali.yenile()}
-                className="mt-4 w-full rounded-xl py-3 text-sm font-bold"
-                style={{ backgroundColor: C.pine, color: "#fff" }}
-              >
+              <Button fullWidth className="mt-4" onClick={() => kreditHali.yenile()}>
                 {t("kredit.tekrarCehd")}
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -375,21 +369,18 @@ export function LoanSheet({
                 fontVariantNumeric: "tabular-nums",
               }}
             />
-            <button
-              type="button"
-              disabled={kreditHali.gedir || !(Number(odenisMebleg) > 0)}
+            <Button
+              ton="mal"
+              fullWidth
+              className="mt-2"
+              loading={kreditHali.gedir}
+              disabled={!(Number(odenisMebleg) > 0)}
               onClick={ode}
-              className="mt-2 w-full rounded-xl py-3 text-sm font-bold"
-              style={{
-                backgroundColor: C.pine,
-                color: "#fff",
-                opacity: kreditHali.gedir || !(Number(odenisMebleg) > 0) ? 0.5 : 1,
-              }}
             >
               {kreditHali.gedir
                 ? t("kredit.gedir")
                 : t("kredit.odenis.cta", { mebleg: { money: Number(odenisMebleg) || 0 } })}
-            </button>
+            </Button>
 
             {/* ── Hərəkət jurnalı ─────────────────────────────────────
                 Ödəniş BİR sətirdir (faiz payı + əsas payı + sonrakı qalıq),
@@ -437,24 +428,15 @@ export function LoanSheet({
             <div className="relative mx-auto mb-2 inline-block">
               {/* Konfeti yalnız TƏZƏ göndərilmiş müraciətdə düşür — paneli
                   yenidən açanda bayram təkrarlanmır (bax: index.css, .konfeti) */}
-              {addim === 2 &&
-                [
-                  ["8%", "0ms", C.gold],
-                  ["24%", "120ms", C.field],
-                  ["40%", "40ms", "#B79BE0"],
-                  ["56%", "180ms", C.gold],
-                  ["72%", "80ms", "#D9483B"],
-                  ["88%", "150ms", C.field],
-                  ["16%", "220ms", "#4A90E2"],
-                  ["64%", "260ms", C.goldDeep],
-                ].map(([sol, gecikme, reng]) => (
-                  <span
-                    key={`${sol}-${gecikme}`}
-                    className="konfeti"
-                    style={{ left: sol, animationDelay: gecikme, backgroundColor: reng }}
-                  />
-                ))}
-              <Aqronom hal="sevincli" bitki={state.chat.crop} olcu={150} />
+              {/* MASKOT VƏ KONFETİ YOXDUR: bu, pul qərarıdır, bayram deyil.
+                  Sakit təsdiq ikonu — maliyyə ekranlarında personaj görünmür
+                  (yalnız onboarding, kömək və aqronom çatında). */}
+              <span
+                className="mx-auto flex items-center justify-center rounded-full"
+                style={{ width: 56, height: 56, backgroundColor: C.malSoft }}
+              >
+                <Icon name="CheckCircle2" size={26} color={C.mal} />
+              </span>
             </div>
             <p className="text-sm font-bold" style={{ color: C.ink }}>
               {t("kredit.teklifBasliq")}
@@ -476,33 +458,36 @@ export function LoanSheet({
                 ay: teklif.muddetAy,
               })}
             </p>
-            <button
-              type="button"
-              disabled={kreditHali.gedir}
+            <Button
+              ton="mal"
+              fullWidth
+              className="mt-4"
+              loading={kreditHali.gedir}
               // Açar TƏKLİFƏ bağlıdır: şəbəkə qırılıb fermer yenidən
               // toxunsa server eyni sorğunu tanıyır, ikinci kredit açmır
               onClick={() => kreditHali.teklifiQebulEt(teklif.id, `t-${teklif.id}`)}
-              className="mt-4 w-full rounded-xl py-3 text-sm font-bold"
-              style={{ backgroundColor: C.gold, color: C.pine, opacity: kreditHali.gedir ? 0.6 : 1 }}
             >
               {kreditHali.gedir ? t("kredit.gedir") : t("kredit.teklifQebulCta")}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="ghost"
+              fullWidth
+              className="mt-1"
               disabled={kreditHali.gedir}
               onClick={() => kreditHali.legvEt()}
-              className="mt-2 w-full rounded-xl py-2.5 text-xs font-bold"
-              style={{ backgroundColor: C.mist, color: C.danger }}
+              style={{ color: C.danger }}
             >
               {t("kredit.teklifImtinaCta")}
-            </button>
+            </Button>
           </div>
         )}
 
         {/* ── Rədd edildi: səbəb açıq deyilir ─────────────────────────── */}
         {serverHal === "hazir" && reddedilib && (
           <div className="py-2 text-center">
-            <Aqronom hal="narahat" bitki={state.chat.crop} olcu={110} gorunus="tam" />
+            <span className="mx-auto flex items-center justify-center rounded-full" style={{ width: 56, height: 56, backgroundColor: C.mist }}>
+              <Icon name="Info" size={26} color={C.muted} />
+            </span>
             <p className="mt-2 text-sm font-bold" style={{ color: C.ink }}>
               {t("kredit.reddBasliq")}
             </p>
@@ -596,11 +581,6 @@ export function LoanSheet({
                 fikirləşir — "çox götürürsən, ödəyə biləcəksən?" sözsüz deyilir.
                 Qadağa deyil, üz ifadəsidir: seçim fermerindir. */}
             <div className="mb-1 flex items-end justify-center gap-3">
-              <Aqronom
-                hal={mebleg >= kredit.maxKredit * 0.85 ? "dusunur" : "sakit"}
-                bitki={state.chat.crop}
-                olcu={44}
-              />
               <p
                 className="text-center text-3xl font-extrabold"
                 style={{ color: C.ink, fontFamily: font.display, fontVariantNumeric: "tabular-nums" }}
@@ -696,14 +676,9 @@ export function LoanSheet({
               {t("kredit.cevikQeyd")}
             </p>
 
-            <button
-              type="button"
-              onClick={() => setAddim(1)}
-              className="mt-4 w-full rounded-xl py-3 text-sm font-bold"
-              style={{ backgroundColor: C.pine, color: "#fff" }}
-            >
+            <Button ton="mal" fullWidth className="mt-4" onClick={() => setAddim(1)}>
               {t("loan.reviewCta")}
-            </button>
+            </Button>
           </div>
         )}
 

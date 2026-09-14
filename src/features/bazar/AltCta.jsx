@@ -1,4 +1,5 @@
-import { C, RADIUS, TIPO } from "../../theme/tokens.js";
+import { Button } from "../../components/Button.jsx";
+import { C } from "../../theme/tokens.js";
 
 /**
  * ALT CTA ZOLAĞI — sürüşən məzmunun İÇİNDƏ yapışqan (sticky) ətək.
@@ -8,7 +9,10 @@ import { C, RADIUS, TIPO } from "../../theme/tokens.js";
  * naviqasiyanın ÜSTÜNDƏ qalır və düzülüşdə yer tutur — məzmunun son sətri
  * düymənin altında itmir (brief: "fixed CTAs do not cover content").
  *
- * BİR EKRANDA BİR DOLU DÜYMƏ: ikinci hərəkət həmişə konturludur.
+ * İYERARXİYA SABİTDİR: `esas` həmişə primary (dolu), `ikinci` həmişə
+ * secondary (konturlu, NEYTRAL rəng). Əvvəl ikinci düymə bənövşəyi kontur
+ * ala bilirdi və əsas düymə ilə rəqabət edirdi; indi rəng yalnız əsas
+ * düymənin tonunu seçir (maliyyə hərəkəti → bənövşəyi).
  */
 export function AltCta({ esas, ikinci, ust }) {
   return (
@@ -22,41 +26,29 @@ export function AltCta({ esas, ikinci, ust }) {
       {ust}
       <div className="flex gap-2">
         {ikinci && (
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="lg"
+            className="flex-1"
             onClick={ikinci.onClick}
             disabled={ikinci.disabled}
-            className="basilir flex-1 font-bold"
-            style={{
-              minHeight: 52,
-              borderRadius: RADIUS.idare,
-              backgroundColor: C.card,
-              color: ikinci.reng ?? C.pine,
-              border: `1px solid ${ikinci.reng ?? C.pine}`,
-              opacity: ikinci.disabled ? 0.5 : 1,
-              ...TIPO.duyme,
-            }}
+            loading={ikinci.loading}
           >
             {ikinci.label}
-          </button>
+          </Button>
         )}
         {esas && (
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            ton={esas.reng === C.mal ? "mal" : "pine"}
+            size="lg"
+            className="flex-1"
             onClick={esas.onClick}
             disabled={esas.disabled}
-            className="basilir flex-1 font-bold"
-            style={{
-              minHeight: 52,
-              borderRadius: RADIUS.idare,
-              backgroundColor: esas.disabled ? C.mist : (esas.reng ?? C.pine),
-              color: esas.disabled ? C.muted : "#fff",
-              border: `1px solid ${esas.disabled ? C.line : (esas.reng ?? C.pine)}`,
-              ...TIPO.duyme,
-            }}
+            loading={esas.loading}
           >
             {esas.label}
-          </button>
+          </Button>
         )}
       </div>
     </div>

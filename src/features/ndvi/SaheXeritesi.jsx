@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Icon } from "../../components/Icon.jsx";
+import { Button } from "../../components/Button.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { fetchSaheSekli } from "../../services/ndvi.js";
@@ -169,15 +170,9 @@ export function SaheXeritesi({ sahe, konturRengi, tamCta = false }) {
             {t(`ndvi.mapNote.${aktiv}`)}
           </p>
           {tamCta && (
-            <button
-              type="button"
-              onClick={() => setTamEkran(true)}
-              className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold"
-              style={{ backgroundColor: C.pine, color: "#fff", minHeight: 48 }}
-            >
-              <Icon name="Map" size={16} color="#fff" />
+            <Button fullWidth className="mt-2.5" ikon="Map" onClick={() => setTamEkran(true)}>
               {t("ndvi.xeritedeBax")}
-            </button>
+            </Button>
           )}
         </>
       )}

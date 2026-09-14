@@ -1,4 +1,5 @@
 import { WeatherStrip } from "../features/weather/WeatherStrip.jsx";
+import { Button } from "../components/Button.jsx";
 import { C, font } from "../theme/tokens.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useStore } from "../state/store.jsx";
@@ -81,8 +82,8 @@ export function HomeScreen({
       <div className="mt-3">
         <h1 className="text-xl font-extrabold" style={{ color: C.ink, fontFamily: font.display }}>
           {state.sahe
-            ? `${t("home.greeting", { name: FARM.farmerName })} 👋`
-            : `${t("pano.salam", { name: FARM.farmerName })} 👋`}
+            ? t("home.greeting", { name: FARM.farmerName })
+            : t("pano.salam", { name: FARM.farmerName })}
         </h1>
         <p className="mt-0.5 text-sm" style={{ color: C.muted }}>
           {state.sahe ? t("pano.salamAlt") : t("pano.qurulus")}
@@ -143,14 +144,9 @@ export function HomeScreen({
             <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
               {t("weather.locationMissingText")}
             </p>
-            <button
-              type="button"
-              onClick={onPickLocation}
-              className="mt-3 w-full rounded-xl py-3 text-sm font-bold"
-              style={{ backgroundColor: C.pine, color: "#fff", minHeight: 44 }}
-            >
+            <Button fullWidth className="mt-3" onClick={onPickLocation}>
               {t("location.pick")}
-            </button>
+            </Button>
           </section>
         )}
       </div>

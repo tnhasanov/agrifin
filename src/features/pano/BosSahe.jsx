@@ -1,4 +1,5 @@
 import { Icon } from "../../components/Icon.jsx";
+import { Button } from "../../components/Button.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { SaheIllustrasiyasi } from "./SaheIllustrasiyasi.jsx";
@@ -29,14 +30,9 @@ export function BosSahe({ onDrawField, onNece }) {
       >
         {t("pano.bosMetn")}
       </p>
-      <button
-        type="button"
-        onClick={onDrawField}
-        className="mt-4 w-full rounded-2xl py-3.5 text-sm font-bold"
-        style={{ backgroundColor: C.pine, color: "#fff", minHeight: 48 }}
-      >
+      <Button fullWidth className="mt-4" onClick={onDrawField}>
         {t("pano.bosCta")}
-      </button>
+      </Button>
       <button
         type="button"
         onClick={onNece}

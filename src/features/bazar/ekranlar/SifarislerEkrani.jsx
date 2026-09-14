@@ -1,4 +1,5 @@
 import { Icon } from "../../../components/Icon.jsx";
+import { Button } from "../../../components/Button.jsx";
 import { Skeleton } from "../../../components/Skeleton.jsx";
 import { C, KOLGE, font } from "../../../theme/tokens.js";
 import { useI18n } from "../../../i18n/index.jsx";
@@ -40,9 +41,9 @@ export function SifarislerEkrani({ get, geri, sifarisHali, onOpenHesab }) {
           <p className="mt-1 text-sm" style={{ color: C.muted }}>
             {t("bazar.sifarisler.girisIzah")}
           </p>
-          <button type="button" onClick={onOpenHesab} className="basilir mt-4 w-full rounded-xl text-sm font-bold" style={{ minHeight: 48, backgroundColor: C.pine, color: "#fff" }}>
+          <Button fullWidth className="mt-4" onClick={onOpenHesab}>
             {t("bazar.maliyye.girisCta")}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -65,9 +66,9 @@ export function SifarislerEkrani({ get, geri, sifarisHali, onOpenHesab }) {
           <p className="text-sm font-bold" style={{ color: C.ink }}>
             {t("bazar.sifarisler.xeta")}
           </p>
-          <button type="button" onClick={sifarisHali.yenile} className="basilir mt-3 w-full rounded-xl text-sm font-bold" style={{ minHeight: 44, backgroundColor: C.pine, color: "#fff" }}>
+          <Button fullWidth className="mt-3" onClick={sifarisHali.yenile}>
             {t("common.retry")}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -82,9 +83,9 @@ export function SifarislerEkrani({ get, geri, sifarisHali, onOpenHesab }) {
           <p className="mt-1 text-sm" style={{ color: C.muted }}>
             {t("bazar.sifarisler.bosIzah")}
           </p>
-          <button type="button" onClick={() => get.ev()} className="basilir mt-4 w-full rounded-xl text-sm font-bold" style={{ minHeight: 48, backgroundColor: C.pine, color: "#fff" }}>
+          <Button fullWidth className="mt-4" onClick={() => get.ev()}>
             {t("bazar.sebet.bosCta")}
-          </button>
+          </Button>
         </div>
       )}
 

@@ -105,6 +105,9 @@ export default function App() {
 
   const route = routeForPath(path);
   const Screen = SCREENS[route.id];
+  // Checkout (/bazar/sifaris — hər iki addım və uğur ekranı) və açıq kredit
+  // vərəqi: alt naviqasiya gizlənir (bax: aşağıdakı BottomNav şərti)
+  const fokusRejimi = loanAcilis !== null || /^\/bazar\/sifaris(\/|$)/.test(path);
 
   // Keçid istiqaməti tab sırasından: sağdakı taba keçəndə ekran sağdan
   // gəlir (bax: index.css, ekran-gel). İlk açılışda istiqamət yoxdur.
@@ -246,7 +249,11 @@ export default function App() {
             </main>
 
             <Toast />
-            <BottomNav />
+            {/* FOKUS REJİMİ: pul qərarı verilən yerlərdə — kredit müraciəti
+                (vərəq açıq), checkout və sifariş təsdiqi — alt naviqasiya
+                gizlənir. Ekranda geri düyməsi və BİR əsas hərəkət qalır;
+                tab çubuğu "başqa yerə keç" təklifi ilə diqqəti bölürdü. */}
+            {!fokusRejimi && <BottomNav />}
 
             {loanOpen && (
               <Suspense fallback={null}>

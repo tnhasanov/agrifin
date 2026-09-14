@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { Button } from "../../components/Button.jsx";
 import { Icon } from "../../components/Icon.jsx";
 import { Sheet } from "../../components/Sheet.jsx";
-import { C, RADIUS, TOXUNMA, font } from "../../theme/tokens.js";
+import { C, TOXUNMA, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { formatQiymet } from "../../lib/format.js";
 import { maliyyeYoxla } from "../../services/bazar.js";
@@ -49,14 +50,9 @@ export function MaliyyeKarti({ mebleg, maliyyeMeblegi, onYoxla }) {
       <p className="mt-1 text-xs leading-relaxed" style={{ color: C.mal }}>
         {t("bazar.maliyye.qeyd")}
       </p>
-      <button
-        type="button"
-        onClick={onYoxla}
-        className="basilir mt-3 w-full rounded-xl text-sm font-bold"
-        style={{ minHeight: 46, backgroundColor: C.mal, color: "#fff" }}
-      >
+      <Button variant="secondary" ton="mal" fullWidth className="mt-3" onClick={onYoxla}>
         {t("bazar.maliyye.yoxla")}
-      </button>
+      </Button>
     </section>
   );
 }
@@ -218,36 +214,27 @@ export function MaliyyeVereqi({ acilib, onBagla, setirler, mebleg, maliyyeMebleg
 
       <div className="mt-4 pb-2">
         {hal === "girisYox" ? (
-          <button
-            type="button"
+          <Button
+            fullWidth
             onClick={() => {
               onBagla();
               onOpenHesab?.();
             }}
-            className="basilir w-full text-sm font-bold"
-            style={{ minHeight: 48, borderRadius: RADIUS.idare, backgroundColor: C.pine, color: "#fff" }}
           >
             {t("bazar.maliyye.girisCta")}
-          </button>
+          </Button>
         ) : (
-          <button
-            type="button"
+          <Button
+            ton="mal"
+            fullWidth
             disabled={!musbet}
             onClick={() => {
               onBagla();
               onDavam?.(netice);
             }}
-            className="basilir w-full text-sm font-bold"
-            style={{
-              minHeight: 48,
-              borderRadius: RADIUS.idare,
-              backgroundColor: musbet ? C.mal : C.mist,
-              color: musbet ? "#fff" : C.muted,
-              border: `1px solid ${musbet ? C.mal : C.line}`,
-            }}
           >
             {t("bazar.maliyye.davam")}
-          </button>
+          </Button>
         )}
         <p className="mt-2 text-center" style={{ color: C.muted, fontSize: 11, minHeight: TOXUNMA / 2 }}>
           {t("bazar.maliyye.qeyd")}

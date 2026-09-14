@@ -35,7 +35,7 @@ function MelumatSetri({ etiket, deger }) {
  * vacib məlumat, miqdar, maliyyə kartı, oxşar məhsullar; altda yapışqan CTA.
  *
  * İKİ ALIŞ YOLU: "Səbətə əlavə et" (dolu) və maliyyələşdirilə bilən məhsulda
- * "Maliyyələşdirmə imkanını yoxla" (kontur). Uyğunluq hələ hesablanmayıb,
+ * "Maliyyələşməni yoxla" (kontur). Uyğunluq hələ hesablanmayıb,
  * ona görə düymə "yoxla" deyir, "al" yox — vərəq nəticəni göstərəndən sonra
  * davam düyməsi "səbətə əlavə et və sifarişə keç" olur.
  */

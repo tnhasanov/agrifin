@@ -20,8 +20,8 @@ import { useI18n } from "../i18n/index.jsx";
  *   • hərəkəti azaldılmış rejimdə animasiyasız işləmək
  */
 
-const ACILMA_MS = 260;
-const BAGLANMA_MS = 200;
+const ACILMA_MS = 220;
+const BAGLANMA_MS = 180;
 // Bu məsafədən çox çəkilibsə və ya bu sürətdən sürətli buraxılıbsa bağlanır.
 // Yalnız məsafəyə baxsaq sürətli "flick" işləmir, yalnız sürətə baxsaq yavaş
 // və uzun çəkmə işləmir — telefon panelləri hər ikisini yoxlayır.

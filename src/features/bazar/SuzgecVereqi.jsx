@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Sheet } from "../../components/Sheet.jsx";
 import { Icon } from "../../components/Icon.jsx";
+import { Button } from "../../components/Button.jsx";
 import { C, RADIUS, TOXUNMA } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { KATEQORIYALAR, TEDARUKCULER } from "../../../lib/bazar/kataloq.js";
@@ -152,25 +153,21 @@ export function SuzgecVereqi({ acilib, onBagla, suzgec, onTetbiq, mehsullar, ray
       </div>
 
       <div className="mt-4 flex gap-2 pb-2">
-        <button
-          type="button"
+        <Button
+          variant="secondary"
           onClick={() => setQaralama({ ...BOS_SUZGEC, kateqoriya: kateqoriyaSabit ? suzgec.kateqoriya : null })}
-          className="basilir px-4 text-sm font-bold"
-          style={{ minHeight: 48, borderRadius: RADIUS.idare, color: C.pine, backgroundColor: C.card, border: `1px solid ${C.line}` }}
         >
           {t("bazar.suzgec.sifirla")}
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          className="flex-1"
           onClick={() => {
             onTetbiq(qaralama);
             onBagla();
           }}
-          className="basilir flex-1 text-sm font-bold"
-          style={{ minHeight: 48, borderRadius: RADIUS.idare, backgroundColor: C.pine, color: "#fff" }}
         >
           {t("bazar.suzgec.goster", { say })}
-        </button>
+        </Button>
       </div>
     </Sheet>
   );

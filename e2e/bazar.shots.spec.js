@@ -48,7 +48,7 @@ test("bazar ekranları", async ({ page }, testInfo) => {
   await page.getByRole("textbox", { name: "Miqdar" }).press("Enter");
   await sakit();
   await cek("05-mehsul");
-  await page.getByRole("button", { name: "Maliyyələşdirmə imkanını yoxla" }).click();
+  await page.getByRole("button", { name: "Maliyyələşməni yoxla" }).click();
   await page.getByText("Sahəniz bu məbləği daşıya bilər").waitFor();
   await sakit();
   await cek("09-maliyye-vereqi");

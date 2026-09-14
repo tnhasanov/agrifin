@@ -1,4 +1,5 @@
 import { Icon } from "../../components/Icon.jsx";
+import { Button } from "../../components/Button.jsx";
 import { C, KOLGE, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { BitkiSekli } from "../crop/BitkiSekli.jsx";
@@ -81,15 +82,9 @@ export function TesserufatKarti({ sahe, bitki, rayon, onTovsiye, onDrawField, on
             )}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={cta.onClick}
-          className="basilir mt-3 flex w-full items-center justify-center gap-1 rounded-xl text-sm font-bold"
-          style={{ minHeight: 46, backgroundColor: C.pine, color: "#fff" }}
-        >
+        <Button fullWidth className="mt-3" ikonSag={cta.ikon} onClick={cta.onClick}>
           {cta.label}
-          <Icon name={cta.ikon} size={16} color="#fff" />
-        </button>
+        </Button>
       </div>
     </section>
   );

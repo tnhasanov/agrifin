@@ -30,7 +30,10 @@ export function BottomNav() {
             onClick={() => navigate(route.path)}
             aria-current={active ? "page" : undefined}
             className="basilir flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 py-0.5"
-            style={{ minHeight: 44 }}
+            // Radius fokus halqası üçündür: :focus-visible konturu elementin
+            // radiusunu izləyir — radiussuz düymədə klaviatura fokusu kvadrat
+            // çıxırdı (bax: index.css → FOKUS HALQASI)
+            style={{ minHeight: 44, borderRadius: 14 }}
           >
             {/* key=active: tab seçiləndə ikon bir dəfə sıçrayır */}
             <span

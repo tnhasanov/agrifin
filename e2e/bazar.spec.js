@@ -185,7 +185,7 @@ test("maliyyələşdirmə: yoxlama vərəqi → maliyyə ilə sifariş → müra
   await page.goto("/bazar/mehsul/damci-lenti-16mm-500m");
   await page.getByRole("textbox", { name: "Miqdar" }).fill("10");
   await page.getByRole("textbox", { name: "Miqdar" }).press("Enter");
-  await page.getByRole("button", { name: "Maliyyələşdirmə imkanını yoxla" }).click();
+  await page.getByRole("button", { name: "Maliyyələşməni yoxla" }).click();
 
   const vereq = page.getByRole("dialog", { name: "Maliyyələşdirməni yoxla" });
   await expect(vereq.getByText("Sahəniz bu məbləği daşıya bilər")).toBeVisible();

@@ -243,10 +243,10 @@ describe("AgriFin tətbiqi", () => {
     const slayder = await screen.findByRole("slider");
     expect(slayder).toBeInTheDocument();
 
-    // Aqro slaydere reaksiya verir: tavana yaxınlaşanda fikirləşir.
-    // Arxadakı əsas ekranda da Aqro var — yalnız dialoqun içinə baxılır.
+    // MASKOT MALİYYƏ PANELİNDƏ YOXDUR: personaj yalnız onboarding, kömək və
+    // aqronom çatındadır — pul qərarı sakit, rəqəm mərkəzli ekrandır
     const dialoq = screen.getByRole("dialog");
-    expect(dialoq.querySelector(".fermer").className).toContain("fermer--sakit");
+    expect(dialoq.querySelector(".fermer")).toBeNull();
 
     // Aylıq faiz seçilmiş əsas borca görə hesablanır və slayderlə birlikdə
     // YENİLƏNİR — "sonda bir məbləğ" modeli deyil
@@ -254,7 +254,7 @@ describe("AgriFin tətbiqi", () => {
     const evvelkiFaiz = faizSetri();
     fireEvent.change(slayder, { target: { value: slayder.max } });
     expect(faizSetri()).not.toBe(evvelkiFaiz);
-    expect(dialoq.querySelector(".fermer").className).toContain("fermer--dusunur");
+    expect(dialoq.querySelector(".fermer")).toBeNull();
 
     // "Bir ödəniş" təqdimatı TAM çıxarılıb: faiz aylıqdır, əsas borc
     // çevikdir, son tarix əsas borcun tam bağlanması üçündür
@@ -302,8 +302,10 @@ describe("AgriFin tətbiqi", () => {
 
     // Qərarı SERVER verir: nəticə təklifdir, yerli "gözləyir" yazısı deyil
     await waitFor(() => expect(screen.getByText("Təklifiniz hazırdır")).toBeInTheDocument());
-    // Uğur anı: konfeti bir dəfə səpələnir (bax: index.css, .konfeti)
-    expect(document.querySelectorAll(".konfeti")).toHaveLength(8);
+    // Uğur anı SAKİTDİR: maliyyə ekranında konfeti də, maskot da yoxdur —
+    // bu pul qərarıdır, bayram deyil (bax: LoanSheet → təklif bloku)
+    expect(document.querySelectorAll(".konfeti")).toHaveLength(0);
+    expect(document.querySelector(".fermer-gov")).toBeNull();
 
     // Göndərilən yükdə YALNIZ məbləğ var — qərar/limit/dərəcə klientdən getmir
     const cagiris = fetch.mock.calls.find(

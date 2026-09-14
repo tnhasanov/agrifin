@@ -1,4 +1,5 @@
 import { Icon } from "../../../components/Icon.jsx";
+import { Button } from "../../../components/Button.jsx";
 import { SectionTitle } from "../../../components/SectionTitle.jsx";
 import { C, KOLGE, RADIUS, font } from "../../../theme/tokens.js";
 import { useI18n } from "../../../i18n/index.jsx";
@@ -39,14 +40,9 @@ export function TovsiyeEkrani({ get, geri, sebet, sahe, bitki, rayon, plan, onDr
           <p className="mt-1 text-sm leading-relaxed" style={{ color: C.muted }}>
             {t(bitkiYox ? "bazar.tovsiye.bitkiYoxIzah" : "bazar.tovsiye.saheYoxIzah")}
           </p>
-          <button
-            type="button"
-            onClick={bitkiYox ? onOpenBitki : onDrawField}
-            className="basilir mt-4 w-full text-sm font-bold"
-            style={{ minHeight: 48, borderRadius: RADIUS.idare, backgroundColor: C.pine, color: "#fff" }}
-          >
+          <Button fullWidth className="mt-4" onClick={bitkiYox ? onOpenBitki : onDrawField}>
             {t(bitkiYox ? "bazar.teserrufat.bitkiCta" : "bazar.teserrufat.saheCta")}
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -114,15 +110,9 @@ export function TovsiyeEkrani({ get, geri, sebet, sahe, bitki, rayon, plan, onDr
       </div>
 
       {elaveOlunacaq.length > 0 && (
-        <button
-          type="button"
-          onClick={qalanlariElave}
-          className="basilir mt-3 flex w-full items-center justify-center gap-1.5 text-sm font-bold"
-          style={{ minHeight: 48, borderRadius: RADIUS.idare, backgroundColor: C.pine, color: "#fff" }}
-        >
-          <Icon name="ShoppingCart" size={16} color="#fff" />
+        <Button fullWidth className="mt-3" ikon="ShoppingCart" onClick={qalanlariElave}>
           {t("bazar.tovsiye.hamisiniElave")} · {q(elaveMebleg)}
-        </button>
+        </Button>
       )}
 
       <SectionTitle>{t("bazar.tovsiye.tovsiyeMehsullar")}</SectionTitle>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Icon } from "../../components/Icon.jsx";
+import { Button } from "../../components/Button.jsx";
 import { C } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { useStore } from "../../state/store.jsx";
@@ -94,16 +95,9 @@ export function HesabatDuymesi({ peyk, qonsu, indeksHali, kreditHali }) {
 
   return (
     <div className="mt-3">
-      <button
-        type="button"
-        onClick={yarat}
-        disabled={hal === "gedir"}
-        className="basilir flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold"
-        style={{ backgroundColor: C.pine, color: "#fff", minHeight: 48, opacity: hal === "gedir" ? 0.7 : 1 }}
-      >
-        <Icon name={hal === "gedir" ? "LoaderCircle" : "FileText"} size={16} color={C.gold} />
+      <Button fullWidth ikon="FileText" loading={hal === "gedir"} onClick={yarat}>
         {t(hal === "gedir" ? "pdf.qurulur" : "pdf.duyme")}
-      </button>
+      </Button>
       {hal === "xeta" && (
         <p className="mt-1.5 text-center text-xs" role="alert" style={{ color: C.danger }}>
           {t("pdf.xeta")}

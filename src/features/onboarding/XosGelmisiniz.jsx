@@ -1,4 +1,5 @@
 import { Icon } from "../../components/Icon.jsx";
+import { Button } from "../../components/Button.jsx";
 import { C, ARA, RADIUS, TIPO, TOXUNMA, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import heroSekli from "../../assets/hero/azerbaijan-fields-ai.webp";
@@ -99,20 +100,15 @@ export function XosGelmisiniz({ onBasla, onGiris }) {
           {t("onb.xos.izah")}
         </p>
 
-        <button
-          type="button"
+        <Button
+          size="lg"
+          fullWidth
+          className="mt-4"
           onClick={onBasla}
-          className="basilir mt-4 w-full font-bold"
-          style={{
-            backgroundColor: C.pine,
-            color: "#FFFFFF",
-            borderRadius: RADIUS.idare,
-            minHeight: 54,
-            ...TIPO.duyme,
-          }}
+          style={{ minHeight: 54 }}
         >
           {t("onb.xos.basla")}
-        </button>
+        </Button>
 
         {/* Hesab girişi İKİNCİDİR: qeydiyyat qapıda tələb olunmur, sahə
             saxlananda lazım olacaq (bax: FieldDraw → OTP axını) */}

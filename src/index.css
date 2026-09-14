@@ -224,8 +224,8 @@ button:active {
    animasiya bitdikdən sonra transform sabitlənərdi və :active kiçilməsi
    işləməzdi. */
 .giris {
-  animation: giris-qalx 320ms ease backwards;
-  animation-delay: calc(var(--i, 0) * 45ms);
+  animation: giris-qalx 180ms ease-out backwards;
+  animation-delay: calc(var(--i, 0) * 30ms);
 }
 
 @keyframes giris-qalx {
@@ -238,7 +238,7 @@ button:active {
 /* 4) Dolan zolaq: mövsüm irəliləyişi kimi göstəricilər açılanda dolur */
 .bar-dolur {
   transform-origin: left;
-  animation: bar-dol 800ms 250ms cubic-bezier(0.22, 0.9, 0.35, 1) backwards;
+  animation: bar-dol 600ms 200ms cubic-bezier(0.22, 0.9, 0.35, 1) backwards;
 }
 
 @keyframes bar-dol {
@@ -579,7 +579,7 @@ button:active {
 .zeng-yellen {
   display: inline-flex;
   transform-origin: top center;
-  animation: zeng-seslen 900ms ease-in-out 400ms 1;
+  animation: zeng-seslen 600ms ease-in-out 300ms 1;
 }
 
 @keyframes zeng-seslen {
@@ -591,7 +591,7 @@ button:active {
 }
 
 .nisan-pop {
-  animation: nisan-gel 260ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation: nisan-gel 180ms ease-out backwards;
   animation-delay: 350ms;
 }
 
@@ -604,18 +604,18 @@ button:active {
 /* Naviqasiya: seçilən tabın ikonu bir dəfə sıçrayır, fon yumşaq keçir */
 .nav-pop {
   display: inline-flex;
-  animation: nav-secildi 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: nav-secildi 160ms ease-out;
 }
 
 @keyframes nav-secildi {
   50% {
-    transform: scale(1.18) translateY(-1px);
+    transform: scale(1.06);
   }
 }
 
 /* Toast aşağıdan üzərək gəlir */
 .toast-gel {
-  animation: toast-qalx 240ms cubic-bezier(0.22, 0.9, 0.35, 1);
+  animation: toast-qalx 180ms ease-out;
 }
 
 @keyframes toast-qalx {
@@ -712,6 +712,172 @@ button:active {
 @keyframes skelet-sayris {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.45; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   FOKUS HALQASI — brauzerin kvadrat mavi konturu əvəzinə brend rəngli,
+   yuvarlaq halqa. SİLİNMİR: klaviatura və ekran oxuyucusu ilə gəzən
+   istifadəçi hara baxdığını görməlidir. :focus-visible olduğu üçün
+   toxunuş və siçan klikindən sonra görünmür — yalnız klaviaturada.
+   Kontur elementin öz radiusunu izləyir (Chromium 94+, Safari 16.4+).
+   ══════════════════════════════════════════════════════════════════ */
+:focus-visible {
+  outline: 2px solid var(--color-field);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   DÜYMƏ SİSTEMİ (bax: components/Button.jsx)
+   Hal sinifdədir, çünki :active və :focus-visible inline yazıla bilmir.
+   ══════════════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 90ms ease;
+}
+
+.btn--sm { min-height: 40px; padding: 0 14px; font-size: 14px; border-radius: 12px; }
+.btn--lg { min-height: 52px; }
+.btn--tam { width: 100%; }
+
+/* primary — ekranda BİR dənə */
+.btn--primary.btn--ton-pine { background: var(--color-pine); color: #fff; border-color: var(--color-pine); }
+.btn--primary.btn--ton-pine:active { background: var(--color-pine-pressed); border-color: var(--color-pine-pressed); }
+.btn--primary.btn--ton-mal { background: var(--color-mal); color: #fff; border-color: var(--color-mal); }
+.btn--primary.btn--ton-mal:active { background: #3d2386; border-color: #3d2386; }
+
+/* secondary — konturlu, sakit */
+.btn--secondary { background: var(--color-card); }
+.btn--secondary.btn--ton-pine { color: var(--color-pine); border-color: rgba(18, 63, 45, 0.28); }
+.btn--secondary.btn--ton-pine:active { background: var(--color-mist); border-color: var(--color-pine); }
+.btn--secondary.btn--ton-mal { color: var(--color-mal); border-color: rgba(75, 44, 163, 0.3); }
+.btn--secondary.btn--ton-mal:active { background: var(--color-mal-soft); border-color: var(--color-mal); }
+
+/* ghost — fonsuz mətn */
+.btn--ghost { background: transparent; border-color: transparent; }
+.btn--ghost.btn--ton-pine { color: var(--color-pine); }
+.btn--ghost.btn--ton-mal { color: var(--color-mal); }
+.btn--ghost:active { background: var(--color-mist); }
+
+/* danger — yalnız kritik hərəkət */
+.btn--danger { background: var(--color-danger); color: #fff; border-color: var(--color-danger); }
+.btn--danger:active { background: #9a3030; border-color: #9a3030; }
+
+/* sönük: rəngsiz səth, kursor işarəsi, basma kiçilməsi yoxdur */
+.btn:disabled,
+.btn[aria-disabled="true"]:not(.btn--yuklenir) {
+  background: var(--color-mist);
+  color: var(--color-muted);
+  border-color: var(--color-line);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* yüklənir: etiket yerində qalır (düzülüş sıçramır), klik keçmir */
+.btn--yuklenir { cursor: progress; pointer-events: none; }
+.btn--yuklenir .btn__etiket { opacity: 0.75; }
+
+.btn__spinner {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: btn-firlan 700ms linear infinite;
+}
+
+@keyframes btn-firlan {
+  to { transform: rotate(360deg); }
+}
+
+/* ── İkon düyməsi (bax: components/IconButton.jsx) ─────────────── */
+.ikon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 150ms ease, color 150ms ease, transform 90ms ease;
+}
+
+.ikon-btn--ghost:active,
+.ikon-btn--aktiv { background: var(--color-field-soft); }
+.ikon-btn--secondary { background: var(--color-card); box-shadow: 0 1px 2px rgba(18, 63, 45, 0.06), 0 4px 12px rgba(18, 63, 45, 0.06); }
+.ikon-btn--secondary:active { background: var(--color-mist); }
+.ikon-btn--ton-mal { color: var(--color-mal); }
+
+.ikon-btn__nisan {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  border: 2px solid var(--color-mist);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   HƏRƏKƏT SİYASƏTİ — davamlı bəzək animasiyası YOXDUR.
+   Personaj riqi (nəfəs, kölgə nəbzi, fikir nöqtələri) və AI kartının
+   fırlanan haşiyəsi/parıltısı/nəbzi söndürülür: maliyyə məhsulunda
+   arxa planda daim tərpənən element diqqəti pozur və "reklam" hissi
+   verir. Bir dəfəlik giriş animasiyaları (skan, cızgı, sütun) qalır —
+   onlar məlumatın gəlişini göstərir. prefers-reduced-motion aşağıdadır.
+   ══════════════════════════════════════════════════════════════════ */
+.fermer-gov,
+.fermer-kolge,
+.fermer--dusunur .fermer-gov,
+.fermer--danisir .fermer-gov,
+.fermer--narahat .fermer-gov,
+.fermer-fikir i,
+.fermer-danisiq i,
+.ai-halqa,
+.ai-ikon,
+.ai-nokta {
+  animation: none !important;
+}
+
+.ai-kart::after {
+  animation: none !important;
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

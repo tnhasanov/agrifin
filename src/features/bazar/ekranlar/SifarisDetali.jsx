@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Button } from "../../../components/Button.jsx";
 import { Icon } from "../../../components/Icon.jsx";
 import { SectionTitle } from "../../../components/SectionTitle.jsx";
 import { Skeleton } from "../../../components/Skeleton.jsx";
@@ -74,18 +75,18 @@ function UgurEkrani({ sifaris, onBax, onBazar, onMuraciet }) {
           <p className="mt-1 text-xs leading-relaxed" style={{ color: C.mal }}>
             {t("bazar.ugur.maliyyeIzah", { mebleg: formatQiymet(sifaris.maliyye.mebleg, lang), app: { key: "app.name" } })}
           </p>
-          <button type="button" onClick={onMuraciet} className="basilir mt-3 w-full text-sm font-bold" style={{ minHeight: 46, borderRadius: RADIUS.idare, backgroundColor: C.mal, color: "#fff" }}>
+          <Button variant="secondary" ton="mal" fullWidth className="mt-3" onClick={onMuraciet}>
             {t("bazar.ugur.maliyyeCta")}
-          </button>
+          </Button>
         </section>
       )}
 
-      <button type="button" onClick={onBax} className="basilir mt-4 w-full text-sm font-bold" style={{ minHeight: 52, borderRadius: RADIUS.idare, backgroundColor: C.pine, color: "#fff" }}>
+      <Button size="lg" fullWidth className="mt-4" onClick={onBax}>
         {t("bazar.ugur.cta")}
-      </button>
-      <button type="button" onClick={onBazar} className="basilir mt-2 w-full text-sm font-bold" style={{ minHeight: 48, borderRadius: RADIUS.idare, color: C.pine }}>
+      </Button>
+      <Button variant="ghost" fullWidth className="mt-2" onClick={onBazar}>
         {t("bazar.ugur.bazar")}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -236,18 +237,18 @@ export function SifarisDetali({ id, get, geri, sifarisHali, yeni = false, onYeni
               {t(`bazar.detal.maliyye.${sifaris.maliyye.hal}`)}
             </p>
             {sifaris.maliyye.hal === "requested" && sifaris.hal !== "cancelled" && (
-              <button type="button" onClick={() => onMuraciet(sifaris)} className="basilir mt-2 w-full text-xs font-bold" style={{ minHeight: 44, borderRadius: RADIUS.idare, backgroundColor: C.mal, color: "#fff" }}>
+              <Button variant="secondary" ton="mal" size="sm" fullWidth className="mt-2" onClick={() => onMuraciet(sifaris)}>
                 {t("bazar.detal.maliyyeCta")}
-              </button>
+              </Button>
             )}
           </div>
         )}
       </Bolme>
 
       {sifaris.legvOlar && !legvSorusur && (
-        <button type="button" onClick={() => setLegvSorusur(true)} className="basilir mt-5 w-full text-sm font-bold" style={{ minHeight: 48, borderRadius: RADIUS.idare, color: C.danger, backgroundColor: C.card, border: `1px solid ${C.line}` }}>
+        <Button variant="secondary" fullWidth className="mt-5" style={{ color: C.danger }} onClick={() => setLegvSorusur(true)}>
           {t("bazar.detal.legv")}
-        </button>
+        </Button>
       )}
       {legvSorusur && (
         <div className="mt-5 rounded-2xl p-4" role="alertdialog" aria-label={t("bazar.detal.legvTesdiq")} style={{ backgroundColor: C.warnSoft }}>
@@ -258,12 +259,12 @@ export function SifarisDetali({ id, get, geri, sifarisHali, yeni = false, onYeni
             {t("bazar.detal.legvIzah")}
           </p>
           <div className="mt-3 flex gap-2">
-            <button type="button" onClick={() => setLegvSorusur(false)} className="basilir flex-1 text-sm font-bold" style={{ minHeight: 44, borderRadius: RADIUS.idare, backgroundColor: C.card, color: C.ink }}>
+            <Button variant="secondary" className="flex-1" onClick={() => setLegvSorusur(false)}>
               {t("bazar.detal.legvXeyr")}
-            </button>
-            <button type="button" onClick={legvEt} disabled={sifarisHali.gedir} className="basilir flex-1 text-sm font-bold" style={{ minHeight: 44, borderRadius: RADIUS.idare, backgroundColor: C.danger, color: "#fff" }}>
+            </Button>
+            <Button variant="danger" className="flex-1" loading={sifarisHali.gedir} onClick={legvEt}>
               {t("bazar.detal.legvBeli")}
-            </button>
+            </Button>
           </div>
         </div>
       )}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "../../components/Icon.jsx";
+import { Button } from "../../components/Button.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { merkez, sahəHektar, sahəniYoxla } from "../../../lib/geo.js";
@@ -284,19 +285,12 @@ export function FieldDraw({ location, existing, onSave, onClose }) {
           >
             {t("field.undo")}
           </button>
-          <button
-            type="button"
-            onClick={saxla}
-            disabled={!kifayetdir}
-            className="basilir flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold"
-            style={{ backgroundColor: C.pine, color: "#fff", opacity: kifayetdir ? 1 : 0.45 }}
-          >
-            <Icon name="Check" size={16} color={C.gold} />
-            {/* SÖNÜK DÜYMƏ SINIQ GÖRÜNÜR. Əvvəl 45% şəffaflıqda "Sahəni
-                saxla" yazırdı və fermer nəyin çatmadığını bilmirdi —
-                indi düymənin özü qalan işi deyir. */}
+          {/* SÖNÜK DÜYMƏ SINIQ GÖRÜNÜR. Əvvəl 45% şəffaflıqda "Sahəni
+              saxla" yazırdı və fermer nəyin çatmadığını bilmirdi —
+              indi düymənin özü qalan işi deyir. */}
+          <Button className="flex-1" ikon={kifayetdir ? "Check" : null} disabled={!kifayetdir} onClick={saxla}>
             {kifayetdir ? t("field.save") : t("field.lazimKunc", { say: 3 - noqteSayi })}
-          </button>
+          </Button>
         </div>
 
         {/* Sahəsini tapa bilməyən fermer ilişib qalmamalıdır: çəkmə həmişə

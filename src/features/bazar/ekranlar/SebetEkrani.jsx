@@ -1,4 +1,5 @@
 import { Icon } from "../../../components/Icon.jsx";
+import { Button } from "../../../components/Button.jsx";
 import { C, KOLGE, font } from "../../../theme/tokens.js";
 import { useI18n } from "../../../i18n/index.jsx";
 import { formatQiymet } from "../../../lib/format.js";
@@ -33,14 +34,9 @@ export function SebetEkrani({ get, geri, sebet, rayon, onSifaris }) {
           <p className="mt-1 text-sm" style={{ color: C.muted }}>
             {t("bazar.sebet.bosIzah")}
           </p>
-          <button
-            type="button"
-            onClick={() => get.ev()}
-            className="basilir mt-4 w-full rounded-xl text-sm font-bold"
-            style={{ minHeight: 48, backgroundColor: C.pine, color: "#fff" }}
-          >
+          <Button fullWidth className="mt-4" onClick={() => get.ev()}>
             {t("bazar.sebet.bosCta")}
-          </button>
+          </Button>
         </div>
       </div>
     );

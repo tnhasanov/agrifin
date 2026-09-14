@@ -1,6 +1,7 @@
 import { Card } from "../../components/Card.jsx";
 import { Chip } from "../../components/Chip.jsx";
 import { C, font } from "../../theme/tokens.js";
+import { Button } from "../../components/Button.jsx";
 import { useI18n } from "../../i18n/index.jsx";
 import { EtibarNisani } from "./EtibarNisani.jsx";
 
@@ -88,23 +89,13 @@ export function SaheXebardarligi({ siqnal, etibar = null, movsumSayi = null, qon
       )}
 
       <div className="mt-3 flex gap-2">
-        <button
-          type="button"
-          onClick={onChat}
-          className="flex-1 rounded-xl py-2.5 text-sm font-bold"
-          style={{ backgroundColor: C.pine, color: "#fff", minHeight: 44 }}
-        >
+        <Button className="flex-1" onClick={onChat}>
           {t(addimliDir ? "xeberdarliq.yoxlama" : "xeberdarliq.aqronom")}
-        </button>
+        </Button>
         {addimliDir && (
-          <button
-            type="button"
-            onClick={onChat}
-            className="flex-1 rounded-xl py-2.5 text-sm font-bold"
-            style={{ backgroundColor: C.mist, color: C.pine, minHeight: 44 }}
-          >
+          <Button variant="secondary" className="flex-1" onClick={onChat}>
             {t("xeberdarliq.aqronom")}
-          </button>
+          </Button>
         )}
       </div>
 

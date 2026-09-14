@@ -1,4 +1,5 @@
 import { Icon } from "../../components/Icon.jsx";
+import { Button } from "../../components/Button.jsx";
 import { Sheet } from "../../components/Sheet.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
@@ -52,14 +53,9 @@ export function SiqnalPaneli({
           <p className="mt-1 text-xs leading-relaxed" style={{ color: C.muted }}>
             {t("siqnal.locationMissingText")}
           </p>
-          <button
-            type="button"
-            onClick={onYerSec}
-            className="mt-4 w-full rounded-xl py-3 text-sm font-bold"
-            style={{ backgroundColor: C.pine, color: "#fff", minHeight: 44 }}
-          >
+          <Button fullWidth className="mt-4" onClick={onYerSec}>
             {t("location.pick")}
-          </button>
+          </Button>
         </div>
       ) : siqnallar.length === 0 ? (
         // Boş vəziyyət susqun deyil: "siqnal yoxdur" özü də xəbərdir —

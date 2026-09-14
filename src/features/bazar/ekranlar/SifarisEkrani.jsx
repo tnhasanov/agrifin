@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Button } from "../../../components/Button.jsx";
 import { Icon } from "../../../components/Icon.jsx";
 import { SectionTitle } from "../../../components/SectionTitle.jsx";
 import { C, KOLGE, RADIUS, TIPO, TOXUNMA, font } from "../../../theme/tokens.js";
@@ -180,14 +181,9 @@ export function SifarisEkrani({
             {t(girisYox ? "bazar.sifaris.girisIzah" : "bazar.sifaris.qurulmayibIzah")}
           </p>
           {girisYox && (
-            <button
-              type="button"
-              onClick={onOpenHesab}
-              className="basilir mt-4 w-full rounded-xl text-sm font-bold"
-              style={{ minHeight: 48, backgroundColor: C.pine, color: "#fff" }}
-            >
+            <Button fullWidth className="mt-4" onClick={onOpenHesab}>
               {t("bazar.maliyye.girisCta")}
-            </button>
+            </Button>
           )}
         </div>
       </div>
