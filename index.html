@@ -14,13 +14,13 @@
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
-    />
-
+    <!--
+      ŞRİFTLƏR BURADAN GETDİ. Əvvəl Google Fonts-a render bloklayan
+      <link rel="stylesheet"> vardı. İndi şriftlər paketin içindədir
+      (src/index.css → @font-face, scripts/srift-qur.py ilə qurulur):
+      başlıq şrifti Azərbaycan «ə» hərfini dəstəkləmirdi, üstəlik iki
+      əlavə origin ilk boyanmanı gecikdirirdi.
+    -->
     <title>AgriFin</title>
   </head>
   <body>

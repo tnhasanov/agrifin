@@ -53,11 +53,13 @@ export async function sebekeniQur(page, { api = "501" } = {}) {
   await page.route("**open-meteo.com/**", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(HAVA()) }),
   );
-  // Google şriftləri: sandbox-da bu sorğu uzun müddət asılı qalıb `load`
-  // hadisəsini gecikdirirdi — çoxsəhifəli testlər vaxt həddini keçirdi.
-  // Dərhal kəsilir; tətbiq sistem şriftinə düşür (dizayn yoxlanmır, axın yoxlanır).
-  await page.route("**fonts.googleapis.com/**", (route) => route.abort());
-  await page.route("**fonts.gstatic.com/**", (route) => route.abort());
+  // ŞRİFT MARŞRUTU ARTIQ YOXDUR. Əvvəl burada fonts.googleapis.com və
+  // fonts.gstatic.com kəsilirdi, çünki sandbox-da həmin sorğu asılı qalıb
+  // `load` hadisəsini gecikdirirdi. Yan təsiri gec görüldü: ekran
+  // görüntüləri tətbiqin ƏSL şrifti ilə deyil, sistem şrifti ilə çıxırdı,
+  // yəni başlıq şriftinin Azərbaycan «ə» hərfini daşımaması testlərdə heç
+  // vaxt görünə bilməzdi. İndi şriftlər paketin içindədir (src/index.css),
+  // kənar sorğu yoxdur və testlər həqiqi tipoqrafiyanı görür.
   await page.route("**arcgisonline.com/**", (route) =>
     route.fulfill({ status: 200, contentType: "image/png", body: BIR_PIKSEL }),
   );

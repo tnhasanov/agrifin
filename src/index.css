@@ -48,28 +48,62 @@
   --color-danger: #b33a3a;
   --color-danger-soft: #fcebec;
 
-  /* MANAT ŞRİFTİ YIĞININ BAŞINDADIR — bax: aşağıdakı @font-face */
-  --font-display: "AgriFinManat", "Sora", system-ui, sans-serif;
-  --font-body: "AgriFinManat", "Inter", system-ui, sans-serif;
+  /*
+   * BAŞLIQ ŞRİFTİNDƏN SONRA INTER TƏSADÜFİ DEYİL: Plus Jakarta Sans-da
+   * əsas kiril bloku yoxdur, ona görə onun @font-face-i latın+AZ ilə
+   * məhdudlaşdırılıb. Rus interfeysində başlıq cihazın şriftinə yox,
+   * bizim göndərdiyimiz Inter-ə düşür. Bax: scripts/srift-qur.py
+   */
+  --font-display: "PlusJakartaSans", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
 }
 
 /**
- * ₼ (U+20BC) üçün tək hərflik ehtiyat şrift.
+ * ŞRİFTLƏR PAKETİN İÇİNDƏDİR — Google Fonts-a sorğu YOXDUR.
  *
- * NİYƏ: Sora-da bu işarə ÜMUMİYYƏTLƏ yoxdur (ən iri məbləğ Sora ilə
- * yazılır), Inter-də isə ayrıca `latin-ext` faylındadır və zəif şəbəkədə
- * gec gəlir. Hər iki halda işarə cihazın öz şriftinə düşür: başqa
- * qalınlıq, başqa hündürlük — rəqəmin yanında yad simvol kimi görünür.
+ * Səbəb və ölçmələr: scripts/srift-qur.py başlığı. Qısası: köhnə başlıq
+ * şrifti Sora Azərbaycan «Ə/ə» hərfini ümumiyyətlə daşımırdı, ona görə hər
+ * başlıqda həmin hərf cihazın öz şriftinə düşürdü.
  *
- * `unicode-range` yalnız bu bir hərfi tutur, ona görə mətnin qalanı
- * toxunulmaz qalır. Fayl 552 baytdır və paketlə birlikdə gedir — əlavə
- * şəbəkə sorğusu yoxdur. Qurmaq: scripts/manat-srifti.py
+ * Hər fayl DƏYİŞƏN şriftdir: 400-dən 800-ə qədər bütün qalınlıqlar bir
+ * fayldadır, yəni qalınlıq başına ayrıca sorğu getmir. `font-weight`
+ * aralıq kimi verilir ki, brauzer interpolyasiya etsin.
+ *
+ * `font-display: swap` QƏSDƏNDİR: fayllar yerlidir və dərhal gəlir, amma
+ * keş boş olanda mətnin görünməsi şriftin yüklənməsindən vacibdir.
  */
 @font-face {
-  font-family: "AgriFinManat";
-  src: url("./assets/fonts/manat.woff2") format("woff2");
-  unicode-range: U+20BC;
-  font-display: block;
+  font-family: "PlusJakartaSans";
+  src: url("./assets/fonts/plusjakartasans-latinaz.woff2") format("woff2");
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+  /* KİRİL QƏSDƏN YOXDUR: bu şriftdə əsas kiril bloku yoxdur. Aralığı
+     məhdudlaşdırmasaq brauzer rus mətnini ona verməyə çalışar və hərf-hərf
+     ehtiyata düşərdi. İndi rus başlığı bütöv şəkildə Inter-ə keçir. */
+  unicode-range: U+0000-00FF, U+0100-017F, U+018F, U+0259, U+02BB-02BC, U+2000-206F,
+    U+20A0-20BF, U+2116, U+2212, U+2191, U+2193, U+25B2, U+25BC;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("./assets/fonts/inter-latinaz.woff2") format("woff2");
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0100-017F, U+018F, U+0259, U+02BB-02BC, U+2000-206F,
+    U+20A0-20BF, U+2116, U+2212, U+2191, U+2193, U+25B2, U+25BC;
+}
+
+/* Kiril ayrıca fayldadır: Azərbaycan və ingilis interfeysində heç vaxt
+   yüklənmir, rus interfeysində isə yalnız o gəlir. */
+@font-face {
+  font-family: "Inter";
+  src: url("./assets/fonts/inter-kiril.woff2") format("woff2");
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0400-045F, U+0490-0491, U+2116;
 }
 
 @layer base {

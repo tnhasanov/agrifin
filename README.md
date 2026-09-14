@@ -63,6 +63,36 @@ src/
 3. **Vəziyyət bir yerdədir.** `state/store.jsx` — pulqabı, kreditlər, əməliyyatlar.
    Komponentlər `useStore()` ilə oxuyur.
 
+### Şriftlər
+
+Şriftlər **paketin içindədir**, Google Fonts-a sorğu getmir. Başlıq üçün
+Plus Jakarta Sans, mətn üçün Inter; hər ikisi dəyişən (variable) şriftdir,
+yəni bir fayl 400-dən 800-ə qədər bütün qalınlıqları verir.
+
+| Fayl | Nə üçün | Ölçü |
+|---|---|---|
+| plusjakartasans-latinaz.woff2 | başlıq, latın + AZ | 22 KB |
+| inter-latinaz.woff2 | mətn, latın + AZ | 39 KB |
+| inter-kiril.woff2 | yalnız rus interfeysi | 12 KB |
+
+Azərbaycan və ingilis dilində cəmi 61 KB yüklənir; kiril faylı yalnız rus
+interfeysində gəlir (`unicode-range`).
+
+**Niyə Sora getdi:** həmin şriftdə `Ə` və `ə` hərfləri ümumiyyətlə yox idi,
+ona görə hər başlıqda dilin ən çox işlənən hərfi cihazın öz şriftinə
+düşürdü. Outfit, Figtree, Urbanist, Manrope və Rubik də eyni səbəbdən
+yararsızdır. Tam izah və ölçmələr: `scripts/srift-qur.py`.
+
+⚠ Başlıq şriftində **əsas kiril bloku yoxdur**. Bu, qəsdən idarə olunur:
+onun `@font-face` elanı latın və AZ aralığı ilə məhdudlaşıb, ona görə rus
+başlıqları cihazın şriftinə yox, bizim göndərdiyimiz Inter-ə düşür. Başlıq
+şriftini dəyişəndə həmin `unicode-range` də yoxlanmalıdır.
+
+Şriftləri yenidən qurmaq: `python3 scripts/srift-qur.py`
+(`pip install fonttools brotli`). Qoruma testi: `e2e/srift.spec.js` — hər
+AZ hərfinin brend şrifti ilə çəkildiyini ölçür və kənar origin-ə sorğu
+getmədiyini yoxlayır.
+
 ### Yeni ekran əlavə etmək
 
 `src/screens/` içində fayl yarat → `routes.js`-ə sətir əlavə et → `App.jsx`-dəki
@@ -394,8 +424,6 @@ Prioritet sırası ilə:
    izlənilə bilən (auditable) olmalıdır.
 7. **KYC və maliyyə tənzimləməsi.** Kredit və kart məhsulu bank lisenziyası və ya
    partnyor bank tələb edir. Bu, texniki deyil, hüquqi işdir və ən uzun sürəndir.
-6. **Şriftləri öz üzərimizdə saxlamaq.** Sora/Inter indi Google-dan gəlir —
-   oflayn rejimdə brend şrifti itir və üçüncü tərəfə sorğu gedir.
 7. **Bazar qiymətləri** üçün real mənbə (dövlət statistikası və ya birja).
 8. **Karbon MRV.** Kredit satışı real registr (Verra/Gold Standard) tələb edir.
 9. **Telemetriya və xəta izləmə** — hansı tövsiyələrin tamamlandığını ölçmək
