@@ -14,6 +14,7 @@ import { MehsulKarti } from "../MehsulKarti.jsx";
 import { MehsulSekli } from "../MehsulSekli.jsx";
 import { MiqdarSecici } from "../MiqdarSecici.jsx";
 import { MaliyyeNisani, OrijinalNisani, PulsuzCatdirilmaNisani, StokNisani, TedarukcuNisani } from "../Nisanlar.jsx";
+import { QiymetMenbeyi } from "../QiymetMenbeyi.jsx";
 
 function MelumatSetri({ etiket, deger }) {
   if (!deger) return null;
@@ -55,6 +56,9 @@ export function MehsulEkrani({ kod, get, geri, sebet, rayon, bitki, onMaliyyeIle
   }
 
   const tedarukcu = tedarukcuTap(mehsul.tedarukcu);
+  const saticiNumune = mehsul.qiymetNovu === "bazar";
+  const saticiTesdiqli = !saticiNumune && tedarukcu?.tesdiqli;
+  const TedarukcuSetri = saticiNumune ? "div" : "button";
   const q = (v) => formatQiymet(v, lang);
   const vahid = t(`bazar.vahid.${mehsul.vahidKey}`);
   const cemi = qepik(mehsul.qiymet * say);
@@ -116,7 +120,7 @@ export function MehsulEkrani({ kod, get, geri, sebet, rayon, bitki, onMaliyyeIle
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        <TedarukcuNisani tesdiqli={tedarukcu?.tesdiqli} />
+        <TedarukcuNisani tesdiqli={saticiTesdiqli} />
         <MaliyyeNisani maliyye={mehsul.maliyye} />
         <OrijinalNisani orijinal={mehsul.orijinal} />
         <PulsuzCatdirilmaNisani pulsuz={pulsuzCatdirilma(mehsul)} />
@@ -134,12 +138,17 @@ export function MehsulEkrani({ kod, get, geri, sebet, rayon, bitki, onMaliyyeIle
           {t("bazar.vahidBasina", { vahid })}
         </span>
       </p>
+      <QiymetMenbeyi mehsul={mehsul} />
+      {mehsul.qiymetNovu === "bazar" && (
+        <p className="mt-1.5 text-[11px] leading-4" style={{ color: C.muted }}>
+          {t("bazar.qiymet.sifarisQeyd")}
+        </p>
+      )}
 
       {/* Tədarükçü sətri — səhifəsinə keçid */}
-      <button
-        type="button"
-        onClick={() => get.tedarukcu(mehsul.tedarukcu)}
-        className="basilir mt-3 flex w-full items-center gap-3 rounded-2xl p-3 text-left"
+      <TedarukcuSetri
+        {...(!saticiNumune ? { type: "button", onClick: () => get.tedarukcu(mehsul.tedarukcu) } : {})}
+        className={`${saticiNumune ? "" : "basilir"} mt-3 flex w-full items-center gap-3 rounded-2xl p-3 text-left`}
         style={{ backgroundColor: C.card, boxShadow: KOLGE.kart, minHeight: 56 }}
       >
         <span className="flex shrink-0 items-center justify-center rounded-xl font-extrabold" style={{ width: 36, height: 36, backgroundColor: C.fieldSoft, color: C.pine, fontFamily: font.display }}>
@@ -147,15 +156,15 @@ export function MehsulEkrani({ kod, get, geri, sebet, rayon, bitki, onMaliyyeIle
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-xs" style={{ color: C.muted }}>
-            {t("bazar.mehsul.tedarukcu")}
+            {t(saticiNumune ? "bazar.qiymet.saticiNumune" : "bazar.mehsul.tedarukcu")}
           </span>
           <span className="flex items-center gap-1.5 text-sm font-bold" style={{ color: C.ink }}>
             <span className="truncate">{tedarukcu?.ad}</span>
-            <TedarukcuNisani tesdiqli={tedarukcu?.tesdiqli} tam kicik />
+            <TedarukcuNisani tesdiqli={saticiTesdiqli} tam kicik />
           </span>
         </span>
-        <Icon name="ChevronRight" size={18} color={C.muted} />
-      </button>
+        {!saticiNumune && <Icon name="ChevronRight" size={18} color={C.muted} />}
+      </TedarukcuSetri>
 
       {rayonaGedir != null && (
         <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold" style={{ color: rayonaGedir ? C.field : C.warn }}>

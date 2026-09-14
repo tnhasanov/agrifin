@@ -109,7 +109,7 @@ export function TedarukcuEkrani({ kod, get, geri, sebetSayi, rayon, bitki }) {
               aria-selected={secili}
               onClick={() => setBolme(b)}
               className="basilir flex-1 rounded-lg text-sm font-bold"
-              style={{ minHeight: 40, backgroundColor: secili ? C.card : "transparent", color: secili ? C.ink : C.muted, boxShadow: secili ? KOLGE.kart : "none" }}
+              style={{ minHeight: 44, backgroundColor: secili ? C.card : "transparent", color: secili ? C.ink : C.muted, boxShadow: secili ? KOLGE.kart : "none" }}
             >
               {t(`bazar.tedarukcu.${b}`)}
             </button>

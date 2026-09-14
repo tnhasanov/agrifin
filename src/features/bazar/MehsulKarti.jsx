@@ -5,6 +5,7 @@ import { formatQiymet } from "../../lib/format.js";
 import { pulsuzCatdirilma, rayonaCatdirilir, tedarukcuTap } from "../../../lib/bazar/kataloq.js";
 import { MehsulSekli } from "./MehsulSekli.jsx";
 import { MaliyyeNisani, StokNisani, TedarukcuNisani } from "./Nisanlar.jsx";
+import { QiymetMenbeyi } from "./QiymetMenbeyi.jsx";
 
 /**
  * MƏHSUL KARTI — iki düzülüş:
@@ -23,6 +24,8 @@ import { MaliyyeNisani, StokNisani, TedarukcuNisani } from "./Nisanlar.jsx";
 export function MehsulKarti({ mehsul, duzum = "siyahi", rayon = null, onAc, elave = null, sira = 0 }) {
   const { t, lang } = useI18n();
   const tedarukcu = tedarukcuTap(mehsul.tedarukcu);
+  const saticiNumune = mehsul.qiymetNovu === "bazar";
+  const saticiTesdiqli = !saticiNumune && tedarukcu?.tesdiqli;
   const rayonaGedir = rayon?.kod ? rayonaCatdirilir(mehsul, rayon.kod) : null;
   const vahid = t(`bazar.vahid.${mehsul.vahidKey}`);
   const etiket = `${mehsul.ad} — ${formatQiymet(mehsul.qiymet, lang)}`;
@@ -46,7 +49,7 @@ export function MehsulKarti({ mehsul, duzum = "siyahi", rayon = null, onAc, elav
       >
         <MehsulSekli mehsul={mehsul} olcu={128} radius={14} />
         <span className="mt-2 flex items-center gap-1">
-          <TedarukcuNisani tesdiqli={tedarukcu?.tesdiqli} kicik />
+          <TedarukcuNisani tesdiqli={saticiTesdiqli} kicik />
           <StokNisani stok={mehsul.stok} kicik />
         </span>
         <span
@@ -58,6 +61,7 @@ export function MehsulKarti({ mehsul, duzum = "siyahi", rayon = null, onAc, elav
         <span className="mt-1 text-sm font-extrabold" style={{ color: C.ink, fontFamily: font.display, fontVariantNumeric: "tabular-nums" }}>
           {formatQiymet(mehsul.qiymet, lang)}
         </span>
+        <QiymetMenbeyi mehsul={mehsul} kicik />
       </button>
     );
   }
@@ -80,8 +84,11 @@ export function MehsulKarti({ mehsul, duzum = "siyahi", rayon = null, onAc, elav
             {mehsul.ad}
           </span>
           <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs" style={{ color: C.muted }}>
-            <span className="truncate">{tedarukcu?.ad}</span>
-            <TedarukcuNisani tesdiqli={tedarukcu?.tesdiqli} kicik />
+            <span className="truncate">
+              {tedarukcu?.ad}
+              {saticiNumune ? ` · ${t("bazar.qiymet.saticiNumuneQisa")}` : ""}
+            </span>
+            <TedarukcuNisani tesdiqli={saticiTesdiqli} kicik />
           </span>
           <span className="mt-auto flex items-end justify-between gap-2 pt-1.5">
             <span>
@@ -102,6 +109,7 @@ export function MehsulKarti({ mehsul, duzum = "siyahi", rayon = null, onAc, elav
             )}
             <StokNisani stok={mehsul.stok} kicik />
           </span>
+          <QiymetMenbeyi mehsul={mehsul} kicik />
           {rayonaGedir === true && (
             <span className="mt-1 flex items-center gap-1" style={{ color: C.field, fontSize: 11, lineHeight: "14px" }}>
               <Icon name="Truck" size={12} color={C.field} />

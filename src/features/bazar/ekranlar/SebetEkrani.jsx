@@ -60,7 +60,7 @@ export function SebetEkrani({ get, geri, sebet, rayon, onSifaris }) {
             type="button"
             onClick={sebet.temizle}
             className="basilir rounded-full px-3 text-xs font-bold"
-            style={{ minHeight: 40, color: C.muted, backgroundColor: C.card, border: `1px solid ${C.line}` }}
+            style={{ minHeight: 44, color: C.muted, backgroundColor: C.card, border: `1px solid ${C.line}` }}
           >
             {t("bazar.sebet.temizle")}
           </button>

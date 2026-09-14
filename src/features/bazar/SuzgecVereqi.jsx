@@ -14,7 +14,7 @@ function Cip({ secili, label, onClick, ikon }) {
       aria-pressed={secili}
       className="basilir flex items-center gap-1.5 rounded-full px-3 text-xs font-semibold"
       style={{
-        minHeight: 40,
+        minHeight: 44,
         backgroundColor: secili ? C.pine : C.mist,
         color: secili ? "#fff" : C.ink,
         border: `1px solid ${secili ? C.pine : "transparent"}`,
@@ -221,7 +221,7 @@ export function SiyahiAletleri({ say, sira, suzgec, onSira, onSuzgec }) {
           type="button"
           onClick={onSira}
           className="basilir flex items-center gap-1 rounded-full px-3 text-xs font-bold"
-          style={{ minHeight: 40, backgroundColor: C.card, border: `1px solid ${C.line}`, color: C.ink }}
+          style={{ minHeight: 44, backgroundColor: C.card, border: `1px solid ${C.line}`, color: C.ink }}
         >
           <Icon name="ArrowUpDown" size={14} color={C.muted} />
           {t(`bazar.sira.${sira}`)}
@@ -232,7 +232,7 @@ export function SiyahiAletleri({ say, sira, suzgec, onSira, onSuzgec }) {
           aria-label={aktiv > 0 ? `${t("bazar.suzgec")} (${aktiv})` : t("bazar.suzgec")}
           className="basilir flex items-center gap-1 rounded-full px-3 text-xs font-bold"
           style={{
-            minHeight: 40,
+            minHeight: 44,
             backgroundColor: aktiv > 0 ? C.pine : C.card,
             border: `1px solid ${aktiv > 0 ? C.pine : C.line}`,
             color: aktiv > 0 ? "#fff" : C.ink,

@@ -125,8 +125,8 @@ describe("bazar API — təhlükəsizlik", () => {
       },
     });
     expect(cavab.statusCode).toBe(200);
-    expect(cavab.govde.hesab.araCem).toBe(798);
-    expect(cavab.govde.hesab.cemi).toBe(798);
+    expect(cavab.govde.hesab.araCem).toBe(450);
+    expect(cavab.govde.hesab.cemi).toBe(465);
     expect(cavab.govde.hesab.setirler[0].tedarukcu).toBe("agrosupply");
     expect(cavab.govde.numune).toBe(true);
   });
@@ -143,12 +143,12 @@ describe("bazar API — təhlükəsizlik", () => {
     expect(cavab.statusCode).toBe(200);
     const { sifaris } = cavab.govde;
     expect(sifaris.hal).toBe("new");
-    expect(sifaris.araCem).toBe(798);
-    expect(sifaris.cemi).toBe(798);
-    expect(sifaris.setirler[0].vahidQiymet).toBe(39.9);
+    expect(sifaris.araCem).toBe(450);
+    expect(sifaris.cemi).toBe(465);
+    expect(sifaris.setirler[0].vahidQiymet).toBe(22.5);
     const [setir] = await sorgu("SELECT istifadeci_id, total FROM marketplace_orders");
     expect(setir.istifadeci_id).toBe(a.id);
-    expect(Number(setir.total)).toBe(798);
+    expect(Number(setir.total)).toBe(465);
   });
 
   it("B fermeri A-nın sifarişini görmür və ləğv edə bilmir (IDOR)", async () => {
@@ -244,9 +244,9 @@ describe("bazar API — sifariş", () => {
     expect(sifaris.hal).toBe("new");
     expect(sifaris.legvOlar).toBe(true);
     expect(sifaris.setirler).toHaveLength(2);
-    expect(sifaris.araCem).toBe(1018);
-    expect(sifaris.catdirilmaHaqqi).toBe(0);
-    expect(sifaris.cemi).toBe(1018);
+    expect(sifaris.araCem).toBe(670);
+    expect(sifaris.catdirilmaHaqqi).toBe(15);
+    expect(sifaris.cemi).toBe(685);
     expect(sifaris.tedarukculer.map((t) => t.kod).sort()).toEqual(["agrosupply", "azertoxum"]);
     // Sahə konteksti anderraytinq üçün snapshot-dur
     expect(sifaris.bitki).toBe("pomidor");
@@ -305,8 +305,8 @@ describe("bazar API — maliyyələşdirmə", () => {
     const cavab = await yoxla(a.cookie);
     expect(cavab.statusCode).toBe(200);
     expect(cavab.govde.maliyye.hal).toBe("uygun");
-    expect(cavab.govde.maliyye.mebleg).toBe(1018);
-    expect(cavab.govde.maliyye.tesdiq).toBe(1018);
+    expect(cavab.govde.maliyye.mebleg).toBe(670);
+    expect(cavab.govde.maliyye.tesdiq).toBe(670);
     expect(cavab.govde.maliyye.illikFaiz).toBe(KREDIT_SERTLERI.illikFaiz);
     expect(cavab.govde.maliyye.ilkAyFaiz).toBeGreaterThan(0);
     expect(await sorgu("SELECT id FROM credit_applications")).toEqual([]);
@@ -322,7 +322,7 @@ describe("bazar API — maliyyələşdirmə", () => {
 
   it("minimum kredit məbləğindən az səbət 'meblegAzdir' verir", async () => {
     const a = await fermer();
-    const cavab = await yoxla(a.cookie, [{ kod: "karbamid-46-50kq", say: 1 }]); // 39,90
+    const cavab = await yoxla(a.cookie, [{ kod: "karbamid-46-50kq", say: 1 }]); // 22,50
     expect(cavab.govde.maliyye.hal).toBe("meblegAzdir");
     expect(cavab.govde.maliyye.minKredit).toBe(KREDIT_SERTLERI.minKredit);
   });
@@ -342,13 +342,13 @@ describe("bazar API — maliyyələşdirmə", () => {
     const { sifaris } = cavab.govde;
     expect(sifaris.odenisUsulu).toBe("agrofin_financing");
     expect(sifaris.maliyyeIstenilib).toBe(true);
-    expect(sifaris.maliyye).toEqual({ hal: "requested", mebleg: 1018, muracietId: null });
+    expect(sifaris.maliyye).toEqual({ hal: "requested", mebleg: 670, muracietId: null });
     // Sifariş kredit mühərrikini ÇAĞIRMIR — müraciət hələ yoxdur
     expect(await sorgu("SELECT id FROM credit_applications")).toEqual([]);
 
     // Fermer LoanSheet-dən müraciət göndərir (mövcud kredit API-si)
     const muraciet = await isle(
-      { method: "POST", cookie: a.cookie, body: { emel: "muraciet", mebleg: 1018 } },
+      { method: "POST", cookie: a.cookie, body: { emel: "muraciet", mebleg: 670 } },
       kreditHandler,
     );
     expect(muraciet.statusCode).toBe(200);
@@ -360,7 +360,7 @@ describe("bazar API — maliyyələşdirmə", () => {
       body: { emel: "maliyye-bagla", sifarisId: sifaris.id, muracietId },
     });
     expect(bagla.statusCode).toBe(200);
-    expect(bagla.govde.sifaris.maliyye).toEqual({ hal: "linked", mebleg: 1018, muracietId });
+    expect(bagla.govde.sifaris.maliyye).toEqual({ hal: "linked", mebleg: 670, muracietId });
     expect(bagla.govde.sifaris.hadiseler.at(-1).nov).toBe("financing_linked");
   });
 

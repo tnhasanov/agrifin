@@ -74,7 +74,7 @@ export function BazarEvi({ get, sebetSayi, aktivSifarisSayi, sahe, bitki, rayon,
           type="button"
           onClick={() => get.axtar()}
           className="basilir -mr-2 flex items-center gap-0.5 px-2 text-xs font-semibold"
-          style={{ color: C.field, minHeight: 40 }}
+          style={{ color: C.field, minHeight: 44 }}
         >
           {t("bazar.hamisinaBax")}
           <Icon name="ChevronRight" size={14} color={C.field} />
