@@ -1,9 +1,10 @@
 // api/kredit.js — kredit sistemi: müraciət, qərar, təklif, kredit, ödəniş.
 //
-// NİYƏ BİR FUNKSİYA: Vercel Hobby planında api/ faylı = funksiya, limit 12.
-// Hazırda 10-u doludur (bax: api/). Kredit axını ayrı-ayrı fayllara bölünsəydi
-// limit dolardı. Əməl POST gövdəsindəki `emel` sahəsindən seçilir — api/hesab.js
-// ilə eyni üslub.
+// NİYƏ BİR FUNKSİYA: müraciət → qərar → təklif → kredit BİR vəziyyət maşınıdır
+// (bax: KECIDLER). Keçid qaydası tək yerdə yaşamalıdır — ayrı fayllarda hər
+// əməl qaydanın öz nüsxəsini daşıyardı və zamanla ayrılardılar. (Tarixi səbəb
+// Hobby planının 12 funksiya limiti idi; plan Pro-dur, limit bağlamır.)
+// Əməl POST gövdəsindəki `emel` sahəsindən seçilir — api/hesab.js ilə eyni üslub.
 //
 //   GET                    → {muraciet, qerar, teklif, kredit, hadiseler}
 //   GET ?tarixce=1         → bütün müraciətlərin qısa tarixçəsi

@@ -409,6 +409,20 @@ Vercel: repo qoşulduqda avtomatik build olunur (`npm run build` → `dist/`).
 `vercel.json` SPA yollarını `index.html`-ə yönləndirir və statik faylları keşləyir.
 Netlify və ya digər statik hostinq üçün eyni yönləndirmə qaydası lazımdır.
 
+### Vercel planı
+
+Layihə **Pro** planındadır. İki səbəb — biri texniki, biri hüquqi:
+
+- **Funksiya sayı.** `api/` qovluğundakı hər fayl ayrıca serverless
+  funksiyadır. Hobby planının 12 funksiyalıq limiti `api/bazar.js` ilə tam
+  dolmuşdu: növbəti hər backend əməli mövcud fayllardan birinin içinə
+  sığışdırılmalı idi. Pro-da bu tavan bağlamır. Mövcud qruplaşdırma
+  (`emel` ilə dispetçer) qalır, amma artıq MƏCBURİYYƏT deyil — seçimdir və
+  səbəbi hər faylın başlığında yazılıb.
+- **Lisenziya.** Hobby planı yalnız şəxsi, qeyri-kommersiya istifadəsi üçündür.
+  Real fermerlərlə kredit pilotu kommersiya istifadəsidir, ona görə pilot
+  başlamazdan əvvəl Pro onsuz da tələb olunurdu.
+
 ### Preview deployment üçün TƏLƏBLƏR
 
 Vercel-də build əmri `npm run vercel-build`-dir (bax: `scripts/vercel-build.mjs`).
@@ -471,8 +485,8 @@ Hissələr:
   pepper ilə); sürət hədləri bazadadır — instanslar arası paylaşılır.
 - `lib/sms.js` — SMS arxası. `SMS_URL` yoxdursa kod funksiya loguna yazılır
   (yerli şlüz müqaviləsinə qədər); müqavilədən sonra yalnız 2 env dəyişəni.
-- `api/hesab.js`, `api/sahe.js` — HTTP qatı (Hobby limiti üçün hər biri bir
-  funksiyadır, əməl POST gövdəsindəki `emel` ilə seçilir).
+- `api/hesab.js`, `api/sahe.js` — HTTP qatı (hər biri bir funksiyadır, əməl
+  POST gövdəsindəki `emel` ilə seçilir — bax: həmin faylların başlığı).
 - Müştəri: `src/features/hesab/` (giriş paneli + sinxron hook-u). Daxil olmuş
   fermerin sahəsi, tarixçəsi və hər indeks hesablanması avtomatik yazılır.
 
@@ -626,7 +640,7 @@ Hissələr:
   (**`actor` sütunu ilə**: fermer / sistem / operator), `marketplace_financing_requests`
   (sifariş → `credit_applications`). Hər sifariş sahə/bitki/hektar
   kontekstini daşıyır — bu, FarmScore-un növbəti girişidir.
-- `api/bazar.js` — 12-ci (sonuncu) Vercel funksiyası, `emel` ilə:
+- `api/bazar.js` — bazarın Vercel funksiyası, `emel` ilə:
   `sebet-hesabla` (sessiyasız, saf), `maliyye-yoxla` (**oxu-yalnız**: mövcud
   `anderraytinq()` çağırılır, HEÇ NƏ YAZILMIR, təsdiq vəd edilmir),
   `sifaris-yarat` (atomik CTE: sifariş + sətirlər + hadisə + maliyyə sorğusu;

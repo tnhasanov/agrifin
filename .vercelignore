@@ -1,6 +1,8 @@
 # Vercel `api/` qovluğundakı HƏR faylı ayrıca serverless funksiyaya çevirir —
-# test faylları da daxil olmaqla. Onlar həm limitə (Hobby planda 12 funksiya)
-# yer tutur, həm də /api/qonsu.test kimi ünvanlarda ictimai açıq olurdu.
+# test faylları da daxil olmaqla. Test faylı deploy olunsa /api/qonsu.test
+# kimi ünvanda İCTİMAİ AÇIQ olur: fikstura məlumatı, daxili sorğular və
+# köməkçi funksiyalar internetə çıxır. Səbəb plandan asılı deyil — Pro-da
+# funksiya limiti problem olmasa da bu istisna qalır.
 #
 # Paylaşılan modullar `lib/` qovluğuna köçürülüb: `api/` xaricindəki fayllar
 # funksiya sayılmır, amma import olunduqda paketə daxil edilir.

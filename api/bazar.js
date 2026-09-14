@@ -1,9 +1,11 @@
 // api/bazar.js — bazar: səbət hesabı, maliyyələşdirmə yoxlaması, sifariş, ləğv.
 //
-// NİYƏ BİR FUNKSİYA: Vercel Hobby planında api/ faylı = funksiya, limit 12.
-// Bu fayl 12-cidir (bax: api/) — bazar əməlləri ayrı fayllara bölünsəydi
-// limit dolardı. Əməl POST gövdəsindəki `emel` sahəsindən seçilir
-// (api/kredit.js ilə eyni üslub).
+// NİYƏ BİR FUNKSİYA: əvvəl səbəb Hobby planının 12 funksiya limiti idi. Plan
+// Pro-ya keçdi, limit artıq bağlamır — qruplaşdırma isə QALIR, çünki səbəbi
+// təkcə limit deyil: bazar əməlləri eyni sessiya yoxlamasını, eyni kataloqu
+// və eyni məbləğ hesablamasını bölüşür. Ayrı fayllarda hər biri öz soyuq
+// start-ını və öz nüsxəsini gətirərdi. Əməl POST gövdəsindəki `emel`
+// sahəsindən seçilir (api/kredit.js ilə eyni üslub).
 //
 //   POST sebet-hesabla     → {setirler:[{kod,say}], rayonKod?} — yekunlar
 //                            KATALOQDAN (sessiya tələb etmir: yazmır)

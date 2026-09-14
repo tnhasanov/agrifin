@@ -1,7 +1,9 @@
 // api/hesab.js — hesab əməliyyatları BİR funksiyada.
 //
-// Niyə bir funksiya: Vercel Hobby planında api/ faylı = funksiya, limit 12.
-// kod-iste / kod-tesdiq / cix ayrıca fayllar olsaydı üç funksiya yeyərdi.
+// Niyə bir funksiya: kod-iste / kod-tesdiq / cix eyni OTP vəziyyətini, eyni
+// sürət həddini və eyni sessiya imzasını bölüşür — bir yerdə oxunur və bir
+// yerdə dəyişir. (Tarixi səbəb Hobby planının 12 funksiya limiti idi; plan
+// Pro-dur, limit bağlamır, qruplaşdırma öz xeyrinə qalır.)
 // Əməl POST gövdəsindəki `emel` sahəsindən seçilir.
 //
 //   GET               → diaqnostika + (sessiya varsa) telefon
