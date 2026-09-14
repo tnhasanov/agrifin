@@ -999,7 +999,7 @@ export default {
   "maliyye.sert.kartBasliq": "Next step towards credit",
 
   // ═══ MARKET ══════════════════════════════════════════════════════════
-  "bazar.basliq": "{app} Market",
+  "bazar.basliq": "Market",
   "bazar.altyazi": "Products and services for your farm",
   "bazar.axtarisYeri": "Search products, seeds, fertilizer or services",
   "bazar.sebet": "Cart",

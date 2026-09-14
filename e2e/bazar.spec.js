@@ -44,7 +44,7 @@ test("Bazar tabı var, ana səhifə təsərrüfatdan başlayır", async ({ page 
   await nav.getByRole("button", { name: "Bazar" }).click();
   await expect(page).toHaveURL(/\/bazar$/);
 
-  await expect(page.getByRole("heading", { name: "AgriFin Bazar" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Bazar" })).toBeVisible();
   await expect(page.getByText("Təsərrüfatınız üçün məhsul və xidmətlər")).toBeVisible();
   // Şəxsi kart: fermerin öz bitkisi və sahəsi
   await expect(page.getByText("Sizin təsərrüfatınız üçün")).toBeVisible();

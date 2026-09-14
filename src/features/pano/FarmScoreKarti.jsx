@@ -1,5 +1,5 @@
 import { Icon } from "../../components/Icon.jsx";
-import { C, font } from "../../theme/tokens.js";
+import { C, GRADIENT, KOLGE, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { formatNumber } from "../../lib/format.js";
 import { IndeksKarti } from "../score/IndeksKarti.jsx";
@@ -28,11 +28,16 @@ export function FarmScoreKarti({
   onBax,
 }) {
   const { t, lang } = useI18n();
+  // Üç faktın heç biri yoxdursa üç "—" göstərmirik: tirelər lövhəni sınmış
+  // kimi göstərirdi, halbuki səbəb yuxarıdakı IndeksKarti-də onsuz da
+  // yazılıb ("peyk inteqrasiyası hələ qurulmayıb"). Uydurma rəqəm yenə
+  // yoxdur — lövhə sadəcə ölçmə gələndə görünür.
+  const faktVar = faiz != null || suSeviyyesi != null || gunEvvel != null;
 
   return (
     <div
       className="giris mt-3 rounded-3xl px-4 pt-3.5 pb-4"
-      style={{ backgroundColor: C.scoreCard }}
+      style={{ background: GRADIENT.hero, boxShadow: KOLGE.hero }}
     >
       {/* Sahə adı + keçid — mock-dakı sağ chevron */}
       <button
@@ -52,7 +57,8 @@ export function FarmScoreKarti({
           yoxdursa fermerin görə biləcəyi yeganə dəlil sahə ekranındadır. */}
       <IndeksKarti indeksHali={indeksHali} onSaheyeBax={onBax} />
 
-      {/* Ağ fakt lövhəsi — mock-dakı üç sütun */}
+      {/* Ağ fakt lövhəsi — mock-dakı üç sütun (yalnız ölçmə varsa) */}
+      {faktVar && (
       <div className="mt-3 grid grid-cols-3 gap-0 rounded-2xl bg-white px-1 py-2.5">
         <FaktSutunu ikon="Leaf" etiket={t("home.cropHealth")}>
           {faiz == null ? "—" : `${formatNumber(faiz, lang)}%`}
@@ -76,6 +82,7 @@ export function FarmScoreKarti({
               : t("pano.gunEvvel", { gun: gunEvvel })}
         </FaktSutunu>
       </div>
+      )}
     </div>
   );
 }

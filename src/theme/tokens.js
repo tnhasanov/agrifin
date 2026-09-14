@@ -34,8 +34,25 @@ export const YASIL = {
  * premium təəssüratı dərinlikdən yox, boşluqdan gəlir.
  */
 export const KOLGE = {
-  kart: "0 1px 2px rgba(18,63,45,0.05), 0 6px 16px rgba(18,63,45,0.05)",
+  // Kart: Mist üzərində GÖRÜNƏN, amma ağır olmayan qalxma. Əvvəlki 0.05
+  // alfada kartlar fona qarışırdı və ekran yastı oxunurdu.
+  kart: "0 1px 2px rgba(18,63,45,0.06), 0 8px 24px rgba(18,63,45,0.08)",
   qalxan: "0 2px 4px rgba(18,63,45,0.06), 0 12px 28px rgba(18,63,45,0.10)",
+  // Tünd hero kartları (FarmScore, aqronom): fona kölgə salır, çünki tünd
+  // səthin özündə kölgə görünmür — dərinlik ətrafdan gəlir.
+  hero: "0 14px 36px rgba(13,46,33,0.22)",
+  // Alt naviqasiya: haşiyə əvəzinə yuxarıya doğru yumşaq kölgə — iOS tab
+  // barı kimi. Hairline "veb" görünürdü.
+  nav: "0 -1px 0 rgba(220,230,221,0.7), 0 -10px 28px rgba(18,63,45,0.07)",
+};
+
+/**
+ * GRADİENTLƏR — yalnız tünd hero səthləri üçün. Yastı tünd yaşıl blok
+ * ekranda "boşluq" kimi oxunurdu; diaqonal keçid ona həcm verir. Rənglər
+ * YASIL şkalasından kənara çıxmır ki, marka bir tona qalsın.
+ */
+export const GRADIENT = {
+  hero: `linear-gradient(148deg, ${YASIL[700]} 0%, ${YASIL[900]} 58%, #0D2E21 100%)`,
 };
 
 export const C = {

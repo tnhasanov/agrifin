@@ -161,9 +161,12 @@ describe("radar ölçməsi — əsas ekran", () => {
     await waitFor(() => expect(screen.getByText(/buludlu olub/)).toBeInTheDocument());
     expect(screen.queryByText(/72%/)).not.toBeInTheDocument();
 
-    // Ana səhifədəki FarmScore lövhəsi də uydurma rəqəm göstərmir
+    // Ana səhifədəki FarmScore lövhəsi də uydurma rəqəm göstərmir. Ölçmə
+    // yoxdursa lövhə ÜMUMİYYƏTLƏ çəkilmir — üç "—" sınmış lövhə kimi
+    // oxunurdu, səbəb isə onsuz da IndeksKarti-də yazılır. Qadağa eynidir:
+    // nə "Bitki örtüyü" etiketi, nə də rəqəm var.
     await user.click(screen.getByRole("button", { name: "Ana səhifə" }));
-    expect(screen.getByText("Bitki örtüyü").parentElement).toHaveTextContent("—");
+    expect(screen.queryByText("Bitki örtüyü")).not.toBeInTheDocument();
     expect(screen.queryByText(/72%/)).not.toBeInTheDocument();
   });
 

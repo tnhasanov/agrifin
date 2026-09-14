@@ -14,21 +14,27 @@ export function AppHeader({ siqnalSayi = 0, onZeng, panelAcilib = false }) {
   return (
     <header className="flex items-center justify-between px-5 pt-5 pb-2">
       <div className="flex items-center gap-2">
-        <div className="rounded-xl p-1.5" style={{ backgroundColor: C.pine }}>
+        <div className="rounded-xl p-1.5" style={{ backgroundColor: C.pine, boxShadow: "0 4px 10px rgba(18,63,45,0.18)" }}>
           <Icon name="Leaf" size={16} color={C.gold} />
         </div>
-        <span className="text-sm font-extrabold" style={{ color: C.pine, fontFamily: font.display }}>
+        <span
+          className="font-extrabold"
+          style={{ color: C.pine, fontFamily: font.display, fontSize: 16, letterSpacing: "-0.01em" }}
+        >
           {t("app.name")}
         </span>
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* GHOST düymələr: haşiyəli ağ qutular başlığı "alət paneli" kimi
+          göstərirdi. Şəffaf fon, yalnız aktiv/basılı halda yumşaq səth —
+          toxunma hədəfi (40 px) hündürlükdən qorunur. */}
+      <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={cycleLang}
           aria-label={`${t("header.language")} (${current.name})`}
-          className="flex items-center gap-1 rounded-full px-2.5 py-2 text-xs font-bold"
-          style={{ backgroundColor: C.card, border: `1px solid ${C.line}`, color: C.ink }}
+          className="basilir flex items-center gap-1 rounded-full px-2.5 text-xs font-bold"
+          style={{ minHeight: 40, color: C.ink, backgroundColor: "transparent" }}
         >
           <Icon name="Languages" size={16} color={C.muted} />
           {current.label}
@@ -46,10 +52,12 @@ export function AppHeader({ siqnalSayi = 0, onZeng, panelAcilib = false }) {
               ? t("header.notificationsCount", { count: gozleyen })
               : t("header.notificationsEmpty")
           }
-          className="relative rounded-full p-2"
+          className="basilir relative flex items-center justify-center rounded-full"
           style={{
-            backgroundColor: panelAcilib ? C.mist : C.card,
-            border: `1px solid ${panelAcilib ? C.field : C.line}`,
+            width: 40,
+            height: 40,
+            backgroundColor: panelAcilib ? C.fieldSoft : "transparent",
+            transition: "background-color 150ms ease",
           }}
         >
           {/* key=say: yeni siqnal gələndə zəng yenidən yellənir. Yellənmə

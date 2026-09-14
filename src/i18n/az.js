@@ -1018,7 +1018,7 @@ export default {
   "maliyye.sert.kartBasliq": "Kredit üçün növbəti addım",
 
   // ═══ BAZAR ═══════════════════════════════════════════════════════════
-  "bazar.basliq": "{app} Bazar",
+  "bazar.basliq": "Bazar",
   "bazar.altyazi": "Təsərrüfatınız üçün məhsul və xidmətlər",
   "bazar.axtarisYeri": "Məhsul, toxum, gübrə və ya xidmət axtarın",
   "bazar.sebet": "Səbət",

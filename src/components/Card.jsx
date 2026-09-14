@@ -1,4 +1,4 @@
-import { C, KOLGE } from "../theme/tokens.js";
+import { C, KOLGE, RADIUS } from "../theme/tokens.js";
 
 /**
  * onClick verilibsə həqiqi <button> kimi render olunur — klaviatura və
@@ -11,8 +11,11 @@ import { C, KOLGE } from "../theme/tokens.js";
  */
 export function Card({ children, style, onClick, ariaLabel, role, className = "" }) {
   const kenarVar = style?.border || style?.borderColor;
+  // Radius TOKENDƏN gəlir (18), Tailwind-in 16-sından yox — ekranda iki
+  // fərqli yuvarlaqlıq yan-yana durmasın (bax: RADIUS.kart)
   const base = {
     backgroundColor: C.card,
+    borderRadius: RADIUS.kart,
     ...(kenarVar ? { border: `1px solid ${C.line}` } : { boxShadow: KOLGE.kart }),
     ...style,
   };
