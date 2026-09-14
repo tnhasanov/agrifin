@@ -250,3 +250,35 @@ test("mövcud axınlar toxunulmayıb: Ana səhifə, Sahələr, Maliyyə, Kömək
   await page.getByRole("navigation").getByRole("button", { name: "Kömək" }).click();
   await expect(page.getByText("Aqronom köməkçisi")).toBeVisible();
 });
+
+// ═══ ƏKİN PLANI: ETİKET VƏ ƏMƏL EYNİ ŞEYİ DEMƏLİDİR ═══════════════════
+// Əvvəlki qüsur: düymənin üzərində QALAN məbləğ yazılırdı, səbətə isə
+// planın TAM miqdarı düşürdü; üstəlik reducer mövcud sayın üstünə gəldiyi
+// üçün iki dəfə basmaq səbəti ikiqat edirdi.
+//
+// Səbət DOM-dan deyil, STORE-dan oxunur: ekranda eyni formada başqa
+// mətnlər də var, burada isə dəqiq {kod, say} cütləri lazımdır.
+const sebetiOxu = (page) =>
+  page.evaluate(() => {
+    // storage.js bütün açarlara "agrifin:" prefiksi qoyur
+    const xam = JSON.parse(localStorage.getItem("agrifin:state") ?? "{}");
+    return Object.fromEntries((xam?.state?.sebet ?? []).map((s) => [s.kod, s.say]));
+  });
+
+test("«Qalanları səbətə əlavə et» idempotentdir və yalnız qalanı əlavə edir", async ({ page }) => {
+  await bazarServeri().qur(page);
+  await page.goto("/bazar/tovsiye");
+
+  const duyme = page.getByRole("button", { name: /Qalanları səbətə əlavə et/ });
+  await expect(duyme).toBeVisible();
+  await duyme.click();
+
+  await expect.poll(async () => Object.keys(await sebetiOxu(page)).length).toBeGreaterThan(0);
+  const birinci = await sebetiOxu(page);
+
+  // Əlavə ediləsi heç nə qalmadığı üçün düymə ÖZÜ yox olur: etiketdəki
+  // məbləğ də, əməl də eyni siyahıdan çıxır. (Səhifə YENİDƏN YÜKLƏNMİR —
+  // test qoşqusu ilkin vəziyyəti hər açılışda yenidən əkir və səbəti silərdi.)
+  await expect(duyme).toBeHidden();
+  expect(await sebetiOxu(page)).toEqual(birinci);
+});
