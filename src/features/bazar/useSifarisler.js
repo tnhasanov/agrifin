@@ -12,6 +12,7 @@ import {
  * yoxdur (`npm run dev` /api/* vermir).
  */
 const QURULMAYIB = new Set([404, 501]);
+const YUKLENMEYIB = Symbol("yuklenmeyib");
 
 function xetaHali(xeta) {
   if (xeta?.status === 401) return "girisYox";
@@ -47,7 +48,7 @@ export function useSifarisler({ telefon = null, aktiv = false } = {}) {
   const [gedir, setGedir] = useState(false);
   const abortRef = useRef(null);
   // Telefon dəyişəndə (giriş/çıxış) siyahı yenidən gətirilir
-  const yuklenenTelefonRef = useRef(undefined);
+  const yuklenenTelefonRef = useRef(YUKLENMEYIB);
 
   const yukle = useCallback(async () => {
     abortRef.current?.abort();
@@ -71,8 +72,19 @@ export function useSifarisler({ telefon = null, aktiv = false } = {}) {
     if (!aktiv) return undefined;
     if (yuklenenTelefonRef.current === telefon) return undefined;
     yuklenenTelefonRef.current = telefon;
-    yukle();
-    return () => abortRef.current?.abort();
+    let bitdi = false;
+    yukle().finally(() => {
+      bitdi = true;
+    });
+    return () => {
+      abortRef.current?.abort();
+      // React StrictMode development-da effekti dərhal dayandırıb yenidən
+      // başladır. Sorğu tamamlanmayıbsa açarı geri aç ki, ikinci effekt
+      // həqiqi sorğunu başlatsın; tamamlanıbsa tab dəyişəndə keş saxlanır.
+      if (!bitdi && yuklenenTelefonRef.current === telefon) {
+        yuklenenTelefonRef.current = YUKLENMEYIB;
+      }
+    };
   }, [aktiv, telefon, yukle]);
 
   /** Serverin qaytardığı sifarişi siyahıda yeniləyir/əlavə edir */

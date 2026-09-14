@@ -25,7 +25,7 @@ export function KateqoriyaKarti({ kateqoriya, duzum = "kart", secili = false, on
         aria-pressed={secili}
         className="basilir flex shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-semibold"
         style={{
-          minHeight: 40,
+          minHeight: 44,
           backgroundColor: secili ? C.pine : C.card,
           color: secili ? "#fff" : C.ink,
           border: `1px solid ${secili ? C.pine : C.line}`,

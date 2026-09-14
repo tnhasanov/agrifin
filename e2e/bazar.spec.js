@@ -52,7 +52,7 @@ test("Bazar tabı var, ana səhifə təsərrüfatdan başlayır", async ({ page 
   await expect(page.getByText("10,02 ha · Bərdə")).toBeVisible();
   // Kateqoriyalar və nümunə qeydi
   await expect(page.getByRole("button", { name: "Gübrə", exact: true })).toBeVisible();
-  await expect(page.getByText(/Qiymətlər, tədarükçülər və stok nümunədir/)).toBeVisible();
+  await expect(page.getByText(/Bazar nişanlı qiymətlər/)).toBeVisible();
   expect(await ufuqiDasir(page)).toBe(false);
 });
 
@@ -63,19 +63,20 @@ test("kateqoriya → məhsul → miqdar → səbət: say yararsız ola bilmir", 
   await expect(page).toHaveURL(/\/bazar\/kateqoriya\/gubre$/);
   await expect(page.getByRole("heading", { name: "Gübrə" })).toBeVisible();
 
-  await page.getByRole("button", { name: /Karbamid 46% — 50 kq/ }).first().click();
+  await page.getByRole("button", { name: /Karbamid 46% — 45 kq/ }).first().click();
   await expect(page).toHaveURL(/\/bazar\/mehsul\/karbamid-46-50kq$/);
-  await expect(page.getByRole("heading", { name: "Karbamid 46% — 50 kq" })).toBeVisible();
-  await expect(page.getByText("39,90 ₼").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Karbamid 46% — 45 kq" })).toBeVisible();
+  await expect(page.getByText("22,50 ₼").first()).toBeVisible();
+  await expect(page.getByText("Son görünən bazar qiyməti")).toBeVisible();
   await expect(page.getByText("AgroSupply MMC").first()).toBeVisible();
 
-  // Miqdar: minimumda "−" sönükdür; 20 yazanda yekun 798
+  // Miqdar: minimumda "−" sönükdür; 20 yazanda yekun 450
   const miqdar = page.getByRole("spinbutton").or(page.getByRole("textbox", { name: "Miqdar" }));
   await expect(page.getByRole("button", { name: "−" })).toBeDisabled();
   await miqdar.fill("20");
   await miqdar.press("Enter");
-  await expect(page.getByText("20 kisə × 39,90 ₼")).toBeVisible();
-  await expect(page.getByText("Yekun: 798 ₼")).toBeVisible();
+  await expect(page.getByText("20 kisə × 22,50 ₼")).toBeVisible();
+  await expect(page.getByText("Yekun: 450 ₼")).toBeVisible();
   // Maksimumdan çox yazılsa sərhədə sıxılır (maxSay 500)
   await miqdar.fill("9999");
   await miqdar.press("Enter");
@@ -109,11 +110,11 @@ test("axtarış, süzgəc və sıralama", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Maye humat/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Süzgəc (1)" })).toBeVisible();
 
-  // Sıra: qiymət azalan → ilk nəticə ən bahalı gübrə (NPK 52,50)
+  // Sıra: qiymət azalan → ilk nəticə ən bahalı gübrə (Ammofos 87)
   await page.getByRole("button", { name: /Tövsiyə olunan/ }).click();
   await page.getByRole("radio", { name: "Qiymət: yuxarıdan aşağı" }).click();
   const ilk = page.locator("[class*=giris]").filter({ has: page.getByRole("button") }).first();
-  await expect(ilk).toContainText("NPK 15-15-15");
+  await expect(ilk).toContainText("Ammofos 12:52");
 });
 
 test("tam sifariş axını: səbət → çatdırılma → təsdiq → uğur → detal → ləğv", async ({ page }) => {
@@ -131,12 +132,12 @@ test("tam sifariş axını: səbət → çatdırılma → təsdiq → uğur → 
   await page.getByRole("button", { name: "+" }).click();
   await page.getByRole("button", { name: "Səbətə əlavə et" }).click();
 
-  // Səbət: iki sətir, yekun 1 018 ₼, çatdırılma pulsuz
+  // Səbət: iki sətir, yekun 685 ₼ (15 ₼ çatdırılma daxil)
   await page.getByRole("button", { name: "Səbət (22)" }).click();
   await expect(page).toHaveURL(/\/bazar\/sebet$/);
-  await expect(page.getByText("20 × 39,90 ₼")).toBeVisible();
+  await expect(page.getByText("20 × 22,50 ₼")).toBeVisible();
   await expect(page.getByText("2 × 110 ₼")).toBeVisible();
-  await expect(page.getByText("1.018 ₼").first()).toBeVisible();
+  await expect(page.getByText("685 ₼").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Sifarişi tamamla" })).toBeInViewport();
   expect(await ufuqiDasir(page)).toBe(false);
 
@@ -160,7 +161,7 @@ test("tam sifariş axını: səbət → çatdırılma → təsdiq → uğur → 
   await expect(page.getByText("AF-000001")).toBeVisible();
   await expect(page.getByText("AgroSupply MMC, AzərToxum ASC")).toBeVisible();
   expect(server.oxu()).toHaveLength(1);
-  expect(server.oxu()[0].cemi).toBe(1018);
+  expect(server.oxu()[0].cemi).toBe(685);
 
   // Detal: zaman xətti "Yeni", ləğv
   await page.getByRole("button", { name: "Sifarişə bax" }).click();

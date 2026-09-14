@@ -236,7 +236,7 @@ export function SifarisDetali({ id, get, geri, sifarisHali, yeni = false, onYeni
               {t(`bazar.detal.maliyye.${sifaris.maliyye.hal}`)}
             </p>
             {sifaris.maliyye.hal === "requested" && sifaris.hal !== "cancelled" && (
-              <button type="button" onClick={() => onMuraciet(sifaris)} className="basilir mt-2 w-full text-xs font-bold" style={{ minHeight: 40, borderRadius: RADIUS.idare, backgroundColor: C.mal, color: "#fff" }}>
+              <button type="button" onClick={() => onMuraciet(sifaris)} className="basilir mt-2 w-full text-xs font-bold" style={{ minHeight: 44, borderRadius: RADIUS.idare, backgroundColor: C.mal, color: "#fff" }}>
                 {t("bazar.detal.maliyyeCta")}
               </button>
             )}
