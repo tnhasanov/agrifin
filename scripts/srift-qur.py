@@ -98,6 +98,37 @@ def qos(emr):
         sys.exit(f"Uğursuz: {' '.join(emr)}\n{netice.stderr}")
 
 
+# Plus Jakarta Sans-ın boşluğu em-in 17%-idir (Inter-də 27,8%). Latın dilləri
+# üçün bu normaldır, amma bizim başlıqlar QALIN, KİÇİK və AZƏRBAYCANCA uzun
+# sözlərdən ibarətdir: "Tövsiyə olunan məhsullar" 14 px-də bitişik oxunurdu.
+# Ona görə YALNIZ boşluq glifinin eni genişləndirilir — hərflərin özünə
+# toxunulmur, yəni şriftin xarakteri dəyişmir.
+BOSLUQ_ENI = 0.225  # em payı
+
+
+def bosluqu_genislendir(yol):
+    from fontTools.ttLib import TTFont
+
+    f = TTFont(yol)
+    upm = f["head"].unitsPerEm
+    cmap = {}
+    for cedvel in f["cmap"].tables:
+        cmap.update(cedvel.cmap)
+    glif = cmap.get(0x20)
+    if not glif:
+        return
+    kohne, lsb = f["hmtx"][glif]
+    yeni = round(upm * BOSLUQ_ENI)
+    if yeni <= kohne:
+        return
+    f["hmtx"][glif] = (yeni, lsb)
+    # HVAR-a TOXUNULMUR: oradan glif silmək cədvəli sındırır (mapping hər
+    # glif üçün tam olmalıdır). Boşluğun qalınlığa görə deltası onsuz da
+    # sıfıra yaxındır — nəticə brauzerdə ölçülüb yoxlanılır (e2e/srift.spec.js).
+    f.save(yol)
+    print(f"  boşluq eni {kohne} → {yeni} ({BOSLUQ_ENI:.0%} em)")
+
+
 def main():
     MUVEQQETI.mkdir(exist_ok=True)
     HEDEF.mkdir(parents=True, exist_ok=True)
@@ -112,6 +143,9 @@ def main():
         # iki dəfə böyüyür və bizə optik ölçü variasiyası lazım deyil.
         oxlar = [QALINLIQ] + (["opsz=16"] if ad == "inter" else [])
         qos([sys.executable, "-m", "fontTools.varLib.instancer", str(xam), *oxlar, "-o", str(dar)])
+        # Yalnız BAŞLIQ şriftində: mətn şriftinin boşluğu onsuz da genişdir
+        if ad == "plusjakartasans":
+            bosluqu_genislendir(dar)
         hazir[ad] = dar
 
     print()

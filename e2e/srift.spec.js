@@ -49,6 +49,31 @@ test("brend şriftləri Azərbaycan əlifbasını və manat işarəsini daşıy�
   expect(netice.Inter, "mətn şriftində çatmayan hərflər").toEqual([]);
 });
 
+// Plus Jakarta Sans-ın öz boşluğu em-in 17%-idir və qalın, kiçik başlıqlarda
+// azərbaycanca sözlər bitişik oxunurdu ("Tövsiyə olunanməhsullar"). Subset
+// qurulanda boşluq glifi genişləndirilir (scripts/srift-qur.py). Bu ölçmə
+// həmin addımın faktiki nəticəsini yoxlayır — niyyəti yox.
+test("başlıq şriftinin boşluğu sözləri bitişdirmir", async ({ page }) => {
+  await bazarServeri().qur(page);
+  await page.goto("/bazar");
+  await page.evaluate(() => document.fonts.ready);
+
+  const pay = await page.evaluate(() => {
+    const en = (metn) => {
+      const s = document.createElement("span");
+      s.textContent = metn;
+      s.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font-size:100px;font-weight:700;font-family:"PlusJakartaSans"';
+      document.body.appendChild(s);
+      const w = s.getBoundingClientRect().width;
+      s.remove();
+      return w;
+    };
+    return (en("a a") - en("aa")) / 100; // em payı
+  });
+
+  expect(pay).toBeGreaterThan(0.19);
+});
+
 test("şriftlər paketdən gəlir, kənar origin-ə sorğu getmir", async ({ page }) => {
   const kenar = [];
   page.on("request", (s) => {

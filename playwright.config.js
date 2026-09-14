@@ -48,6 +48,13 @@ export default defineConfig({
     { name: "430x932", use: { ...devices["Desktop Chrome"], viewport: { width: 430, height: 932 } } },
   ],
 
+  // ⚠ `vite preview` DIST QOVLUĞUNU verir, mənbəni yox. Yəni e2e testləri
+  // son `npm run build`-in nəticəsini görür: mənbədə etdiyiniz dəyişiklik
+  // build olunmayıbsa test KÖHNƏ kodu yoxlayır və "düzəliş işləmir" kimi
+  // yanlış nəticə verir. Testdən əvvəl HƏMİŞƏ build edin:
+  //     npm run build && npx playwright test
+  // (`reuseExistingServer` yalnız serveri təkrar qaldırmır — build-i
+  // təzələmir, çünki fayllar diskdən oxunur.)
   webServer: {
     command: `npx vite preview --port ${PORT}`,
     url: `http://localhost:${PORT}`,
