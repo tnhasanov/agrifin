@@ -1,0 +1,33 @@
+# SƏTİR SONLARI — miqrasiya checksum-unun kökündəki səbəb.
+#
+# Tarixçə: 001_baseline.sql prodakşn bazasına Windows iş masasından tətbiq
+# olunmuşdu. Repoda .gitattributes olmadığı üçün Windows checkout-u faylı
+# CRLF ilə açmışdı, jurnala düşən sha256 isə CRLF məzmununun hash-ı idi.
+# Vercel/Linux eyni faylı LF ilə oxuyur → hash fərqlənir → build "Miqrasiya
+# faylı dəyişib" deyib dayanırdı, halbuki SQL bir bayt da dəyişməmişdi
+# (git blob 5700a67 yaranışından bəri eynidir).
+#
+# İki qat müdafiə var, hər ikisi lazımdır:
+#   1) lib/miqrasiya.js hash-dan əvvəl sətir sonlarını normallaşdırır —
+#      ARTIQ ZƏDƏLƏNMİŞ jurnalları sağaldır (köhnə CRLF hash tanınır və
+#      kanonik LF hash-a keçirilir; həqiqi SQL dəyişikliyi yenə xəta verir).
+#   2) bu fayl — problemin BİR DAHA yaranmasının qarşısını alır: SQL hər
+#      işçi ağacda LF qalır, platformadan asılı olmayaraq.
+#
+# Yalnız 1) qalsaydı hər yeni miqrasiya eyni tələni qurardı.
+*.sql text eol=lf
+
+# Miqrasiya ilə eyni məntiq: skriptlər və sxem faylları platformalar arası
+# eyni baytlarda qalsın.
+*.mjs text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+
+# İkili fayllar heç vaxt çevrilməsin
+*.webp binary
+*.png binary
+*.jpg binary
+*.pdf binary
+*.woff2 binary
