@@ -1128,6 +1128,8 @@ export default {
   "bazar.maliyye.hal.meblegAzdirIzah": "Финансирование возможно от {min} — добавьте товары в корзину.",
   "bazar.maliyye.hal.uygunMehsulYoxdur": "В корзине нет товаров, доступных для финансирования",
   "bazar.maliyye.hal.uygunMehsulYoxdurIzah": "Финансируются только товары с отметкой «Финансирование {app}».",
+  "bazar.maliyye.hal.subutYoxdur": "Спутниковое измерение ещё не получено",
+  "bazar.maliyye.hal.subutYoxdurIzah": "Финансирование рассчитывается по спутниковым данным поля, а они пока не готовы. Можно оформить заказ с оплатой при доставке и проверить финансирование позже.",
 
   "bazar.axtaris.netice": "{say} результатов",
   "bazar.axtaris.bos": "Ничего не найдено",

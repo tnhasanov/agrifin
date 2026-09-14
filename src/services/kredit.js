@@ -33,10 +33,10 @@ export function muracietGonder({ mebleg, acar }) {
   return sorguGonder("/api/kredit", { method: "POST", govde: { emel: "muraciet", mebleg, acar } });
 }
 
-export function teklifQebul(teklifId) {
+export function teklifQebul(teklifId, acar) {
   return sorguGonder("/api/kredit", {
     method: "POST",
-    govde: { emel: "teklif-qebul", teklifId },
+    govde: { emel: "teklif-qebul", teklifId, acar },
   });
 }
 

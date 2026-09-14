@@ -5,6 +5,8 @@ import { miqrasiyalariTetbiqEt } from "../lib/miqrasiya.js";
 import { otpTesdiqle, otpYarat } from "../lib/hesab.js";
 import { SIFARIS_HEDDI } from "../lib/bazar/sifaris.js";
 import { KREDIT_SERTLERI } from "../lib/kreditSertler.js";
+import { sahəHektar } from "../lib/geo.js";
+import { konturHash } from "../lib/konturHash.js";
 import handler from "./bazar.js";
 import kreditHandler from "./kredit.js";
 
@@ -64,22 +66,43 @@ const NOQTELER = [
   [40.4, 47.1029],
 ];
 
+/** Verilən hektara yaxın düzbucaqlı kontur (kredit testləri ilə eyni) */
+function konturYarat(hektar) {
+  const k = Math.sqrt(hektar / 10);
+  const dEn = 0.002902 * k;
+  const dUz = 0.003659 * k;
+  return [
+    [40.4, 47.1],
+    [40.4 + dEn, 47.1],
+    [40.4 + dEn, 47.1 + dUz],
+    [40.4, 47.1 + dUz],
+  ];
+}
+
 async function fermer({ telefon = "+994501234567", hektar = 10, bitki = "pomidor" } = {}) {
   const { kod } = await otpYarat({ telefon, ip: null });
   const { token } = await otpTesdiqle({ telefon, kod });
   const [istifadeci] = await sorgu("SELECT id FROM istifadeciler WHERE telefon=$1", [telefon]);
   if (hektar) {
+    // `hektar` klientin dediyidir (diaqnostika); maliyyə ön yoxlaması
+    // hektar_server-i və kontur hash-ını oxuyur — burada da konturdan çıxır
+    const noqteler = konturYarat(hektar);
     await sorgu(
-      "INSERT INTO saheler (istifadeci_id, noqteler, hektar, bitki) VALUES ($1,$2,$3,$4)",
-      [istifadeci.id, JSON.stringify(NOQTELER), hektar, bitki],
+      `INSERT INTO saheler (istifadeci_id, noqteler, hektar, hektar_server, kontur_hash, bitki)
+       VALUES ($1,$2,$3,$4,$5,$6)`,
+      [istifadeci.id, JSON.stringify(noqteler), hektar, sahəHektar(noqteler), konturHash(noqteler), bitki],
     );
   }
   return { cookie: `agrifin_sessiya=${token}`, id: istifadeci.id };
 }
 
-/** Peyk tarixçəsi — anderraytinq üçün (kredit testləri ilə eyni) */
-async function tarixceYaz(istifadeciId, il = new Date().getFullYear()) {
-  const [sahe] = await sorgu("SELECT id FROM saheler WHERE istifadeci_id=$1", [istifadeciId]);
+/**
+ * Peyk tarixçəsi — anderraytinq YALNIZ menbe='server' və kontura uyğun
+ * kontur_hash daşıyan sətri oxuyur (lib/saheSubutu.js). Klient mənbəli
+ * sətir qərara düşmür; test də məhz elə yazır.
+ */
+async function tarixceYaz(istifadeciId, il = new Date().getFullYear(), { menbe = "server" } = {}) {
+  const [sahe] = await sorgu("SELECT id, kontur_hash FROM saheler WHERE istifadeci_id=$1", [istifadeciId]);
   const movsumler = Array.from({ length: 6 }, (_, i) => ({
     il: il - 5 + i,
     zirve: 0.72,
@@ -87,10 +110,10 @@ async function tarixceYaz(istifadeciId, il = new Date().getFullYear()) {
     etrafMedyan: 0.6,
     olcmeSayi: 6,
   }));
-  await sorgu("INSERT INTO peyk_snapshotlar (sahe_id, nov, mezmun) VALUES ($1,'tarixce',$2)", [
-    sahe.id,
-    JSON.stringify({ movsumler }),
-  ]);
+  await sorgu(
+    "INSERT INTO peyk_snapshotlar (sahe_id, nov, mezmun, menbe, kontur_hash) VALUES ($1,'tarixce',$2,$3,$4)",
+    [sahe.id, JSON.stringify({ movsumler }), menbe, sahe.kontur_hash],
+  );
 }
 
 const CATDIRILMA = { rayonKod: "semkir", ad: "Tural Həsənov", telefon: "0501234567", unvan: "Dəllər", qeyd: "" };
@@ -298,6 +321,35 @@ describe("bazar API — sifariş", () => {
 describe("bazar API — maliyyələşdirmə", () => {
   const yoxla = (cookie, setirler = SEBET) =>
     isle({ method: "POST", cookie, body: { emel: "maliyye-yoxla", setirler } });
+
+  // ═══ SÜBUT AVTORİTETİ (006) — bazar tərəfindən qoruma ═══════════════
+  // Ön yoxlama kredit müraciəti ilə EYNİ mənbəni oxumalıdır: klientin yazdığı
+  // hektar və klientin göndərdiyi snapshot nəticəyə DÜŞMÜR. Aşağıdakı iki
+  // test bunu bazar API-si üçün ayrıca bağlayır — kredit testləri kredit
+  // endpointini yoxlayır, buradakı isə maliyye-yoxla-nı.
+  it("klient mənbəli snapshot ön yoxlamaya düşmür — sübut yoxdursa qərar verilmir", async () => {
+    const a = await fermer({ hektar: 10, bitki: "pomidor" });
+    await tarixceYaz(a.id, undefined, { menbe: "klient" });
+    const cavab = await yoxla(a.cookie);
+    expect(cavab.statusCode).toBe(200);
+    // "uyğun deyil" YOX — sahə pis deyil, ölçmə yoxdur; klient sətrinə keçilmir
+    expect(cavab.govde.maliyye.hal).toBe("subutYoxdur");
+    expect(await sorgu("SELECT id FROM credit_applications")).toEqual([]);
+  });
+
+  it("klientin dediyi hektar nəticəyə təsir etmir — ölçü konturdan hesablanır", async () => {
+    const a = await fermer({ hektar: 10, bitki: "pomidor" });
+    await tarixceYaz(a.id);
+    const durust = (await yoxla(a.cookie)).govde.maliyye;
+    expect(durust.hal).toBe("uygun");
+
+    // Klient sütununu yüz dəfə şişirdirik; kontur (və hektar_server) eynidir
+    await sorgu("UPDATE saheler SET hektar=1000 WHERE istifadeci_id=$1", [a.id]);
+    const sisirdilmis = (await yoxla(a.cookie)).govde.maliyye;
+    expect(sisirdilmis.hal).toBe("uygun");
+    expect(sisirdilmis.tesdiq).toBe(durust.tesdiq);
+    expect(sisirdilmis.sebebler).toEqual(durust.sebebler);
+  });
 
   it("yoxlama OXU-YALNIZDIR: uyğun cavab verir, amma müraciət YARATMIR", async () => {
     const a = await fermer({ hektar: 10, bitki: "pomidor" });

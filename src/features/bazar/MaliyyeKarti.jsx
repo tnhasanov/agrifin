@@ -76,7 +76,9 @@ function halGorunusu(hal) {
 /**
  * MALİYYƏ YOXLAMASI NƏTİCƏSİ — server cavabını göstərir (oxu-yalnız yoxlama).
  * `netice.hal`: uygun | qismen | uygunDeyil | saheYoxdur | bitkiYoxdur |
- * aktivKredit | aciqMuraciet | meblegAzdir | meblegYanlis | uygunMehsulYoxdur
+ * aktivKredit | aciqMuraciet | meblegAzdir | meblegYanlis | uygunMehsulYoxdur |
+ * subutYoxdur (peyk ölçməsi hazır deyil — "uyğun deyil" DEYİL, qərar verilməyib;
+ * `default` qolu ilə xəbərdarlıq tonunda göstərilir)
  */
 export function MaliyyeNeticesi({ netice }) {
   const { t, lang } = useI18n();

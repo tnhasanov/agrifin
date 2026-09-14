@@ -35,6 +35,7 @@
 import { sorgu, baglantiKimliyi, dbQurulub, sxemYoxdurXetasi } from "../lib/db.js";
 import { cookieToken, hesabQurulub, sessiyaOxu } from "../lib/hesab.js";
 import { ACIQ_HALLAR, anderraytinq, muddetTeyin, murecietGirisi } from "../lib/kredit.js";
+import { saheSubutu } from "../lib/saheSubutu.js";
 import { KREDIT_SERTLERI } from "../lib/kreditSertler.js";
 import { ayliqFaiz } from "../lib/kreditOdenis.js";
 import { KATALOQ_VERSIYA, NUMUNE } from "../lib/bazar/kataloq.js";
@@ -190,9 +191,15 @@ async function maliyyeYoxla(istifadeciId, hesab, indi) {
   const esas = { mebleg, minKredit: KREDIT_SERTLERI.minKredit, illikFaiz: KREDIT_SERTLERI.illikFaiz };
   if (mebleg <= 0) return { hal: "uygunMehsulYoxdur", ...esas };
 
-  const [sahe] = await sorgu("SELECT id, hektar, bitki FROM saheler WHERE istifadeci_id=$1", [istifadeciId]);
-  if (!sahe) return { hal: "saheYoxdur", ...esas };
-  if (!sahe.bitki) return { hal: "bitkiYoxdur", ...esas };
+  // ═══ SÜBUT SERVERDƏN — kredit müraciəti ilə EYNİ mənbə ════════════
+  // Əvvəl bu ön yoxlama `saheler.hektar` (klientin yazdığı) və klientin
+  // göndərdiyi snapshot-u oxuyurdu, əsl müraciət isə serverin öz sübutunu.
+  // İki fərqli giriş iki fərqli cavab verirdi: ön yoxlama "uyğun" deyib,
+  // müraciət rədd edə bilərdi. İndi hər ikisi lib/saheSubutu.js-dən keçir:
+  // hektar konturdan hesablanır, tarixçə yalnız serverin öz yazdığı sətirdir.
+  const subut = await saheSubutu({ istifadeciId, indi });
+  if (subut.hal === "yoxdur") return { hal: "saheYoxdur", ...esas };
+  if (!subut.sahe?.bitki) return { hal: "bitkiYoxdur", ...esas };
 
   const [aktiv] = await sorgu("SELECT id FROM loans WHERE istifadeci_id=$1 AND status='active' LIMIT 1", [
     istifadeciId,
@@ -205,23 +212,23 @@ async function maliyyeYoxla(istifadeciId, hesab, indi) {
   );
   if (aciq) return { hal: "aciqMuraciet", ...esas, muracietId: aciq.id };
 
-  const muddetAy = muddetTeyin(sahe.bitki, indi);
+  const muddetAy = muddetTeyin(subut.sahe.bitki, indi);
   const giris = murecietGirisi({ mebleg, muddetAy });
   if (!giris.ok) return { hal: giris.sebeb === "meblegAzdir" ? "meblegAzdir" : "meblegYanlis", ...esas };
 
-  const [snapshot] = await sorgu(
-    "SELECT mezmun FROM peyk_snapshotlar WHERE sahe_id=$1 AND nov='tarixce'",
-    [sahe.id],
-  );
-  const movsumler = Array.isArray(snapshot?.mezmun?.movsumler) ? snapshot.mezmun.movsumler : [];
+  // Peyk sübutu yoxdursa "uyğun deyil" DEMİRİK — bu, sahənin pisliyi deyil,
+  // ölçmənin olmamasıdır. Fermer sifarişi çatdırılmada ödəməklə verə bilər,
+  // maliyyələşdirməni isə müraciətdə yenidən yoxlatdıra bilər.
+  if (subut.hal === "subutYoxdur") return { hal: "subutYoxdur", ...esas, bitki: subut.sahe.bitki, muddetAy };
 
   const netice = anderraytinq({
     mebleg: giris.mebleg,
     muddetAy,
-    sahe: { hektar: sahe.hektar, bitki: sahe.bitki },
-    movsumler,
+    sahe: { hektar: subut.hektar, bitki: subut.sahe.bitki },
+    movsumler: subut.movsumler ?? [],
     indi,
   });
+  const sahe = subut.sahe;
   const cavab = {
     ...esas,
     mebleg: giris.mebleg,
@@ -338,8 +345,13 @@ export default async function handler(req, res) {
       );
       if (hedd.say >= SIFARIS_HEDDI.maxSay) return res.status(429).json({ error: "hedd" });
 
-      // Sahə konteksti — anderraytinq üçün snapshot (sahə yoxdursa null)
-      const [sahe] = await sorgu("SELECT id, hektar, bitki FROM saheler WHERE istifadeci_id=$1", [istifadeci.id]);
+      // Sahə konteksti — sifarişə yazılan snapshot (sahə yoxdursa null).
+      // Hektar SERVERİN ölçdüyüdür (hektar_server); klientin dediyi yalnız
+      // köhnə, backfill-dən əvvəlki sətirlərdə ehtiyatdır.
+      const [sahe] = await sorgu(
+        "SELECT id, COALESCE(hektar_server, hektar) AS hektar, bitki FROM saheler WHERE istifadeci_id=$1",
+        [istifadeci.id],
+      );
 
       // Maliyyələşdirmə: uyğunluq sifarişdən ƏVVƏL yoxlanılır ki, "sonra
       // baxarıq" ilə fermer boş yerə gözləməsin. Yekun qərar yenə müraciətdədir.

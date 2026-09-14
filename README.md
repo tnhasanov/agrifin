@@ -693,11 +693,32 @@ Brauzer testləri: `e2e/bazar.spec.js` (server `e2e/bazarKome.js`-də
 təqlid olunur, yekunlar real domen modulundan). Ekran görüntüləri:
 `BAZAR_SHOTS=./shots npx playwright test e2e/bazar.shots.spec.js --project=390x844`.
 
-⚠ **Deploy sırası:** `005_bazar.sql` prod bazasına tətbiq olunmalıdır —
-`scripts/miqrasiya-yoxla.mjs` bazar cədvəllərini də yoxlayır, ona görə
-prod build miqrasiyasız READY olmur (qəsdən: yarımçıq tətbiq yoxdur).
-Sıra əvvəlki kimidir: **miqrasiya → deploy → smoke test** (`GET /api/bazar`
-daxil olmuş istifadəçi ilə 200 qaytarmalıdır).
+⚠ **Deploy sırası:** `005_bazar.sql` və `006_butovluk.sql` prod bazasına
+tətbiq olunmalıdır — `scripts/miqrasiya-yoxla.mjs` bazar cədvəllərini də
+yoxlayır, ona görə prod build miqrasiyasız READY olmur (qəsdən: yarımçıq
+tətbiq yoxdur). Sıra əvvəlki kimidir: **miqrasiya → deploy → smoke test**
+(`GET /api/bazar` daxil olmuş istifadəçi ilə 200 qaytarmalıdır).
+
+**006-dan ƏVVƏL:** `git push origin <branch>:yoxlama-run` ilə read-only
+bütövlük yoxlaması (`scripts/butovluk-yoxla.mjs`) işlədilməlidir — bir
+istifadəçidə birdən çox aktiv kredit varsa 006-dakı partial unique index
+düşməz. 006-dan SONRA `scripts/hektar-backfill.mjs` köhnə sahələrin
+`hektar_server` və `kontur_hash` sütunlarını konturdan doldurur.
+
+### Sübut avtoriteti (006)
+
+Kredit qərarına gedən iki rəqəm — sahənin ölçüsü və mövsüm tarixçəsi —
+əvvəl klientdən gəlirdi: hektar sorğu gövdəsindən yazılırdı, snapshot-u
+brauzer göndərirdi. İndi `lib/saheSubutu.js` anderraytinqin oxuya bildiyi
+YEGANƏ mənbədir: hektar konturdan geodezik hesablanır, tarixçəni server
+özü gətirir (`lib/tarixceGetir.js`), yalnız `menbe='server'` və kontura
+uyğun `kontur_hash` daşıyan snapshot qərara düşür. Klientin yazdığı sətirlər
+qalır (oflayn UI üçün), amma `menbe='klient'` ilə işarələnir və oxunmur.
+Peyk sübutu yoxdursa avtomatik təsdiq VERİLMİR (`subutYoxdur`).
+
+Bazarın maliyyə ön yoxlaması (`POST /api/bazar maliyye-yoxla`) da eyni
+modulu işlədir — ön yoxlama ilə müraciət eyni girişi görür, fərqli cavab
+vermir.
 
 ## Faza 3 — fermer panosu (altı hal)
 

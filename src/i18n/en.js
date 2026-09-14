@@ -1126,6 +1126,8 @@ export default {
   "bazar.maliyye.hal.meblegAzdirIzah": "Financing is possible from {min} — add products to the cart.",
   "bazar.maliyye.hal.uygunMehsulYoxdur": "No financeable products in the cart",
   "bazar.maliyye.hal.uygunMehsulYoxdurIzah": "Only products marked “{app} finance” can be financed.",
+  "bazar.maliyye.hal.subutYoxdur": "Satellite measurement not available yet",
+  "bazar.maliyye.hal.subutYoxdurIzah": "Financing is assessed from your field's satellite record, and that record is not ready. You can order with payment on delivery and check financing later.",
 
   "bazar.axtaris.netice": "{say} results",
   "bazar.axtaris.bos": "Nothing found",

@@ -1,4 +1,4 @@
-import { merkez, sahəHektar } from "../../services/geo.js";
+import { merkez, sahəHektar } from "../../../lib/geo.js";
 import { necheGunEvvel, ortukFaizi } from "../../services/ndvi.js";
 import { EKIN_HEDDI, cariVeziyyetHali } from "../../../lib/mehsuldarliq.js";
 import { MOVSUM, bicineQalanAy, movsumGedisi } from "../../../lib/movsum.js";

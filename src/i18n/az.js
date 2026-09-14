@@ -1145,6 +1145,8 @@ export default {
   "bazar.maliyye.hal.meblegAzdirIzah": "Maliyyələşdirmə ən azı {min} üçün mümkündür — səbətə məhsul əlavə edin.",
   "bazar.maliyye.hal.uygunMehsulYoxdur": "Səbətdə maliyyələşdirilə bilən məhsul yoxdur",
   "bazar.maliyye.hal.uygunMehsulYoxdurIzah": "Yalnız «{app} maliyyəsi» nişanlı məhsullar maliyyələşdirilir.",
+  "bazar.maliyye.hal.subutYoxdur": "Peyk ölçməsi hələ alınmayıb",
+  "bazar.maliyye.hal.subutYoxdurIzah": "Maliyyələşdirmə sahənin peyk göstəricilərinə görə hesablanır, ölçmə isə hazır deyil. Sifarişi çatdırılmada ödəməklə verə, maliyyələşdirməni sonra yoxlada bilərsiniz.",
 
   "bazar.axtaris.netice": "{say} nəticə",
   "bazar.axtaris.bos": "Heç nə tapılmadı",

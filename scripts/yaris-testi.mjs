@@ -32,6 +32,8 @@
  */
 import { sorgu } from "../lib/db.js";
 import { miqrasiyalariTetbiqEt } from "../lib/miqrasiya.js";
+import { sahəHektar } from "../lib/geo.js";
+import { konturHash } from "../lib/konturHash.js";
 import { otpTesdiqle, otpYarat } from "../lib/hesab.js";
 import handler from "../api/kredit.js";
 
@@ -80,10 +82,11 @@ async function fermerYarat(sonluq) {
   const { kod } = await otpYarat({ telefon, ip: null });
   const { token } = await otpTesdiqle({ telefon, kod });
   const [istifadeci] = await sorgu("SELECT id FROM istifadeciler WHERE telefon=$1", [telefon]);
-  await sorgu("INSERT INTO saheler (istifadeci_id, noqteler, hektar, bitki) VALUES ($1,$2,10,'pomidor')", [
-    istifadeci.id,
-    JSON.stringify(NOQTELER),
-  ]);
+  await sorgu(
+    `INSERT INTO saheler (istifadeci_id, noqteler, hektar, hektar_server, kontur_hash, bitki)
+     VALUES ($1,$2,10,$3,$4,'pomidor')`,
+    [istifadeci.id, JSON.stringify(NOQTELER), sahəHektar(NOQTELER), konturHash(NOQTELER)],
+  );
   const [sahe] = await sorgu("SELECT id FROM saheler WHERE istifadeci_id=$1", [istifadeci.id]);
   const il = new Date().getFullYear();
   const movsumler = Array.from({ length: 6 }, (_, i) => ({
@@ -93,10 +96,12 @@ async function fermerYarat(sonluq) {
     etrafMedyan: 0.6,
     olcmeSayi: 6,
   }));
-  await sorgu("INSERT INTO peyk_snapshotlar (sahe_id, nov, mezmun) VALUES ($1,'tarixce',$2)", [
-    sahe.id,
-    JSON.stringify({ movsumler }),
-  ]);
+  // Anderraytinq YALNIZ menbe='server' + kontura uyğun sətri oxuyur
+  await sorgu(
+    `INSERT INTO peyk_snapshotlar (sahe_id, nov, mezmun, menbe, kontur_hash)
+     VALUES ($1,'tarixce',$2,'server',$3)`,
+    [sahe.id, JSON.stringify({ movsumler }), konturHash(NOQTELER)],
+  );
   return { cookie: `agrifin_sessiya=${token}`, id: istifadeci.id };
 }
 
@@ -109,7 +114,11 @@ async function kreditAl(fermer) {
   const qebul = await isle({
     method: "POST",
     cookie: fermer.cookie,
-    body: { emel: "teklif-qebul", teklifId: muraciet.govde.teklif.id },
+    body: {
+      emel: "teklif-qebul",
+      teklifId: muraciet.govde.teklif.id,
+      acar: `q-${muraciet.govde.teklif.id}`,
+    },
   });
   return qebul.govde.kredit;
 }
@@ -190,6 +199,68 @@ await miqrasiyalariTetbiqEt(sorgu, (mesaj) => console.log(mesaj));
   yoxla("düz BİR kredit yaranıb", kreditler.length === 1, `${kreditler.length} kredit`);
   yoxla("yalnız bir sorğu 200 alıb, o biri idarəli 409", ugurlu === 1 && cavablar.some((c) => c.statusCode === 409),
     JSON.stringify(cavablar.map((c) => c.statusCode)));
+}
+
+// ── D. Bir fermer, bir aktiv kredit — BAZA SƏVİYYƏSİNDƏ ─────────────────
+// PGlite tək bağlantılıdır, ona görə partial unique index-in əsl paralel
+// icrada işlədiyini yalnız burada, real Postgres-də görmək olar.
+{
+  console.log("\nD. Paralel iki aktiv kredit cəhdi (partial unique index)");
+  const f = await fermerYarat("04");
+  const kredit = await kreditAl(f);
+
+  // Eyni istifadəçi üçün İKİNCİ aktiv kredit yazmağa paralel cəhd
+  const ikinciYaz = () =>
+    sorgu(
+      `INSERT INTO loans
+         (istifadeci_id, application_id, offer_id, principal_original, principal_outstanding,
+          annual_rate, term_months, status, matures_on, disbursed_at)
+       SELECT l.istifadeci_id, l.application_id, l.offer_id, 500, 500, 11.5, 6,
+              'active', l.matures_on, now()
+       FROM loans l WHERE l.id=$1`,
+      [kredit.id],
+    ).then(() => "yazildi").catch((xeta) => String(xeta?.message ?? xeta));
+
+  const neticeler = await Promise.all([ikinciYaz(), ikinciYaz()]);
+  const aktivler = await sorgu(
+    "SELECT id FROM loans WHERE istifadeci_id=$1 AND status='active'",
+    [f.id],
+  );
+  yoxla("aktiv kredit yenə BİRDİR", aktivler.length === 1, `${aktivler.length} aktiv kredit`);
+  yoxla(
+    "hər iki cəhd baza tərəfindən dayandırılıb",
+    neticeler.every((n) => n !== "yazildi"),
+    JSON.stringify(neticeler).slice(0, 200),
+  );
+}
+
+// ── E. Ay ortasında tam bağlanma + paralel adi ödəniş ───────────────────
+// Payoff faizi ilə adi ödənişin toqquşması: nə ikiqat faiz, nə mənfi qalıq.
+{
+  console.log("\nE. Paralel tam bağlanma və adi ödəniş");
+  const f = await fermerYarat("05");
+  const kredit = await kreditAl(f);
+  // Verilməni 45 gün geri çəkirik: 1 tam dövr + yarımçıq aralıq qalsın
+  const verilme = new Date(Date.now() - 45 * 86_400_000).toISOString();
+  await sorgu("UPDATE loans SET disbursed_at=$2, created_at=$2 WHERE id=$1", [kredit.id, verilme]);
+  await sorgu("UPDATE loan_events SET created_at=$2 WHERE loan_id=$1", [kredit.id, verilme]);
+
+  await Promise.all([
+    isle({ method: "POST", cookie: f.cookie, body: { emel: "odenis", tam: true, acar: "e-tam" } }),
+    isle({ method: "POST", cookie: f.cookie, body: { emel: "odenis", mebleg: 100, acar: "e-adi" } }),
+  ]);
+
+  const [setir] = await sorgu(
+    "SELECT principal_outstanding, interest_outstanding, status FROM loans WHERE id=$1",
+    [kredit.id],
+  );
+  const payoffFaizler = await sorgu(
+    "SELECT id FROM loan_events WHERE loan_id=$1 AND idempotency_key LIKE 'faiz-payoff-%'",
+    [kredit.id],
+  );
+  yoxla("qalıq mənfi deyil", Number(setir.principal_outstanding) >= 0, setir.principal_outstanding);
+  yoxla("faiz borcu mənfi deyil", Number(setir.interest_outstanding) >= 0, setir.interest_outstanding);
+  yoxla("payoff faizi yalnız BİR dəfə yazılıb", payoffFaizler.length <= 1, `${payoffFaizler.length} sətir`);
 }
 
 console.log(ugursuz === 0 ? "\nHAMISI KEÇDİ" : `\n${ugursuz} YOXLAMA KEÇMƏDİ`);

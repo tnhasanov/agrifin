@@ -10,7 +10,9 @@ import {
 import * as storage from "../lib/storage.js";
 import { FARM } from "../services/farm.js";
 import { districtByName, isValidLocation, nearestDistrict, readLegacyLocation } from "../services/location.js";
-import { duzgunSahe } from "../services/geo.js";
+// Həndəsə lib/-dədir: hektar artıq SERVERDƏ də hesablanır və klientlə server
+// eyni düsturu işlətməlidir (bax: lib/geo.js, api/sahe.js)
+import { duzgunSahe } from "../../lib/geo.js";
 import { mehsulTap } from "../../lib/bazar/kataloq.js";
 import { sayiSix } from "../../lib/bazar/sifaris.js";
 

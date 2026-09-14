@@ -108,7 +108,10 @@ describe("api/sahe GET/PUT", () => {
     expect((await saheYaz(cookie)).statusCode).toBe(200);
 
     const res = await isle({ cookie });
-    expect(res.govde.sahe).toEqual({ noqteler: NOQTELER, hektar: 4.2, bitki: "bugda" });
+    // HEKTAR KLİENTİN DEDİYİ DEYİL: PUT gövdəsində 4.2 göndərilir, GET isə
+    // konturdan hesablanan geodezik ölçünü qaytarır (bax: lib/geo.js).
+    // Kredit tavanı bu rəqəmə bağlıdır — klient onu yaza bilməməlidir.
+    expect(res.govde.sahe).toEqual({ noqteler: NOQTELER, hektar: 94.19, bitki: "bugda" });
   });
 
   it("ikinci PUT əvəz edir, ikinci sətir yaratmır", async () => {
