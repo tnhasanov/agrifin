@@ -22,7 +22,10 @@ export function FaktSetri({ etiket, qeyd = null, children, son = false }) {
       className="flex items-start justify-between gap-4 py-3"
       style={{ borderBottom: son ? "none" : `1px solid ${C.line}` }}
     >
-      <div className="min-w-0">
+      {/* Etiket sabit, dəyər ÇEVİKDİR: uzun mətn dəyəri (məsələn müraciət
+          dövrü) sətrə keçir, etiketin üstünə çıxmır. Məbləğ (Amount) onsuz
+          da nowrap-dır, ona görə rəqəmlər bölünmür. */}
+      <div className="shrink-0" style={{ maxWidth: "46%" }}>
         <p style={{ ...TIPO.metn, color: C.muted }}>{etiket}</p>
         {qeyd && (
           <p className="mt-0.5" style={{ ...TIPO.qeyd, color: C.muted, opacity: 0.85 }}>
@@ -30,7 +33,10 @@ export function FaktSetri({ etiket, qeyd = null, children, son = false }) {
           </p>
         )}
       </div>
-      <div className="shrink-0 text-right" style={{ ...TIPO.metn, color: C.ink, fontWeight: 700, fontFamily: font.display, fontVariantNumeric: "tabular-nums" }}>
+      <div
+        className="min-w-0 flex-1 text-right"
+        style={{ ...TIPO.metn, color: C.ink, fontWeight: 700, fontFamily: font.display, fontVariantNumeric: "tabular-nums", overflowWrap: "anywhere" }}
+      >
         {children}
       </div>
     </div>
