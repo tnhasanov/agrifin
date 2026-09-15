@@ -573,24 +573,42 @@ isə heç yerdə qeyd olunmur.
 - Müştəri: `src/services/kredit.js` + `src/features/loan/useKreditVeziyyeti.js`.
   localStorage-da yalnız UI vəziyyəti qalır (yüklənir, forma, dil).
 
-### Subsidiya (ilkin cədvəl)
+### Subsidiya — 2026 modeli (`lib/subsidiya/`)
 
-`lib/subsidiya.js` — dövlət subsidiyasının TƏK MƏNBƏYİ. Gəlir modeli
-(`lib/gelir.js`, kredit tavanı) və Maliyyə ekranındakı "Gözlənilən
-subsidiya" bloku (`src/features/money/SubsidiyaKarti.jsx`) eyni cədvəldən
-oxuyur: fermerin gördüyü rəqəm anderraytinqin işlətdiyi rəqəmdir.
+Dövlət subsidiyasının TƏK MƏNBƏYİ. Üç anlayış qəsdən ayrıdır:
 
-Model: hektar başına baza ödənişi × hektar; bitki üzrə müraciət pəncərəsi
-(ay aralığı, açıq / hələ açılmayıb / bağlanıb). Dərəcəsi olmayan bitkidə
-blok GÖSTƏRİLMİR — nə məbləğ, nə rədd uydurulmur.
+- **sourceVerified** — cədvəl rəsmi mənbə ilə tutuşdurulubmu (cədvəlin
+  xüsusiyyəti; `qaydalar2026.js → yoxlanmis` siyahısında olmayan hər rəqəm
+  təsdiqsizdir);
+- **eligibilityStatus** — BU fermer uyğundurmu (`yoxlanmayib | tesdiq |
+  redd`); mühərrik HEÇ VAXT özü `tesdiq` vermir, yalnız kənardan qəbul edir;
+- **estimateStatus** — hesablama halı: `hesablanib | araliq | menbeLazim |
+  saheYoxdur | bitkiYoxdur`.
 
-**Cədvəl hələ ilkindir** (`tesdiqli: false`, versiya `ilkin-2026-01`):
-rəqəmlər yer tutandır. Rəsmi Aqrar Subsidiya qaydaları gələndə yalnız bu
-fayl dəyişir — `hektarBaza`, `pencere`, `maxHektar`, `versiya`,
-`qebulTarixi`, `tesdiqli: true`; ekrandakı "İlkin" nişanı öz-özünə itir.
-Toxum/gübrə güzəştləri və rayon əmsalları `setirler` massivinə ayrı sətir
-kimi əlavə olunur. UI heç vaxt "rəsmi məbləğ" demir: hesablama təxminidir,
-məbləğ müraciət və qərarla müəyyənləşir.
+Model: `əkin (₼/ha) = baza 200 × bitki əmsalı × suvarma əmsalı (dəmyə 1,0 ·
+ənənəvi 1,2 · müasir 1,45) × (təkrar əkin ? təkrar əmsalı : 1)`; məhsul
+subsidiyası ayrı modeldir (pambıq, ₼/ton); bağlar üçün salınma ili,
+intensivlik və ting sıxlığı ölçüləri var, dərəcə `null` (mənbə lazımdır).
+Sənəd üzrə və ölçülmüş hektarın KİÇİYİ götürülür. Müraciət dövrləri:
+payızlıq 1 sentyabr – dekabrın son iş günü; yazlıq 1 fevral – 1 iyun;
+təkrar əkin 1 iyun – 1 avqust (sərhəd tarixləri testlə qorunur).
+
+**Suvarma bilinmirsə tək rəqəm göstərilmir:** Bərdə, 10,02 ha buğda üçün
+ekranda 2.004–2.905,80 ₼ aralığı və suvarma sualı çıxır; cavab sahədə
+saxlanılır (`sahe.suvarma`).
+
+**Kredit tavanına YALNIZ təsdiqli məbləğ girir:** `kreditUcunSubsidiya`
+sourceVerified && eligibilityStatus === "tesdiq" && üsul bilinəndə məbləğ
+verir, əks halda 0; gəlir modelinin ümumi cədvəli (`GELIR_CONFIG.subsidiya`)
+bütövlükdə 0-dır. Nəticə: buğda/arpa modeldə subsidiyasız görünür və
+taxılçının limiti aşağıdır — bu, qəsdəndir. Ekranda "Kredit limitində
+nəzərə alınıb: 0 ₼" ayrıca sətirdir.
+
+Rəsmi mənbə gələndə YALNIZ `qaydalar2026.js` dəyişir: `menbe.url`,
+`menbe.qerarTarixi`, əmsallar, `yoxlanmis` siyahısı. Hazırda təsdiqsiz:
+ənənəvi suvarma əmsalı (1,2), qarğıdalı/kartof/tərəvəz/pambıq əmsalları,
+pambıq məhsul dərəcəsi (100 ₼/t), təkrar əkin əmsalı, bağ dərəcələri,
+minimum hektar hədləri, sığorta və kooperativ şərtləri.
 
 ### Kredit mühərriki (004)
 

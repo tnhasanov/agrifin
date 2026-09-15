@@ -137,7 +137,7 @@ export function MoneyScreen({
   onOpenHesab,
 }) {
   const { t } = useI18n();
-  const { state } = useStore();
+  const { state, actions } = useStore();
   const { navigate } = useRouter();
 
   const muraciet = kreditHali?.muraciet ?? null;
@@ -370,8 +370,16 @@ export function MoneyScreen({
       {/* Mövsüm pulu — fermerin "maaş dövrü" (bax: features/money/MovsumPulu) */}
       <MovsumPulu indeksHali={indeksHali} kreditHali={kreditHali} />
 
-      {/* Gözlənilən subsidiya — eyni cədvəl kredit tavanına da gedir (lib/subsidiya.js) */}
-      {state.sahe && <SubsidiyaKarti bitki={state.chat.crop} hektar={state.sahe.hektar} />}
+      {/* Təxmini əkin subsidiyası — 2026 modeli; təsdiqsiz məbləğ kredit
+          tavanına girmir və bu, ekranda ayrıca sətirdir (lib/subsidiya/) */}
+      {state.sahe && (
+        <SubsidiyaKarti
+          bitki={state.chat.crop}
+          hektar={state.sahe.hektar}
+          suvarma={state.sahe.suvarma ?? null}
+          onSuvarma={actions.saheSuvarmaTeyin}
+        />
+      )}
 
       {/* Yeni müraciət — yalnız açıq iş yoxdursa. Kart NÖVBƏTİ ƏSKİK ADDIMI
           göstərir: sahə yoxdursa "Sahə əlavə et", bitki yoxdursa "Bitkini

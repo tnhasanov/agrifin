@@ -13,6 +13,7 @@ import { districtByName, isValidLocation, nearestDistrict, readLegacyLocation } 
 // Həndəsə lib/-dədir: hektar artıq SERVERDƏ də hesablanır və klientlə server
 // eyni düsturu işlətməlidir (bax: lib/geo.js, api/sahe.js)
 import { duzgunSahe } from "../../lib/geo.js";
+import { SUVARMA_USULLARI } from "../../lib/subsidiya/index.js";
 import { mehsulTap } from "../../lib/bazar/kataloq.js";
 import { sayiSix } from "../../lib/bazar/sifaris.js";
 
@@ -296,6 +297,12 @@ export function reducer(state, action) {
     case "sahe/clear":
       return { ...state, sahe: null };
 
+    // Suvarma üsulu SAHƏNİN xüsusiyyətidir (subsidiya dərəcəsi ona görədir);
+    // sahə yoxdursa saxlanacaq yer də yoxdur
+    case "sahe/suvarma":
+      if (!state.sahe || !SUVARMA_USULLARI.includes(action.suvarma)) return state;
+      return { ...state, sahe: { ...state.sahe, suvarma: action.suvarma } };
+
     // Serverdən qayıdan sahə toast-sız qəbul edilir: fermer heç nə etməyib,
     // sadəcə köhnə cihazdakı konturu geri alır — "yadda saxlandı" demək yalandır.
     //
@@ -459,6 +466,7 @@ export function StoreProvider({ children }) {
       },
       clearSahe: () => dispatch({ type: "sahe/clear" }),
       saheQebulEt: (sahe) => dispatch({ type: "sahe/qebul", sahe }),
+      saheSuvarmaTeyin: (suvarma) => dispatch({ type: "sahe/suvarma", suvarma }),
       hesabTelefon: (telefon) => dispatch({ type: "hesab/set", telefon }),
       hesabCixdi: () => dispatch({ type: "hesab/set", telefon: null }),
       // Bazar səbəti
