@@ -50,10 +50,12 @@ export function muracietLegv() {
  * `acar` idempotentlik üçündür: şəbəkə itsə təkrar sorğu ikinci dəfə
  * tətbiq olunmur.
  */
-export function odenisEt({ mebleg, acar }) {
+export function odenisEt({ mebleg, acar, tam = false }) {
+  // `tam: true` — ERKƏN TAM BAĞLANMA: məbləği SERVER hesablayır (yarımçıq
+  // dövrün faizi daxil). Klientin göstərdiyi rəqəm həmişə köhnə olardı.
   return sorguGonder("/api/kredit", {
     method: "POST",
-    govde: { emel: "odenis", mebleg, acar },
+    govde: tam ? { emel: "odenis", tam: true, acar } : { emel: "odenis", mebleg, acar },
   });
 }
 

@@ -51,8 +51,12 @@ export default async function handler(req, res) {
       );
       if (!sahe) return res.status(200).json({ sahe: null, snapshotlar: {} });
 
+      // 006-dan sonra eyni növdən iki sətir ola bilər (menbe: klient/server).
+      // Sıra QƏSDƏNDİR: server sətri sonuncu gəlir və Object.fromEntries-də
+      // qalib olur — anderraytinqin gördüyü tarixçə ekranın da gördüyüdür,
+      // ORDER BY olmadan isə hər açılışda təsadüfi biri qayıdırdı.
       const snapshotSetirleri = await sorgu(
-        "SELECT nov, mezmun FROM peyk_snapshotlar WHERE sahe_id=$1",
+        "SELECT nov, mezmun FROM peyk_snapshotlar WHERE sahe_id=$1 ORDER BY (menbe = 'server'), id",
         [sahe.id],
       );
       const snapshotlar = Object.fromEntries(snapshotSetirleri.map((s) => [s.nov, s.mezmun]));
@@ -89,7 +93,11 @@ export default async function handler(req, res) {
         `INSERT INTO saheler (istifadeci_id, noqteler, hektar, hektar_server, kontur_hash, bitki)
          VALUES ($1, $2, $3, $4, $5, $6)
          ON CONFLICT (istifadeci_id) DO UPDATE
-           SET noqteler=$2, hektar=$3, hektar_server=$4, kontur_hash=$5, bitki=$6,
+           SET noqteler=$2, hektar=$3, hektar_server=$4, kontur_hash=$5,
+               -- Bitkisiz PUT mövcud bitkini SİLMİR: yeni cihazda hələ bitki
+               -- seçməmiş fermerin sinxronu serverdəki seçimi NULL-layırdı
+               -- (kredit müddəti və bazar ön yoxlaması ondan asılıdır)
+               bitki=COALESCE($6, saheler.bitki),
                yenilenib=now()`,
         [
           istifadeci.id,

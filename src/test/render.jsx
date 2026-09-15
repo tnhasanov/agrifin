@@ -142,10 +142,12 @@ export function kreditServeri({
           ],
         };
       } else if (govde?.emel === "odenis") {
-        // Serverin bölgüsü: əvvəl faiz, sonra əsas borc
+        // Serverin bölgüsü: əvvəl faiz, sonra əsas borc.
+        // `tam: true` — serverin özü hesabladığı tam bağlanma məbləği
         const kredit = veziyyet.kredit;
-        const faiz = Math.min(govde.mebleg, kredit.faizBorc);
-        const esas = Math.min(govde.mebleg - faiz, kredit.qaliqBorc);
+        const odenilecek = govde.tam ? kredit.faizBorc + kredit.qaliqBorc : govde.mebleg;
+        const faiz = Math.min(odenilecek, kredit.faizBorc);
+        const esas = Math.min(odenilecek - faiz, kredit.qaliqBorc);
         const yeniEsas = kredit.qaliqBorc - esas;
         const yeniFaiz = kredit.faizBorc - faiz;
         veziyyet = {

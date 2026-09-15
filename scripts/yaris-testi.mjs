@@ -11,7 +11,7 @@
  * ilə göndərilən sorğular serverdə həqiqətən eyni anda yarışır.
  *
  * ═══ SSENARİLƏR ═══════════════════════════════════════════════════════
- *   A. Qalıq 100, eyni anda 60+60  → tətbiq 60 və 40, qalıq 0, mənfi yox
+ *   A. Qalıq 100, eyni anda 60+60  → tətbiq yalnız 60, o biri 409 (borcdan çox), qalıq 40
  *   B. Eyni idempotentlik açarı (paralel + təkrar) → DÜZ BİR maliyyə hadisəsi
  *   C. Eyni təklifə eyni anda iki qəbul → DÜZ BİR kredit
  *
@@ -133,7 +133,7 @@ await miqrasiyalariTetbiqEt(sorgu, (mesaj) => console.log(mesaj));
   const kredit = await kreditAl(f);
   await isle({ method: "POST", cookie: f.cookie, body: { emel: "odenis", mebleg: 1900 } });
 
-  await Promise.all([
+  const cavablar = await Promise.all([
     isle({ method: "POST", cookie: f.cookie, body: { emel: "odenis", mebleg: 60, acar: "a-1" } }),
     isle({ method: "POST", cookie: f.cookie, body: { emel: "odenis", mebleg: 60, acar: "a-2" } }),
   ]);
@@ -148,8 +148,14 @@ await miqrasiyalariTetbiqEt(sorgu, (mesaj) => console.log(mesaj));
     [kredit.id],
   );
   const megbleger = hadiseler.map((h) => Number(h.amount)).sort((a, b) => b - a);
-  yoxla("qalıq 0-dır və kredit bağlanıb", Number(setir.principal_outstanding) === 0 && setir.status === "repaid", JSON.stringify(setir));
-  yoxla("tətbiq 60 və 40-dır (ikinci sorğu yenilənmiş qalığı görüb)", JSON.stringify(megbleger) === "[60,40]", JSON.stringify(megbleger));
+  // BORCDAN ÇOX ÖDƏNİŞ QƏBUL EDİLMİR: ikinci sorğu kilidi gözləyib yenilənmiş
+  // 40 ₼ qalığı görür və 60 ₼-i sıxmır — 409 meblegCoxdur qaytarır. Artıq
+  // pul izsiz udulmur (əvvəl LEAST ilə 40 tətbiq olunub 20 ₼ itirdi).
+  const kodlar = cavablar.map((c) => c.statusCode).sort();
+  const coxdur = cavablar.find((c) => c.statusCode === 409);
+  yoxla("qalıq 40-dır, kredit açıqdır", Number(setir.principal_outstanding) === 40 && setir.status === "active", JSON.stringify(setir));
+  yoxla("yalnız BİR 60 tətbiq olunub", JSON.stringify(megbleger) === "[60]", JSON.stringify(megbleger));
+  yoxla("o biri 409 meblegCoxdur + ödəniləcək 40", JSON.stringify(kodlar) === "[200,409]" && coxdur?.govde?.error === "meblegCoxdur" && coxdur?.govde?.odenilecek === 40, `${JSON.stringify(kodlar)} ${JSON.stringify(coxdur?.govde)}`);
 }
 
 // ── B. Eyni idempotentlik açarı ────────────────────────────────────────

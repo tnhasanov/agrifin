@@ -281,6 +281,13 @@ export default {
   "kredit.xeta.kecidYanlis": "The status changed — reopen the panel.",
   "kredit.xeta.girisLazim": "Sign-in required.",
   "kredit.xeta.xeta": "That didn't go through. Please try again.",
+  "kredit.xeta.meblegCoxdur": "The amount exceeds your balance. Use \"Pay everything\" to close the loan.",
+  "kredit.xeta.aktivKreditVar": "A new loan can't be opened while one is active.",
+  "kredit.xeta.peykSubutuYoxdur": "Satellite measurement of your field isn't ready yet. Please try again later.",
+  "kredit.xeta.borcYoxdur": "There is nothing to pay.",
+  "kredit.xeta.muddetYanlis": "The term is invalid.",
+  "kredit.xeta.sxemYoxdur": "The server is being set up. Please try again later.",
+  "kredit.xeta.kreditInvariantiPozulub": "Your loan account is inconsistent — please contact support.",
 
 
   "pano.salam": "Hello, {name}",

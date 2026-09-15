@@ -51,6 +51,7 @@ import {
   odenisTarixcesi,
   payoffFaizi,
   qepik,
+  yazilmisPayoffFaizi,
 } from "../lib/kreditMuhasibat.js";
 import { bicinTarixi } from "../lib/movsum.js";
 import { balJurnalinaYaz, saheSubutu } from "../lib/saheSubutu.js";
@@ -215,7 +216,7 @@ async function faizleriIsle(kredit, indi) {
   if (!dovrler.length) return kredit;
 
   const hadiseler = await sorgu(
-    `SELECT event_type, amount, principal_after, created_at FROM loan_events
+    `SELECT event_type, amount, principal_after, created_at, idempotency_key FROM loan_events
      WHERE loan_id=$1 ORDER BY created_at, id`,
     [kredit.id],
   );
@@ -224,7 +225,15 @@ async function faizleriIsle(kredit, indi) {
 
   let cari = kredit;
   for (const dovr of dovrler) {
-    const faiz = araliqFaizi({ xett, baslangic: dovr.baslangic, son: dovr.son, illikFaiz });
+    // Bu dövrün içində erkən bağlanma cəhdi faiz yazıbsa (payoff), həmin
+    // günlər artıq faizlənib — dövrün faizindən çıxılır, ikiqat olmur
+    const faiz = qepik(
+      Math.max(
+        0,
+        araliqFaizi({ xett, baslangic: dovr.baslangic, son: dovr.son, illikFaiz }) -
+          yazilmisPayoffFaizi(hadiseler, dovr.baslangic, dovr.son),
+      ),
+    );
     let yeni;
     try {
       [yeni] = await sorgu(
@@ -286,17 +295,24 @@ async function faizleriIsle(kredit, indi) {
 async function payoffFaiziniYaz(kredit, indi) {
   const verilme = kredit.disbursed_at ?? kredit.created_at;
   const hadiseler = await sorgu(
-    `SELECT event_type, amount, principal_after, created_at FROM loan_events
+    `SELECT event_type, amount, principal_after, created_at, idempotency_key FROM loan_events
      WHERE loan_id=$1 ORDER BY created_at, id`,
     [kredit.id],
   );
-  const faiz = payoffFaizi({
-    xett: esasXetti(hadiseler),
-    verilme,
-    hesablanmisDovr: kredit.accrued_periods ?? 0,
-    indi,
-    illikFaiz: reqem(kredit.annual_rate),
-  });
+  // Əvvəlki gün(lər)də yarımçıq qalmış payoff cəhdi faiz yazıbsa, yalnız
+  // ondan sonrakı günlərin faizi yazılır — eyni gün iki dəfə faizlənmir
+  const faiz = qepik(
+    Math.max(
+      0,
+      payoffFaizi({
+        xett: esasXetti(hadiseler),
+        verilme,
+        hesablanmisDovr: kredit.accrued_periods ?? 0,
+        indi,
+        illikFaiz: reqem(kredit.annual_rate),
+      }) - yazilmisPayoffFaizi(hadiseler, dovrSonu(verilme, kredit.accrued_periods ?? 0), indi),
+    ),
+  );
   if (!(faiz > 0)) return kredit;
 
   let yeni;
@@ -584,6 +600,19 @@ export default async function handler(req, res) {
       const giris = murecietGirisi({ mebleg: req.body?.mebleg, muddetAy });
       if (!giris.ok) return res.status(400).json({ error: giris.sebeb });
 
+      // EYNİ AÇARLA TƏKRAR = UĞUR: cavabı itirən şəbəkə təkrar göndərəndə
+      // fermer öz müraciətinə "artıq var" almamalıdır — mövcud vəziyyət
+      // qayıdır (teklif-qebul və sifariş ilə eyni qayda). Açıq-müraciət
+      // qapısından ƏVVƏL yoxlanır, əks halda o qapı elə bu müraciəti tutur.
+      const acar = typeof req.body?.acar === "string" ? req.body.acar.slice(0, 64) : null;
+      if (acar) {
+        const [evvelki] = await sorgu(
+          "SELECT id FROM credit_applications WHERE istifadeci_id=$1 AND idempotency_key=$2",
+          [istifadeci.id, acar],
+        );
+        if (evvelki) return res.status(200).json(await veziyyetOxu(istifadeci.id, indi));
+      }
+
       // Açıq müraciət varsa ikincisi açılmır (bazada da unikal indeks var)
       const [acıq] = await sorgu(
         `SELECT id FROM credit_applications
@@ -613,7 +642,6 @@ export default async function handler(req, res) {
         movsumler,
       });
 
-      const acar = typeof req.body?.acar === "string" ? req.body.acar.slice(0, 64) : null;
       if (!acar) acarsizEmel("muraciet", istifadeci.id);
 
       // ═══ NƏTİCƏNİN TAMAMI BİR İFADƏDƏ YAZILIR ═══════════════════════
@@ -734,6 +762,16 @@ export default async function handler(req, res) {
         // Unikal indekslər (açıq müraciət / idempotentlik açarı): təkrar
         // sorğu ikinci müraciət yaratmır — bütöv ifadə geri sarınır
         if (String(xeta?.message ?? "").includes("credit_app")) {
+          // EYNİ AÇARLA TƏKRAR = UĞUR, xəta deyil: şəbəkə cavabı itirmişsə
+          // fermer öz yaratdığı müraciətə "artıq var" almamalıdır — cari
+          // vəziyyət qaytarılır (teklif-qebul və sifariş ilə eyni qayda)
+          if (acar) {
+            const [movcud] = await sorgu(
+              "SELECT id FROM credit_applications WHERE istifadeci_id=$1 AND idempotency_key=$2",
+              [istifadeci.id, acar],
+            );
+            if (movcud) return res.status(200).json(await veziyyetOxu(istifadeci.id, indi));
+          }
           return res.status(409).json({ error: "artiqMuracietVar" });
         }
         throw xeta;
@@ -981,6 +1019,15 @@ export default async function handler(req, res) {
       if (tamBaglanma && !(odenilecek > 0)) {
         return res.status(409).json({ error: "borcYoxdur" });
       }
+      // BORCDAN ÇOX ÖDƏNİŞ QƏBUL EDİLMİR. Əvvəl LEAST(...) artığı səssizcə
+      // udurdu: 999.999 ₼ göndərən 200 alır, jurnalda yalnız borc qədəri
+      // görünürdü, qalan məbləğin izi yox idi. Ödəniş relsi qoşulanda bu,
+      // uzlaşdırılmayan boşluqdur. İndi tam məbləğ cavabda deyilir; klient
+      // "hamısını bağla" üçün `tam: true` göndərir və server özü hesablayır.
+      const borcCemi = qepik(reqem(kredit.interest_outstanding) + reqem(kredit.principal_outstanding));
+      if (!tamBaglanma && mebleg > borcCemi + 0.005) {
+        return res.status(409).json({ error: "meblegCoxdur", odenilecek: borcCemi });
+      }
 
       // BÖLGÜ VƏ TƏTBİQ KİLİDLİ CARİ BALANSDAN HESABLANIR. Ödəniş əvvəl faiz
       // borcunu, sonra əsas borcu bağlayır (bax: lib/kreditMuhasibat.js →
@@ -1002,6 +1049,9 @@ export default async function handler(req, res) {
           `WITH evvel AS (
              SELECT id, principal_outstanding, interest_outstanding FROM loans
              WHERE id=$1 AND status='active'
+               -- Kilid altındakı balansdan çox ödəniş tətbiq olunmur (yarışda
+               -- balans yoxlamadan sonra azala bilər — qapı SQL-dədir)
+               AND $2::numeric <= principal_outstanding + interest_outstanding + 0.005
                AND ($3::text IS NULL OR NOT EXISTS (
                  SELECT 1 FROM loan_events WHERE loan_id=$1
                    AND idempotency_key IN ($3::text || ':faiz', $3::text || ':esas')))
@@ -1069,6 +1119,16 @@ export default async function handler(req, res) {
           // İdempotent təkrar: eyni sorğunun təkrarı uğurdur, əməl deyil —
           // cari vəziyyət qaytarılır, ikinci hadisə YAZILMIR
           if (movcud) return res.status(200).json(await veziyyetOxu(istifadeci.id, indi));
+        }
+        // Yarışda balans azalıb və məbləğ artıq borcdan çoxdursa, səbəb
+        // "bağlanıb" yox, "çoxdur"dur — fermer düzgün rəqəmi görsün
+        const [indiki] = await sorgu(
+          "SELECT status, principal_outstanding, interest_outstanding FROM loans WHERE id=$1",
+          [kredit.id],
+        );
+        if (indiki?.status === "active") {
+          const cemi = qepik(reqem(indiki.interest_outstanding) + reqem(indiki.principal_outstanding));
+          if (odenilecek > cemi + 0.005) return res.status(409).json({ error: "meblegCoxdur", odenilecek: cemi });
         }
         return res.status(409).json({ error: "kreditBaglidir" });
       }

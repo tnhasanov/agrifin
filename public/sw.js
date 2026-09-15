@@ -1,6 +1,10 @@
 // Sahədə internet tez-tez kəsilir: tətbiq qabığı keşdən açılır.
 // Hava məlumatının öz keşi var (src/services/weather.js), burada saxlanmır.
-const CACHE = "agrifin-v1";
+//
+// KEŞ ADI DƏYİŞƏNDƏ köhnə keş "activate"-də silinir. v2: /api/* cavabları
+// əvvəl keşə düşürdü (aşağıdakı qeydə bax) — v1-də qalan köhnə API
+// cavabları bu adla təmizlənir.
+const CACHE = "agrifin-v2";
 const PRECACHE = ["/", "/index.html", "/manifest.webmanifest", "/icons/icon.svg"];
 
 self.addEventListener("install", (event) => {
@@ -28,6 +32,12 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   // Kənar sorğular (Open-Meteo, şriftlər) brauzerin öz keşinə buraxılır
   if (url.origin !== self.location.origin) return;
+
+  // API HEÇ VAXT KEŞLƏNMİR. Kredit qalığı, sessiya, sifariş siyahısı canlı
+  // məlumatdır: keş-birinci verilsəydi ödənişdən sonra reload köhnə borcu,
+  // çıxışdan sonra isə köhnə "daxil olub" cavabını göstərərdi. Bu sorğular
+  // birbaşa şəbəkəyə gedir; oflaynda xəta alır və UI onu açıq deyir.
+  if (url.pathname.startsWith("/api/")) return;
 
   // Naviqasiya: şəbəkə birinci, oflayn olsa qabıq keşdən
   if (request.mode === "navigate") {

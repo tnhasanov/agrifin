@@ -163,6 +163,6 @@ export function useKreditVeziyyeti(telefon) {
     teklifiQebulEt: (teklifId, acar) => emelEt(() => apiTeklifQebul(teklifId, acar)),
     legvEt: () => emelEt(() => apiMuracietLegv()),
     // Bölgü (əvvəl faiz, sonra əsas) SERVERDƏDİR — burada yalnız məbləğ gedir
-    odeEt: (mebleg, acar) => emelEt(() => apiOdenisEt({ mebleg, acar })),
+    odeEt: (mebleg, acar, { tam = false } = {}) => emelEt(() => apiOdenisEt({ mebleg, acar, tam })),
   };
 }

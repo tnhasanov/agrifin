@@ -128,6 +128,33 @@ describe("api/sahe GET/PUT", () => {
     expect(res.govde.sahe.bitki).toBe("pambiq");
   });
 
+  it("bitkisiz PUT mövcud bitkini SİLMİR (yeni cihazın sinxronu)", async () => {
+    const cookie = await girisEt();
+    await saheYaz(cookie);
+    // Yeni cihazda hələ bitki seçilməyib: sinxron konturu bitki=null ilə göndərir
+    await isle({ method: "PUT", cookie, body: { noqteler: NOQTELER, hektar: 4.2, bitki: null } });
+    const res = await isle({ cookie });
+    expect(res.govde.sahe.bitki).toBe("bugda");
+    // Açıq seçim isə əvəz edir
+    await isle({ method: "PUT", cookie, body: { noqteler: NOQTELER, bitki: "pomidor" } });
+    expect((await isle({ cookie })).govde.sahe.bitki).toBe("pomidor");
+  });
+
+  it("GET-də eyni növdən iki snapshot varsa SERVERİNKİ qayıdır (təsadüfi deyil)", async () => {
+    const cookie = await girisEt();
+    await saheYaz(cookie);
+    const [sahe] = await sorgu("SELECT id, kontur_hash FROM saheler");
+    await sorgu(
+      "INSERT INTO peyk_snapshotlar (sahe_id, nov, mezmun, menbe, kontur_hash) VALUES ($1,'tarixce',$2,'server',$3)",
+      [sahe.id, JSON.stringify({ movsumler: ["server"] }), sahe.kontur_hash],
+    );
+    await isle({ method: "POST", cookie, body: { emel: "snapshot", nov: "tarixce", mezmun: { movsumler: ["klient"] } } });
+    for (let i = 0; i < 3; i += 1) {
+      const res = await isle({ cookie });
+      expect(res.govde.snapshotlar.tarixce).toEqual({ movsumler: ["server"] });
+    }
+  });
+
   it("hər istifadəçi yalnız öz sahəsini görür", async () => {
     const birinci = await girisEt("+994501111111");
     const ikinci = await girisEt("+994502222222");

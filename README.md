@@ -615,11 +615,20 @@ DATABASE_URL="postgres://...yaris-branch..." SESSION_SECRET="test-sirri" \
   node scripts/yaris-testi.mjs
 ```
 
-Ssenarilər: qalıq 100-ə eyni anda 60+60 → 60 və 40, qalıq 0; eyni
-idempotentlik açarı (paralel + təkrar) → düz bir maliyyə hadisəsi; eyni
-təklifə paralel iki qəbul → düz bir kredit. Uğursuzluqda çıxış kodu 1.
-Bitirəndə branch-ı silin. Bu yoxlama hər sxem/SQL dəyişikliyindən sonra,
-merge-dən əvvəl işlədilməlidir.
+Ssenarilər: qalıq 100-ə eyni anda 60+60 → yalnız 60 tətbiq olunur, o biri
+409 `meblegCoxdur` alır (borcdan çox ödəniş qəbul edilmir, artıq pul izsiz
+udulmur); eyni idempotentlik açarı (paralel + təkrar) → düz bir maliyyə
+hadisəsi; eyni təklifə paralel iki qəbul → düz bir kredit. Uğursuzluqda
+çıxış kodu 1. Bitirəndə branch-ı silin. Bu yoxlama hər sxem/SQL
+dəyişikliyindən sonra, merge-dən əvvəl işlədilməlidir.
+
+**Tam axın simulyasiyası (PGlite, uzaq baza lazım deyil):**
+`node scripts/simulyasiya.mjs` — onboarding → OTP → sahə → saxta klient
+snapshot-u → kredit müraciəti (Copernicus stub, server özü çağırır) →
+təklif → qəbul → bazar sifarişi/ləğv → 40 gün vaxt sürüşməsi (faiz,
+gecikmə) → ödəniş → tam bağlanma → yenidən müraciət → iki istifadəçi
+arasında izolyasiya. Hər addımda hansı cədvələ nəyin düşdüyü yoxlanılır
+(~95 yoxlama, sonda cədvəl doluluğu). OTP kodu ekrana yazılmır.
 
 ⚠ **Demo pul:** `wallet`, əməliyyat siyahısı və karbon satışı hələ
 prototip nümunələridir — server hesabına bağlı deyil və kredit axını

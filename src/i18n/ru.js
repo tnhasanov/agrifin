@@ -282,6 +282,13 @@ export default {
   "kredit.xeta.kecidYanlis": "Статус изменился — откройте панель заново.",
   "kredit.xeta.girisLazim": "Требуется вход.",
   "kredit.xeta.xeta": "Не удалось выполнить. Попробуйте снова.",
+  "kredit.xeta.meblegCoxdur": "Сумма больше остатка долга. Чтобы закрыть кредит, выберите «Погасить всё».",
+  "kredit.xeta.aktivKreditVar": "Пока есть активный кредит, новый не открывается.",
+  "kredit.xeta.peykSubutuYoxdur": "Спутниковое измерение поля ещё не готово. Попробуйте позже.",
+  "kredit.xeta.borcYoxdur": "Задолженности нет.",
+  "kredit.xeta.muddetYanlis": "Неверный срок.",
+  "kredit.xeta.sxemYoxdur": "Сервер настраивается. Попробуйте позже.",
+  "kredit.xeta.kreditInvariantiPozulub": "В кредитном счёте есть расхождение — свяжитесь с поддержкой.",
 
 
   "pano.salam": "Здравствуйте, {name}",

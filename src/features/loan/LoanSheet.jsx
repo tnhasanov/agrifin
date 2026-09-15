@@ -31,6 +31,36 @@ import { kreditImkani } from "./useKredit.js";
  * qaytarır ki, sifariş ona bağlansın. Kredit məntiqinin özü DƏYİŞMİR —
  * eyni server, eyni anderraytinq, eyni slayder.
  */
+/**
+ * Server xəta kodları → i18n açarı. Tanınmayan kod (məsələn 500-ün
+ * "Gözlənilməz xəta." mətni) ekranda açar kimi görünməsin deyə ümumi
+ * mesaja düşür.
+ */
+const XETA_ACARLARI = new Set([
+  "kreditYoxdur",
+  "kreditBaglidir",
+  "artiqMuracietVar",
+  "aktivKreditVar",
+  "saheYoxdur",
+  "peykSubutuYoxdur",
+  "meblegYanlis",
+  "meblegAzdir",
+  "meblegCoxdur",
+  "muddetYanlis",
+  "borcYoxdur",
+  "teklifBaglidir",
+  "teklifVaxti",
+  "teklifYoxdur",
+  "muracietYoxdur",
+  "kecidYanlis",
+  "girisLazim",
+  "sxemYoxdur",
+  "kreditInvariantiPozulub",
+]);
+function xetaAcariniSec(acar) {
+  return XETA_ACARLARI.has(acar) ? acar : "xeta";
+}
+
 export function LoanSheet({
   onClose,
   indeksHali = null,
@@ -52,6 +82,9 @@ export function LoanSheet({
   // növbəti ödəniş YENİ əməl kimi getsin
   const odeAcarRef = useRef(null);
   const [odenisMebleg, setOdenisMebleg] = useState("");
+  // "Hamısını bağla" seçilibsə məbləği SERVER hesablayır (tam: true) —
+  // yarımçıq dövrün faizi daxil. Fermer rəqəmi əl ilə dəyişən kimi sönür.
+  const [tamBaglanma, setTamBaglanma] = useState(false);
 
   // SERVER vəziyyəti — müraciət, qərar, təklif, kredit (bax: useKreditVeziyyeti)
   const serverHal = kreditHali?.hal ?? "yuklenir";
@@ -148,12 +181,15 @@ export function LoanSheet({
   // server aparır — klient nə bölür, nə də balansı özü hesablayır
   const ode = async () => {
     const mebleg = Number(odenisMebleg);
-    if (!(mebleg > 0)) return;
+    if (!tamBaglanma && !(mebleg > 0)) return;
     odeAcarRef.current ??= `o-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-    const netice = await kreditHali.odeEt(mebleg, odeAcarRef.current);
+    const netice = await kreditHali.odeEt(tamBaglanma ? null : mebleg, odeAcarRef.current, {
+      tam: tamBaglanma,
+    });
     if (netice.ok) {
       odeAcarRef.current = null;
       setOdenisMebleg("");
+      setTamBaglanma(false);
     }
   };
 
@@ -340,16 +376,21 @@ export function LoanSheet({
                   {t("kredit.odenis.novbeti", { mebleg: { money: aktivKredit.novbetiMebleg } })}
                 </button>
               )}
+              {/* Rəqəm SERVERİN bu günə hesabladığı payoff-dur (yarımçıq
+                  dövrün faizi daxil); `qalıq + faiz borcu` ondan azdır və
+                  krediti "bağlayıb" faizi itirirdi. Göndərilən də `tam: true`-dur. */}
               <button
                 type="button"
-                onClick={() =>
-                  setOdenisMebleg(String(Math.ceil(aktivKredit.qaliqBorc + aktivKredit.faizBorc)))
-                }
+                onClick={() => {
+                  setOdenisMebleg(String(aktivKredit.payoffMebleg ?? aktivKredit.qaliqBorc + aktivKredit.faizBorc));
+                  setTamBaglanma(true);
+                }}
+                aria-pressed={tamBaglanma}
                 className="rounded-xl px-3 py-2 text-xs font-semibold"
-                style={{ backgroundColor: C.mist, color: C.pine }}
+                style={{ backgroundColor: tamBaglanma ? C.malSoft : C.mist, color: tamBaglanma ? C.mal : C.pine }}
               >
                 {t("kredit.odenis.hamisi", {
-                  mebleg: { money: aktivKredit.qaliqBorc + aktivKredit.faizBorc },
+                  mebleg: { money: aktivKredit.payoffMebleg ?? aktivKredit.qaliqBorc + aktivKredit.faizBorc },
                 })}
               </button>
             </div>
@@ -358,7 +399,10 @@ export function LoanSheet({
               inputMode="decimal"
               min="1"
               value={odenisMebleg}
-              onChange={(e) => setOdenisMebleg(e.target.value)}
+              onChange={(e) => {
+                setOdenisMebleg(e.target.value);
+                setTamBaglanma(false);
+              }}
               aria-label={t("kredit.odenis.mebleg")}
               placeholder={t("kredit.odenis.mebleg")}
               className="mt-2 w-full rounded-xl px-3 py-2.5 text-sm font-bold"
@@ -532,7 +576,7 @@ export function LoanSheet({
             className="mt-2 rounded-lg px-2.5 py-2 text-xs leading-relaxed"
             style={{ backgroundColor: "#FBEAE7", color: C.danger }}
           >
-            {t(`kredit.xeta.${kreditHali.xetaAcari}`)}
+            {t(`kredit.xeta.${xetaAcariniSec(kreditHali.xetaAcari)}`)}
           </p>
         )}
 

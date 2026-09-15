@@ -284,6 +284,13 @@ export default {
   "kredit.xeta.kecidYanlis": "Vəziyyət dəyişib — paneli yenidən açın.",
   "kredit.xeta.girisLazim": "Giriş tələb olunur.",
   "kredit.xeta.xeta": "Əməliyyat alınmadı. Yenidən cəhd edin.",
+  "kredit.xeta.meblegCoxdur": "Məbləğ borcdan çoxdur. Hamısını bağlamaq üçün \"Hamısını bağla\" seçin.",
+  "kredit.xeta.aktivKreditVar": "Aktiv krediti olan fermerə yeni kredit açılmır.",
+  "kredit.xeta.peykSubutuYoxdur": "Sahənizin peyk ölçməsi hazır deyil. Bir az sonra yenidən cəhd edin.",
+  "kredit.xeta.borcYoxdur": "Ödəniləcək borc yoxdur.",
+  "kredit.xeta.muddetYanlis": "Müddət düzgün deyil.",
+  "kredit.xeta.sxemYoxdur": "Server hazırlanır. Bir az sonra yenidən cəhd edin.",
+  "kredit.xeta.kreditInvariantiPozulub": "Kredit hesabında uyğunsuzluq var — dəstəklə əlaqə saxlayın.",
 
   // ── Fermer panosu (dashboard) — dəqiq məhsul mətnləri ──────────────
   "pano.salam": "Salam, {name}",

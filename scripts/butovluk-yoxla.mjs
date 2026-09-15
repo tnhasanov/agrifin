@@ -39,6 +39,14 @@ const sorgu = async (metn, params = []) => {
 };
 
 /** Cədvəl yoxdursa yoxlama atlanır — baza köhnə ola bilər */
+async function sutunVar(cedvel, sutun) {
+  const [setir] = await sorgu(
+    "SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name=$1 AND column_name=$2",
+    [cedvel, sutun],
+  );
+  return Boolean(setir);
+}
+
 async function cedvelVar(ad) {
   const [setir] = await sorgu("SELECT to_regclass($1) IS NOT NULL AS var", [`public.${ad}`]);
   return Boolean(setir?.var);
@@ -100,17 +108,33 @@ if (await cedvelVar("loans")) {
 }
 
 // ── 3. Klient mənbəli peyk snapshot-ları ──────────────────────────────
-basliq("3. Peyk snapshot-larının mənbəyi (006-də 'klient' işarələnəcək)");
+basliq("3. Peyk snapshot-larının mənbəyi (menbe: klient / server)");
 if (await cedvelVar("peyk_snapshotlar")) {
   const [snap] = await sorgu("SELECT count(*)::int AS say FROM peyk_snapshotlar");
-  const novler = await sorgu(
-    "SELECT nov, count(*)::int AS say FROM peyk_snapshotlar GROUP BY nov ORDER BY 2 DESC",
-  );
-  console.log(`Snapshot (cəmi): ${snap.say} — hamısı klient tərəfindən yazılıb (provenance sütunu hələ yoxdur).`);
-  for (const setir of novler) console.log(`   nov=${setir.nov} → ${setir.say}`);
-  if (snap.say > 0) {
-    xeberdarliq += 1;
-    console.log("⚠ Bu sətirlər 006-dən sonra anderraytinqdə İSTİFADƏ OLUNMAYACAQ (yalnız diaqnostika).");
+  if (await sutunVar("peyk_snapshotlar", "menbe")) {
+    // 006 tətbiq olunub: anderraytinq YALNIZ menbe='server' sətrini oxuyur
+    const menbeler = await sorgu(
+      "SELECT nov, menbe, count(*)::int AS say FROM peyk_snapshotlar GROUP BY nov, menbe ORDER BY 1, 2",
+    );
+    console.log(`Snapshot (cəmi): ${snap.say}`);
+    for (const setir of menbeler) console.log(`   nov=${setir.nov} menbe=${setir.menbe} → ${setir.say}`);
+    const [serverSay] = await sorgu("SELECT count(*)::int AS say FROM peyk_snapshotlar WHERE menbe='server'");
+    console.log(
+      serverSay.say > 0
+        ? `✓ ${serverSay.say} server mənbəli snapshot — kredit qərarı bunlara söykənir.`
+        : "ℹ Server mənbəli snapshot hələ yoxdur — ilk müraciətdə server Copernicus-dan özü gətirəcək.",
+    );
+  } else {
+    // 006-dan əvvəlki sxem
+    const novler = await sorgu(
+      "SELECT nov, count(*)::int AS say FROM peyk_snapshotlar GROUP BY nov ORDER BY 2 DESC",
+    );
+    console.log(`Snapshot (cəmi): ${snap.say} — hamısı klient tərəfindən yazılıb (provenance sütunu hələ yoxdur).`);
+    for (const setir of novler) console.log(`   nov=${setir.nov} → ${setir.say}`);
+    if (snap.say > 0) {
+      xeberdarliq += 1;
+      console.log("⚠ Bu sətirlər 006-dən sonra anderraytinqdə İSTİFADƏ OLUNMAYACAQ (yalnız diaqnostika).");
+    }
   }
 } else {
   console.log("peyk_snapshotlar cədvəli yoxdur — atlanır.");
@@ -119,8 +143,14 @@ if (await cedvelVar("peyk_snapshotlar")) {
 // ── 4. Hektar: saxlanmış dəyər vs geodezik hesablama ──────────────────
 basliq("4. Hektar avtoriteti (klient dəyəri vs geodezik)");
 if (await cedvelVar("saheler")) {
-  const saheler = await sorgu("SELECT id, hektar, noqteler FROM saheler");
-  console.log(`Sahə (cəmi): ${saheler.length}`);
+  // 006-dan sonra AVTORİTET hektar_server-dir; ondan əvvəl yalnız hektar var
+  const serverSutunu = await sutunVar("saheler", "hektar_server");
+  const saheler = await sorgu(
+    serverSutunu
+      ? "SELECT id, COALESCE(hektar_server, hektar) AS hektar, noqteler FROM saheler"
+      : "SELECT id, hektar, noqteler FROM saheler",
+  );
+  console.log(`Sahə (cəmi): ${saheler.length}${serverSutunu ? " · müqayisə: hektar_server (yoxdursa hektar)" : ""}`);
   let fərqli = 0;
   let enBoyukFerq = 0;
   for (const sahe of saheler) {
@@ -153,4 +183,4 @@ if (bloker > 0) {
   console.log("MİQRASİYA 006 TƏTBİQ EDİLMƏMƏLİDİR — əvvəlcə blokerlər həll olunmalıdır.");
   process.exit(1);
 }
-console.log("Baza 006 miqrasiyası üçün hazırdır.");
+console.log("Bütövlük yoxlaması keçdi.");

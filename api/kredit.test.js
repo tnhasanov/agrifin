@@ -7,7 +7,7 @@ import { miqrasiyalariTetbiqEt } from "../lib/miqrasiya.js";
 import { otpTesdiqle, otpYarat } from "../lib/hesab.js";
 import { ayliqFaiz } from "../lib/kreditOdenis.js";
 import { KREDIT_SERTLERI } from "../lib/kreditSertler.js";
-import { dovrSonu } from "../lib/kreditMuhasibat.js";
+import { araliqFaizi, dovrSonu } from "../lib/kreditMuhasibat.js";
 import handler from "./kredit.js";
 
 let pg;
@@ -705,10 +705,34 @@ describe("ödəniş qalığı azaldır, faiz qalığa hesablanır", () => {
     expect(ikinci.statusCode).toBe(404);
   });
 
-  it("qalıqdan çox ödəniş mənfi borc yaratmır", async () => {
+  it("qalıqdan çox ödəniş RƏDD edilir — artıq pul izsiz udulmur", async () => {
     const { cookie } = await kreditAl(2000);
-    const cavab = await isle({ method: "POST", cookie, body: { emel: "odenis", mebleg: 999999 } });
-    expect(cavab.govde.kredit.qaliqBorc).toBe(0);
+    const cavab = await isle({ method: "POST", cookie, body: { emel: "odenis", mebleg: 999999, acar: "cox" } });
+    // Əvvəl LEAST(...) 999.999-u qəbul edib borc qədərini tətbiq edirdi;
+    // qalan məbləğin jurnalda izi yox idi. İndi ödəniləcək məbləğ deyilir.
+    expect(cavab.statusCode).toBe(409);
+    expect(cavab.govde.error).toBe("meblegCoxdur");
+    expect(cavab.govde.odenilecek).toBe(2000);
+    const [kredit] = await sorgu("SELECT status, principal_outstanding FROM loans");
+    expect(kredit.status).toBe("active");
+    expect(Number(kredit.principal_outstanding)).toBe(2000);
+    expect(await sorgu("SELECT id FROM loan_events WHERE event_type='principal_repayment'")).toHaveLength(0);
+
+    // Dəqiq borc qədəri isə krediti bağlayır
+    const tam = await isle({ method: "POST", cookie, body: { emel: "odenis", mebleg: 2000, acar: "tam" } });
+    expect(tam.statusCode).toBe(200);
+    expect(tam.govde.kredit.hal).toBe("repaid");
+  });
+
+  it("eyni açarla təkrar müraciət 409 deyil, mövcud vəziyyətdir", async () => {
+    const f = await fermer();
+    await tarixceYaz(f.id);
+    const birinci = await isle({ method: "POST", cookie: f.cookie, body: { emel: "muraciet", mebleg: 2000, acar: "m-1" } });
+    expect(birinci.statusCode).toBe(200);
+    const tekrar = await isle({ method: "POST", cookie: f.cookie, body: { emel: "muraciet", mebleg: 2000, acar: "m-1" } });
+    expect(tekrar.statusCode).toBe(200);
+    expect(tekrar.govde.muraciet.id).toBe(birinci.govde.muraciet.id);
+    expect(await sorgu("SELECT id FROM credit_applications")).toHaveLength(1);
   });
 
   it("ödəniş jurnalı yalnız artır — hər hadisə qalığı ilə yazılır", async () => {
@@ -1379,6 +1403,58 @@ describe("erkən tam bağlanma", () => {
       [kredit.id],
     );
     expect(payoffFaizler).toHaveLength(1);
+  });
+
+  // REQRESSİYA: payoff faizi yazılıb, amma ödəniş krediti bağlamayıb
+  // (təkrar açar / qırılma / 409). Əvvəl növbəti dövr eyni günləri YENİDƏN
+  // faizləndirirdi: 15 günlük payoff + 30 günlük dövr = 45 günlük faiz.
+  it("yarımçıq qalan payoff cəhdi növbəti dövrün faizini ikiqat etmir", async () => {
+    const { f, kredit } = await kreditAc(2000);
+    // Adi ödəniş "x" açarı ilə jurnala düşür — sonra eyni açarla tam bağlanma
+    // cəhdi ödəniş hissəsini "təkrar" sayıb atlayacaq, faizi isə yazacaq
+    await isle({ method: "POST", cookie: f.cookie, body: { emel: "odenis", mebleg: 100, acar: "x" } });
+    const verilme15 = new Date(Date.now() - 15 * 86_400_000);
+    await sorgu("UPDATE loans SET disbursed_at=$2, created_at=$2 WHERE id=$1", [kredit.id, verilme15.toISOString()]);
+    await sorgu("UPDATE loan_events SET created_at=$2 WHERE loan_id=$1", [kredit.id, verilme15.toISOString()]);
+
+    const tam = await isle({ method: "POST", cookie: f.cookie, body: { emel: "odenis", tam: true, acar: "x" } });
+    expect(tam.statusCode).toBe(200);
+    const [aralıq] = await sorgu("SELECT status, interest_outstanding FROM loans WHERE id=$1", [kredit.id]);
+    expect(aralıq.status).toBe("active");
+    const [payoff] = await sorgu(
+      "SELECT amount FROM loan_events WHERE loan_id=$1 AND idempotency_key LIKE 'faiz-payoff-%'",
+      [kredit.id],
+    );
+    expect(Number(payoff.amount)).toBeGreaterThan(0);
+
+    // 1-ci dövr bitir: verilmə 35 gün geriyə, payoff hadisəsi isə 15-ci günə
+    const verilme35 = new Date(Date.now() - 35 * 86_400_000);
+    const payoffGunu = new Date(verilme35.getTime() + 15 * 86_400_000);
+    await sorgu("UPDATE loans SET disbursed_at=$2, created_at=$2 WHERE id=$1", [kredit.id, verilme35.toISOString()]);
+    await sorgu(
+      "UPDATE loan_events SET created_at=$2 WHERE loan_id=$1 AND (idempotency_key IS NULL OR idempotency_key NOT LIKE 'faiz-payoff-%')",
+      [kredit.id, verilme35.toISOString()],
+    );
+    await sorgu("UPDATE loan_events SET created_at=$2 WHERE loan_id=$1 AND idempotency_key LIKE 'faiz-payoff-%'", [
+      kredit.id,
+      payoffGunu.toISOString(),
+    ]);
+
+    const cavab = await isle({ cookie: f.cookie });
+    expect(cavab.statusCode).toBe(200);
+    const [son] = await sorgu("SELECT interest_accrued_total, annual_rate FROM loans WHERE id=$1", [kredit.id]);
+    // Dövrün faizi 1900 qalığa, [verilmə, verilmə+1 ay) üçün BİR dəfə
+    const gozlenilen = araliqFaizi({
+      xett: [{ vaxt: verilme35, qaliq: 1900 }],
+      baslangic: verilme35,
+      son: dovrSonu(verilme35, 1),
+      illikFaiz: Number(son.annual_rate),
+    });
+    expect(Math.abs(Number(son.interest_accrued_total) - gozlenilen)).toBeLessThan(0.02);
+    // Payoff sətri + dövr sətri birlikdə məhz bu cəmi verir — ikiqat yoxdur
+    const faizler = await sorgu("SELECT amount FROM loan_events WHERE loan_id=$1 AND event_type='interest_charge'", [kredit.id]);
+    expect(faizler).toHaveLength(2);
+    expect(Math.abs(faizler.reduce((c, h) => c + Number(h.amount), 0) - gozlenilen)).toBeLessThan(0.02);
   });
 });
 
