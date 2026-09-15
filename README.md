@@ -573,6 +573,25 @@ isə heç yerdə qeyd olunmur.
 - Müştəri: `src/services/kredit.js` + `src/features/loan/useKreditVeziyyeti.js`.
   localStorage-da yalnız UI vəziyyəti qalır (yüklənir, forma, dil).
 
+### Subsidiya (ilkin cədvəl)
+
+`lib/subsidiya.js` — dövlət subsidiyasının TƏK MƏNBƏYİ. Gəlir modeli
+(`lib/gelir.js`, kredit tavanı) və Maliyyə ekranındakı "Gözlənilən
+subsidiya" bloku (`src/features/money/SubsidiyaKarti.jsx`) eyni cədvəldən
+oxuyur: fermerin gördüyü rəqəm anderraytinqin işlətdiyi rəqəmdir.
+
+Model: hektar başına baza ödənişi × hektar; bitki üzrə müraciət pəncərəsi
+(ay aralığı, açıq / hələ açılmayıb / bağlanıb). Dərəcəsi olmayan bitkidə
+blok GÖSTƏRİLMİR — nə məbləğ, nə rədd uydurulmur.
+
+**Cədvəl hələ ilkindir** (`tesdiqli: false`, versiya `ilkin-2026-01`):
+rəqəmlər yer tutandır. Rəsmi Aqrar Subsidiya qaydaları gələndə yalnız bu
+fayl dəyişir — `hektarBaza`, `pencere`, `maxHektar`, `versiya`,
+`qebulTarixi`, `tesdiqli: true`; ekrandakı "İlkin" nişanı öz-özünə itir.
+Toxum/gübrə güzəştləri və rayon əmsalları `setirler` massivinə ayrı sətir
+kimi əlavə olunur. UI heç vaxt "rəsmi məbləğ" demir: hesablama təxminidir,
+məbləğ müraciət və qərarla müəyyənləşir.
+
 ### Kredit mühərriki (004)
 
 Kredit verildikdən sonrakı həyat: faizin yığılması, ödənişin bölünməsi,

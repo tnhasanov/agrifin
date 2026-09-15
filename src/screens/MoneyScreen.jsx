@@ -12,6 +12,7 @@ import { useRouter } from "../lib/router.jsx";
 import { gunAdi } from "../lib/tarix.js";
 import { pathFor } from "../routes.js";
 import { MovsumPulu } from "../features/money/MovsumPulu.jsx";
+import { SubsidiyaKarti } from "../features/money/SubsidiyaKarti.jsx";
 import { novbetiSert } from "../features/money/sertler.js";
 import { TeklifAmilleri } from "../features/money/TeklifAmilleri.jsx";
 import { ayliqFaiz } from "../../lib/kreditOdenis.js";
@@ -368,6 +369,9 @@ export function MoneyScreen({
 
       {/* Mövsüm pulu — fermerin "maaş dövrü" (bax: features/money/MovsumPulu) */}
       <MovsumPulu indeksHali={indeksHali} kreditHali={kreditHali} />
+
+      {/* Gözlənilən subsidiya — eyni cədvəl kredit tavanına da gedir (lib/subsidiya.js) */}
+      {state.sahe && <SubsidiyaKarti bitki={state.chat.crop} hektar={state.sahe.hektar} />}
 
       {/* Yeni müraciət — yalnız açıq iş yoxdursa. Kart NÖVBƏTİ ƏSKİK ADDIMI
           göstərir: sahə yoxdursa "Sahə əlavə et", bitki yoxdursa "Bitkini
