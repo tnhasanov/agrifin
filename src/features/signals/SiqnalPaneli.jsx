@@ -21,6 +21,7 @@ export function SiqnalPaneli({
   onBagla,
   onSiqnaliBagla,
   onHereket,
+  onBazar,
   onHamisi,
   // Sahə yoxdursa panel "Sahənizdən" demir — xəbərdarlıqlar rayon üzrədir
   saheVar = true,
@@ -85,6 +86,14 @@ export function SiqnalPaneli({
                 onBagla();
                 onHereket();
               }}
+              onBazar={
+                onBazar
+                  ? () => {
+                      onBagla();
+                      onBazar(siqnal);
+                    }
+                  : undefined
+              }
               style={{ "--i": index, marginBottom: 12 }}
             />
           ))}

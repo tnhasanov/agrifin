@@ -10,6 +10,7 @@ import { KateqoriyaKarti } from "../KateqoriyaKarti.jsx";
 import { MehsulKarti } from "../MehsulKarti.jsx";
 import { TesserufatKarti } from "../TesserufatKarti.jsx";
 import { TovsiyeKarti } from "../TovsiyeKarti.jsx";
+import { SiqnalTeklifleri } from "../SiqnalTeklifleri.jsx";
 
 /**
  * BAZAR ANA SƏHİFƏSİ — kataloq deyil, TƏSƏRRÜFATDAN BAŞLAYAN vitrin:
@@ -20,7 +21,7 @@ import { TovsiyeKarti } from "../TovsiyeKarti.jsx";
  * "Sizin üçün" sırası fermerin bitkisinə görədir (lib/bazar/axtaris.js →
  * tovsiyeBali): pomidor əkən əvvəlcə pomidor toxumunu görür, traktoru yox.
  */
-export function BazarEvi({ get, sebetSayi, aktivSifarisSayi, sahe, bitki, rayon, plan, onDrawField, onOpenBitki }) {
+export function BazarEvi({ get, sebetSayi, aktivSifarisSayi, sahe, bitki, rayon, plan, siqnallar = [], onDrawField, onOpenBitki }) {
   const { t } = useI18n();
   const sizinUcun = sirala(MEHSULLAR, "tovsiye", { bitki }).slice(0, 8);
   const yeniler = yeniMehsullar(4);
@@ -55,6 +56,9 @@ export function BazarEvi({ get, sebetSayi, aktivSifarisSayi, sahe, bitki, rayon,
         onDrawField={onDrawField}
         onOpenBitki={onOpenBitki}
       />
+
+      {/* Sahə siqnalı → bazar: yalnız açıq siqnal varsa (bax: lib/bazar/siqnalTovsiye.js) */}
+      <SiqnalTeklifleri siqnallar={siqnallar} bitki={bitki} rayon={rayon} get={get} />
 
       {/* Kateqoriyalar — üfüqi, snap ilə; kənardan kənara sürüşür */}
       <SectionTitle>{t("bazar.kateqoriyalar")}</SectionTitle>

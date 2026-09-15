@@ -3,6 +3,7 @@ import { Button } from "../../components/Button.jsx";
 import { C, font } from "../../theme/tokens.js";
 import { useI18n } from "../../i18n/index.jsx";
 import { menbeSetri } from "./siqnalEhate.js";
+import { siqnalTeklifi } from "../../../lib/bazar/siqnalTovsiye.js";
 
 /**
  * Rəng ciddilikdən gəlir, məzmun növündən yox: fermer ekrana baxanda
@@ -26,6 +27,7 @@ export function SiqnalKarti({
   siqnal,
   onBagla,
   onHereket,
+  onBazar,
   style,
   className = "giris",
   saheVar = true,
@@ -80,12 +82,21 @@ export function SiqnalKarti({
               {t(menbe.key, menbe.vars)}
             </span>
             {/* Yalnız işi başqa ekranda görülən siqnalda düymə olur —
-                "OK" düyməsi fermerə heç nə vermir */}
-            {siqnal.hereket === "chat" && onHereket && (
-              <Button size="sm" onClick={onHereket} style={{ whiteSpace: "nowrap" }}>
-                {t("siqnal.sekilCek")}
-              </Button>
-            )}
+                "OK" düyməsi fermerə heç nə vermir. Bazar keçidi İKİNCİ
+                hərəkətdir (konturlu): siqnal satış üçün deyil, amma alışla
+                həll olunan siqnalda yol göstərilir (lib/bazar/siqnalTovsiye) */}
+            <span className="flex flex-wrap justify-end gap-1.5">
+              {onBazar && siqnalTeklifi(siqnal.nov) && (
+                <Button variant="secondary" size="sm" onClick={onBazar} style={{ whiteSpace: "nowrap" }}>
+                  {t("siqnal.bazardaBax")}
+                </Button>
+              )}
+              {siqnal.hereket === "chat" && onHereket && (
+                <Button size="sm" onClick={onHereket} style={{ whiteSpace: "nowrap" }}>
+                  {t("siqnal.sekilCek")}
+                </Button>
+              )}
+            </span>
           </div>
         </div>
       </div>

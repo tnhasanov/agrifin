@@ -31,7 +31,7 @@ const AKTIV_HALLAR = new Set(["new", "confirmed", "preparing", "delivering"]);
  * Alt-səhifələr arasında keçid dərinliyə görə soldan/sağdan gəlir
  * (ekran-giris + --dir), tablar arasındakı ilə eyni hərəkət dili.
  */
-export function BazarScreen({ sifarisHali, onOpenLoan, onOpenHesab, onDrawField, onOpenBitki }) {
+export function BazarScreen({ sifarisHali, siqnallar = [], onOpenLoan, onOpenHesab, onDrawField, onOpenBitki }) {
   const { t } = useI18n();
   const { path, navigate } = useRouter();
   const { state, actions } = useStore();
@@ -164,7 +164,7 @@ export function BazarScreen({ sifarisHali, onOpenLoan, onOpenHesab, onDrawField,
       break;
     default:
       ekran = (
-        <BazarEvi get={get} sebetSayi={sebet.sayCemi} aktivSifarisSayi={aktivSifarisSayi} sahe={sahe} bitki={bitki} rayon={rayon} plan={plan} onDrawField={onDrawField} onOpenBitki={onOpenBitki} />
+        <BazarEvi get={get} sebetSayi={sebet.sayCemi} aktivSifarisSayi={aktivSifarisSayi} sahe={sahe} bitki={bitki} rayon={rayon} plan={plan} siqnallar={siqnallar} onDrawField={onDrawField} onOpenBitki={onOpenBitki} />
       );
   }
 

@@ -283,6 +283,7 @@ export default function App() {
               onBagla={closeSiqnal}
               onSiqnaliBagla={actions.siqnaliBagla}
               onHereket={() => setChatOpen(true)}
+              onBazar={() => navigate(pathFor("bazar"))}
               onHamisi={() => {
                 setSiqnalOpen(false);
                 navigate(pathFor("advisor"));
