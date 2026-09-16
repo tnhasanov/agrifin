@@ -129,7 +129,7 @@ export default function App() {
   // Radar YALNIZ optik ölçmə buludun altında qalanda çağırılır (bax: useRadar)
   const radar = useRadar(state.sahe, peyk);
   // Məhsuldarlıq indeksi: çoxillik tarixçə + cari mövsüm
-  const indeks = useIndeks(state.sahe, peyk.xulase, qonsu.muqayise);
+  const indeks = useIndeks(state.sahe, peyk.xulase, qonsu.muqayise, state.chat.crop);
   // Hesab sinxronu: sessiyanı yoxlayır, sahəni və indeksi hesaba yazır
   useHesab(indeks);
   // SERVER kredit vəziyyəti — bir yerdə gətirilir, ekranlara prop kimi gedir

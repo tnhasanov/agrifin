@@ -354,7 +354,11 @@ export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
   // olan sahə bu mövsüm pis getsə də "Yüksək" qala bilər. Bal AŞAĞI
   // SALINMIR — cari vəziyyət bantın yanında AYRICA oxunur, yoxsa fermer
   // "Yüksək" sözünü "hər şey qaydasındadır" kimi başa düşür.
-  const cariHal = cariVeziyyetHali(indeks);
+  // v3 (lib/farmscore/v3.js) cari vəziyyəti özü qaytarır — "qeyri-müəyyən"
+  // halı da daxil; v2-də köhnə köməkçi işləyir
+  const cariHal = indeks.currentRisk ?? cariVeziyyetHali(indeks);
+  const v3 = Boolean(indeks.scoreVersion);
+  const bantTavani = v3 && indeks.bandCapReason?.startsWith("etibar.") ? indeks.bandCap : null;
   const faiz = (d) => Math.round(d * 100);
 
   return (
@@ -375,6 +379,8 @@ export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
           // "Yüksək"i tək oxumursa, ekran oxuyucu da tək deməməlidir
           cariHal.risk ? t("indeks.cariRisk") : null,
           `${t("indeks.etibarEtiket")}: ${t(`indeks.etibar.${indeks.etibar}`)}`,
+          v3 ? t("indeks.v3Nisan") : null,
+          bantTavani ? t("indeks.bantTavani", { say: bantTavani.movsumSayi, bant: t(`indeks.bant.${bantTavani.maxBant}`) }) : null,
           indeks.natamam ? t("indeks.natamam", { xal: indeks.elcatanXal }) : null,
           t("indeks.movsum", { say: olculen }),
         ]
@@ -428,6 +434,24 @@ export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
                 ⚠ {t("indeks.cariRisk")}
               </span>
             )}
+            {/* v3: etibar banda TAVAN qoyur — bu, bal deyil, "az bilirik"
+                deməkdir və fermer bunu bantın yanında görməlidir */}
+            {bantTavani && (
+              <span
+                className="rounded-full px-2 py-0.5"
+                style={{ color: C.gold, backgroundColor: "rgba(233,181,74,0.14)", fontSize: 10, fontWeight: 600 }}
+              >
+                {t("indeks.bantTavani", { say: bantTavani.movsumSayi, bant: t(`indeks.bant.${bantTavani.maxBant}`) })}
+              </span>
+            )}
+            {v3 && (
+              <span
+                className="rounded-full px-2 py-0.5"
+                style={{ color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.25)", fontSize: 10, fontWeight: 600 }}
+              >
+                {t("indeks.v3Nisan")}
+              </span>
+            )}
           </div>
           <p className="mt-1 text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
             {t("indeks.movsum", { say: olculen })}
@@ -461,6 +485,16 @@ export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
               {t("indeks.natamam", { xal: indeks.elcatanXal })}
             </p>
           )}
+          {/* v3: aşağı örtük, fenologiya bilinmir — nə risk, nə "hər şey
+              qaydasında"; qeyri-müəyyənlik açıq yazılır */}
+          {cariHal.qeyriMueyyen && (
+            <p className="mt-0.5" style={{ color: C.gold, fontSize: 10, lineHeight: 1.4 }}>
+              {t("indeks.cariQeyriMueyyenIzah", {
+                sizin: faiz(indeksHali.cari?.ndvi ?? 0),
+                medyan: faiz(indeksHali.cari?.etrafMedyan ?? 0),
+              })}
+            </p>
+          )}
         </div>
 
         <Icon
@@ -491,9 +525,33 @@ export function IndeksKarti({ indeksHali, onSaheyeBax = null }) {
             </p>
           )}
 
+          {bantTavani && (
+            <p
+              className="mb-2.5 rounded-lg px-2.5 py-2"
+              style={{ backgroundColor: "rgba(233,181,74,0.12)", color: "rgba(255,255,255,0.82)", fontSize: 12, lineHeight: 1.45 }}
+            >
+              {t("indeks.bantTavaniIzah", {
+                say: bantTavani.movsumSayi,
+                bant: t(`indeks.bant.${bantTavani.maxBant}`),
+                xam: indeks.rawScore,
+                duzelis: indeks.adjustedScore,
+              })}
+            </p>
+          )}
+
           {indeks.setirler.map((setir, sira) => (
             <AmilSetri key={setir.id} setir={setir} sira={sira} t={t} />
           ))}
+
+          {/* PROXY QEYRİ-MÜƏYYƏNLİYİ AÇIQ QEYDDİR, CƏZA DEYİL: yerli ətraf
+              həmyaş qrupu deyil, zirvə NDVI mövsüm əyrisi (AUC) deyil.
+              Eyni qeyri-müəyyənliyə görə balda ikinci dəfə xal çıxılmır. */}
+          <p
+            className="mt-1 rounded-lg px-2.5 py-2"
+            style={{ backgroundColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.72)", fontSize: 11, lineHeight: 1.45 }}
+          >
+            {t("indeks.proxyQeyd")}
+          </p>
 
           <MovsumQrafiki movsumler={movsumler} t={t} />
 

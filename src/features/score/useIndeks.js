@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { fetchTarixce } from "../../services/tarixce.js";
 import { mehsuldarliqIndeksi } from "../../../lib/mehsuldarliq.js";
+import { farmScoreV3 } from "../../../lib/farmscore/v3.js";
 import { saheAcari } from "../../services/ndvi.js";
+import { farmScoreRejimi } from "../../lib/farmscoreFlag.js";
 
 const BOS = { hal: "yoxdur", indeks: null, movsumler: [], cari: null };
 
@@ -10,8 +12,12 @@ const BOS = { hal: "yoxdur", indeks: null, movsumler: [], cari: null };
  *
  * Cari mövsüm parametri `useNdvi`-dən gəlir: son ölçmə və qonşu medianı
  * onsuz da əldədir, tarixçə sorğusuna salmırıq.
+ *
+ * Bal versiyası: defolt v2 (istehsal). v3 yalnız bayraqla (bax:
+ * src/lib/farmscoreFlag.js) — kredit rəqəmlərinə TƏSİR ETMİR, onlar serverdə
+ * hesablanır.
  */
-export function useIndeks(sahe, xulase, muqayise) {
+export function useIndeks(sahe, xulase, muqayise, bitki = null) {
   const [veziyyet, setVeziyyet] = useState(BOS);
   const noqteler = sahe?.noqteler;
   const varmi = Array.isArray(noqteler) && noqteler.length >= 3;
@@ -48,12 +54,15 @@ export function useIndeks(sahe, xulase, muqayise) {
       ? { ndvi: xulase.ndvi, etrafMedyan: muqayise.medyan }
       : null;
 
+  const rejim = farmScoreRejimi();
   const indeks =
     veziyyet.hal === "hazir"
-      ? mehsuldarliqIndeksi({ movsumler: veziyyet.movsumler, cari })
+      ? rejim === "v3"
+        ? farmScoreV3({ movsumler: veziyyet.movsumler, cari, bitki })
+        : mehsuldarliqIndeksi({ movsumler: veziyyet.movsumler, cari })
       : null;
 
   // `cari` kartda da lazımdır: risk zolağı fərqi deyil, İKİ RƏQƏMİ
   // göstərməlidir — "39% / 55%" fermerə "−0.16" -dan qat-qat aydındır
-  return { ...veziyyet, indeks, cari };
+  return { ...veziyyet, indeks, cari, rejim };
 }

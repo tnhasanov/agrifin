@@ -315,3 +315,57 @@ describe("aqronomik performans indeksi — əsas ekran", () => {
     });
   });
 });
+
+// ═══ FARMSCORE V3 — YALNIZ BAYRAQLA (?farmscore=v3) ════════════════════
+describe("FarmScore v3 — klient bayrağı", () => {
+  it("defolt v2-dir: 3 mövsüm cüzi üstünlük yenə 'Yüksək' göstərir (istehsal davranışı dəyişmir)", async () => {
+    seed();
+    stubApi({ movsumSiyahisi: movsumler({ sayi: 3 }).map((m) => ({ ...m, zirve: 0.705, etrafMedyan: 0.7 })) });
+    renderApp(<App />);
+    await waitFor(() => screen.getByText(BASLIQ));
+    expect(screen.getByText("Yüksək")).toBeInTheDocument();
+    expect(screen.queryByText("v3 · konservativ")).not.toBeInTheDocument();
+  });
+
+  it("?farmscore=v3: eyni sahə ən çoxu 'Orta', tavan nişanı və v3 nişanı görünür", async () => {
+    window.history.pushState({}, "", "/?farmscore=v3");
+    seed();
+    stubApi({ movsumSiyahisi: movsumler({ sayi: 4 }).map((m) => ({ ...m, zirve: 0.9, etrafMedyan: 0.6 })) });
+    renderApp(<App />);
+    await waitFor(() => screen.getByText(BASLIQ));
+    expect(screen.getByText("v3 · konservativ")).toBeInTheDocument();
+    expect(screen.getByText("Orta")).toBeInTheDocument();
+    expect(screen.queryByText("Yüksək")).not.toBeInTheDocument();
+    expect(screen.getByText("4 mövsüm → ən çoxu Orta")).toBeInTheDocument();
+    window.sessionStorage.removeItem("agrifin:farmscore");
+  });
+
+  it("v3-də açılan kartda proxy qeyri-müəyyənliyi və tavan izahı açıq yazılır", async () => {
+    const user = userEvent.setup();
+    window.history.pushState({}, "", "/?farmscore=v3");
+    seed();
+    stubApi({ movsumSiyahisi: movsumler({ sayi: 6 }).map((m) => ({ ...m, zirve: 0.9, etrafMedyan: 0.6 })) });
+    renderApp(<App />);
+    await waitFor(() => screen.getByText(BASLIQ));
+    await user.click(screen.getByRole("button", { name: new RegExp(BASLIQ) }));
+    expect(screen.getByText(/həmyaş qrupu/)).toBeInTheDocument();
+    expect(screen.getByText(/Etibar tavanı: 6 ölçülə bilən mövsümlə/)).toBeInTheDocument();
+    window.sessionStorage.removeItem("agrifin:farmscore");
+  });
+
+  it("v3: aşağı NDVI + fenologiya bilinmir → 'qeyri-müəyyən', risk bayrağı yoxdur", async () => {
+    window.history.pushState({}, "", "/?farmscore=v3");
+    seedState({
+      location: { name: "Bərdə", lat: 40.3705, lon: 47.1265, gps: false },
+      onboarded: true,
+      sahe: { hektar: 6.5, noqteler: [[40.4, 47.1], [40.4023, 47.1], [40.4023, 47.1029], [40.4, 47.1029]] },
+      chat: { messages: [], crop: null, referral: false },
+    });
+    stubApi({ cariNdvi: 0.2, qonsuMedyan: 0.55 });
+    renderApp(<App />);
+    await waitFor(() => screen.getByText(BASLIQ));
+    expect(screen.getByText(/Cari mövsüm qeyri-müəyyən/)).toBeInTheDocument();
+    expect(screen.queryByText(/cari mövsümdə risk/)).not.toBeInTheDocument();
+    window.sessionStorage.removeItem("agrifin:farmscore");
+  });
+});

@@ -573,42 +573,66 @@ isə heç yerdə qeyd olunmur.
 - Müştəri: `src/services/kredit.js` + `src/features/loan/useKreditVeziyyeti.js`.
   localStorage-da yalnız UI vəziyyəti qalır (yüklənir, forma, dil).
 
-### Subsidiya — 2026 modeli (`lib/subsidiya/`)
+### Subsidiya — 2026 rəsmi tarif matrisi (`lib/subsidiya/`)
 
 Dövlət subsidiyasının TƏK MƏNBƏYİ. Üç anlayış qəsdən ayrıdır:
 
-- **sourceVerified** — cədvəl rəsmi mənbə ilə tutuşdurulubmu (cədvəlin
-  xüsusiyyəti; `qaydalar2026.js → yoxlanmis` siyahısında olmayan hər rəqəm
-  təsdiqsizdir);
+- **sourceVerified** — istifadə olunan HƏR tarif rəsmi səhifə ilə
+  tutuşdurulubmu. Hər tarifin öz metadata-sı var (`sourceUrl`,
+  `sourceTitle`, `decisionDate`, `effectiveFrom/To`, `campaignYear`,
+  `verifiedAt`, `verifiedFields`); üçü — URL, qərar tarixi, yoxlama tarixi —
+  dolu olmasa `true` OLA BİLMƏZ. Hazırda hamısı `false`: rəsmi səhifələr
+  model qurulan mühitdən açılmayıb, rəqəmlər səhifədən təkrar yoxlanmayıb
+  (`menbeler.js`).
 - **eligibilityStatus** — BU fermer uyğundurmu (`yoxlanmayib | tesdiq |
-  redd`); mühərrik HEÇ VAXT özü `tesdiq` vermir, yalnız kənardan qəbul edir;
-- **estimateStatus** — hesablama halı: `hesablanib | araliq | menbeLazim |
+  redd`); mühərrik HEÇ VAXT özü `tesdiq` vermir.
+- **estimateStatus** — `hesablanib | araliq | mehsulModeli | menbeLazim |
   saheYoxdur | bitkiYoxdur`.
 
-Model: `əkin (₼/ha) = baza 200 × bitki əmsalı × suvarma əmsalı (dəmyə 1,0 ·
-ənənəvi 1,2 · müasir 1,45) × (təkrar əkin ? təkrar əmsalı : 1)`; məhsul
-subsidiyası ayrı modeldir (pambıq, ₼/ton); bağlar üçün salınma ili,
-intensivlik və ting sıxlığı ölçüləri var, dərəcə `null` (mənbə lazımdır).
-Sənəd üzrə və ölçülmüş hektarın KİÇİYİ götürülür. Müraciət dövrləri:
-payızlıq 1 sentyabr – dekabrın son iş günü; yazlıq 1 fevral – 1 iyun;
-təkrar əkin 1 iyun – 1 avqust (sərhəd tarixləri testlə qorunur).
+Model: `tarif[campaignYear][bitkiQrupu][suvarma]` (`qaydalar2026.js →
+TARIFLER`). 2026: buğda/arpa müasir 290 · qeyri-müasir 230 · dəmyə 200 ₼/ha;
+qarğıdalı 160/100; kartof 360/300; tərəvəz (pomidor, soğan) 310/250. Dəmyə
+tarifi bilinməyən bitkidə matrisdə HEÇ NƏ yoxdur (0 deyil) — həmin üsul
+seçilsə "mənbə lazımdır". Pambıq hektar matrisində DEYİL: məhsul subsidiyası
+(₼/ton, 215 və 200 variantları, şərtləri `unknown`); köhnə təsdiqsiz 100 ₼/t
+silinib. Sertifikatlı toxum blanket tələb deyil — 2026 və 2026–27
+versiyalarında qayda `unknown`. Bağ dərəcəsi, sığorta, kooperativ, minimum
+hektar — `null`/`unknown`. Kampaniya versiyaları `KAMPANIYALAR` (2026 aktiv,
+2026–27 `unknown`): yeni versiya köhnə hesablamanı dəyişmir, nəticə
+`kampaniya`/`qaydalarVersiyasi` daşıyır.
 
-**Suvarma bilinmirsə tək rəqəm göstərilmir:** Bərdə, 10,02 ha buğda üçün
-ekranda 2.004–2.905,80 ₼ aralığı və suvarma sualı çıxır; cavab sahədə
-saxlanılır (`sahe.suvarma`).
+**Təqvim (`teqvim.js`):** "ayın son iş günü" həftə sonu + Əmək Məcəlləsi
+m.105 bayramları ilə hesablanır; **31 dekabr qeyri-iş günüdür → 2026
+payızlıq dövrü 30 dekabrda bağlanır.** Ramazan/Qurban 2026 və köçürülmüş
+günlər istehsalat təqvimindən (sosial.gov.az) yüklənməyib — `null`.
 
-**Kredit tavanına YALNIZ təsdiqli məbləğ girir:** `kreditUcunSubsidiya`
+**Suvarma bilinmirsə** aralıq YALNIZ bitkinin real tarifləri üzrədir: buğda
+2.004–2.905,80 ₼ (10,02 ha, 3 çip), qarğıdalı 1.002–1.603,20 ₼ (2 çip).
+
+**Kredit hesablamasına YALNIZ təsdiqli məbləğ girir:** `kreditUcunSubsidiya`
 sourceVerified && eligibilityStatus === "tesdiq" && üsul bilinəndə məbləğ
-verir, əks halda 0; gəlir modelinin ümumi cədvəli (`GELIR_CONFIG.subsidiya`)
-bütövlükdə 0-dır. Nəticə: buğda/arpa modeldə subsidiyasız görünür və
-taxılçının limiti aşağıdır — bu, qəsdəndir. Ekranda "Kredit limitində
-nəzərə alınıb: 0 ₼" ayrıca sətirdir.
+verir, əks halda 0. Ekranda "İlkin təxmin" və "Kredit hesablamasına daxil
+edilən məbləğ" ayrı sətirlərdir; mənbə linki kliklənir; "rəsmi təsdiqlənib"
+yalnız `verifiedAt` dolu olanda yazılır; çatışmayan məlumatlar ayrıca
+sadalanır.
 
-Rəsmi mənbə gələndə YALNIZ `qaydalar2026.js` dəyişir: `menbe.url`,
-`menbe.qerarTarixi`, əmsallar, `yoxlanmis` siyahısı. Hazırda təsdiqsiz:
-ənənəvi suvarma əmsalı (1,2), qarğıdalı/kartof/tərəvəz/pambıq əmsalları,
-pambıq məhsul dərəcəsi (100 ₼/t), təkrar əkin əmsalı, bağ dərəcələri,
-minimum hektar hədləri, sığorta və kooperativ şərtləri.
+### FarmScore v3 — konservativ (`lib/farmscore/v3.js`, kölgə rejimi)
+
+v2 (`lib/mehsuldarliq.js`) toxunulmazdır və istehsal qərarını verir. v3
+paralel hesablanır (`FARMSCORE_V3` mühit dəyişəni: boş/`shadow` — defolt;
+`on` — v3 qərar verir; `off` — yalnız v2). `anderraytinq` hər iki nəticəni
+`girisler.farmScore`-da (v2/v3/fərq) saxlayır; snapshot `indeks.scoreVersion:
+"v2"` daşıyır, köhnə snapshot-lar `snapshotVersiyasi()` ilə v2 kimi oxunur.
+
+v3 fərqləri: bantlar 85/70/50; etibar banda TAVAN qoyur (3–4 mövsüm → ən
+çoxu Orta, 5–7 → Yaxşı, 8+ → Yüksək); nisbi performans = qalib payı ×
+median fərq (`min`; tam 30 üçün ≥85% VƏ ≥+0.08); cari mövsümdə aşağı NDVI
+yalnız əkin təqvimi/fenoloji sübutla "ölçülməyib", əks halda "qeyri-müəyyən";
+multiplikator baldan ayrıdır (1.05/1.00/0.90/0.75, bant yoxdur 0.85 + əl ilə
+baxış; cari risk/qeyri-müəyyən → ≤1.00). Proxy qeyri-müəyyənliyi (yerli ətraf
+≠ həmyaş qrupu, zirvə ≠ AUC) UI-də qeyd olunur, balda cəzalanmır.
+Müqayisə: `node scripts/farmscore-muqayise.mjs`. Klientdə v3 yalnız
+`?farmscore=v3` (və ya `VITE_FARMSCORE_V3=on`) ilə göstərilir.
 
 ### Kredit mühərriki (004)
 
