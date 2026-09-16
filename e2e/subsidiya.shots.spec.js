@@ -65,7 +65,12 @@ async function maliyye(page, { crop, suvarma = null }) {
   await veziyyetEk(page, veziyyet);
   await kreditServeri(page, "bos");
   await page.goto("/money");
-  await page.getByText("Təxmini əkin subsidiyası").scrollIntoViewIfNeeded();
+  // Bölmə ekranın BAŞINA gətirilir ki, "kredit hesablamasına daxil edilən
+  // məbləğ" sətri və mənbə linki də kadra düşsün (ekran daxili sürüşmə)
+  const bolme = page.locator('section[aria-label="Təxmini əkin subsidiyası"]');
+  await bolme.waitFor();
+  await bolme.evaluate((el) => el.scrollIntoView({ block: "start" }));
+  await page.waitForTimeout(300);
 }
 
 test("1 · subsidiya — dəqiq (buğda, müasir)", async ({ page }, ti) => {
